@@ -1,0 +1,101 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  annotations:
+    run.googleapis.com/client-name: gcloud
+    run.googleapis.com/client-version: 569.0.0
+    run.googleapis.com/ingress: all
+    run.googleapis.com/ingress-status: all
+    run.googleapis.com/maxScale: '10'
+    run.googleapis.com/operation-id: dc29fe94-39ee-47b1-87c4-c8aca0985cdc
+    run.googleapis.com/urls: '["https://gemma-assistant-api-664870102667.us-central1.run.app","https://gemma-assistant-api-53fsvk75gq-uc.a.run.app"]'
+    serving.knative.dev/creator: supreme@kingsincorporated.org
+    serving.knative.dev/lastModifier: supreme@kingsincorporated.org
+  creationTimestamp: '2026-05-25T15:30:22.667847Z'
+  generation: 28
+  labels:
+    cloud.googleapis.com/location: us-central1
+  name: gemma-assistant-api
+  namespace: '664870102667'
+  resourceVersion: AAZS1oMlLks
+  selfLink: /apis/serving.knative.dev/v1/namespaces/664870102667/services/gemma-assistant-api
+  uid: f17eb9b2-03c0-462c-99fd-db32398191ea
+spec:
+  template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/maxScale: '10'
+        run.googleapis.com/client-name: gcloud
+        run.googleapis.com/client-version: 569.0.0
+        run.googleapis.com/startup-cpu-boost: 'true'
+      labels:
+        client.knative.dev/nonce: pnwkhgtldd
+        run.googleapis.com/startupProbeType: Default
+    spec:
+      containerConcurrency: 160
+      containers:
+      - env:
+        - name: VERTEX_ENDPOINT_URL
+          value: https:///v1/projects//locations//endpoints/:rawPredict
+        - name: PACKAGE_BUCKET
+        - name: SERVICE_ACCOUNT_EMAIL
+        - name: GOOGLE_MAPS_API_KEY
+          value: your-key
+        image: gcr.io/enterprise-gemma/gemma-assistant-api:v14
+        ports:
+        - containerPort: 8080
+          name: http1
+        resources:
+          limits:
+            cpu: '2'
+            memory: 4Gi
+        startupProbe:
+          failureThreshold: 1
+          periodSeconds: 240
+          tcpSocket:
+            port: 8080
+          timeoutSeconds: 240
+      serviceAccountName: 664870102667-compute@developer.gserviceaccount.com
+      timeoutSeconds: 900
+  traffic:
+  - latestRevision: true
+    percent: 100
+status:
+  address:
+    url: https://gemma-assistant-api-53fsvk75gq-uc.a.run.app
+  conditions:
+  - lastTransitionTime: '2026-05-28T01:18:56.939225Z'
+    message: |-
+      Revision 'gemma-assistant-api-00028-4d2' is not ready and cannot serve traffic. The user-provided container failed to start and listen on the port defined provided by the PORT=8080 environment variable within the allocated timeout. This can happen when the container port is misconfigured or if the timeout is too short. The health check timeout can be extended. Logs for this revision might contain more information.
+
+      Logs URL: https://console.cloud.google.com/logs/viewer?project=enterprise-gemma&resource=cloud_run_revision/service_name/gemma-assistant-api/revision_name/gemma-assistant-api-00028-4d2&advancedFilter=resource.type%3D%22cloud_run_revision%22%0Aresource.labels.service_name%3D%22gemma-assistant-api%22%0Aresource.labels.revision_name%3D%22gemma-assistant-api-00028-4d2%22 
+      For more troubleshooting guidance, see https://cloud.google.com/run/docs/troubleshooting#container-failed-to-start
+    reason: HealthCheckContainerError
+    status: 'False'
+    type: Ready
+  - lastTransitionTime: '2026-05-28T01:18:56.921698Z'
+    message: |-
+      The user-provided container failed to start and listen on the port defined provided by the PORT=8080 environment variable within the allocated timeout. This can happen when the container port is misconfigured or if the timeout is too short. The health check timeout can be extended. Logs for this revision might contain more information.
+
+      Logs URL: https://console.cloud.google.com/logs/viewer?project=enterprise-gemma&resource=cloud_run_revision/service_name/gemma-assistant-api/revision_name/gemma-assistant-api-00028-4d2&advancedFilter=resource.type%3D%22cloud_run_revision%22%0Aresource.labels.service_name%3D%22gemma-assistant-api%22%0Aresource.labels.revision_name%3D%22gemma-assistant-api-00028-4d2%22 
+      For more troubleshooting guidance, see https://cloud.google.com/run/docs/troubleshooting#container-failed-to-start
+    reason: HealthCheckContainerError
+    status: 'False'
+    type: ConfigurationsReady
+  - lastTransitionTime: '2026-05-28T01:18:56.939225Z'
+    message: |-
+      Revision 'gemma-assistant-api-00028-4d2' is not ready and cannot serve traffic. The user-provided container failed to start and listen on the port defined provided by the PORT=8080 environment variable within the allocated timeout. This can happen when the container port is misconfigured or if the timeout is too short. The health check timeout can be extended. Logs for this revision might contain more information.
+
+      Logs URL: https://console.cloud.google.com/logs/viewer?project=enterprise-gemma&resource=cloud_run_revision/service_name/gemma-assistant-api/revision_name/gemma-assistant-api-00028-4d2&advancedFilter=resource.type%3D%22cloud_run_revision%22%0Aresource.labels.service_name%3D%22gemma-assistant-api%22%0Aresource.labels.revision_name%3D%22gemma-assistant-api-00028-4d2%22 
+      For more troubleshooting guidance, see https://cloud.google.com/run/docs/troubleshooting#container-failed-to-start
+    reason: HealthCheckContainerError
+    status: 'False'
+    type: RoutesReady
+  latestCreatedRevisionName: gemma-assistant-api-00028-4d2
+  latestReadyRevisionName: gemma-assistant-api-00027-ljz
+  observedGeneration: 28
+  traffic:
+  - latestRevision: true
+    percent: 100
+    revisionName: gemma-assistant-api-00027-ljz
+  url: https://gemma-assistant-api-53fsvk75gq-uc.a.run.app
