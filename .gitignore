@@ -1,0 +1,16 @@
+.env
+.env.local
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.venv/
+node_modules/
+
+# Local archives and generated extraction artifacts
+gemma-cloudrun-main/
+main_*backup*.py
+main_before_*.py
+downloaded-package.pdf
+superior-compliance-package.pdf
+vertex-endpoint.txt
