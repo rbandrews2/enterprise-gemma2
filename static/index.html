@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Superior Ops Console</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <div class="ambient ambient-one"></div>
+  <div class="ambient ambient-two"></div>
+
+  <main class="shell">
+    <header class="topbar" aria-label="Superior Ops status">
+      <a class="brand" href="/" aria-label="Superior Ops Console home">
+        <span class="brand-mark">SO</span>
+        <span>
+          <strong>Superior Ops</strong>
+          <small>Work-zone service console</small>
+        </span>
+      </a>
+      <div class="access">
+        <span class="pulse" aria-hidden="true"></span>
+        <span id="session-status">Checking verified access...</span>
+      </div>
+    </header>
+
+    <section class="hero" aria-labelledby="page-title">
+      <div class="hero-copy">
+        <p class="eyebrow">Roadwork package automation</p>
+        <h1 id="page-title">Build field-ready compliance packages from one control surface.</h1>
+        <p class="lede">Select a function card, confirm the job details, and generate the exact draft, visual prompt, manifest, email preview, or delivery record needed for the next customer step.</p>
+      </div>
+      <aside class="signal-panel" aria-label="Deployment alignment">
+        <span>Stable Channel</span>
+        <strong>Cloud Run + IAP</strong>
+        <small>Designed for workzoneos.org verified users</small>
+      </aside>
+    </section>
+
+    <section class="function-grid" id="function-grid" aria-label="Available app functions"></section>
+
+    <section class="workspace" aria-label="Function workspace">
+      <form class="panel form-panel" id="ops-form">
+        <div class="section-title">
+          <span>Job Intake</span>
+          <strong id="active-function-title">Draft Plan</strong>
+        </div>
+
+        <div class="field-grid">
+          <label>Location
+            <input id="location" value="Richmond, VA shoulder closure" autocomplete="street-address">
+          </label>
+          <label>Road Type
+            <input id="road-type" value="Urban arterial">
+          </label>
+          <label>Work Type
+            <input id="work-type" value="Line striping and traffic control">
+          </label>
+          <label>Work Zone Type
+            <input id="work-zone-type" value="Shoulder closure">
+          </label>
+          <label>Speed Limit
+            <input id="speed-limit" value="35 mph">
+          </label>
+          <label>Customer Email
+            <input id="customer-email" value="customer@example.com" type="email">
+          </label>
+        </div>
+
+        <label>Risk Notes
+          <textarea id="crew-notes">Night work, moderate traffic, supervisor review required, maintain pedestrian access.</textarea>
+        </label>
+
+        <div class="actions">
+          <button id="generate-button" type="submit">Run Selected Function</button>
+          <button class="secondary" id="sample-button" type="button">Reset Sample</button>
+        </div>
+      </form>
+
+      <section class="panel output-panel" aria-label="Generated output">
+        <div class="section-title">
+          <span>Output</span>
+          <strong id="endpoint-label">/work-zone-plan</strong>
+        </div>
+        <div class="route-preview" aria-hidden="true">
+          <span class="lane-line"></span>
+          <span class="route-dot dot-one"></span>
+          <span class="route-dot dot-two"></span>
+          <span class="route-dot dot-three"></span>
+          <span class="route-label label-one">Intake</span>
+          <span class="route-label label-two">Review</span>
+          <span class="route-label label-three">Deliver</span>
+        </div>
+        <output class="result" id="result" aria-live="polite">Select a function card, then run the selected function.</output>
+      </section>
+    </section>
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

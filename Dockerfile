@@ -2,9 +2,12 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-RUN pip install --no-cache-dir fastapi uvicorn requests google-auth reportlab google-cloud-aiplatform google-cloud-storage pillow
+COPY requirements.txt /app/requirements.txt
+
+RUN pip install --no-cache-dir -r requirements.txt
 
 COPY main.py /app/main.py
+COPY static /app/static
 
 ENV PORT=8080
 

@@ -7,20 +7,59 @@ import google.auth.transport.requests
 import json
 import uuid
 import base64
+from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
 from google.cloud import storage
 from datetime import datetime, timedelta
 from vertexai.preview.vision_models import ImageGenerationModel
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from pydantic import BaseModel
 from typing import Optional, Literal, List
 
 VERTEX_ENDPOINT_URL = os.getenv("VERTEX_ENDPOINT_URL")
+BASE_DIR = Path(__file__).resolve().parent
+STATIC_DIR = BASE_DIR / "static"
+AUTH_PROVIDER = os.getenv("AUTH_PROVIDER", "cloud_run_iam").lower()
+ALLOWED_EMAIL_DOMAIN = os.getenv("ALLOWED_EMAIL_DOMAIN", "workzoneos.org").lower()
 
 app = FastAPI(title="Superior Gemma Assistant API", version="3.0")
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+
+
+def _email_from_iap_header(value: Optional[str]) -> Optional[str]:
+    if not value:
+        return None
+    email = value.split(":", 1)[-1].strip().lower()
+    return email or None
+
+
+def verified_user(request: Request) -> Optional[str]:
+    if AUTH_PROVIDER != "iap":
+        return None
+
+    email = _email_from_iap_header(request.headers.get("x-goog-authenticated-user-email"))
+    if not email or not email.endswith(f"@{ALLOWED_EMAIL_DOMAIN}"):
+        raise HTTPException(status_code=403, detail="Verified workzoneos.org access required")
+
+    return email
+
+
+@app.middleware("http")
+async def verified_user_middleware(request: Request, call_next):
+    if request.url.path == "/health":
+        return await call_next(request)
+
+    try:
+        email = verified_user(request)
+    except HTTPException as exc:
+        return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
+
+    request.state.verified_user_email = email
+    return await call_next(request)
 
 class StreetViewVisualRequest(BaseModel):
     address: Optional[str] = None
@@ -272,10 +311,14 @@ def generate_signed_url(destination_blob: str, minutes: int = 60) -> str:
     auth_req = google.auth.transport.requests.Request()
     credentials.refresh(auth_req)
 
-    service_account_email = os.getenv(
-        "SERVICE_ACCOUNT_EMAIL",
-        "664870102667-compute@developer.gserviceaccount.com"
+    service_account_email = os.getenv("SERVICE_ACCOUNT_EMAIL") or getattr(
+        credentials,
+        "service_account_email",
+        None
     )
+
+    if not service_account_email:
+        raise HTTPException(status_code=500, detail="SERVICE_ACCOUNT_EMAIL is not configured")
 
     return blob.generate_signed_url(
         version="v4",
@@ -413,11 +456,13 @@ def generate_vertex_image(prompt: str) -> str:
         import vertexai
 
         vertexai.init(
-            project="enterprise-gemma",
-            location="us-central1"
+            project=os.getenv("GOOGLE_CLOUD_PROJECT", "enterprise-gemma2"),
+            location=os.getenv("VERTEX_IMAGE_REGION", "us-central1")
         )
 
-        model = ImageGenerationModel.from_pretrained("imagen-4.0-generate-001")
+        model = ImageGenerationModel.from_pretrained(
+            os.getenv("VERTEX_IMAGE_MODEL", "imagen-4.0-generate-001")
+        )
 
         images = model.generate_images(
             prompt=prompt,
@@ -536,9 +581,16 @@ Professional work-zone visual aid.
 
 @app.get("/")
 def root():
+    return FileResponse(STATIC_DIR / "index.html")
+
+
+@app.get("/api")
+def api_status(request: Request):
     return {
         "service": "Superior Gemma Assistant API",
         "status": "online",
+        "auth_provider": AUTH_PROVIDER,
+        "verified_user": getattr(request.state, "verified_user_email", None),
         "routes": [
             "/health",
             "/chat",
@@ -559,6 +611,16 @@ def root():
             "/complete-package-saved-v13"
         ]
     }
+
+
+@app.get("/api/session")
+def session(request: Request):
+    return {
+        "auth_provider": AUTH_PROVIDER,
+        "allowed_domain": ALLOWED_EMAIL_DOMAIN,
+        "verified_user": getattr(request.state, "verified_user_email", None),
+    }
+
 
 @app.get("/health")
 def health():
@@ -1349,4 +1411,3 @@ Superior Consultation
         "body": body,
         "status": "preview_ready"
     }
-
