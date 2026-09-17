@@ -49,6 +49,17 @@ These are candidates for product prioritization, not claims of working recovered
 
 ## What can be reused
 
+### Step 2 extension: WZOS requirements and dependencies
+
+The September 17 [capability map](WZOS_GEMMA_REQUIREMENTS.md) adds explicit acceptance checks for Ray's requirements and distinguishes the broader Atlas role from the first package workflow. Additional source inspection confirms:
+
+- `draw_workzone_overlay()` uses hardcoded pixel locations for every scene. Reuse its drawing concepts, but replace placement with editable, image-relative annotations and retain the original photograph. It is not a surveyed layout engine.
+- `build_package_pdf()` writes text lines with ReportLab; it does not embed the actual imagery, annotated figures, or versioned form templates. Reuse the rendering dependency and rebuild document composition around structured package data.
+- Free-text speed/volume inputs are not verified traffic measurements. Replace their V2 contracts with typed, dated, sourced observations; retain unknown states.
+- The recovered state-based source draft cannot provide jurisdiction coverage without the missing source catalog, reviewed official documents, and locality/road-authority resolution.
+
+The eight pinned direct dependencies in `requirements.txt` cover FastAPI/Uvicorn, HTTP requests, Google authentication/Vertex/storage, ReportLab, and Pillow. They support candidate components, but do not establish a WZOS integration, jurisdiction retrieval, durable job queue, or actual email delivery. Google auth alone does not implement an email provider. No dependency upgrades, vulnerability-clearance claims, successful installation claims, or provider compatibility claims are made by this static review. Build the separate V2 environment and check its chosen dependency set during the skeleton milestone; preserve V1 pins for reproducibility.
+
 - Existing request shapes and prompt concepts as input to a cleaner, versioned contract.
 - PDF, Street View overlay, image-generation, and GCS helper logic after extracting and validating each component.
 - Static dashboard assets as a reference for user flows; they do not determine the final WZOS integration design.
