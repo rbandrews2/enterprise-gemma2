@@ -5,6 +5,14 @@ Status: requirements and source reconciliation; these capabilities are not yet i
 
 ## Product boundary
 
+### Confirmed Virginia launch scope
+
+Ray confirmed Virginia as the company's home state and initial customer market. Virginia is the first jurisdiction to build and validate. Locality and road ownership must still be identified for each job.
+
+VDOT, FHWA, and OSHA information must be readily available to end users, with Virginia Occupational Safety and Health (VOSH) coverage included where applicable. Implement a searchable reference library alongside cited assistant answers: filter by agency, topic, applicable jurisdiction, and edition; open the official source at the relevant section; show effective/review dates and superseded status; link applicable forms directly from the job. Users must be able to consult sources without generating a package. Preserve the distinction between requirements, guidance, and project-specific approvals.
+
+Acceptance: a Virginia user can find agency materials directly, follow an answer's citation to its evidence, identify the edition applicable to the project, and see missing coverage or conflicting requirements. A reference link alone does not count as a validated knowledge corpus. Source ingestion and this interface remain to be implemented.
+
 The [WZOS homepage](https://workzoneos.org), reviewed September 17, describes Atlas as a crew assistant for work orders, safety forms, schedules, setup, and workflow questions. Its surrounding modules cover time tracking, messaging, navigation, dispatch, training, organization roles, reporting, and integrations. Listed forms include C85, JSA, DVIR, incident, whistleblower, and company forms. The page does not explicitly describe the full imagery, document delivery, jurisdiction knowledge, and traffic-data workflow requested by Ray.
 
 Design assumption: Gemma supplies intelligence behind Atlas and WZOS workflows. WZOS owns identity, organization membership, permissions, business records, and subscriptions. A published feature is a product requirement reference, not proof of an available integration API. Confirm API contracts during integration. Dispatch tier descriptions on the page differ; keep entitlements configurable until resolved. The site still uses the former company name; a future content update should align it with Molecular Project Development LLC.
@@ -33,7 +41,7 @@ Design assumption: Gemma supplies intelligence behind Atlas and WZOS workflows. 
 6. Record qualified review against an immutable package revision. Substantive changes require another review.
 7. An authorized user approves the recipient list and delivery. Queue and record the provider result without claiming preview or acceptance means successful delivery.
 
-This workflow is the first implementation target, not a claim that all listed WZOS modules must be rebuilt inside Gemma. Email production credentials, WZOS API contracts, pilot jurisdictions, and measurable latency/cost thresholds remain integration/product decisions. No jurisdiction receives a supported designation until its source coverage has been checked.
+This workflow is the first implementation target, not a claim that all listed WZOS modules must be rebuilt inside Gemma. Virginia is the confirmed initial market. Email production credentials, WZOS API contracts, representative Virginia localities/projects, and measurable latency/cost thresholds remain integration/product decisions. No jurisdiction receives a supported designation until its source coverage has been checked.
 
 ## Initial evaluation cases
 
