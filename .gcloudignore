@@ -1,0 +1,4 @@
+.gcloudignore
+.git
+.local-recovery/
+#!include:.gitignore

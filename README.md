@@ -25,9 +25,13 @@ This cleanup preserves application behavior and removes tracked historical backu
 
 Next, implement and boot the service skeleton locally, then introduce an inference interface before migrating legacy routes. Choose and verify the model/backend separately; the project name does not select a model version.
 
-## Recovery limitation
+## Recovery status
 
-`gemma-cloudrun` is a Git submodule pointer at `0a0f7f040850fbbd653e885c27cc3dfa0f3fe4af`, but the repository has no `.gitmodules` mapping. Its source files were not recovered by the checkout. Preserve this pointer while locating the original source repository.
+`gemma-cloudrun` is a Git submodule pointer at `0a0f7f040850fbbd653e885c27cc3dfa0f3fe4af`, but the repository has no `.gitmodules` mapping. The matching source checkout has now been located in Cloud Shell and archived with its Git history. The active submodule remains unchanged while the recovered versions are compared. See [recovery inventory](docs/RECOVERY_INVENTORY.md) for validation and transfer status.
+
+## V2 roadmap
+
+Follow the [numbered implementation plan](docs/V2_PLAN.md). Preserve useful old material; further deletion is optional, not a requirement. The next milestones are verified recovery, version reconciliation, and a locally testable service skeleton. Production timing will be agreed with Ray after readiness is assessed.
 
 ## Product direction
 
