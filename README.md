@@ -23,7 +23,7 @@ This cleanup preserves application behavior and removes tracked historical backu
 - `shared/`: future shared contracts and configuration.
 - `knowledge/`: future source inventory and curated knowledge.
 
-Next, implement and boot the service skeleton locally, then introduce an inference interface before migrating legacy routes. Choose and verify the model/backend separately; the project name does not select a model version.
+The [local V2 skeleton](services/v2/README.md) now boots independently with a validated preview contract and deterministic inference adapter. See the [architecture decision](docs/V2_ARCHITECTURE.md). Cloud adapters and the complete package workflow remain unimplemented. Choose and verify the model/backend separately; the project name does not select a model version.
 
 ## Recovery status
 

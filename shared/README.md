@@ -1,3 +1,3 @@
 # Shared
 
-Reserved for common request/response contracts and validated configuration as services are introduced.
+`contracts.py` defines the initial validated Virginia local-preview request and response. Evidence, imagery, package persistence, identity, and delivery contracts remain future increments.
