@@ -11,6 +11,8 @@ from services.v2.settings import Settings
 from shared.contracts import DraftRequest, DraftResponse
 from services.v2.knowledge.api import router
 from services.v2.knowledge.store import Store
+from shared.intake import IntakeRequest, IntakeAssessment
+from services.v2.intake import assess
 
 logger = logging.getLogger(__name__)
 
@@ -31,6 +33,10 @@ def create_app(settings: Settings | None = None, provider: InferenceProvider | N
     @app.get("/health/live")
     async def live():
         return {"status": "alive"}
+
+    @app.post("/v2/intake/assess", response_model=IntakeAssessment)
+    async def assess_intake(request: IntakeRequest):
+        return assess(request)
 
     @app.get("/health/ready")
     async def ready():

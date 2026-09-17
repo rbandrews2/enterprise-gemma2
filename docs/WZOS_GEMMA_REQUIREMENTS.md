@@ -5,6 +5,8 @@ Status: requirements and source reconciliation; these capabilities are not yet i
 
 ## Product boundary
 
+Ray further confirmed the customer workflow: work type plus address or coordinates, selected planning/forms outputs, proactive JSA recommendations, and actual imagery with traffic/sign/flagger overlays. WZOS must unite this workflow with time tracking, employee messaging, integrations, dispatch, navigation, video training, and schedules. See [customer workflow and implemented intake assessment](CUSTOMER_WORKFLOW.md) for the current contract and remaining implementation boundaries.
+
 ### Confirmed Virginia launch scope
 
 Ray confirmed Virginia as the company's home state and initial customer market. Virginia is the first jurisdiction to build and validate. Locality and road ownership must still be identified for each job.
