@@ -14,3 +14,5 @@ Open http://127.0.0.1:8081/docs to try the preview. Use invented demonstration i
 Optional environment settings: `WZOS_ENVIRONMENT=local` and `WZOS_INFERENCE_BACKEND=deterministic_local`. Other values fail startup. The V1 requirements, main.py, and deployment scripts are separate and unchanged.
 
 The pinned dependency snapshot includes HTTPX for testing. It reproduces this local milestone; it is not a production dependency approval.
+
+The [agency reference backend](../../knowledge/README.md) adds catalog browsing and citation search. Its separate operator command must ingest sources before text search is available. Ingestion and search do not alter the draft preview or add model-generated safety guidance.

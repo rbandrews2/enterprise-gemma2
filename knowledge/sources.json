@@ -1,0 +1,93 @@
+[
+  {
+    "id": "vdot-vwapm-2026",
+    "agency": "VDOT",
+    "title": "Virginia Work Area Protection Manual",
+    "url": "https://www.vdot.virginia.gov/media/vdotvirginiagov/doing-business/technical-guidance-and-support/traffic-operations/work-zones/vwapm-2026-01-28_acc.pdf",
+    "publication_page": "https://www.vdot.virginia.gov/doing-business/technical-guidance-and-support/technical-guidance-documents/work-area-protection-manual-and-pocket-guide/",
+    "edition": "11.0 January 2026",
+    "jurisdiction": "VA: VDOT roadways",
+    "kind": "pdf",
+    "links_verified_on": "2026-09-17",
+    "applicability_note": "Discovery reference only. Confirm authority, project dates, exceptions, and current amendments before use.",
+    "publication_status": "current_at_verification"
+  },
+  {
+    "id": "vdot-field-guide-2026",
+    "agency": "VDOT",
+    "title": "VDOT Work Zone Field Guide",
+    "url": "https://www.vdot.virginia.gov/media/vdotvirginiagov/doing-business/technical-guidance-and-support/traffic-operations/work-zones/workzone-field-guide_acc.pdf",
+    "publication_page": "https://www.vdot.virginia.gov/doing-business/technical-guidance-and-support/technical-guidance-documents/work-area-protection-manual-and-pocket-guide/",
+    "edition": "January 2026",
+    "jurisdiction": "VA: VDOT roadways",
+    "kind": "pdf",
+    "links_verified_on": "2026-09-17",
+    "applicability_note": "Discovery reference only. Confirm authority, project dates, exceptions, and current amendments before use.",
+    "publication_status": "current_at_verification"
+  },
+  {
+    "id": "vdot-known-errors",
+    "agency": "VDOT",
+    "title": "VWAPM known errors",
+    "url": "https://www.vdot.virginia.gov/media/vdotvirginiagov/doing-business/technical-guidance-and-support/technical-guidance-documents/traffic-operations/wapm-list-known-errors_acc.pdf",
+    "publication_page": "https://www.vdot.virginia.gov/doing-business/technical-guidance-and-support/technical-guidance-documents/work-area-protection-manual-and-pocket-guide/",
+    "edition": null,
+    "jurisdiction": "VA: VDOT roadways",
+    "kind": "pdf",
+    "links_verified_on": "2026-09-17",
+    "applicability_note": "Discovery reference only. Confirm authority, project dates, exceptions, and current amendments before use.",
+    "publication_status": "unknown"
+  },
+  {
+    "id": "fhwa-mutcd-11-r1",
+    "agency": "FHWA",
+    "title": "MUTCD including Part 6 Temporary Traffic Control",
+    "url": "https://mutcd.fhwa.dot.gov/pdfs/11th_Editionr1/mutcd11theditionr1hl.pdf",
+    "publication_page": "https://mutcd.fhwa.dot.gov/kno_11th_Editionr1.htm",
+    "edition": "11th Edition Revision 1 December 2025",
+    "jurisdiction": "US; state adoption and project applicability require review",
+    "kind": "pdf",
+    "links_verified_on": "2026-09-17",
+    "applicability_note": "Discovery reference only. Confirm authority, project dates, exceptions, and current amendments before use.",
+    "publication_status": "current_at_verification"
+  },
+  {
+    "id": "osha-workzone-facts",
+    "agency": "OSHA",
+    "title": "Work Zone Traffic Safety Fact Sheet",
+    "url": "https://www.osha.gov/sites/default/files/publications/WORK_ZONE_TRAFFIC_SAFETY.pdf",
+    "publication_page": "https://www.osha.gov/publications/bytopic/highway-work-zones",
+    "edition": null,
+    "jurisdiction": "US; VOSH coverage must be resolved in Virginia",
+    "kind": "pdf",
+    "links_verified_on": "2026-09-17",
+    "applicability_note": "Discovery reference only. Confirm authority, project dates, exceptions, and current amendments before use.",
+    "publication_status": "unknown"
+  },
+  {
+    "id": "vosh-program",
+    "agency": "VOSH",
+    "title": "Virginia Occupational Safety and Health Program and standards references",
+    "url": "https://doli.virginia.gov/vosh/",
+    "publication_page": "https://doli.virginia.gov/vosh/",
+    "edition": null,
+    "jurisdiction": "VA; jurisdiction exclusions require review",
+    "kind": "html",
+    "links_verified_on": "2026-09-17",
+    "applicability_note": "Discovery reference only. Confirm authority, project dates, exceptions, and current amendments before use.",
+    "publication_status": "unknown"
+  },
+  {
+    "id": "vosh-regulatory",
+    "agency": "VOSH",
+    "title": "DOLI Regulatory Information",
+    "url": "https://doli.virginia.gov/resources/regulatory-information/",
+    "publication_page": "https://doli.virginia.gov/resources/regulatory-information/",
+    "edition": null,
+    "jurisdiction": "VA",
+    "kind": "html",
+    "links_verified_on": "2026-09-17",
+    "applicability_note": "Discovery reference only. Confirm authority, project dates, exceptions, and current amendments before use.",
+    "publication_status": "unknown"
+  }
+]

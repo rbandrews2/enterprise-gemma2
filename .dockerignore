@@ -1,5 +1,6 @@
 .git
 .local-recovery
+.local-data
 .env
 .env.*
 env.local

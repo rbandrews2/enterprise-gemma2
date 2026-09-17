@@ -8,7 +8,7 @@ Use one modular Python service initially, with replaceable provider interfaces. 
 
 - API: validate requests and, before cloud use, verify WZOS identity and organization/job permissions. Never trust a caller-supplied organization ID as authorization.
 - Inference: structured input/output behind an adapter. The implemented local adapter is deterministic and generates no guidance. Live model adapters need timeouts, bounded output, validated responses, and failure-path tests.
-- Knowledge: retrieve reviewed VDOT/FHWA/OSHA/VOSH material by authority, activity and effective date. Expose references independently of generation. No source ingestion is implemented yet.
+- Knowledge: the local source backend now ingests catalog-approved documents and exposes agency/source-filtered reference search independently of generation. Source review states and editions are visible; project activity/effective-date applicability selection remains unimplemented. See `knowledge/README.md` for operation and review limits.
 - Imagery/documents: retain original actual imagery, store editable annotations separately, and render versioned PDFs. Calculations and placement validation must be deterministic where appropriate.
 - Storage/jobs: durable organization-scoped package revisions and stage results, indexed listing, stable object references, authorized temporary links, and idempotency. No storage is implemented in this milestone; preview data is not saved.
 - Review/delivery: bind approval to the package revision and recipients. Use a durable outbox and provider reconciliation for uncertain send outcomes. No email endpoint is enabled.

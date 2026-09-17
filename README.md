@@ -35,6 +35,8 @@ Follow the [numbered implementation plan](docs/V2_PLAN.md). Preserve useful old 
 
 ## Product direction
 
+The [Virginia agency source backend](knowledge/README.md) now supports catalog browsing, bounded document ingestion, immutable originals, revision tracking, and cited full-text search. See [verified ingestion coverage](docs/SOURCE_BACKEND_STATUS.md) for available material, failed downloads, and review limits. It runs locally and has not been deployed to the live V1 site.
+
 Work Zone OS is the destination product; Enterprise Gemma V2 is the development project. The user leads product vision and business requirements; the assistant handles most technical implementation and design collaboratively.
 
 The [WZOS/Gemma capability map](docs/WZOS_GEMMA_REQUIREMENTS.md) connects the website's Atlas assistant role to recovered code and adds real-image annotations, PDF/email delivery, jurisdiction-specific forms and safety sources, and verified traffic/speed inputs. These are V2 requirements, not claims of completed functionality. See the [source register](knowledge/SOURCE_REGISTER.md) for initial authoritative discovery links and remaining coverage work.

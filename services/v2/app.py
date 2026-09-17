@@ -9,14 +9,18 @@ from fastapi.responses import JSONResponse
 from services.v2.inference import InferenceProvider, LocalProvider
 from services.v2.settings import Settings
 from shared.contracts import DraftRequest, DraftResponse
+from services.v2.knowledge.api import router
+from services.v2.knowledge.store import Store
 
 logger = logging.getLogger(__name__)
 
 
-def create_app(settings: Settings | None = None, provider: InferenceProvider | None = None):
+def create_app(settings: Settings | None = None, provider: InferenceProvider | None = None,
+               knowledge_store: Store | None = None):
     settings = settings or Settings.from_env()
     provider = provider or LocalProvider()
     app = FastAPI(title="WZOS Gemma V2 — local scaffold", version="0.1.0")
+    app.include_router(router(knowledge_store or Store()))
 
     @app.middleware("http")
     async def local_only(request: Request, call_next):
