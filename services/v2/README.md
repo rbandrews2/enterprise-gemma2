@@ -13,6 +13,8 @@ Open http://127.0.0.1:8081/docs to try the preview. Use invented demonstration i
 
 `POST /v2/intake/assess` now supports address/coordinate intake, requested outputs, a proactive JSA recommendation, and missing-context prompts. See [customer workflow](../../docs/CUSTOMER_WORKFLOW.md). These are product intake rules; they do not establish legal requirements or produce sign/flagger placements.
 
+`POST /v2/planning/references` accepts the same intake and returns that assessment plus job-related source passages and explicit coverage gaps. See [planning reference API](../../docs/PLANNING_REFERENCES.md). The source library must be ingested and indexed first; missing indexes produce a partial response with the intake assessment preserved.
+
 Optional environment settings: `WZOS_ENVIRONMENT=local` and `WZOS_INFERENCE_BACKEND=deterministic_local`. Other values fail startup. The V1 requirements, main.py, and deployment scripts are separate and unchanged.
 
 The pinned dependency snapshot includes HTTPX for testing. It reproduces this local milestone; it is not a production dependency approval.

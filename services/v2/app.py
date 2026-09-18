@@ -13,6 +13,8 @@ from services.v2.knowledge.api import router
 from services.v2.knowledge.store import Store
 from shared.intake import IntakeRequest, IntakeAssessment
 from services.v2.intake import assess
+from services.v2.planning import discover
+from shared.planning import PlanningReferences
 
 logger = logging.getLogger(__name__)
 
@@ -21,8 +23,9 @@ def create_app(settings: Settings | None = None, provider: InferenceProvider | N
                knowledge_store: Store | None = None):
     settings = settings or Settings.from_env()
     provider = provider or LocalProvider()
+    knowledge_store = knowledge_store or Store()
     app = FastAPI(title="WZOS Gemma V2 — local scaffold", version="0.1.0")
-    app.include_router(router(knowledge_store or Store()))
+    app.include_router(router(knowledge_store))
 
     @app.middleware("http")
     async def local_only(request: Request, call_next):
@@ -37,6 +40,10 @@ def create_app(settings: Settings | None = None, provider: InferenceProvider | N
     @app.post("/v2/intake/assess", response_model=IntakeAssessment)
     async def assess_intake(request: IntakeRequest):
         return assess(request)
+
+    @app.post("/v2/planning/references", response_model=PlanningReferences)
+    def planning_references(request: IntakeRequest):
+        return discover(request, knowledge_store)
 
     @app.get("/health/ready")
     async def ready():

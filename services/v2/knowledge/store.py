@@ -189,7 +189,17 @@ class Store:
         finally:
             Path(temp).unlink(missing_ok=True)
 
-    def search(self, query, agency=None, source_id=None, limit=20, offset=0):
+    def indexed_revisions(self):
+        path = self.data / "index.sqlite"
+        if not path.exists():
+            raise IndexUnavailable("index_not_built")
+        try:
+            with closing(sqlite3.connect(path.resolve().as_uri() + "?mode=ro", uri=True)) as db:
+                return dict(db.execute("SELECT DISTINCT source_id,revision FROM passages WHERE is_latest=1"))
+        except sqlite3.DatabaseError as error:
+            raise IndexUnavailable("index_unavailable_rebuild_required") from error
+
+    def search(self, query, agency=None, source_id=None, limit=20, offset=0, latest_only=False):
         tokens = re.findall(r"\w+", query, flags=re.UNICODE)
         if not tokens or len(query) > 500 or not 1 <= limit <= 50 or offset < 0:
             raise ValueError("Invalid search parameters")
@@ -199,6 +209,8 @@ class Store:
         # Literal terms, never caller-supplied FTS syntax or SQL.
         match = " AND ".join('"' + term + '"' for term in tokens)
         where, params = ["search MATCH ?"], [match]
+        if latest_only:
+            where.append("p.is_latest = 1")
         if agency:
             where.append("p.agency = ?")
             params.append(agency)
