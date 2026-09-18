@@ -19,4 +19,6 @@ Optional environment settings: `WZOS_ENVIRONMENT=local` and `WZOS_INFERENCE_BACK
 
 The pinned dependency snapshot includes HTTPX for testing. It reproduces this local milestone; it is not a production dependency approval.
 
+The [local project workspace](../../docs/PROJECT_WORKSPACE.md) adds saved intake, typed evidence references, pending applicability notes, version history, and conflict-safe edits. Use only development data until WZOS identity and organization authorization are implemented.
+
 The [agency reference backend](../../knowledge/README.md) adds catalog browsing and citation search. Its separate operator command must ingest sources before text search is available. Ingestion and search do not alter the draft preview or add model-generated safety guidance.

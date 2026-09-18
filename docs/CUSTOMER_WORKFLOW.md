@@ -30,7 +30,7 @@ Example:
 }
 ```
 
-The assessment prompts for missing jurisdiction, dates, traffic, speed, roadway information, and excavation context; raises night/pedestrian review topics; and strongly recommends a JSA. It does not create a layout or approved package. All generated deliverables remain `not_implemented`; `regulatory_requirements_status` remains `not_evaluated` and `approved_for_field_use` remains false. The existing draft-preview and reference-search APIs remain compatible. No intake is persisted or sent to another system.
+The assessment prompts for missing jurisdiction, dates, traffic, speed, roadway information, and excavation context; raises night/pedestrian review topics; and strongly recommends a JSA. It does not create a layout or approved package. All generated deliverables remain `not_implemented`; `regulatory_requirements_status` remains `not_evaluated` and `approved_for_field_use` remains false. The standalone assessment does not persist intake or send it elsewhere. The separate [project workspace](PROJECT_WORKSPACE.md) now supports saving intake and evidence references locally with revision history.
 
 ## Next workflow increments
 

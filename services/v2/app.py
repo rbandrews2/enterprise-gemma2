@@ -15,17 +15,32 @@ from shared.intake import IntakeRequest, IntakeAssessment
 from services.v2.intake import assess
 from services.v2.planning import discover
 from shared.planning import PlanningReferences
+from services.v2.projects import ProjectStore, ProjectMissing, ProjectConflict, project_router
+import sqlite3
 
 logger = logging.getLogger(__name__)
 
 
 def create_app(settings: Settings | None = None, provider: InferenceProvider | None = None,
-               knowledge_store: Store | None = None):
+               knowledge_store: Store | None = None, project_store: ProjectStore | None = None):
     settings = settings or Settings.from_env()
     provider = provider or LocalProvider()
     knowledge_store = knowledge_store or Store()
     app = FastAPI(title="WZOS Gemma V2 — local scaffold", version="0.1.0")
     app.include_router(router(knowledge_store))
+    app.include_router(project_router(project_store or ProjectStore(), knowledge_store))
+
+    @app.exception_handler(ProjectMissing)
+    async def missing_project(request, error):
+        return JSONResponse(status_code=404, content={"error": "project_or_revision_not_found"})
+
+    @app.exception_handler(ProjectConflict)
+    async def changed_project(request, error):
+        return JSONResponse(status_code=409, content={"error": str(error)})
+
+    @app.exception_handler(sqlite3.DatabaseError)
+    async def unavailable_store(request, error):
+        return JSONResponse(status_code=503, content={"error": "local_storage_unavailable"})
 
     @app.middleware("http")
     async def local_only(request: Request, call_next):

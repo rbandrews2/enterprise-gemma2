@@ -23,6 +23,8 @@ No production date is set. Discuss timing with Ray after the recovery and valida
 
 ## Working principles
 
+Saved-project increment: `/v2/projects` now preserves intake, structured evidence references, pending applicability questions, and version history in a local SQLite workspace. Creation retries and stale-edit conflicts are handled. See [project workspace](PROJECT_WORKSPACE.md). Actual image attachments, evidence verification, authenticated review, and multi-organization storage remain pending.
+
 Job-specific reference increment: `/v2/planning/references` now connects intake context to cited source candidates, with latest-revision checks and explicit missing/stale/superseded-source handling. See [planning references](PLANNING_REFERENCES.md). This is keyword-based discovery; project applicability, required forms, and field placements remain unresolved.
 
 Customer-intake increment: address/coordinate validation, requested outputs, explicit unknown site conditions, proactive JSA recommendation, and rule-based context prompts are implemented at `/v2/intake/assess`. See [customer workflow](CUSTOMER_WORKFLOW.md). Applicable-form selection, traffic evidence, image annotation, and measured placement remain the next workflow increments; workforce modules remain part of the unified WZOS destination.
