@@ -17,16 +17,25 @@ from services.v2.planning import discover
 from shared.planning import PlanningReferences
 from services.v2.projects import ProjectStore, ProjectMissing, ProjectConflict, project_router
 import sqlite3
+from services.v2.imagery import StreetViewMetadata, ImageryAvailability
+from shared.intake import JobLocation
 
 logger = logging.getLogger(__name__)
 
 
 def create_app(settings: Settings | None = None, provider: InferenceProvider | None = None,
-               knowledge_store: Store | None = None, project_store: ProjectStore | None = None):
+               knowledge_store: Store | None = None, project_store: ProjectStore | None = None,
+               imagery_provider: StreetViewMetadata | None = None):
     settings = settings or Settings.from_env()
     provider = provider or LocalProvider()
     knowledge_store = knowledge_store or Store()
     app = FastAPI(title="WZOS Gemma V2 — local scaffold", version="0.1.0")
+    imagery_provider = imagery_provider or StreetViewMetadata()
+
+    @app.post("/v2/imagery/streetview/availability", response_model=ImageryAvailability)
+    def imagery_availability(location: JobLocation):
+        return imagery_provider.lookup(location)
+
     app.include_router(router(knowledge_store))
     app.include_router(project_router(project_store or ProjectStore(), knowledge_store))
 

@@ -23,6 +23,8 @@ No production date is set. Discuss timing with Ray after the recovery and valida
 
 ## Working principles
 
+Imagery increment: the local `/v2/imagery/streetview/availability` endpoint and Google metadata adapter now distinguish available, missing, failed and disabled imagery access. Google access is disabled by default; no image storage or placement is implemented. See [imagery backend](IMAGERY_BACKEND.md). All 62 V2 tests and a real loopback HTTP check passed.
+
 Saved-project increment: `/v2/projects` now preserves intake, structured evidence references, pending applicability questions, and version history in a local SQLite workspace. Creation retries and stale-edit conflicts are handled. See [project workspace](PROJECT_WORKSPACE.md). Actual image attachments, evidence verification, authenticated review, and multi-organization storage remain pending.
 
 Job-specific reference increment: `/v2/planning/references` now connects intake context to cited source candidates, with latest-revision checks and explicit missing/stale/superseded-source handling. See [planning references](PLANNING_REFERENCES.md). This is keyword-based discovery; project applicability, required forms, and field placements remain unresolved.
