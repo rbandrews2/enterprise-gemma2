@@ -6,6 +6,8 @@ Updated: 2026-09-17.
 
 ## Direction
 
+Current release gates and deferred work are consolidated in [Must complete before launch](MUST_COMPLETE_BEFORE_LAUNCH.md). Earlier milestone notes below are historical; the checklist and latest handoff identify current outstanding work.
+
 Build a capable, reliable WZOS service with measurable improvements in output quality, latency, cost, and operational stability. Preserve useful prior work; deleting old material is optional, not a project requirement. Model size or the Gemma name alone is not a quality target.
 
 No production date is set. Discuss timing with Ray after the recovery and validation work establishes readiness. Do not run the legacy deployment scripts or push a deployment-triggering branch as part of recovery.

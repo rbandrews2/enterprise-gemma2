@@ -20,6 +20,8 @@ Set `WZOS_GOOGLE_MAPS_BROWSER_KEY` only to a Maps JavaScript browser key restric
 
 No browser key was configured in the inspected environment. No cloud API, key, restriction or billing setting was changed. Live image rendering is therefore **not verified**. The missing-key path displays a configuration message and makes no Google script request.
 
+Live Cloud Console follow-up on 2026-09-20 found the existing `GOOGLE_MAPS_API_KEY` secret (version 1 enabled), and enabled Geocoding, Maps Static and Street View Static APIs. The project's Credentials page listed no API keys, and Maps JavaScript was absent from the enabled-services inventory. Existing credentials must be traced and checked before adding or reusing a browser key. See [Must complete before launch](MUST_COMPLETE_BEFORE_LAUNCH.md).
+
 Official documentation checked 2026-09-20:
 
 - [Google Maps JavaScript setup](https://developers.google.com/maps/documentation/javascript/get-api-key)

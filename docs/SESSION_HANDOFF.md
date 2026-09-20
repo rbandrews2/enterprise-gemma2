@@ -14,6 +14,8 @@ Resumed 2026-09-20 at Ray's request. Development remains local; production deplo
 
 ## Resume here
 
+Launch tracking: [Must complete before launch](MUST_COMPLETE_BEFORE_LAUNCH.md) is the consolidated open checklist. Live Cloud Console inspection found `GOOGLE_MAPS_API_KEY` in Secret Manager with enabled version 1, but no API keys listed in this project's Credentials page. Key value/issuing project/restrictions were not verified. Resolve existing credential ownership and suitability before creating duplicates or exposing any key to the browser.
+
 Job details/geometry and Google display increment: the workspace now saves structured job inputs and reported work-limit lines; Atlas checks missing geometry fields. Google hybrid map and nearby Street View code is implemented with on-demand loading and a dedicated browser-key configuration. All 76 tests plus browser save/missing-key checks passed. Live imagery remains unverified because `WZOS_GOOGLE_MAPS_BROWSER_KEY` is not configured. See [geometry and Maps setup](GEOMETRY_AND_GOOGLE_MAPS.md). Next: restricted-key setup/live provider verification and reviewed placement rules, not further placeholder-only UI.
 
 Completed response capture and follow-up review: customers can save per-finding notes/dispositions in project revisions; Atlas reconciles them on the next run and flags context changes for reconfirmation. See [Atlas responses](ATLAS_RESPONSES.md). All 73 tests and the browser save/review flow passed. Next: structured intake/geometry answer capture and a reviewed placement-rule contract, then model integration. Free-text responses do not fill those fields automatically.
