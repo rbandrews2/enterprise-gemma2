@@ -31,3 +31,9 @@ Official documentation checked 2026-09-20:
 ## Verification
 
 All 76 V2 tests passed, including geometry validation, compatibility and browser/server credential separation. Browser testing saved a synthetic two-point line with a source reference in revision 2 and verified the explicit missing-key state. Successful live map/Street View rendering, production referrer restrictions, quota behavior and imagery export permissions remain to be verified with the configured Google project. Tests did not call paid APIs.
+
+## Live Maps verification — 2026-09-20
+
+The dedicated browser key is configured locally in `.local-data/credentials/wzos-v2-browser-key.txt` (Git ignored). Run `./scripts/start_v2_local.ps1` from PowerShell; it loads the key into the child server environment without printing it, binds to 127.0.0.1:8081, and restores the prior environment on exit. An alternate key file can be supplied with `-BrowserKeyFile`.
+
+Live browser checks against an isolated synthetic Norfolk project (36.8508, -76.2859) successfully loaded Google's hybrid map with attribution and a nearby Street View panorama. Street View reported capture date 2022-09 and a nearby location, not the exact requested coordinate. No customer project was created or changed. The test server was stopped. All 76 tests passed; launcher syntax parsing passed. No imagery was downloaded or exported. Production referrer behavior, quotas/cost limits, marker overlays, missing imagery cases and export permissions still need validation.
