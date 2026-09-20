@@ -2,6 +2,7 @@
 from services.v2.planning import discover
 from shared.projects import ProjectDraft
 from services.v2.advice import review_project
+from services.v2.placement import assess_placement
 
 
 def prepare(record, knowledge):
@@ -49,6 +50,7 @@ def prepare(record, knowledge):
         "model_called": False, "placements": [], "approved_for_field_use": False,
         "questions": questions,
         "project_advice": advice,
+        "placement_readiness": assess_placement(draft, references),
         "response_summary": {state: sum(a["response_state"] == state for a in advice)
                              for state in ("unanswered", "reported_handled", "needs_help", "stale")},
         "unmatched_response_ids": [r.finding_id for r in draft.review_responses

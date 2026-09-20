@@ -152,6 +152,12 @@ el("atlas").onclick=async()=>{
         try {const url=new URL(c.url);if(url.protocol==="https:"){const link=line("a","Official source",details);link.href=url.href;link.target="_blank";link.rel="noopener noreferrer";}} catch {}
       }
     }
+    if(result.placement_readiness) {
+      line("h4","Placement readiness");
+      line("p","Reported details need verification. Atlas has no reviewed placement rules yet.");
+      const checks=line("ul","");
+      for(const check of result.placement_readiness.checks) line("li",`${check.status.replaceAll("_"," ")}: ${check.next_action}`,checks);
+    }
     line("h4","Remaining gaps");
     const gaps=line("ul","");for(const gap of [...result.blockers,...result.references.coverage_gaps]) line("li",gap,gaps);
     status("Atlas preparation complete. Review questions and sources below; no placements were changed.");
