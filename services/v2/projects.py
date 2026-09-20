@@ -24,7 +24,11 @@ class ProjectConflict(Exception):
 
 
 def canonical(draft):
-    return json.dumps(draft.model_dump(mode="json"), sort_keys=True, separators=(",", ":"))
+    payload = draft.model_dump(mode="json")
+    # Keep create retry hashes compatible with projects saved before annotations.
+    if not payload.get("annotations"):
+        payload.pop("annotations", None)
+    return json.dumps(payload, sort_keys=True, separators=(",", ":"))
 
 
 def evidence_review(draft):
@@ -53,6 +57,8 @@ def evidence_review(draft):
     issues.append("All evidence remains customer-supplied and unverified. No source-reference URLs or files were fetched.")
     issues.append("Imagery entries are references only; image bytes and declared hashes have not been checked.")
     issues.append("Source applicability, road geometry, and field-use approval still require qualified review.")
+    if draft.annotations:
+        issues.append("Geographic markers are user proposals; positions, spacing and evidence relevance have not been verified.")
     return {"verification_status": "not_verified", "approved_for_field_use": False,
             "issues": issues, "pending_applicability_notes": len(draft.applicability_notes)}
 
@@ -172,5 +178,19 @@ def project_router(projects, knowledge):
         draft = ProjectDraft.model_validate(record["draft"])
         return {"project_id": str(project_id), "version": record["version"],
                 "references": discover(draft.intake, knowledge)}
+
+    @router.get("/v2/projects/{project_id}/annotations")
+    def annotations(project_id: UUID, version: int | None = Query(None, ge=1)):
+        record = projects.get(project_id, version)
+        draft = ProjectDraft.model_validate(record["draft"])
+        return {
+            "type": "FeatureCollection", "project_id": str(project_id),
+            "version": record["version"], "approved_for_field_use": False,
+            "features": [{
+                "type": "Feature", "id": a.id,
+                "geometry": {"type": "Point", "coordinates": [a.longitude, a.latitude]},
+                "properties": a.model_dump(exclude={"id", "longitude", "latitude"}),
+            } for a in draft.annotations],
+        }
 
     return router

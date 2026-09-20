@@ -1,6 +1,6 @@
 # WZOS V2 pause and resume handoff
 
-Saved 2026-09-17 at Ray's request. Work is paused for a break; no scheduled continuation or production deployment is authorized by this pause.
+Resumed 2026-09-20 at Ray's request. Development remains local; production deployment is not scheduled.
 
 ## Completed
 
@@ -13,6 +13,8 @@ Saved 2026-09-17 at Ray's request. Work is paused for a break; no scheduled cont
 - Latest implementation commit: `bfc08dbecad727478ddc094ef3c77493368dd06b`, pushed to GitHub `enterprise-v2`. All 62 V2 tests passed, plus a real loopback HTTP check. V1 and cloud services were unchanged.
 
 ## Resume here
+
+2026-09-20 increment: project revisions now preserve proposed geographic point annotations and evidence links. A version-selectable GeoJSON endpoint exposes them for future maps. See [geographic annotations](GEOGRAPHIC_ANNOTATIONS.md). Next is map display/editing and Google usage verification before enabling imagery retrieval/export.
 
 1. Check branch, working tree, and this handoff against current code before making changes.
 2. Continue the imagery workflow: define geographic annotations for signs, flaggers and work areas; preserve their evidence and review status. Existing fixed-pixel overlays are historical examples, not placement rules.

@@ -23,6 +23,8 @@ No production date is set. Discuss timing with Ray after the recovery and valida
 
 ## Working principles
 
+Geographic annotation increment (2026-09-20): project revisions now save proposed sign, flagger, work-area and traffic-observation points, validate evidence links, and expose versioned GeoJSON. No provider calls or cloud costs are introduced. See [annotation contract](GEOGRAPHIC_ANNOTATIONS.md). Road geometry, automatic placement and map UI remain pending.
+
 Imagery increment: the local `/v2/imagery/streetview/availability` endpoint and Google metadata adapter now distinguish available, missing, failed and disabled imagery access. Google access is disabled by default; no image storage or placement is implemented. See [imagery backend](IMAGERY_BACKEND.md). All 62 V2 tests and a real loopback HTTP check passed.
 
 Saved-project increment: `/v2/projects` now preserves intake, structured evidence references, pending applicability questions, and version history in a local SQLite workspace. Creation retries and stale-edit conflicts are handled. See [project workspace](PROJECT_WORKSPACE.md). Actual image attachments, evidence verification, authenticated review, and multi-organization storage remain pending.

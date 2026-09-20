@@ -6,6 +6,7 @@ from pydantic import Field, model_validator
 
 from shared.contracts import StrictModel
 from shared.intake import IntakeRequest
+from shared.annotations import GeographicAnnotation
 
 
 class EvidenceBase(StrictModel):
@@ -68,11 +69,22 @@ class ProjectDraft(StrictModel):
     intake: IntakeRequest
     evidence: list[Evidence] = Field(default_factory=list, max_length=100)
     applicability_notes: list[ApplicabilityNote] = Field(default_factory=list, max_length=100)
+    annotations: list[GeographicAnnotation] = Field(default_factory=list, max_length=200)
 
     @model_validator(mode="after")
     def unique_evidence(self):
         if len({e.id for e in self.evidence}) != len(self.evidence):
             raise ValueError("Evidence IDs must be unique within a revision")
+        if len({a.id for a in self.annotations}) != len(self.annotations):
+            raise ValueError("Annotation IDs must be unique within a revision")
+        evidence = {e.id: e for e in self.evidence}
+        for annotation in self.annotations:
+            if any(ref not in evidence for ref in annotation.evidence_ids):
+                raise ValueError("Annotation references missing evidence in this revision")
+            if annotation.kind == "traffic_observation" and not any(
+                evidence[ref].kind == "traffic" for ref in annotation.evidence_ids
+            ):
+                raise ValueError("Traffic markers require traffic evidence")
         return self
 
 

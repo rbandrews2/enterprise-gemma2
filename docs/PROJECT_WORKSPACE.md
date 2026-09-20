@@ -19,6 +19,8 @@ An identical create retry with the same key returns the original project and rev
 
 ## Evidence records
 
+Projects also support proposed geographic annotations and a version-selectable GeoJSON endpoint. See [geographic annotation contract](GEOGRAPHIC_ANNOTATIONS.md). Full updates must include annotations to retain them in the new revision.
+
 Every record has a unique `id`, `kind`, `source_name`, `source_reference`, `basis`, `road_segment`, optional `observed_on`, and optional `notes`. Basis distinguishes customer reports, official-record claims, field observations, and estimates. The service has not verified any of those claims.
 
 - **Speed:** `kind=speed`, `speed_type` (`posted`, `temporary_authorized`, `design`, `observed`), and `value_mph`. Other speed types do not satisfy the prompt for posted-speed evidence.
