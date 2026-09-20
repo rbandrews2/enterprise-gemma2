@@ -14,6 +14,8 @@ Resumed 2026-09-20 at Ray's request. Development remains local; production deplo
 
 ## Resume here
 
+2026-09-20 approved credential setup completed: enabled Maps JavaScript (`maps-backend.googleapis.com`) and API Keys API in `enterprise-gemma2`. Created `projects/910004733138/locations/global/keys/wzos-v2-browser` (display name `WZOS V2 Browser Maps`). Independent describe verified Maps JavaScript-only API restriction and referrers `http://localhost:8081/*`, `http://127.0.0.1:8081/*`, `https://app.workzoneos.org/*`. No key value printed or committed; legacy key, live app and Cloud Shell checkout untouched. Next: securely configure local `WZOS_GOOGLE_MAPS_BROWSER_KEY` from this new credential and test live map/Street View, billing and quota behavior. Creation is complete; runtime integration remains pending.
+
 Maps lookup follow-up: secret access succeeded inside Cloud Shell, but API Keys returned 403 for missing `apikeys.keys.lookup` permission under admin@workzoneos.org. No key was exposed or cloud resources changed. A metadata-only helper is saved at `scripts/check_maps_credential.py`. Separate restricted browser-key/API setup is proposed in the launch checklist and requires confirmation before creating the credential.
 
 Launch tracking: [Must complete before launch](MUST_COMPLETE_BEFORE_LAUNCH.md) is the consolidated open checklist. Live Cloud Console inspection found `GOOGLE_MAPS_API_KEY` in Secret Manager with enabled version 1, but no API keys listed in this project's Credentials page. Key value/issuing project/restrictions were not verified. Resolve existing credential ownership and suitability before creating duplicates or exposing any key to the browser.

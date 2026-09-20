@@ -15,12 +15,13 @@ Read-only live inspection of `enterprise-gemma2` (project number 910004733138) o
 
 Follow-up: authenticated Cloud Shell could read the secret in memory, but API Keys lookup returned HTTP 403 / `PERMISSION_DENIED`: `apikeys.keys.lookup` denied for the signed-in `admin@workzoneos.org` account. The key value was not printed or saved locally. Ownership/restrictions remain unresolved. Either obtain authorized lookup access in the owning project or approve a separate restricted V2 browser key. Do not alter the V1 key to work around this.
 
-Proposed separate V2 configuration, pending approval: enable Maps JavaScript in `enterprise-gemma2`; create a browser key restricted to Maps JavaScript and website referrers `http://localhost:8081/*`, `http://127.0.0.1:8081/*` and `https://app.workzoneos.org/*`. Add any staging origin explicitly when it exists. This creates a new credential and should not change legacy credentials or deploy V2. Live use may incur Maps charges.
+Approved setup completed 2026-09-20: enabled Maps JavaScript and API Keys API in `enterprise-gemma2`; created `projects/910004733138/locations/global/keys/wzos-v2-browser`, display name `WZOS V2 Browser Maps`. Independent metadata describe verified Maps JavaScript-only restriction and website referrers `http://localhost:8081/*`, `http://127.0.0.1:8081/*` and `https://app.workzoneos.org/*`. Key value was not printed or committed. Legacy credentials and deployed applications were unchanged. Local configuration and live imagery validation remain pending. Add staging origins explicitly when they exist. Live use may incur Maps charges.
 
 ## 1. Credentials, Google APIs and costs
 
 - [ ] Identify the stored Maps key's issuing project, current validity, application restrictions, allowed APIs and existing V1 use. Reuse appropriate existing resources before creating replacements.
-- [ ] Locate or create a separate website-restricted Maps JavaScript key when needed; configure authorized localhost/staging/production referrers and connect V2 securely. Keep server credentials separate.
+- [x] Create a separate website-restricted Maps JavaScript key with authorized localhost and app.workzoneos.org referrers; verified by metadata describe on 2026-09-20.
+- [ ] Connect the new browser key to local V2 securely and add a staging referrer when selected. Keep server credentials separate.
 - [ ] Verify Maps JavaScript and required Street View/geocoding APIs, billing, quotas and live success/error behavior in the correct key-owning project.
 - [ ] Test hybrid/satellite imagery, marker/work-limit overlays and Street View against representative Virginia sites, including missing imagery and incorrect nearby panoramas.
 - [ ] Verify permitted Google imagery display, retention, annotation and PDF/email export; preserve attribution. Implement only permitted exports.
