@@ -13,6 +13,10 @@ Read-only live inspection of `enterprise-gemma2` (project number 910004733138) o
 - Local V2 has no configured `WZOS_GOOGLE_MAPS_BROWSER_KEY`. The existing secret must not be exposed to browsers until its intended use and restrictions are established.
 - No credentials, permissions, billing or deployed services were changed during this inspection.
 
+Follow-up: authenticated Cloud Shell could read the secret in memory, but API Keys lookup returned HTTP 403 / `PERMISSION_DENIED`: `apikeys.keys.lookup` denied for the signed-in `admin@workzoneos.org` account. The key value was not printed or saved locally. Ownership/restrictions remain unresolved. Either obtain authorized lookup access in the owning project or approve a separate restricted V2 browser key. Do not alter the V1 key to work around this.
+
+Proposed separate V2 configuration, pending approval: enable Maps JavaScript in `enterprise-gemma2`; create a browser key restricted to Maps JavaScript and website referrers `http://localhost:8081/*`, `http://127.0.0.1:8081/*` and `https://app.workzoneos.org/*`. Add any staging origin explicitly when it exists. This creates a new credential and should not change legacy credentials or deploy V2. Live use may incur Maps charges.
+
 ## 1. Credentials, Google APIs and costs
 
 - [ ] Identify the stored Maps key's issuing project, current validity, application restrictions, allowed APIs and existing V1 use. Reuse appropriate existing resources before creating replacements.
