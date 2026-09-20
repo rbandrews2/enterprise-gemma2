@@ -5,6 +5,8 @@ import json
 
 def context_hash(draft):
     payload = draft.model_dump(mode="json", exclude={"review_responses"})
+    if payload.get("job_geometry") is None:
+        payload.pop("job_geometry", None)
     return hashlib.sha256(json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
 
 

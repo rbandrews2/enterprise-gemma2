@@ -19,6 +19,8 @@ Optional environment settings: `WZOS_ENVIRONMENT=local` and `WZOS_INFERENCE_BACK
 
 Visit `/v2/workspace` for the [local annotation editor](../../docs/LOCAL_WORKSPACE.md). It edits existing project markers with a coordinate preview; Google imagery is not connected.
 
+The editor now includes [structured job inputs and optional Google site imagery](../../docs/GEOMETRY_AND_GOOGLE_MAPS.md). Google display is disabled until a dedicated browser-restricted `WZOS_GOOGLE_MAPS_BROWSER_KEY` is configured; the coordinate preview remains available without it.
+
 `POST /v2/imagery/streetview/availability` accepts an address or coordinates. Default Google access is disabled; see the [imagery backend](../../docs/IMAGERY_BACKEND.md) for provider injection, response states and remaining image-display work.
 
 The pinned dependency snapshot includes HTTPX for testing. It reproduces this local milestone; it is not a production dependency approval.

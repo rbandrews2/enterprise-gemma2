@@ -23,6 +23,8 @@ No production date is set. Discuss timing with Ray after the recovery and valida
 
 ## Working principles
 
+Structured job geometry and Google site view: see [implementation and setup](GEOMETRY_AND_GOOGLE_MAPS.md). The editor saves reported geometry and Atlas checks its missing fields. Google Maps/Street View loading is implemented but awaits a dedicated browser-restricted key for live verification. No cloud services or credentials were changed.
+
 Atlas response increment: per-finding answers and existing-record explanations are saved in project history. Follow-up preparation distinguishes unanswered, customer-reported, needs-help and stale responses. See [response workflow](ATLAS_RESPONSES.md). Structured intake/geometry updates, reviewed placement rules and Gemma integration remain pending.
 
 Atlas source strategy selected: maintained official documents with controlled internet updates, Virginia first and expansion by demand. The local **Let Atlas help** action now prepares questions, evidence gaps and citation candidates for the saved project; Gemma inference and automatic placements remain pending. See [Atlas workflow](ATLAS_RECOMMENDATIONS.md).

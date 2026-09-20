@@ -24,6 +24,7 @@ async function refresh() {
   } catch (error) { status(error.message); }
 }
 function render() {
+  window.dispatchEvent(new Event("wzos-project"));
   el("atlas").disabled=false;
   el("atlasResults").replaceChildren();
   el("heading").textContent = `${draft.name} · loaded revision ${record.version}${dirty ? " · unsaved draft" : ""}`;
@@ -81,6 +82,7 @@ el("editor").onsubmit=event=>{
 el("remove").onclick=()=>{if(busy) return;if(document.querySelector('form[data-dirty="true"]')){status("Save Atlas responses before removing a marker.");return;}draft.annotations=draft.annotations.filter(a=>a.id!==editing);dirty=true;render();edit();};
 el("save").onclick=async()=>{
   if(busy) return;
+  if(document.querySelector('form[data-dirty="true"]')){status("Save or discard job details and Atlas responses first.");return;}
   if(formDirty) {status("Apply or discard the marker edits before saving.");return;}
   if(!dirty) {status("No applied changes to save.");return;}
   busy=true; el("fields").disabled=true; el("save").disabled=true;
@@ -91,6 +93,7 @@ el("save").onclick=async()=>{
 el("refresh").onclick=refresh;
 el("atlas").onclick=async()=>{
   if(busy || !record) return;
+  if(el("jobEditor").querySelector('form[data-dirty="true"]')){status("Save job details before running Atlas.");return;}
   if(document.querySelector('form[data-dirty="true"]') && !window.confirm("Discard unsaved Atlas responses and refresh?")) return;
   if(dirty || formDirty) {status("Save or discard your edits before asking Atlas to review the saved project.");return;}
   busy=true; el("fields").disabled=true; el("atlas").disabled=true;

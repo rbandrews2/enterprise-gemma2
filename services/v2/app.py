@@ -20,6 +20,7 @@ import sqlite3
 from services.v2.imagery import StreetViewMetadata, ImageryAvailability
 from shared.intake import JobLocation
 from pathlib import Path
+import os
 from fastapi.responses import FileResponse
 
 logger = logging.getLogger(__name__)
@@ -41,6 +42,16 @@ def create_app(settings: Settings | None = None, provider: InferenceProvider | N
     @app.get("/v2/workspace.js", include_in_schema=False)
     def workspace_script():
         return FileResponse(Path(__file__).with_name("workspace.js"), media_type="text/javascript")
+
+    @app.get("/v2/workspace-job.js", include_in_schema=False)
+    def job_script():
+        return FileResponse(Path(__file__).with_name("workspace-job.js"), media_type="text/javascript")
+
+    @app.get("/v2/maps/config")
+    def map_config():
+        # Deliberately separate browser-restricted credential, never the server Maps key.
+        key = os.getenv("WZOS_GOOGLE_MAPS_BROWSER_KEY", "").strip()
+        return JSONResponse({"enabled": bool(key), "browser_key": key or None}, headers={"Cache-Control":"no-store"})
 
     @app.post("/v2/imagery/streetview/availability", response_model=ImageryAvailability)
     def imagery_availability(location: JobLocation):

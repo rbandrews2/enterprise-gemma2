@@ -27,11 +27,25 @@ def prepare(record, knowledge):
         {"id": "duration_visibility", "question": "Confirm work duration, sight distance and visibility constraints."},
         {"id": "local_conditions", "question": "Provide applicable local permits, contract conditions and approved traffic-control plans."},
     ]
+    geometry = draft.job_geometry
+    if geometry:
+        questions = [q for q in questions if q["id"] not in {"closure_geometry", "duration_visibility"}]
+        for field, value, prompt in (
+            ("closure_type", None if geometry.closure_type == "unknown" else geometry.closure_type, "What type of closure is planned?"),
+            ("work_limits", geometry.work_limits or None, "Provide at least two reported work-limit points and their source."),
+            ("lane_width_ft", geometry.lane_width_ft, "Provide the lane width in feet."),
+            ("travel_direction", geometry.travel_direction, "Describe affected travel directions."),
+            ("duration_hours", geometry.duration_hours, "Provide the planned work duration in hours."),
+            ("available_sight_distance_ft", geometry.available_sight_distance_ft, "Provide measured available sight distance in feet."),
+        ):
+            if value is None:
+                questions.append({"id":field,"question":prompt})
+        questions.append({"id":"verify_geometry", "question":"Verify the reported geometry against site measurements before choosing placements."})
     advice = review_project(draft, references.assessment, record["evidence_review"])
     return {
         "project_id": record["project_id"], "project_version": record["version"],
         "project_sha256": record["sha256"], "mode": "source_grounded_preparation",
-        "status": "needs_information" if len(questions) > 3 else "needs_verified_rules",
+        "status": "needs_information" if any(q["id"] not in {"local_conditions", "verify_geometry"} for q in questions) else "needs_verified_rules",
         "model_called": False, "placements": [], "approved_for_field_use": False,
         "questions": questions,
         "project_advice": advice,

@@ -7,6 +7,7 @@ from pydantic import Field, model_validator
 from shared.contracts import StrictModel
 from shared.intake import IntakeRequest
 from shared.annotations import GeographicAnnotation
+from shared.job_geometry import JobGeometry
 
 
 class EvidenceBase(StrictModel):
@@ -82,6 +83,7 @@ class ProjectDraft(StrictModel):
     applicability_notes: list[ApplicabilityNote] = Field(default_factory=list, max_length=100)
     annotations: list[GeographicAnnotation] = Field(default_factory=list, max_length=200)
     review_responses: list[ReviewResponse] = Field(default_factory=list, max_length=200)
+    job_geometry: JobGeometry | None = None
 
     @model_validator(mode="after")
     def unique_evidence(self):

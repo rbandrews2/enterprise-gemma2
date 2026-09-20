@@ -33,6 +33,8 @@ def canonical(draft):
         payload.pop("annotations", None)
     if not payload.get("review_responses"):
         payload.pop("review_responses", None)
+    if payload.get("job_geometry") is None:
+        payload.pop("job_geometry", None)
     return json.dumps(payload, sort_keys=True, separators=(",", ":"))
 
 

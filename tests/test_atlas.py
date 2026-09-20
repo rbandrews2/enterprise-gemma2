@@ -38,6 +38,6 @@ class AtlasTests(unittest.TestCase):
             store=ProjectStore(Path(directory)/'projects.sqlite')
             draft=ProjectDraft.model_validate({'name':'Complete claims','intake':{'work_type':'line_striping','location':{'address':'Example','locality':'Norfolk','road_authority':'Claimed authority'},'project_date':'2026-10-01','site':{'speed_limit_mph':35,'lane_count':2,'pedestrians_present':False,'intersections_present':False,'work_period':'day'},'requested_outputs':['annotated_image']}})
             result=prepare(store.create(draft,'test-key'),Store(Path(directory)/'sources',{}))
-            self.assertEqual(result['status'],'needs_verified_rules')
+            self.assertEqual(result['status'],'needs_information')
             self.assertEqual(len(result['questions']),3)
             self.assertEqual(result['placements'],[])
