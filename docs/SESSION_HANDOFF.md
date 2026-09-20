@@ -14,6 +14,8 @@ Resumed 2026-09-20 at Ray's request. Development remains local; production deplo
 
 ## Resume here
 
+Latest direction: review any relevant missing form/function, not primarily JSA. Atlas preparation now returns categorized project advice with reasons and next actions across context, forms, evidence, deliverables and operations. Unknown external arrangements are not labeled missing. Next is structured answer/form inventory capture so resolved items can be tracked, followed by reviewed rules and model integration.
+
 Atlas preparation increment: **Let Atlas help** now connects a saved project revision to context questions, JSA, evidence review and cited reference candidates. This is deterministic preparation, not Gemma-generated placements. See [Atlas workflow](ATLAS_RECOMMENDATIONS.md). All 70 tests and a browser click-through passed. Next: structured answers/geometry and reviewed placement rules, followed by model integration.
 
 Local editor added: `/v2/workspace` loads projects, edits proposed markers and saves revisions. It uses a clearly labeled coordinate preview without imagery. See [local workspace](LOCAL_WORKSPACE.md). Next: Google map display and usage verification; full product UI remains open.

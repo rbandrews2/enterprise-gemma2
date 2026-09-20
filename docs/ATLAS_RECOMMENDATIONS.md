@@ -8,6 +8,10 @@ The eventual "Let Atlas help" action will identify the governing authority, gath
 
 ## Implemented preparation stage
 
+Atlas reviews the whole project; JSA is one example, not its central purpose. The `project_advice` response groups context, forms, evidence, requested functions and operations. Each item includes a finding, reason, next action, state and priority. Missing inputs, unverified claims, unavailable functions and unknown external arrangements are distinguished. Operational prompts cover crews/equipment/training, scheduling/dispatch/communications/access, and tracking/integrations. They do not claim these capabilities or records already exist in WZOS, or that every job needs them. All current advice is product-policy review guidance, not an agency-backed legal determination.
+
+The form inventory is still incomplete: automated discovery of arbitrary missing forms/functions and Gemma reasoning remain future work. Existing JSA API fields are retained for compatibility, while the interface presents it as one item in the broader review. Customers should be asked about equivalent existing records before being advised to create duplicates.
+
 `POST /v2/projects/{uuid}/atlas/prepare?expected_version=1` prepares the saved revision. A stale version returns 409; missing/invalid version returns 422; missing project returns 404. The normal local-only boundary applies. The response includes project ID, version and payload hash, targeted missing-context questions, JSA recommendation, evidence review, source candidates and explicit blockers. It does not alter the project or persist the response. References reflect the current index, not a frozen historical recommendation snapshot.
 
 The workspace's **Let Atlas help** button calls this endpoint only after pending edits are saved or discarded. It displays source passages, editions, page/section locators, revision hashes, review status and official HTTPS links. A locality name such as Norfolk never causes the system to claim municipal coverage exists.

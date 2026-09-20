@@ -98,8 +98,17 @@ el("atlas").onclick=async()=>{
     const result=await api(`/v2/projects/${record.project_id}/atlas/prepare?expected_version=${record.version}`,{method:"POST"});
     line("h3",`Preparation for revision ${result.project_version}`);
     line("p","Official-reference preparation only. Gemma was not called; no sign or flagger placements were generated.");
-    line("h4","Recommended forms");
-    for(const f of result.form_recommendations) line("p",`${f.title}: ${f.priority.replaceAll("_"," ")} — ${f.reason} (WZOS recommendation; legal requirement not determined.)`);
+    line("h4","Project recommendations and gaps");
+    for(const category of ["project_context","forms","evidence","requested_function","operations"]) {
+      const items=result.project_advice.filter(a=>a.category===category);
+      const group=line("details","");line("summary",`${category.replaceAll("_"," ")} · ${items.length} review items`,group);
+      for(const item of items) {
+        line("h5",item.finding,group);
+        line("p",`Status: ${item.state.replaceAll("_"," ")} · ${item.priority.replaceAll("_"," ")}`,group);
+        line("p",item.reason,group);line("p",`Next: ${item.next_action}`,group);
+      }
+    }
+    line("p","These are project-review suggestions, not verified legal requirements. Unknown items may already be handled outside WZOS.");
     line("h4","Information to confirm");
     const questions=line("ul",""); for(const q of result.questions) line("li",q.question,questions);
     line("h4","Evidence review");

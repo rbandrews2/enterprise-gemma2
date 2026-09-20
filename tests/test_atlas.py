@@ -20,6 +20,8 @@ class AtlasTests(unittest.TestCase):
                 result=response.json()
                 self.assertEqual(result['project_sha256'],record['sha256'])
                 self.assertEqual(result['placements'],[])
+                self.assertIn('operations', {a['category'] for a in result['project_advice']})
+                self.assertTrue(all(a['next_action'] for a in result['project_advice']))
                 self.assertFalse(result['model_called'])
                 self.assertFalse(result['approved_for_field_use'])
                 self.assertEqual(result['form_recommendations'][0]['form_id'],'jsa')

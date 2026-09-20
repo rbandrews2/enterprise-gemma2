@@ -7,8 +7,8 @@ from shared.intake import (
 OUTPUT_GAPS = {
     "work_zone_setup": "Applicable-rule selection, verified roadway geometry, and reviewed sign/flagger placement are not implemented.",
     "required_forms": "Jurisdiction and activity-specific form applicability has not been evaluated.",
-    "recommended_forms": "A JSA recommendation is included; official form selection and generation are not implemented.",
-    "annotated_image": "Actual site imagery, annotation editing, and verified placement are not connected.",
+    "recommended_forms": "Project-specific form inventory, applicability review and form generation are not implemented.",
+    "annotated_image": "Geographic annotation editing exists; actual site imagery and verified placement are not connected.",
     "traffic_overlay": "Geolocated, dated traffic measurements and map rendering are not connected. A photograph alone does not establish traffic volume or current conditions.",
     "pdf_package": "Structured package composition and PDF rendering are not implemented in V2.",
     "email_delivery": "Recipient approval, durable delivery, and an email provider are not connected.",

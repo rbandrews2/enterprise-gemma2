@@ -1,6 +1,7 @@
 """Prepare a traceable review packet; does not claim model-generated placements."""
 from services.v2.planning import discover
 from shared.projects import ProjectDraft
+from services.v2.advice import review_project
 
 
 def prepare(record, knowledge):
@@ -32,6 +33,7 @@ def prepare(record, knowledge):
         "status": "needs_information" if len(questions) > 3 else "needs_verified_rules",
         "model_called": False, "placements": [], "approved_for_field_use": False,
         "questions": questions,
+        "project_advice": review_project(draft, references.assessment, record["evidence_review"]),
         "form_recommendations": [f.model_dump(mode="json") for f in references.assessment.form_recommendations],
         "evidence_review": record["evidence_review"],
         "references": references.model_dump(mode="json"),
