@@ -1,0 +1,4 @@
+# Keep the reproducible Core repair patch and dependency hashes stable on Windows.
+scripts/core_typescript_repairs.patch text eol=lf
+scripts/core-repair-dependencies/package.json text eol=lf
+scripts/core-repair-dependencies/pnpm-lock.yaml text eol=lf
