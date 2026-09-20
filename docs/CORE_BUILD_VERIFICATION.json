@@ -1,0 +1,29 @@
+{
+  "source_revision": "e5d7167bd1834a393fae8e2e19ed8b515f08c0e9",
+  "node": "24.19.0",
+  "pnpm": "11.19.0",
+  "configuration": "synthetic .invalid backend; no production credentials",
+  "dependency_scripts": "disabled",
+  "build_passed": true,
+  "repeat_build_identical": true,
+  "output_files": 98,
+  "typecheck_passed": false,
+  "typecheck_error_count": 6,
+  "audit_counts": {
+    "info": 0,
+    "low": 7,
+    "moderate": 19,
+    "high": 16,
+    "critical": 0
+  },
+  "hashes": {
+    "package-lock.json": "9a43459dc4ea2ea9ae7e76d0c4a5caa0fbd9543e5c26911abd3cbe72ef383139",
+    "pnpm-lock.yaml": "1c9ca97172abbab352e01b30ea4aab9bfb52af1a6e36e3a2d995a62bd74ed814",
+    "baseline-manifest.json": "c87a6ce2cd47c3dca700ac4f02a8f2e7bee13ab45bb951f6158fadec0808bf91"
+  },
+  "limits": [
+    "No authenticated backend or general/admin parity verified",
+    "No external services exercised",
+    "No restore of customer database or objects performed"
+  ]
+}

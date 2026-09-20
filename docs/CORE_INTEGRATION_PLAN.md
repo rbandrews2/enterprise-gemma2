@@ -16,7 +16,7 @@ The fastest safe transition is a source-based rebuild with a temporary compatibi
 
 - Current Core production: `https://app.superiorllc.org`, as supplied by Ray and confirmed in Netlify and the live page.
 - Netlify project `workzoneos`, published deploy `69fe1fe30ce8180923504b8f`, May 8, 2026. Netlify reports deployment through Drop, with build stages skipped; no commit-to-deploy identity was established.
-- Preserved 72 public deployed code/config files locally, including the lazy-loaded JavaScript dependency graph. Hashes and provenance are in `CORE_RECOVERY_MANIFEST.json`. This is not the entire 98-file deployment or a customer-data backup. The full ZIP was requested but has not appeared locally.
+- Initially preserved 72 public deployed code/config files; subsequently recovered and verified the complete 98-file deployment ZIP. Hashes and provenance are in `CORE_RECOVERY_MANIFEST.json` and `CORE_DEPLOY_ARCHIVE_MANIFEST.json`. This frontend archive is not a customer-data or off-device backup.
 - Found editable source in `rbandrews2/dev`, commit `e5d7167bd1834a393fae8e2e19ed8b515f08c0e9` (July 2, 2026). It contains React/TypeScript/Vite, 274 files under `src`, SQL scripts, and 12 Supabase function directories plus shared code. Its date is newer than production; exact parity must be established before importing it as the baseline.
 - Also preserved an older `rbandrews2/work-zone` source checkout locally. It is a historical reference, not the chosen production baseline.
 - The live Core page was signed out. Inspection covered its visible homepage, deployed code, and recovered source. No account was created, license accepted, customer record read/changed, message sent, purchase made or administrative action executed. Backend deployment/schema/RLS, account behavior, billing and real data remain unverified.
@@ -79,7 +79,7 @@ Cost approach: reuse the frontend and relational model; start with a small numbe
 
 ### Immediate next task
 
-Create the source-parity inventory and a clean, isolated Core build from the recovered `dev` source. Resolve the known persistence/error-handling and access-control findings before importing production credentials or data. Do not deploy the downloaded minified files as the permanent V2 foundation.
+The source-parity inventory and isolated Core builds now exist; see [baseline status](CORE_BASELINE_STATUS.md). Next complete live backend inventory after Supabase sign-in, authenticated parity and durable backup. Repair the six TypeScript errors and triage dependency findings in a separate change. Resolve known persistence/error-handling and access-control findings before importing production credentials or data. Do not deploy the downloaded minified files as the permanent V2 foundation.
 
 ## Primary technical references checked
 
