@@ -22,6 +22,8 @@ from shared.intake import JobLocation
 from pathlib import Path
 import os
 from fastapi.responses import FileResponse
+from shared.placement_preview import PlacementPreviewRequest
+from services.v2.placement_preview import preview as placement_preview
 
 logger = logging.getLogger(__name__)
 
@@ -34,6 +36,10 @@ def create_app(settings: Settings | None = None, provider: InferenceProvider | N
     knowledge_store = knowledge_store or Store()
     app = FastAPI(title="WZOS Gemma V2 — local scaffold", version="0.1.0")
     imagery_provider = imagery_provider or StreetViewMetadata()
+
+    @app.post("/v2/placement/reference-preview")
+    def reference_preview(request: PlacementPreviewRequest):
+        return placement_preview(request)
 
     @app.get("/v2/workspace", include_in_schema=False)
     def workspace():
