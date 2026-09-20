@@ -10,7 +10,9 @@ from uuid import uuid4
 from fastapi import APIRouter, Header, HTTPException, Query
 from uuid import UUID
 
-from shared.projects import ProjectDraft, ProjectUpdate
+from shared.projects import ProjectDraft, ProjectUpdate, ReviewResponse, ReviewResponseUpdate
+from services.v2.advice import context_hash, review_project
+from services.v2.intake import assess
 from services.v2.knowledge.models import ROOT
 from services.v2.planning import discover
 from services.v2.atlas import prepare
@@ -29,6 +31,8 @@ def canonical(draft):
     # Keep create retry hashes compatible with projects saved before annotations.
     if not payload.get("annotations"):
         payload.pop("annotations", None)
+    if not payload.get("review_responses"):
+        payload.pop("review_responses", None)
     return json.dumps(payload, sort_keys=True, separators=(",", ":"))
 
 
@@ -200,5 +204,23 @@ def project_router(projects, knowledge):
         if record["version"] != expected_version:
             raise ProjectConflict("project_changed_reload_before_requesting_atlas")
         return prepare(record, knowledge)
+
+    @router.post("/v2/projects/{project_id}/atlas/responses")
+    def save_response(project_id: UUID, request: ReviewResponseUpdate):
+        record = projects.get(project_id)
+        if record["version"] != request.expected_version:
+            raise ProjectConflict("project_changed_reload_before_saving")
+        draft = ProjectDraft.model_validate(record["draft"])
+        if request.context_sha256 != context_hash(draft):
+            raise ProjectConflict("project_context_changed_rerun_atlas")
+        current = review_project(draft, assess(draft.intake), record["evidence_review"])
+        if request.finding_id not in {item["id"] for item in current}:
+            raise HTTPException(422, "unknown_current_finding")
+        response = ReviewResponse.model_validate(request.model_dump(exclude={"expected_version"}))
+        if len(draft.review_responses) >= 200 and not any(r.finding_id == response.finding_id for r in draft.review_responses):
+            raise HTTPException(422, "review_response_limit_reached")
+        draft.review_responses = [r for r in draft.review_responses if r.finding_id != response.finding_id] + [response]
+        draft = ProjectDraft.model_validate(draft.model_dump())
+        return projects.update(project_id, draft, request.expected_version)
 
     return router

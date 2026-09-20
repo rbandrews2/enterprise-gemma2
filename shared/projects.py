@@ -64,15 +64,29 @@ class ApplicabilityNote(StrictModel):
     status: Literal["pending_review"] = "pending_review"
 
 
+class ReviewResponse(StrictModel):
+    finding_id: str = Field(min_length=1, max_length=100)
+    context_sha256: str = Field(pattern=r"^[a-f0-9]{64}$")
+    disposition: Literal["provided", "already_handled", "not_applicable", "needs_help"]
+    note: str = Field(min_length=1, max_length=2000)
+
+
+class ReviewResponseUpdate(ReviewResponse):
+    expected_version: int = Field(ge=1, strict=True)
+
+
 class ProjectDraft(StrictModel):
     name: str = Field(min_length=1, max_length=200)
     intake: IntakeRequest
     evidence: list[Evidence] = Field(default_factory=list, max_length=100)
     applicability_notes: list[ApplicabilityNote] = Field(default_factory=list, max_length=100)
     annotations: list[GeographicAnnotation] = Field(default_factory=list, max_length=200)
+    review_responses: list[ReviewResponse] = Field(default_factory=list, max_length=200)
 
     @model_validator(mode="after")
     def unique_evidence(self):
+        if len({r.finding_id for r in self.review_responses}) != len(self.review_responses):
+            raise ValueError("Review responses must have unique finding IDs")
         if len({e.id for e in self.evidence}) != len(self.evidence):
             raise ValueError("Evidence IDs must be unique within a revision")
         if len({a.id for a in self.annotations}) != len(self.annotations):

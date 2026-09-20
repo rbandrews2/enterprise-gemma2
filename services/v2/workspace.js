@@ -8,7 +8,7 @@ async function api(path, options) {
   if (!response.ok) throw new Error(response.status === 409 ? "Project changed elsewhere. Your draft is retained. Reload to review the latest version before editing again." : `Request failed (${response.status}): ${JSON.stringify(body.detail || body.error || body)}`);
   return body;
 }
-function discard() { return !(dirty || formDirty) || window.confirm("Discard unsaved edits?"); }
+function discard() { return !(dirty || formDirty || document.querySelector('form[data-dirty="true"]')) || window.confirm("Discard unsaved edits?"); }
 async function refresh() {
   if(busy) return;
   try {
@@ -67,6 +67,7 @@ el("new").onclick=()=>{if(!formDirty || window.confirm("Discard unapplied marker
 el("editor").oninput=()=>{formDirty=true;};
 el("editor").onsubmit=event=>{
   event.preventDefault(); if(busy) return; const id=el("markerId").value.trim();
+  if(document.querySelector('form[data-dirty="true"]')){status("Save Atlas responses before applying marker edits.");return;}
   if(!editing && draft.annotations.some(a=>a.id===id)) {status("Choose a unique marker ID.");return;}
   const evidence_ids=Array.from(el("evidence").selectedOptions,o=>o.value);
   const kind=el("kind").value;
@@ -77,7 +78,7 @@ el("editor").onsubmit=event=>{
   draft.annotations=editing ? draft.annotations.map(a=>a.id===editing?marker:a) : [...draft.annotations,marker];
   dirty=true; render(); edit(id); status("Marker applied locally. Save the project revision to persist it.");
 };
-el("remove").onclick=()=>{if(busy) return;draft.annotations=draft.annotations.filter(a=>a.id!==editing);dirty=true;render();edit();};
+el("remove").onclick=()=>{if(busy) return;if(document.querySelector('form[data-dirty="true"]')){status("Save Atlas responses before removing a marker.");return;}draft.annotations=draft.annotations.filter(a=>a.id!==editing);dirty=true;render();edit();};
 el("save").onclick=async()=>{
   if(busy) return;
   if(formDirty) {status("Apply or discard the marker edits before saving.");return;}
@@ -90,6 +91,7 @@ el("save").onclick=async()=>{
 el("refresh").onclick=refresh;
 el("atlas").onclick=async()=>{
   if(busy || !record) return;
+  if(document.querySelector('form[data-dirty="true"]') && !window.confirm("Discard unsaved Atlas responses and refresh?")) return;
   if(dirty || formDirty) {status("Save or discard your edits before asking Atlas to review the saved project.");return;}
   busy=true; el("fields").disabled=true; el("atlas").disabled=true;
   const box=el("atlasResults"); box.replaceChildren();
@@ -97,6 +99,8 @@ el("atlas").onclick=async()=>{
   try {
     const result=await api(`/v2/projects/${record.project_id}/atlas/prepare?expected_version=${record.version}`,{method:"POST"});
     line("h3",`Preparation for revision ${result.project_version}`);
+    line("p",`Responses: ${result.response_summary.unanswered} unanswered · ${result.response_summary.reported_handled} customer-reported · ${result.response_summary.needs_help} need help · ${result.response_summary.stale} need reconfirmation.`);
+    if(result.unmatched_response_ids.length) line("p",`${result.unmatched_response_ids.length} saved responses no longer match current findings; they remain in project history.`);
     line("p","Official-reference preparation only. Gemma was not called; no sign or flagger placements were generated.");
     line("h4","Project recommendations and gaps");
     for(const category of ["project_context","forms","evidence","requested_function","operations"]) {
@@ -106,6 +110,27 @@ el("atlas").onclick=async()=>{
         line("h5",item.finding,group);
         line("p",`Status: ${item.state.replaceAll("_"," ")} · ${item.priority.replaceAll("_"," ")}`,group);
         line("p",item.reason,group);line("p",`Next: ${item.next_action}`,group);
+        line("p",`Response: ${item.response_state.replaceAll("_"," ")} — not independently verified`,group);
+        const form=line("form","",group);
+        const choiceLabel=line("label","Your response",form);const choice=line("select","",choiceLabel);
+        for(const [value,title] of [["provided","Information provided"],["already_handled","Already handled"],["not_applicable","Not applicable — explain why"],["needs_help","I need help"]]) choice.add(new Option(title,value));
+        choice.value=item.customer_response?.disposition || "provided";
+        const noteLabel=line("label","Explanation or existing record reference",form);const note=line("textarea","",noteLabel);
+        note.required=true;note.maxLength=2000;note.value=item.customer_response?.note || "";
+        note.oninput=()=>{form.dataset.dirty="true";};choice.onchange=()=>{form.dataset.dirty="true";};
+        const submit=line("button","Save response",form);submit.type="submit";
+        form.onsubmit=async event=>{
+          event.preventDefault();if(busy)return;
+          if(dirty||formDirty){status("Save marker edits first.");return;}
+          if(!note.value.trim()){status("Explain the response before saving.");return;}
+          busy=true;submit.disabled=true;el("fields").disabled=true;
+          try {
+            const saved=await api(`/v2/projects/${record.project_id}/atlas/responses`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({finding_id:item.id,context_sha256:item.context_sha256,disposition:choice.value,note:note.value.trim(),expected_version:record.version})});
+            record=saved;draft=structuredClone(saved.draft);form.dataset.dirty="false";
+            el("heading").textContent=`${draft.name} · loaded revision ${record.version}`;
+            status(`Response saved in revision ${record.version}. Run Let Atlas help again to refresh the review.`);
+          }catch(error){status(error.message);}finally{busy=false;submit.disabled=false;el("fields").disabled=false;}
+        };
       }
     }
     line("p","These are project-review suggestions, not verified legal requirements. Unknown items may already be handled outside WZOS.");
@@ -129,5 +154,5 @@ el("atlas").onclick=async()=>{
     status("Atlas preparation complete. Review questions and sources below; no placements were changed.");
   } catch(error) {status(error.message);} finally {busy=false;el("fields").disabled=false;el("atlas").disabled=false;}
 };
-window.addEventListener("beforeunload",event=>{if(dirty||formDirty){event.preventDefault();event.returnValue="";}});
+window.addEventListener("beforeunload",event=>{if(dirty||formDirty||document.querySelector('form[data-dirty="true"]')){event.preventDefault();event.returnValue="";}});
 refresh();

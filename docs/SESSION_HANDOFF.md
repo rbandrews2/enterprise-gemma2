@@ -14,6 +14,8 @@ Resumed 2026-09-20 at Ray's request. Development remains local; production deplo
 
 ## Resume here
 
+Completed response capture and follow-up review: customers can save per-finding notes/dispositions in project revisions; Atlas reconciles them on the next run and flags context changes for reconfirmation. See [Atlas responses](ATLAS_RESPONSES.md). All 73 tests and the browser save/review flow passed. Next: structured intake/geometry answer capture and a reviewed placement-rule contract, then model integration. Free-text responses do not fill those fields automatically.
+
 Latest direction: review any relevant missing form/function, not primarily JSA. Atlas preparation now returns categorized project advice with reasons and next actions across context, forms, evidence, deliverables and operations. Unknown external arrangements are not labeled missing. Next is structured answer/form inventory capture so resolved items can be tracked, followed by reviewed rules and model integration.
 
 Atlas preparation increment: **Let Atlas help** now connects a saved project revision to context questions, JSA, evidence review and cited reference candidates. This is deterministic preparation, not Gemma-generated placements. See [Atlas workflow](ATLAS_RECOMMENDATIONS.md). All 70 tests and a browser click-through passed. Next: structured answers/geometry and reviewed placement rules, followed by model integration.

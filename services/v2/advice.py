@@ -1,4 +1,11 @@
 """Cross-workflow gap review. Product suggestions are not legal determinations."""
+import hashlib
+import json
+
+
+def context_hash(draft):
+    payload = draft.model_dump(mode="json", exclude={"review_responses"})
+    return hashlib.sha256(json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
 
 
 def review_project(draft, assessment, evidence_review):
@@ -18,8 +25,8 @@ def review_project(draft, assessment, evidence_review):
             "needs_input" if item.category == "missing_information" else "review",
             "missing" if item.category == "missing_information" else "unverified")
 
-    for index, issue in enumerate(evidence_review["issues"]):
-        add(f"evidence_{index}", "evidence", issue,
+    for issue in evidence_review["issues"]:
+        add("evidence_" + hashlib.sha256(issue.encode()).hexdigest()[:24], "evidence", issue,
             "Planning decisions need relevant, traceable site evidence.",
             "Supply or verify the evidence and resolve discrepancies.", state="unverified")
 
@@ -46,4 +53,14 @@ def review_project(draft, assessment, evidence_review):
         add("form_" + form.form_id, "forms", form.title + " is a suggested review item.",
             form.reason, "Check whether an equivalent current record already exists before creating another.",
             priority="recommended")
+    digest = context_hash(draft)
+    responses = {r.finding_id: r for r in draft.review_responses}
+    for item in advice:
+        response = responses.get(item["id"])
+        item["context_sha256"] = digest
+        item["customer_response"] = response.model_dump() if response else None
+        item["response_state"] = ("unanswered" if response is None else
+                                  "stale" if response.context_sha256 != digest else
+                                  "needs_help" if response.disposition == "needs_help" else "reported_handled")
+        item["verification_status"] = "not_verified"
     return advice

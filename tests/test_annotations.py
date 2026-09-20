@@ -56,7 +56,7 @@ class AnnotationTests(unittest.TestCase):
 
     def test_legacy_create_hash_unchanged(self):
         draft = ProjectDraft.model_validate(DRAFT)
-        legacy = draft.model_dump(mode="json", exclude={"annotations"})
+        legacy = draft.model_dump(mode="json", exclude={"annotations", "review_responses"})
         encoded = json.dumps(legacy, sort_keys=True, separators=(",", ":"))
         self.assertEqual(canonical(draft), encoded)
         self.assertEqual(ProjectDraft.model_validate_json(encoded).annotations, [])

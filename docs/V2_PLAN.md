@@ -23,6 +23,8 @@ No production date is set. Discuss timing with Ray after the recovery and valida
 
 ## Working principles
 
+Atlas response increment: per-finding answers and existing-record explanations are saved in project history. Follow-up preparation distinguishes unanswered, customer-reported, needs-help and stale responses. See [response workflow](ATLAS_RESPONSES.md). Structured intake/geometry updates, reviewed placement rules and Gemma integration remain pending.
+
 Atlas source strategy selected: maintained official documents with controlled internet updates, Virginia first and expansion by demand. The local **Let Atlas help** action now prepares questions, evidence gaps and citation candidates for the saved project; Gemma inference and automatic placements remain pending. See [Atlas workflow](ATLAS_RECOMMENDATIONS.md).
 
 Local annotation editor: `/v2/workspace` now edits saved project markers and links evidence, with revision-safe saves and a coordinate-only preview. Google imagery and a final customer UI remain pending. See [local workspace](LOCAL_WORKSPACE.md).

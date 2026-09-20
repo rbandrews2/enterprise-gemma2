@@ -20,6 +20,8 @@ This stage is deterministic preparation: `model_called=false`, `placements=[]`, 
 
 ## Validation and next steps
 
+Response capture and follow-up review are now implemented: see [Atlas responses](ATLAS_RESPONSES.md). Customer notes remain unverified; they neither suppress underlying warnings nor approve recommendations.
+
 All 70 V2 tests passed. Tests cover missing library behavior, omitted JSA, missing context, supplied-but-unverified context, version conflicts and unchanged projects. Browser testing against the local indexed library showed 13 reference candidates across five topics for a synthetic Norfolk striping project, with JSA, evidence gaps and no generated placements. No model or external imagery calls were made.
 
 Next: structured closure/geometry inputs and answer capture; locality source verification; reviewed rules with table/diagram extraction; model adapter and output validation; geographic rendering on permitted imagery; persisted recommendation snapshots and qualified review. Production deployment remains separate.
