@@ -4,6 +4,10 @@ Decision proposal, 2026-09-20. Owner: Molecular Project Development LLC. No prod
 
 ## Recommendation
 
+### Confirmed product direction — 2026-09-20
+
+Ray selected `https://app.workzoneos.org` as the eventual shared Core/Enterprise application address. `https://workzoneos.org` will carry product explanations and module/function descriptions. Design the signed-in application as a task-focused workspace with persistent navigation, direct access to tools, compact project context and responsive mobile layouts. Keep promotional sections and long module introductions on the public website; retain contextual help where it supports a task. This direction does not authorize a production cutover or replacement of the existing V1 deployment yet.
+
 Reuse the editable Core React application and migrate it in stages into `enterprise-gemma2`. Keep one frontend, one organization/account model and a shared API. Treat Core and Enterprise as organization entitlements, with general and admin permissions inside each edition. Enterprise includes Core capabilities plus advanced Atlas workflows. Rebuild deficient modules selectively; do not recreate the whole product or maintain separate edition forks.
 
 The fastest safe transition is a source-based rebuild with a temporary compatibility adapter for the existing backend. Hosting the frontend on Google Cloud while it still calls Supabase is only an intermediate milestone. The final target moves application compute, data, files, identity and operational configuration to Google Cloud. External providers such as Maps, payments and video meetings remain integrations where appropriate.
@@ -58,7 +62,7 @@ Use server-validated identity plus membership, edition entitlements and action-l
 - **Cloud Storage and Secret Manager:** private attachments/source documents and service credentials, with access mediated by the application. Keep static presentation assets separate from customer evidence.
 - **Background jobs:** introduce Cloud Tasks or equivalent only where needed for exports, delivery and retries; avoid provisioning extra infrastructure before load and requirements justify it.
 
-One customer-facing domain should ultimately serve both editions. Final canonical hostname is not yet selected. Keep `app.superiorllc.org` working during migration; account for `app.workzoneos.org` separately and avoid replacing its live V1 prematurely. Domain moves affect localStorage, service workers, cookies, login callbacks and Maps referrers.
+The selected application hostname is `app.workzoneos.org`, serving both editions. Keep `app.superiorllc.org` working during migration and preserve the existing V1 at `app.workzoneos.org` until the approved cutover. Domain moves affect localStorage, service workers, cookies, login callbacks and Maps referrers.
 
 Cost approach: reuse the frontend and relational model; start with a small number of services, bounded instances/connections, on-demand Atlas calls and measured request costs. Cloud SQL has a running-instance cost and continuing storage charges, so size from real usage and retain the existing backend only during the limited transition. Do not self-host the entire Supabase stack by default: it adds operational components and maintenance. No new paid resources are provisioned in this plan.
 
