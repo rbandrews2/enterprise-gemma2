@@ -24,6 +24,13 @@ class PlacementReadinessTests(unittest.TestCase):
             'lane_width_ft':12,'available_sight_distance_ft':0,'travel_direction':'northbound',
             'geometry_source':'customer sketch','work_limits':[{'latitude':36.85,'longitude':-76.28},{'latitude':36.851,'longitude':-76.28}]}})
         result = assess_placement(draft, SimpleNamespace(topics=[SimpleNamespace(candidates=[object()])]))
+        self.assertEqual(result['status'], 'missing_inputs')
+        from shared.job_geometry import MeasuredApproach
+        draft.job_geometry.approaches=[MeasuredApproach(id='north',travel_direction='northbound',
+            measurement_source='Example measurements',measured_on='2026-01-01',
+            path=draft.job_geometry.work_limits,available_sight_distance_ft=0,lane_width_ft=12,
+            obstruction_notes='Needs field review')]
+        result = assess_placement(draft, SimpleNamespace(topics=[SimpleNamespace(candidates=[object()])]))
         self.assertEqual(result['status'], 'review_required')
         self.assertEqual(result['reference_candidate_count'], 1)
         self.assertEqual(result['reviewed_rule_count'], 0)

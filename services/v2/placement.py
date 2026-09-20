@@ -23,6 +23,7 @@ def assess_placement(draft, references):
     reported("duration", bool(geometry and geometry.duration_hours is not None), "Confirm duration and whether the operation moves along the road.")
     reported("pedestrians", site.pedestrians_present is not None, "Verify pedestrian and accessible-route needs.")
     reported("intersections", site.intersections_present is not None, "Verify intersecting streets, driveways and access constraints.")
+    reported("measured_approaches", bool(geometry and geometry.approaches), "Provide dated approach paths, travel direction, lane width, sight distance and obstruction notes; verify measurements in the field.")
     # These cannot become approved from customer text or a keyword match.
     for identifier, action in (
         ("edition_applicability", "Review governing editions, permit/contract exceptions and local requirements."),

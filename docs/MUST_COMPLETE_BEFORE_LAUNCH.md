@@ -49,6 +49,8 @@ Approved setup completed 2026-09-20: enabled Maps JavaScript and API Keys API in
 
 ## 4. Production security and operations
 
+- [ ] Complete the Core/Enterprise consolidation gates in [Core integration plan](CORE_INTEGRATION_PLAN.md): exact source baseline, full deployment/media backup, actual backend schema/auth/object inventory, edition/organization permissions, parity tests, staged migration and rollback. Core currently serves at `app.superiorllc.org`; final shared hostname is undecided. Resolve internal audit findings before importing production credentials/data.
+
 - [ ] Replace the local-only boundary with tested customer authentication, organization isolation, roles and record-level authorization. Decide customer access beyond the current workzoneos.org-only V1 access.
 - [ ] Choose production persistence and migration strategy; test concurrency, backups, restore, retention and data deletion. Local SQLite and ignored data are not backed up by GitHub.
 - [ ] Back up preserved recovery archives and source/project data to a durable approved location and verify restoration.

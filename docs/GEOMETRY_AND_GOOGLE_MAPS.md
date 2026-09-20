@@ -30,6 +30,14 @@ Official documentation checked 2026-09-20:
 
 ## Verification
 
+### Scenario and measured approaches — 2026-09-20
+
+The job editor now saves an explicit reference scenario and road classification. Stationary-shoulder selection requires the shoulder closure type. Up to eight named approaches each preserve an ordered upstream-to-work-area path, travel direction, measurement source/date, lane width, sight distance and obstruction/access notes. Future measurement dates, blank descriptions, duplicate IDs, invalid coordinates and consecutive duplicate points are rejected. Measurements remain customer reports, not verified engineering geometry. Blue approach polylines are added to an already-loaded Google map; work limits remain orange. The live Google rendering of the new approach lines has not yet been tested.
+
+**Preview source table values** uses the saved scenario, road class and posted speed. It refuses unsaved edits, labels the saved revision, shows supported table values with page/hash citation, and keeps all limitations visible. It never generates markers. Optional new geometry fields are omitted when unused to preserve earlier project hashes and Atlas response fingerprints. Save operations preserve existing project evidence and history.
+
+All 84 tests passed, including persistence/conflicts, validation, legacy hash compatibility and placement gating. A browser test on an isolated synthetic project saved measurements into revision 2 and successfully displayed the cited preview. The test server was stopped; no production data changed.
+
 All 76 V2 tests passed, including geometry validation, compatibility and browser/server credential separation. Browser testing saved a synthetic two-point line with a source reference in revision 2 and verified the explicit missing-key state. Successful live map/Street View rendering, production referrer restrictions, quota behavior and imagery export permissions remain to be verified with the configured Google project. Tests did not call paid APIs.
 
 ## Live Maps verification — 2026-09-20
