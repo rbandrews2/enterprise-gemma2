@@ -13,6 +13,7 @@ from uuid import UUID
 from shared.projects import ProjectDraft, ProjectUpdate
 from services.v2.knowledge.models import ROOT
 from services.v2.planning import discover
+from services.v2.atlas import prepare
 
 
 class ProjectMissing(Exception):
@@ -192,5 +193,12 @@ def project_router(projects, knowledge):
                 "properties": a.model_dump(exclude={"id", "longitude", "latitude"}),
             } for a in draft.annotations],
         }
+
+    @router.post("/v2/projects/{project_id}/atlas/prepare")
+    def atlas_prepare(project_id: UUID, expected_version: int = Query(..., ge=1)):
+        record = projects.get(project_id)
+        if record["version"] != expected_version:
+            raise ProjectConflict("project_changed_reload_before_requesting_atlas")
+        return prepare(record, knowledge)
 
     return router

@@ -24,6 +24,8 @@ async function refresh() {
   } catch (error) { status(error.message); }
 }
 function render() {
+  el("atlas").disabled=false;
+  el("atlasResults").replaceChildren();
   el("heading").textContent = `${draft.name} · loaded revision ${record.version}${dirty ? " · unsaved draft" : ""}`;
   el("markers").replaceChildren();
   const svg = el("plot"); svg.replaceChildren();
@@ -86,5 +88,37 @@ el("save").onclick=async()=>{
   } catch(error) {status(error.message);} finally {busy=false;el("fields").disabled=false;el("save").disabled=false;}
 };
 el("refresh").onclick=refresh;
+el("atlas").onclick=async()=>{
+  if(busy || !record) return;
+  if(dirty || formDirty) {status("Save or discard your edits before asking Atlas to review the saved project.");return;}
+  busy=true; el("fields").disabled=true; el("atlas").disabled=true;
+  const box=el("atlasResults"); box.replaceChildren();
+  function line(tag,text,parent=box) {const node=document.createElement(tag);node.textContent=text;parent.append(node);return node;}
+  try {
+    const result=await api(`/v2/projects/${record.project_id}/atlas/prepare?expected_version=${record.version}`,{method:"POST"});
+    line("h3",`Preparation for revision ${result.project_version}`);
+    line("p","Official-reference preparation only. Gemma was not called; no sign or flagger placements were generated.");
+    line("h4","Recommended forms");
+    for(const f of result.form_recommendations) line("p",`${f.title}: ${f.priority.replaceAll("_"," ")} — ${f.reason} (WZOS recommendation; legal requirement not determined.)`);
+    line("h4","Information to confirm");
+    const questions=line("ul",""); for(const q of result.questions) line("li",q.question,questions);
+    line("h4","Evidence review");
+    const issues=line("ul",""); for(const issue of result.evidence_review.issues) line("li",issue,issues);
+    line("h4","Official reference candidates — applicability unresolved");
+    for(const topic of result.references.topics) {
+      const details=line("details",""); line("summary",`${topic.id.replaceAll("_"," ")} · ${topic.candidates.length} candidates`,details);
+      if(!topic.candidates.length) line("p","No usable reference found. This does not mean no requirement applies.",details);
+      for(const c of topic.candidates) {
+        line("h5",`${c.agency}: ${c.title}`,details);
+        line("p",`Edition: ${c.edition || "unknown"}; page: ${c.page ?? "n/a"}; section: ${c.section || "n/a"}; review: ${c.review_status}; revision: ${c.revision}`,details);
+        line("p",c.text,details);
+        try {const url=new URL(c.url);if(url.protocol==="https:"){const link=line("a","Official source",details);link.href=url.href;link.target="_blank";link.rel="noopener noreferrer";}} catch {}
+      }
+    }
+    line("h4","Remaining gaps");
+    const gaps=line("ul","");for(const gap of [...result.blockers,...result.references.coverage_gaps]) line("li",gap,gaps);
+    status("Atlas preparation complete. Review questions and sources below; no placements were changed.");
+  } catch(error) {status(error.message);} finally {busy=false;el("fields").disabled=false;el("atlas").disabled=false;}
+};
 window.addEventListener("beforeunload",event=>{if(dirty||formDirty){event.preventDefault();event.returnValue="";}});
 refresh();

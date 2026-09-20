@@ -23,6 +23,8 @@ No production date is set. Discuss timing with Ray after the recovery and valida
 
 ## Working principles
 
+Atlas source strategy selected: maintained official documents with controlled internet updates, Virginia first and expansion by demand. The local **Let Atlas help** action now prepares questions, evidence gaps and citation candidates for the saved project; Gemma inference and automatic placements remain pending. See [Atlas workflow](ATLAS_RECOMMENDATIONS.md).
+
 Local annotation editor: `/v2/workspace` now edits saved project markers and links evidence, with revision-safe saves and a coordinate-only preview. Google imagery and a final customer UI remain pending. See [local workspace](LOCAL_WORKSPACE.md).
 
 Geographic annotation increment (2026-09-20): project revisions now save proposed sign, flagger, work-area and traffic-observation points, validate evidence links, and expose versioned GeoJSON. No provider calls or cloud costs are introduced. See [annotation contract](GEOGRAPHIC_ANNOTATIONS.md). Road geometry, automatic placement and map UI remain pending.
