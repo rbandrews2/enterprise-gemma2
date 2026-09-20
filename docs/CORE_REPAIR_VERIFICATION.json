@@ -1,0 +1,20 @@
+{
+  "source_revision": "e5d7167bd1834a393fae8e2e19ed8b515f08c0e9",
+  "typecheck_passed": true,
+  "vite_build_passed": true,
+  "browser_shell_passed": true,
+  "signed_out_admin_redirect_passed": true,
+  "synthetic_backend_only": true,
+  "audit_findings": {
+    "critical": 0,
+    "high": 0,
+    "moderate": 2,
+    "low": 0
+  },
+  "fresh_export_matches_tested_sources_and_locks": true,
+  "hashes": {
+    "package.json": "bb85a01fd70dfacbab196ec1973c12bab3882ea55a6acc8efdf3bc540de787b6",
+    "pnpm-lock.yaml": "9774e70b8739caed02d0cdcf2168e311fb29a341b491d4dccd18f7e9557dd2e9"
+  },
+  "authenticated_regression": "blocked pending test backend and test identities"
+}

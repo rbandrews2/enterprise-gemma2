@@ -1,0 +1,57 @@
+--- a/src/components/ui/LiquidGlassCard.tsx
++++ b/src/components/ui/LiquidGlassCard.tsx
+@@ -21,7 +21,7 @@
+   disabled = false,
+   statusText,
+ }: Props) {
+-  const cardRef = useRef<HTMLDivElement | null>(null);
++  const cardRef = useRef<HTMLAnchorElement | HTMLButtonElement | null>(null);
+   const timeoutRef = useRef<number | null>(null);
+   const [offsetY, setOffsetY] = useState(0);
+   const [clicked, setClicked] = useState(false);
+@@ -119,7 +119,9 @@
+   };
+ 
+   const sharedProps = {
+-    ref: cardRef,
++    ref: (node: HTMLAnchorElement | HTMLButtonElement | null) => {
++      cardRef.current = node;
++    },
+     className,
+     style,
+     onPointerDown: disabled ? undefined : triggerGlow,
+--- a/src/pages/forms/CompanyForms.tsx
++++ b/src/pages/forms/CompanyForms.tsx
+@@ -6,7 +6,9 @@
+ import { usePermissions } from "@/hooks/usePermissions";
+ import SignInGate from "@/components/auth/SignInGate";
+ import { Building2 } from "lucide-react";
+-import type { FileObject } from "@supabase/storage-js";
++// Infer the storage response through the declared Supabase client dependency.
++type StorageBucket = ReturnType<typeof supabase.storage.from>;
++type FileObject = NonNullable<Awaited<ReturnType<StorageBucket["list"]>>["data"]>[number];
+ 
+ type CompanyFormsProps = {
+   adminMode?: boolean;
+--- a/src/pages/Home.tsx
++++ b/src/pages/Home.tsx
+@@ -1,3 +1,4 @@
++import type { ReactNode } from "react";
+ import { useNavigate } from "react-router-dom";
+ import LiquidGlassCard from "@/components/ui/LiquidGlassCard";
+ import { toast } from "sonner";
+@@ -14,7 +15,13 @@
+ export default function Home() {
+   const navigate = useNavigate();
+ 
+-  const cards = [
++  const cards: Array<{
++    title: string;
++    subtitle: string;
++    icon: ReactNode;
++    onClick: () => void;
++    locked?: boolean;
++  }> = [
+     {
+       title: "Organization",
+       subtitle: "Create or manage your workspace",

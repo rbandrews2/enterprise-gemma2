@@ -49,6 +49,9 @@ Approved setup completed 2026-09-20: enabled Maps JavaScript and API Keys API in
 
 ## 4. Production security and operations
 
+- [ ] Restore Ray's Supabase administrative access through the provider's normal 2FA/account-recovery process. Current blocker: authenticator-app issue reported by Ray. After access is restored, inventory live schema, policies, functions, auth and storage; verify database/object backup and restore before migration. Continue local work with synthetic configuration while this is blocked.
+- [ ] Complete the separately tested React Router upgrade and authenticated regressions after Core dependency refresh. The local repair candidate fixes six TypeScript errors and reduces the dependency audit to two moderate router findings; see [repair status](CORE_REPAIR_STATUS.md). This is not production security approval.
+
 - [ ] Complete the Core/Enterprise consolidation gates in [Core integration plan](CORE_INTEGRATION_PLAN.md): source baseline reconciliation, actual backend schema/auth/object inventory, edition/organization permissions, parity tests, staged migration and rollback. Full 98-file frontend archive and repeated local builds are verified; see [baseline status](CORE_BASELINE_STATUS.md). Resolve six TypeScript errors and triage dependency audit findings before import acceptance. Core currently serves at `app.superiorllc.org`; the selected future shared app hostname is `app.workzoneos.org`. Resolve internal audit findings before importing production credentials/data.
 
 - [ ] Replace the local-only boundary with tested customer authentication, organization isolation, roles and record-level authorization. Decide customer access beyond the current workzoneos.org-only V1 access.

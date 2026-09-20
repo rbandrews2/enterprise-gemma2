@@ -79,7 +79,7 @@ Cost approach: reuse the frontend and relational model; start with a small numbe
 
 ### Immediate next task
 
-The source-parity inventory and isolated Core builds now exist; see [baseline status](CORE_BASELINE_STATUS.md). Next complete live backend inventory after Supabase sign-in, authenticated parity and durable backup. Repair the six TypeScript errors and triage dependency findings in a separate change. Resolve known persistence/error-handling and access-control findings before importing production credentials or data. Do not deploy the downloaded minified files as the permanent V2 foundation.
+The source-parity inventory, isolated Core builds and a separate type/dependency repair candidate now exist; see [baseline status](CORE_BASELINE_STATUS.md) and [repair status](CORE_REPAIR_STATUS.md). Supabase account recovery is blocked by Ray's 2FA app issue. Continue a synthetic-data app workspace while live inventory, authenticated parity and durable backup remain pending. Complete the separately tested router upgrade and resolve known persistence/error-handling and access-control findings before importing production credentials or data. Do not deploy the downloaded minified files as the permanent V2 foundation.
 
 ## Primary technical references checked
 

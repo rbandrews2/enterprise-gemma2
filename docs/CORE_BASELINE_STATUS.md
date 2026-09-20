@@ -1,5 +1,7 @@
 # Core recovery baseline — 2026-09-20
 
+This document records the unchanged recovered baseline. The subsequent repair candidate fixes its six TypeScript errors and reduces the dependency audit to two moderate findings; see [repair status](CORE_REPAIR_STATUS.md).
+
 ## Completed evidence
 
 - Full Netlify deploy `69fe1fe30ce8180923504b8f` ZIP is preserved under ignored `.local-recovery/core-netlify/`. All 98 file CRC checks pass; the copied archive matches the download by SHA-256. See `CORE_DEPLOY_ARCHIVE_MANIFEST.json` for file hashes. This is a frontend backup, not a database backup or an off-device backup.

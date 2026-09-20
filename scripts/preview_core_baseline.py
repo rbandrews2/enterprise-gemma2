@@ -3,6 +3,7 @@
 This inspection server is not a deployment server or an authenticated backend.
 """
 from functools import partial
+import argparse
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlsplit
@@ -38,6 +39,12 @@ class Handler(SimpleHTTPRequestHandler):
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--name", default="core-build-baseline")
+    args = parser.parse_args()
+    if not args.name or any(c not in "abcdefghijklmnopqrstuvwxyz0123456789-_" for c in args.name):
+        parser.error("name must contain lowercase letters, digits, hyphen or underscore")
+    BUILD = BUILD.parents[1] / args.name / "dist"
     if not (BUILD / "index.html").is_file():
         raise SystemExit("Build the isolated baseline first.")
     print("Core inspection only: http://127.0.0.1:8082; external requests blocked", flush=True)
