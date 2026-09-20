@@ -17,6 +17,8 @@ Open http://127.0.0.1:8081/docs to try the preview. Use invented demonstration i
 
 Optional environment settings: `WZOS_ENVIRONMENT=local` and `WZOS_INFERENCE_BACKEND=deterministic_local`. Other values fail startup. The V1 requirements, main.py, and deployment scripts are separate and unchanged.
 
+Visit `/v2/workspace` for the [local annotation editor](../../docs/LOCAL_WORKSPACE.md). It edits existing project markers with a coordinate preview; Google imagery is not connected.
+
 `POST /v2/imagery/streetview/availability` accepts an address or coordinates. Default Google access is disabled; see the [imagery backend](../../docs/IMAGERY_BACKEND.md) for provider injection, response states and remaining image-display work.
 
 The pinned dependency snapshot includes HTTPX for testing. It reproduces this local milestone; it is not a production dependency approval.

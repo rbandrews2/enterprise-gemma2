@@ -14,6 +14,8 @@ Resumed 2026-09-20 at Ray's request. Development remains local; production deplo
 
 ## Resume here
 
+Local editor added: `/v2/workspace` loads projects, edits proposed markers and saves revisions. It uses a clearly labeled coordinate preview without imagery. See [local workspace](LOCAL_WORKSPACE.md). Next: Google map display and usage verification; full product UI remains open.
+
 2026-09-20 increment: project revisions now preserve proposed geographic point annotations and evidence links. A version-selectable GeoJSON endpoint exposes them for future maps. See [geographic annotations](GEOGRAPHIC_ANNOTATIONS.md). Next is map display/editing and Google usage verification before enabling imagery retrieval/export.
 
 1. Check branch, working tree, and this handoff against current code before making changes.

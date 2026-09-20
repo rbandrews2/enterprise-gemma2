@@ -19,6 +19,8 @@ from services.v2.projects import ProjectStore, ProjectMissing, ProjectConflict, 
 import sqlite3
 from services.v2.imagery import StreetViewMetadata, ImageryAvailability
 from shared.intake import JobLocation
+from pathlib import Path
+from fastapi.responses import FileResponse
 
 logger = logging.getLogger(__name__)
 
@@ -31,6 +33,14 @@ def create_app(settings: Settings | None = None, provider: InferenceProvider | N
     knowledge_store = knowledge_store or Store()
     app = FastAPI(title="WZOS Gemma V2 — local scaffold", version="0.1.0")
     imagery_provider = imagery_provider or StreetViewMetadata()
+
+    @app.get("/v2/workspace", include_in_schema=False)
+    def workspace():
+        return FileResponse(Path(__file__).with_name("workspace.html"), headers={"Cache-Control": "no-store"})
+
+    @app.get("/v2/workspace.js", include_in_schema=False)
+    def workspace_script():
+        return FileResponse(Path(__file__).with_name("workspace.js"), media_type="text/javascript")
 
     @app.post("/v2/imagery/streetview/availability", response_model=ImageryAvailability)
     def imagery_availability(location: JobLocation):

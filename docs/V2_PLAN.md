@@ -23,6 +23,8 @@ No production date is set. Discuss timing with Ray after the recovery and valida
 
 ## Working principles
 
+Local annotation editor: `/v2/workspace` now edits saved project markers and links evidence, with revision-safe saves and a coordinate-only preview. Google imagery and a final customer UI remain pending. See [local workspace](LOCAL_WORKSPACE.md).
+
 Geographic annotation increment (2026-09-20): project revisions now save proposed sign, flagger, work-area and traffic-observation points, validate evidence links, and expose versioned GeoJSON. No provider calls or cloud costs are introduced. See [annotation contract](GEOGRAPHIC_ANNOTATIONS.md). Road geometry, automatic placement and map UI remain pending.
 
 Imagery increment: the local `/v2/imagery/streetview/availability` endpoint and Google metadata adapter now distinguish available, missing, failed and disabled imagery access. Google access is disabled by default; no image storage or placement is implemented. See [imagery backend](IMAGERY_BACKEND.md). All 62 V2 tests and a real loopback HTTP check passed.
