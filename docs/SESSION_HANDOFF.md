@@ -1,6 +1,16 @@
 # WZOS V2 pause and resume handoff
 
-Resumed 2026-09-20 at Ray's request. Development remains local; production deployment is not scheduled.
+Paused 2026-09-20 at Ray's request. Development remains local; production deployment is not scheduled.
+
+## Current pause checkpoint — read first
+
+- Latest code checkpoint: `b711b41` on `enterprise-v2`, following repair commit `d53cc85`. Both pushed to GitHub. The sections below retain chronological history; older counts and pending items are superseded by this checkpoint.
+- Core recovery: complete 98-file Netlify archive verified locally; 309-file source export preserved. Separate Core repair candidate passes TypeScript, Vite production build and local shell/guest-admin redirect checks. All six original type errors are fixed; dependency audit now reports two moderate React Router advisories, zero high/critical. The existing V2 suite last passed all 84 tests during the recovery increment.
+- Resume with `docs/CORE_REPAIR_STATUS.md`, `docs/CORE_INTEGRATION_PLAN.md` and `docs/MUST_COMPLETE_BEFORE_LAUNCH.md`, then verify Git status before editing. Next local milestone: app-style Core/Enterprise workspace with synthetic organizations, test identities and records, followed by one complete saved work-order workflow. Keep test identity handling separate from production authentication.
+- Domain/design decision: `workzoneos.org` contains product/module explanations; `app.workzoneos.org` is the future shared functional app. Both editions have general/admin roles. Preserve current Core at `app.superiorllc.org` and V1 at `app.workzoneos.org` until an approved cutover.
+- Blockers/open gates: Ray's Supabase 2FA-app issue prevents live backend inventory and backup. Do not repeatedly ask for sign-in or bypass authentication. Authenticated parity, off-device backup/restore and a tested router major upgrade remain open.
+- Recovery archives, original source, local databases and credentials remain in ignored local directories; GitHub preserves code, repair patch, tested dependency lock, manifests and plans, not those local materials. Off-device backup is not complete.
+- Temporary Core preview servers were stopped and verification tabs closed. No production deployment, DNS change, cloud migration, customer-data change or Cloud Shell checkout update occurred. No automatic continuation is scheduled; wait for Ray to resume.
 
 ## Completed
 
