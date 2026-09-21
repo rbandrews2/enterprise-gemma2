@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>WZOS · Operations workspace</title><link rel="stylesheet" href="/workspace.css"><script src="/workspace.js" defer></script></head>
+<body>
+<a class="skip" href="#main">Skip to workspace</a>
+<aside class="sidebar">
+ <a class="brand" href="/"><span class="brand-mark">W</span><span>WORK ZONE<span class="brand-os">OPERATING SYSTEM</span></span></a>
+ <div class="org-card"><span class="org-icon">MP</span><div><strong id="org-name">Workspace</strong><small id="edition">Loading…</small></div></div>
+ <p class="nav-label">WORKSPACE</p>
+ <nav aria-label="Workspace navigation">
+  <button class="nav-item active" id="jobs-nav" aria-current="page"><span aria-hidden="true">▤</span> Work orders <span class="nav-count" id="nav-count">0</span></button>
+  <button class="nav-item" id="atlas-nav"><span aria-hidden="true">✦</span> Atlas assistant</button>
+  <button class="nav-item" disabled title="Not connected in this preview"><span aria-hidden="true">□</span> Forms</button>
+  <button class="nav-item" disabled title="Not connected in this preview"><span aria-hidden="true">◷</span> Time clock</button>
+  <button class="nav-item" disabled title="Not connected in this preview"><span aria-hidden="true">▦</span> Schedule & dispatch</button>
+  <button class="nav-item" disabled title="Not connected in this preview"><span aria-hidden="true">◇</span> Maps & navigation</button>
+  <button class="nav-item" disabled title="Not connected in this preview"><span aria-hidden="true">▱</span> Messages</button>
+  <button class="nav-item" disabled title="Not connected in this preview"><span aria-hidden="true">▷</span> Training</button>
+ </nav>
+ <div class="sidebar-foot"><span class="status-dot"></span> Local development <small>Unavailable modules are dimmed.</small><p>Molecular Project Development LLC</p></div>
+</aside>
+<div class="app">
+ <header class="topbar"><div><span class="breadcrumb">Workspace /</span> <strong>Work orders</strong></div><div class="profile"><span id="role-pill" class="pill">General</span><span class="avatar">JL</span><span id="actor-name">Test user</span></div></header>
+ <section class="preview-bar" aria-label="Preview controls"><div><strong>LOCAL PREVIEW</strong><span>Synthetic records · no production sign-in</span></div><label for="identity">Test identity <select id="identity" disabled></select></label></section>
+ <main id="main">
+  <div class="page-heading"><div><p class="eyebrow">FIELD OPERATIONS</p><h1>Work orders</h1><p id="scope-note">Your jobs, ready for the next step.</p></div><button id="new-order" class="primary" disabled>+ New work order</button></div>
+  <div id="notice" role="status" aria-live="polite" hidden></div>
+  <section class="metrics" aria-label="Work order summary"><div><span>Visible work orders</span><strong id="metric-total">—</strong><small id="metric-scope">Current test identity</small></div><div><span>Drafts</span><strong id="metric-drafts">—</strong><small>Not approved for field use</small></div><div><span>Need a work date</span><strong id="metric-date">—</strong><small>Complete the job details</small></div></section>
+  <div class="workspace-grid">
+   <section class="panel job-panel" aria-labelledby="list-title"><div class="panel-heading"><h2 id="list-title">Job board</h2><button class="text-button" id="refresh">Refresh</button></div><label class="search-label" for="search">Find a work order</label><input id="search" type="search" placeholder="Search job or location…"><div id="job-list" aria-label="Work orders"></div></section>
+   <section class="panel detail-panel" aria-labelledby="detail-title">
+    <div class="panel-heading"><div><p class="eyebrow" id="record-meta">WORK ORDER</p><h2 id="detail-title">Select a work order</h2></div><span class="pill draft">Draft</span></div>
+    <p id="empty-detail" class="muted">Choose a job to review its details, or start a new work order.</p>
+    <form id="order-form" hidden>
+     <label for="title">Job name<input id="title" name="title" required maxlength="120" autocomplete="off"></label>
+     <div class="form-row"><label for="work-type">Work type<select id="work-type" name="work_type"><option value="line_striping">Line striping</option><option value="underground_utility">Underground utility</option><option value="road_maintenance">Road maintenance</option><option value="other">Other</option></select></label><label for="work-date">Planned work date<input id="work-date" name="work_date" type="date"></label></div>
+     <label for="address">Work location<input id="address" name="address" required maxlength="500" placeholder="Physical address or road segment"></label>
+     <div class="form-row"><label for="locality">City or county<input id="locality" name="locality" required maxlength="120"></label><div class="state-field"><span>State</span><strong>Virginia</strong></div></div>
+     <label for="notes">Job notes<textarea id="notes" name="notes" rows="3" maxlength="2000" placeholder="Scope, site conditions, and anything the crew should know"></textarea></label>
+     <div class="form-footer"><span id="save-state" class="muted">Saved draft</span><div><button type="button" id="reload-order" class="secondary">Reload saved</button><button type="submit" id="save-order" class="primary">Save changes</button></div></div>
+    </form>
+    <section class="atlas-card" aria-labelledby="atlas-title"><div class="atlas-top"><div><p class="eyebrow">ATLAS · POWERED BY GEMMA</p><h3 id="atlas-title">Prepare the next step</h3></div><span class="atlas-symbol" aria-hidden="true">✦</span></div><p id="atlas-description">Check a saved job for missing site details before planning.</p><button id="prepare" class="secondary" disabled>Let Atlas help</button><p class="fine">This preview uses intake rules only. Gemma, imagery generation and field approval are not connected.</p><div id="atlas-output" role="status" aria-live="polite"></div></section>
+   </section>
+  </div>
+ </main>
+ <footer class="app-footer"><span>WZOS / Core + Enterprise</span><span>All records on this page are synthetic.</span></footer>
+</div>
+</body></html>

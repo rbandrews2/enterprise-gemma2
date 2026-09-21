@@ -49,6 +49,8 @@ Approved setup completed 2026-09-20: enabled Maps JavaScript and API Keys API in
 
 ## 4. Production security and operations
 
+- [ ] Replace the isolated workspace preview's selectable synthetic identities with server-verified production identity; complete authenticated role/tenant regression tests. The prototype at port 8083 is local-only and must not be deployed. Integrate its tested work-order flow into the shared React app; see [workspace preview](WORKSPACE_PREVIEW.md).
+
 - [ ] Restore Ray's Supabase administrative access through the provider's normal 2FA/account-recovery process. Current blocker: authenticator-app issue reported by Ray. After access is restored, inventory live schema, policies, functions, auth and storage; verify database/object backup and restore before migration. Continue local work with synthetic configuration while this is blocked.
 - [ ] Complete the separately tested React Router upgrade and authenticated regressions after Core dependency refresh. The local repair candidate fixes six TypeScript errors and reduces the dependency audit to two moderate router findings; see [repair status](CORE_REPAIR_STATUS.md). This is not production security approval.
 

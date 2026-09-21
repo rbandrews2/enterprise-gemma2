@@ -1,8 +1,12 @@
 # WZOS V2 pause and resume handoff
 
-Paused 2026-09-20 at Ray's request. Development remains local; production deployment is not scheduled.
+Resumed at Ray's request. Development remains local; production deployment is not scheduled.
 
-## Current pause checkpoint — read first
+## Latest resume checkpoint
+
+Implemented a separate synthetic-data app-style workspace at `http://127.0.0.1:8083`; run `.venv/Scripts/python.exe scripts/start_workspace_preview.py`. Read `docs/WORKSPACE_PREVIEW.md`. It supports Core/Enterprise and general/admin fixture identities, scoped persisted work-order create/edit/reload/search, optimistic revision checks, idempotent creation and Enterprise intake preparation using existing V2 rules. No Gemma calls or imagery generation. All 92 tests pass, plus browser save/reload/edit and edition-switch checks. Original Core React recovery remains intact; this is a local interaction/API prototype, not a production import or authentication system. Next: a saved work-order-linked form/checklist and an adapter to the richer V2 project workflow. Supabase 2FA, live backend recovery, router upgrade and off-device backup remain open. Live/cloud apps remain unchanged.
+
+## Previous pause checkpoint — historical
 
 - Latest code checkpoint: `b711b41` on `enterprise-v2`, following repair commit `d53cc85`. Both pushed to GitHub. The sections below retain chronological history; older counts and pending items are superseded by this checkpoint.
 - Core recovery: complete 98-file Netlify archive verified locally; 309-file source export preserved. Separate Core repair candidate passes TypeScript, Vite production build and local shell/guest-admin redirect checks. All six original type errors are fixed; dependency audit now reports two moderate React Router advisories, zero high/critical. The existing V2 suite last passed all 84 tests during the recovery increment.
