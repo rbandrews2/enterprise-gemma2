@@ -22,4 +22,17 @@ Durable database and backup/restore, server-verified user and organization roles
 
 ## Deployment record
 
-Prepared locally; live deployment verification pending.
+Initial deployment succeeded in Google Cloud:
+
+- Service: `wzos-v2-staging`, project `enterprise-gemma2`, region `us-central1`.
+- Service URL: https://wzos-v2-staging-910004733138.us-central1.run.app (IAM authentication required).
+- Initial code: `15587c1ab7e89fd25108f8850716e94862b164dd`; Cloud Build `7ecf0909-2fbf-49df-bcf4-5fad4a2ec0ff` succeeded.
+- Initial revision: `wzos-v2-staging-00001-sd9`.
+- Anonymous `/` and `/api/session`: HTTP 403. Authenticated `/api/session` and `/api/time/status`: HTTP 200; fixed staging identity confirmed.
+- No public service IAM binding; dedicated runtime identity `wzos-v2-staging@enterprise-gemma2.iam.gserviceaccount.com` created without role grants.
+- 110 tests passed before initial deploy. Two focused staging tests passed after the browser navigation/origin adjustment (`83ad543`).
+- A Cloud Shell authenticated proxy runs on port 8080; its preview is session-dependent. Browser-origin verification succeeded using the exact Cloud Shell preview origin. A synthetic clock-in and clock-out both saved successfully through the browser. No V1 service or DNS changes were made.
+
+Cloud Shell uses isolated checkout `/tmp/wzos-v2-staging-sV48jaJS`; the historical checkout was not modified. Local Git, GitHub and the image commit are tracked explicitly; subsequent docs-only commits need not trigger another image build.
+
+Browser access verified on revision `wzos-v2-staging-00003-ctz` (code `83ad543e0e8776f3147bc59174a0aa7760366ae0`, build `8be971e7-c334-47db-9d90-c8969a81ef2c`). The exact session origin is https://8080-cs-1002772085547-default.cs-us-east1-pkhd.cloudshell.dev . This address depends on the active authenticated Cloud Shell session and may change. A final label/UTF-8 correction follows this verified revision.
