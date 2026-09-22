@@ -46,7 +46,7 @@
   if(!retry)pending={actor:session.id,body:{request_id:crypto.randomUUID(),action,shift_id:active?.id||null,expected_version:active?.version||0,task:node('clock-task').value,...(action==='clock_in'?{order_id:node('clock-order').value||null,note:node('clock-note').value}:{})}};
   if(pending.actor!==session.id)return;
   busy=true;node('identity').disabled=true;controls();message('Saving clock action…');
-  try{await window.wzosClock.api('/api/time/commands',{method:'POST',body:JSON.stringify(pending.body)});pending=null;message('Clock action saved locally.');document.dispatchEvent(new CustomEvent('wzos:time-context'));}
+  try{await window.wzosClock.api('/api/time/commands',{method:'POST',body:JSON.stringify(pending.body)});pending=null;message(session.restricted_staging?'Clock action saved in temporary cloud staging.':'Clock action saved locally.');document.dispatchEvent(new CustomEvent('wzos:time-context'));}
   catch(error){if(error.status>=400&&error.status<500){pending=null;message(error.message);}else message('Save not confirmed. Reconnect and retry the same action; duplicate records will be prevented.');}
   finally{busy=false;node('identity').disabled=false;await refresh();controls();}
  }
