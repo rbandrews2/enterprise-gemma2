@@ -36,3 +36,10 @@ Initial deployment succeeded in Google Cloud:
 Cloud Shell uses isolated checkout `/tmp/wzos-v2-staging-sV48jaJS`; the historical checkout was not modified. Local Git, GitHub and the image commit are tracked explicitly; subsequent docs-only commits need not trigger another image build.
 
 Browser access verified on revision `wzos-v2-staging-00003-ctz` (code `83ad543e0e8776f3147bc59174a0aa7760366ae0`, build `8be971e7-c334-47db-9d90-c8969a81ef2c`). The exact session origin is https://8080-cs-1002772085547-default.cs-us-east1-pkhd.cloudshell.dev . This address depends on the active authenticated Cloud Shell session and may change. Final label/UTF-8 correction deployed successfully as revision `wzos-v2-staging-00004-swh`, image source commit `3a69b4200ff664dc79fcca71cd913f46fded8ee9`. Browser reload verified the final revision renders the staging banner and Atlas greeting correctly.
+
+
+## 2026-09-22 module and report revision rollout
+
+Current ready revision: `wzos-v2-staging-00006-2nx`, app image commit `cf14a40`. This includes the animated road-work background, report black-card presentation, Forms hub incident drafts, Schedule management drafts, dedicated Work Zone Report and creator-scoped immutable report revisions. Deployed from isolated `/tmp/wzos-v2-staging-SNTUgzHm`; historical checkout and production apps/DNS untouched. Authenticated browser saved and reopened a synthetic cloud report; anonymous session request returns 403. The authenticated Cloud Shell proxy is running on port 8080 for this session.
+
+Cloud source documents and model conversation remain unavailable. Snapshot storage uses the same temporary staging SQLite database; snapshots are not durable cloud backups. New deployments/instance replacement can reset them. Local Git/GitHub include source and documentation, not local test records or agency document binaries. Docs-only follow-up commit does not require another image build.
