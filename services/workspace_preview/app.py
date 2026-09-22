@@ -13,8 +13,10 @@ from fastapi import FastAPI, HTTPException, Request, Query
 from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from services.v2.intake import assess
-from shared.intake import IntakeRequest
+from shared.intake import SiteContext
+from shared.job_geometry import JobGeometry
+from services.v2.knowledge.store import Store
+from services.workspace_preview.atlas_adapter import prepare_order
 
 ROOT = Path(__file__).resolve().parents[2]
 STATIC = Path(__file__).with_name("static")
@@ -35,6 +37,9 @@ class OrderInput(BaseModel):
     locality: str = Field(min_length=1, max_length=120)
     work_date: date | None = None
     notes: str = Field(default="", max_length=2000)
+    road_authority: str | None = Field(default=None, min_length=1, max_length=200)
+    site: SiteContext = Field(default_factory=SiteContext)
+    job_geometry: JobGeometry | None = None
 
 
 class NewOrder(OrderInput):
@@ -79,11 +84,12 @@ class ChecklistInput(BaseModel):
         return self
 
 
-def create_app(db_path: Path | None = None):
+def create_app(db_path: Path | None = None, knowledge_store=None):
     if os.getenv("WZOS_WORKSPACE_PREVIEW") != "1" or any(os.getenv(k) for k in ("K_SERVICE", "GAE_ENV", "NETLIFY")):
         raise RuntimeError("Synthetic preview requires explicit local opt-in and refuses cloud runtime markers")
     db_path = db_path or ROOT / ".local-data/workspace-preview/orders.sqlite"
     db_path.parent.mkdir(parents=True, exist_ok=True)
+    knowledge_store = knowledge_store if knowledge_store is not None else Store()
 
     @contextmanager
     def connect():
@@ -268,14 +274,6 @@ def create_app(db_path: Path | None = None):
             if row["version"] != expected_version:
                 raise HTTPException(409, "Work order changed. Reload before preparing recommendations.")
             record = serialize(row)
-        intake = IntakeRequest(work_type=record["work_type"], work_description=record["notes"] or record["title"],
-                               location={"address": record["address"], "locality": record["locality"]},
-                               project_date=record["work_date"],
-                               requested_outputs=["work_zone_setup", "required_forms", "annotated_image"])
-        assessment = assess(intake)
-        return {"order_id": order_id, "version": record["version"], "model_called": False,
-                "approved_for_field_use": False, "placements": [],
-                "attention_items": [i.model_dump() for i in assessment.attention_items if i.category != "capability_gap"],
-                "note": "Intake preparation only. No Gemma call, verified placement, imagery or compliance approval."}
+        return prepare_order(record, knowledge_store)
 
     return app

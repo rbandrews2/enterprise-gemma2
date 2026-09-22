@@ -28,6 +28,7 @@ function open(record){
  for(const name of ["title","address","locality","notes"])$(name).value=record?.[name]||"";
  $("work-type").value=record?.work_type||"line_striping";$("work-date").value=record?.work_date||"";
  $("save-state").textContent=record?"Saved locally":"Not saved yet";$("save-order").textContent=record?"Save changes":"Create draft";$("reload-order").hidden=!record;
+ $("road-authority").value=record?.road_authority||"";$("speed-limit").value=record?.site?.speed_limit_mph??"";$("lane-count").value=record?.site?.lane_count??"";$("work-period").value=record?.site?.work_period||"unknown";
  renderList();lock(false);loadChecklist();
 }
 async function loadRows(){rows=(await api("/api/orders")).items;renderList();}
@@ -47,7 +48,7 @@ $("new-order").addEventListener("click",()=>{if(canLeave()){open(null);$("title"
 $("order-form").addEventListener("input",()=>{dirty=true;$("save-state").textContent="Unsaved changes";$("atlas-output").replaceChildren();$("prepare").disabled=true;lockChecklist();});
 $("order-form").addEventListener("submit",async event=>{
  event.preventDefault();if(busy)return;if(checklistDirty){notify("Save or reload your checklist changes before saving job details.",true);return;}lock(true);
- const body={title:$("title").value,work_type:$("work-type").value,address:$("address").value,locality:$("locality").value,work_date:$("work-date").value||null,notes:$("notes").value};
+ const body={title:$("title").value,work_type:$("work-type").value,address:$("address").value,locality:$("locality").value,work_date:$("work-date").value||null,notes:$("notes").value,road_authority:$("road-authority").value.trim()||null,site:{...selected?.site,speed_limit_mph:$("speed-limit").value?Number($("speed-limit").value):null,lane_count:$("lane-count").value?Number($("lane-count").value):null,work_period:$("work-period").value},job_geometry:selected?.job_geometry||null};
  if(!selected){const signature=JSON.stringify(body);if(lastCreateBody!==null&&lastCreateBody!==signature)requestId=crypto.randomUUID();lastCreateBody=signature;}
  try{const record=await api(selected?`/api/orders/${selected.id}`:"/api/orders",{method:selected?"PUT":"POST",body:JSON.stringify({...body,...(selected?{expected_version:selected.version}:{request_id:requestId})})});
   open(record);lock(true);notify(`Saved locally · revision ${record.version}.`);try{await loadRows();}catch{notify(`Saved revision ${record.version}, but the job board could not refresh. Use Refresh to try again.`,true);}
@@ -57,7 +58,15 @@ async function refresh(){if(busy||!canLeave())return;lock(true);try{const id=sel
 $("refresh").addEventListener("click",refresh);$("reload-order").addEventListener("click",refresh);
 $("prepare").addEventListener("click",async()=>{
  if(busy||dirty||!selected)return;lock(true);$("atlas-output").replaceChildren(el("p","Checking saved job details…","muted"));
- try{const data=await api(`/api/orders/${selected.id}/preparation?expected_version=${selected.version}`,{method:"POST"});const list=el("ul");for(const item of data.attention_items)list.append(el("li",item.message));$("atlas-output").replaceChildren(el("strong",`Preparation for revision ${data.version}`),list,el("p",data.note,"fine"));}
+ try{const data=await api(`/api/orders/${selected.id}/preparation?expected_version=${selected.version}`,{method:"POST"});const list=el("ul");for(const item of data.questions)list.append(el("li",item.question));
+ const output=$("atlas-output");output.replaceChildren(el("strong",`Preparation for revision ${data.version}`),list,el("p",data.note,"fine"));
+ const advicePanel=el("details");advicePanel.append(el("summary","Forms, evidence and operational review"),el("p","Checklist entries are saved separately and have not been verified by Atlas."));for(const item of data.project_advice){const entry=el("article");entry.append(el("strong",item.finding),el("p",item.next_action));advicePanel.append(entry);}output.append(advicePanel);
+ output.append(el("h4",`Agency references - library ${data.references.library_status}`));
+ for(const topic of data.references.topics){const section=el("details");section.append(el("summary",`${topic.id.replaceAll("_"," ")} (${topic.candidates.length})`));
+ if(!topic.candidates.length)section.append(el("p","No candidate passages available. This does not establish that no requirement applies."));
+ for(const ref of topic.candidates){const article=el("article");const link=el("a",`${ref.agency}: ${ref.title}`);if(ref.url.startsWith("https://")){link.href=ref.url;link.target="_blank";link.rel="noopener noreferrer";}
+ article.append(link,el("p",`${ref.edition||"Edition unspecified"} | ${ref.page?'PDF page '+ref.page:ref.section||"Section unspecified"} | ${ref.review_status} | applicability unresolved`),el("p",ref.text),el("small",`Revision ${ref.revision} | Retrieved ${ref.retrieved_at}`));for(const warning of ref.warnings)article.append(el("p",warning));article.append(el("small",`Publication status: ${ref.publication_status}`));section.append(article);}output.append(section);}
+ const gaps=el("details");gaps.append(el("summary","Coverage gaps and review limits"));for(const gap of data.references.coverage_gaps)gaps.append(el("p",gap));output.append(gaps);}
  catch(error){$("atlas-output").replaceChildren();notify(error.message,true);}finally{lock(false);}
 });
 $("atlas-nav").addEventListener("click",()=>{$("atlas-title").scrollIntoView({behavior:"smooth",block:"center"});});

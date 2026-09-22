@@ -4,9 +4,11 @@ Resumed at Ray's request. Development remains local; production deployment is no
 
 ## Latest resume checkpoint
 
-2026-09-21: completed saved readiness checklists in the isolated app workspace at `http://127.0.0.1:8083`. Run `.venv/Scripts/python.exe scripts/start_workspace_preview.py`; see `docs/WORKSPACE_PREVIEW.md`. Checklists retain authors/timestamps and job-version links, preserve history, reject stale writes, enforce the parent work-order scope, and show stale/read-only revision states. All 94 tests passed; real browser save, server-restart persistence and historical revision checks passed. The synthetic Norfolk sample is job revision 3 with checklist revision 2. Preview server was left running for review; restart if unavailable.
+2026-09-21: connected the work-order preview to existing V2 Atlas preparation through `services/workspace_preview/atlas_adapter.py`. One saved work-order record feeds ProjectDraft, source discovery, evidence review and placement readiness without writing a second project. Added reported authority/speed/lane-count/work-period fields and preserved API-supplied JobGeometry during browser edits. Gloss-black theme retains recovered V17 green/gold styling cues. Read `docs/V1_REUSE_DECISIONS.md` and `docs/WORKSPACE_PREVIEW.md`.
 
-Next: connect the saved work order to the existing V2 project/geometry and cited-reference workflow through an adapter, avoiding divergent job records. Atlas currently runs intake rules only; checklist claims are not verified evidence. Continue local synthetic development. No production/cloud/Cloud Shell changes, new paid services or deployment date. Supabase 2FA recovery, live backend inventory, router upgrade, production authentication and off-device backup remain open. Original Core recovery files are preserved.
+All 95 tests pass. Real browser saved the Norfolk sample at job revision 4 and returned 17 candidate passages across six topics, with VDOT/FHWA citation details visibly checked. Checklist revision 2 is now correctly stale. Preview remains at http://127.0.0.1:8083; run `.venv/Scripts/python.exe scripts/start_workspace_preview.py` if stopped. No Gemma call, new download, imagery generation, field approval, production/cloud change or paid service.
+
+Next: reuse the existing measured-approach and geometry editor in this app workspace, followed by Maps/imagery integration with existing restricted credentials. Geometry is validated through the shared schema today but lacks an editor on port 8083. Checklist claims remain separate and unverified. Supabase 2FA, live backend inventory, router upgrade, production authentication and off-device backup remain open. Preserve all recovery materials.
 
 ## Previous pause checkpoint — historical
 

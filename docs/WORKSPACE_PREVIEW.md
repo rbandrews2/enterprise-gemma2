@@ -18,7 +18,7 @@ Open `http://127.0.0.1:8083`. Stop with Ctrl+C. The launcher binds only to loopb
 - Create, save, edit, reload and search draft work orders. Saved fields: title, work type, address/road segment, Virginia locality, optional date and notes. New records belong to the selected test identity. Assignment, dispatch status and coordinate intake are not added in this increment.
 - SQLite persistence in ignored `.local-data/workspace-preview/orders.sqlite`, separate from existing V2 projects. Seeded examples are synthetic and survive restarts without overwriting edits. The list is capped at the 100 most recently updated visible records; displayed counts cover that list, not a production-wide total.
 - Retry identifiers prevent duplicate creation for identical retry requests. Changed-content retries are rejected by the API. Optimistic version checks prevent stale writes; drafts remain in the browser form on save errors and reload requires confirmation if dirty.
-- Enterprise's **Let Atlas help** reads a saved work-order revision and reuses existing V2 intake rules to identify missing site information. Unsaved edits clear prior preparation and disable the button. Preparation is not persisted; it is tied to the revision in the response. No model call, official source retrieval, verified placements, images or compliance approval occurs.
+- Enterprise's **Let Atlas help** adapts the saved work-order revision to the existing V2 ProjectDraft and reuses Atlas preparation, evidence review, placement readiness and local source discovery. It does not create a second project record. Reported authority, speed, lane count and work period are editable; the existing JobGeometry schema is accepted by the API and preserved on browser edits. The geometry editor itself remains to be integrated. Unsaved edits clear prior preparation and disable the button. Preparation is not persisted; it is tied to the revision in the response. Candidate passages come from the existing local agency index, with official links, PDF pages/sections, edition, hash, retrieval time, review state and warnings. No live source download, model call, verified placements, images or compliance approval occurs.
 - Core's existing assistant remains part of the integration plan; it is not implemented by this preview. Forms, time clock, dispatch, maps, messaging and training are displayed as unavailable modules, not simulated success flows.
 
 ## Saved readiness checklist
@@ -39,7 +39,7 @@ No Supabase, Google Maps, model, billing or email credentials are loaded. The re
 
 ## Validation
 
-- Existing suite plus ten preview tests: 94 passing tests. Preview tests cover opt-in/cloud refusal, remote/Host/origin rejection, invalid identities, all four combinations, cross-organization read/write/list isolation, general-user restrictions, payload spoofing, idempotent creation, stale edits, restart persistence and Enterprise preparation controls.
+- Existing suite plus eleven preview tests: 95 passing tests. Preview tests cover opt-in/cloud refusal, remote/Host/origin rejection, invalid identities, all four combinations, cross-organization read/write/list isolation, general-user restrictions, payload spoofing, idempotent creation, stale edits, restart persistence and Enterprise preparation controls.
 - Browser: create a synthetic Norfolk utility job, save, reload, edit to revision 2, run preparation on the saved job, switch to Core/general and verify advanced preparation is unavailable.
 - Desktop and 390-pixel mobile viewport checked; no horizontal overflow in the mobile DOM. JavaScript syntax check passed. No new JavaScript packages were needed.
 
@@ -48,8 +48,10 @@ Browser checklist verification (2026-09-21): persisted across server restart, sa
 ## Next
 
 1. Completed: saved readiness checklist with preserved revisions and stale-job warnings.
-2. Connect the richer V2 project/geometry and cited-reference workflow through an adapter instead of maintaining two independent job records.
+2. Adapter and cited-reference preparation are connected. Next: reuse the existing measured-approach/geometry editor in the app-style workspace, then imagery integration.
 3. Complete the reviewed React import and router upgrade; replace fixture identity with server-verified identity before any deployment.
 4. Resume actual backend inventory/backup after Ray resolves Supabase 2FA; no workaround or repeated sign-in request is needed now.
 
 The final functional app remains targeted at `app.workzoneos.org`; public module explanations remain on `workzoneos.org`. Existing live services are unchanged.
+
+2026-09-21: browser saved reported speed/lane count/night-work context at work-order revision 4 and returned 17 reference candidates across six topics from the local library. Expanded advance-warning results showed VDOT/FHWA links, page references and unresolved applicability. Gloss-black theme uses the recovered V17 dark green/gold palette, clear focus rings and expandable reference groups.

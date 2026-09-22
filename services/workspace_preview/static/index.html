@@ -36,6 +36,8 @@
      <div class="form-row"><label for="work-type">Work type<select id="work-type" name="work_type"><option value="line_striping">Line striping</option><option value="underground_utility">Underground utility</option><option value="road_maintenance">Road maintenance</option><option value="other">Other</option></select></label><label for="work-date">Planned work date<input id="work-date" name="work_date" type="date"></label></div>
      <label for="address">Work location<input id="address" name="address" required maxlength="500" placeholder="Physical address or road segment"></label>
      <div class="form-row"><label for="locality">City or county<input id="locality" name="locality" required maxlength="120"></label><div class="state-field"><span>State</span><strong>Virginia</strong></div></div>
+     <div class="form-row"><label for="road-authority">Reported road authority<input id="road-authority" maxlength="200" placeholder="Confirm road owner / authority"></label><label for="speed-limit">Reported speed limit (mph)<input id="speed-limit" type="number" min="1" max="100" step="any"></label></div>
+     <div class="form-row"><label for="lane-count">Lane count<input id="lane-count" type="number" min="1" max="20" step="1"></label><label for="work-period">Work period<select id="work-period"><option value="unknown">Not yet known</option><option value="day">Day</option><option value="night">Night</option><option value="mixed">Day and night</option></select></label></div>
      <label for="notes">Job notes<textarea id="notes" name="notes" rows="3" maxlength="2000" placeholder="Scope, site conditions, and anything the crew should know"></textarea></label>
      <div class="form-footer"><span id="save-state" class="muted">Saved draft</span><div><button type="button" id="reload-order" class="secondary">Reload saved</button><button type="submit" id="save-order" class="primary">Save changes</button></div></div>
     </form>
@@ -46,7 +48,7 @@
      <label for="checklist-revision">Saved revision <select id="checklist-revision"></select></label>
      <form id="checklist-form"><div id="checklist-items"></div><button id="save-checklist" class="secondary" type="submit">Save checklist</button></form>
     </section>
-    <section class="atlas-card" aria-labelledby="atlas-title"><div class="atlas-top"><div><p class="eyebrow">ATLAS · POWERED BY GEMMA</p><h3 id="atlas-title">Prepare the next step</h3></div><span class="atlas-symbol" aria-hidden="true">✦</span></div><p id="atlas-description">Check a saved job for missing site details before planning.</p><button id="prepare" class="secondary" disabled>Let Atlas help</button><p class="fine">This preview uses intake rules only. Gemma, imagery generation and field approval are not connected.</p><div id="atlas-output" role="status" aria-live="polite"></div></section>
+    <section class="atlas-card" aria-labelledby="atlas-title"><div class="atlas-top"><div><p class="eyebrow">ATLAS · POWERED BY GEMMA</p><h3 id="atlas-title">Prepare the next step</h3></div><span class="atlas-symbol" aria-hidden="true">✦</span></div><p id="atlas-description">Check a saved job for missing site details before planning.</p><button id="prepare" class="secondary" disabled>Let Atlas help</button><p class="fine">Uses saved job details and the local agency library. Gemma, imagery generation and field approval are not connected.</p><div id="atlas-output" role="status" aria-live="polite"></div></section>
    </section>
   </div>
  </main>

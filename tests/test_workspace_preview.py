@@ -9,6 +9,7 @@ from uuid import uuid4
 
 from fastapi.testclient import TestClient
 from services.workspace_preview.app import create_app, ACTORS
+from services.v2.knowledge.store import Store
 
 
 class WorkspacePreviewTests(unittest.TestCase):
@@ -19,7 +20,7 @@ class WorkspacePreviewTests(unittest.TestCase):
         self.env = patch.dict(os.environ, {"WZOS_WORKSPACE_PREVIEW": "1", "K_SERVICE": "", "GAE_ENV": "", "NETLIFY": ""})
         self.env.start()
         self.addCleanup(self.env.stop)
-        self.client = TestClient(create_app(self.db))
+        self.client = TestClient(create_app(self.db, Store(Path(self.temp.name) / "sources", {})))
         self.addCleanup(self.client.close)
 
     def headers(self, actor="enterprise-admin"):
@@ -116,6 +117,35 @@ class WorkspacePreviewTests(unittest.TestCase):
         self.assertEqual(data["placements"], [])
         self.assertTrue(data["attention_items"])
         self.assertEqual(data["order_id"], row["id"])
+
+    def test_atlas_adapter_uses_saved_context_and_preserves_geometry(self):
+        body = self.payload(road_authority="Reported city road", site={"speed_limit_mph": 35.0,
+                            "lane_count": 2, "work_period": "night"},
+                            job_geometry={"closure_type": "shoulder", "lane_width_ft": 12.0})
+        order = self.create(body=body)
+        path = f"/api/orders/{order['id']}"
+        result = self.client.post(path + "/preparation?expected_version=1", headers=self.headers()).json()
+        self.assertEqual(result["mode"], "source_grounded_preparation")
+        self.assertEqual(result["references"]["library_status"], "unavailable")
+        self.assertEqual(result["project_id"], order["id"])
+        self.assertEqual(len(result["project_sha256"]), 64)
+        questions = {q["id"] for q in result["questions"]}
+        self.assertNotIn("speed_limit", questions)
+        self.assertNotIn("road_authority", questions)
+        self.assertNotIn("lane_width_ft", questions)
+        self.assertIn("verify_geometry", questions)
+        self.assertEqual(result["placements"], [])
+        self.assertEqual(result["evidence_review"]["verification_status"], "not_verified")
+        self.assertEqual(self.client.get(path, headers=self.headers()).json()["job_geometry"], order["job_geometry"])
+        self.assertEqual(self.client.get(path, headers=self.headers()).json()["version"], 1)
+        body.pop("request_id")
+        body["site"]["speed_limit_mph"] = 45.0
+        changed = self.client.put(path, headers=self.headers(), json={**body, "expected_version": 1})
+        self.assertEqual(changed.status_code, 200)
+        new = self.client.post(path + "/preparation?expected_version=2", headers=self.headers()).json()
+        self.assertNotEqual(new["project_sha256"], result["project_sha256"])
+        body["job_geometry"] = {"work_limits": [{"latitude": 36.8, "longitude": -76.2}]}
+        self.assertEqual(self.client.put(path, headers=self.headers(), json={**body, "expected_version": 2}).status_code, 422)
 
     def checklist_payload(self, version=0, order_version=1):
         from services.workspace_preview.app import CHECKLIST_ITEMS
