@@ -3,6 +3,7 @@ const $ = id => document.getElementById(id);
 let identities = [], session = null, rows = [], selected = null, dirty = false, busy = false;
 let requestId = crypto.randomUUID();
 let lastCreateBody = null;
+let checklistDirty=false, checklistData=null, checklistGeneration=0, checklistLoading=false;
 const types = {line_striping:"Line striping",underground_utility:"Underground utility",road_maintenance:"Road maintenance",other:"Other"};
 function el(tag, text, className) {const node=document.createElement(tag); if(text!==undefined)node.textContent=text; if(className)node.className=className;return node;}
 function notify(message,error=false){$("notice").hidden=false;$("notice").textContent=message;$("notice").classList.toggle("error",error);}
@@ -12,8 +13,8 @@ async function api(path, options={}) {
  if(!response.ok)throw new Error(typeof data.detail==="string"?data.detail:"Check the job fields and try again. Nothing was confirmed saved.");
  return data;
 }
-function lock(value){busy=value;$("identity").disabled=value;$("new-order").disabled=value;$("refresh").disabled=value;$("reload-order").disabled=value;$("save-order").disabled=value;$("prepare").disabled=value||dirty||!selected||!session?.can_prepare_atlas;for(const input of $("order-form").querySelectorAll("input,select,textarea"))input.disabled=value;}
-function canLeave(){return !dirty||confirm("Discard the unsaved changes to this work order?");}
+function lock(value){busy=value;lockChecklist();$("identity").disabled=value;$("new-order").disabled=value;$("refresh").disabled=value;$("reload-order").disabled=value;$("save-order").disabled=value;$("prepare").disabled=value||dirty||!selected||!session?.can_prepare_atlas;for(const input of $("order-form").querySelectorAll("input,select,textarea"))input.disabled=value||checklistDirty;}
+function canLeave(){return !(dirty||checklistDirty)||confirm("Discard unsaved job or checklist changes?");}
 function renderList(){
  const query=$("search").value.toLowerCase();$("job-list").replaceChildren();
  const filtered=rows.filter(r=>`${r.title} ${r.address} ${r.locality}`.toLowerCase().includes(query));
@@ -27,11 +28,11 @@ function open(record){
  for(const name of ["title","address","locality","notes"])$(name).value=record?.[name]||"";
  $("work-type").value=record?.work_type||"line_striping";$("work-date").value=record?.work_date||"";
  $("save-state").textContent=record?"Saved locally":"Not saved yet";$("save-order").textContent=record?"Save changes":"Create draft";$("reload-order").hidden=!record;
- renderList();lock(false);
+ renderList();lock(false);loadChecklist();
 }
 async function loadRows(){rows=(await api("/api/orders")).items;renderList();}
 async function switchIdentity(){
- lock(true);$("notice").hidden=true;
+ lock(true);resetChecklist();$("notice").hidden=true;
  try{session=null;session=await api("/api/session");selected=null;dirty=false;rows=[];$("atlas-output").replaceChildren();$("order-form").hidden=true;$("empty-detail").hidden=false;$("detail-title").textContent="Select a work order";
  $("org-name").textContent=session.organization;$("edition").textContent=`${session.edition==="core"?"Core":"Enterprise"} edition · synthetic`;
  $("actor-name").textContent=session.name;document.querySelector(".avatar").textContent=session.name.split(" ").map(n=>n[0]).join("");$("role-pill").textContent=session.role==="admin"?"Admin":"General";
@@ -43,16 +44,16 @@ async function switchIdentity(){
 $("identity").addEventListener("change",()=>{if(!canLeave()){$("identity").value=session.id;return;}switchIdentity();});
 $("search").addEventListener("input",renderList);
 $("new-order").addEventListener("click",()=>{if(canLeave()){open(null);$("title").focus();}});
-$("order-form").addEventListener("input",()=>{dirty=true;$("save-state").textContent="Unsaved changes";$("atlas-output").replaceChildren();$("prepare").disabled=true;});
+$("order-form").addEventListener("input",()=>{dirty=true;$("save-state").textContent="Unsaved changes";$("atlas-output").replaceChildren();$("prepare").disabled=true;lockChecklist();});
 $("order-form").addEventListener("submit",async event=>{
- event.preventDefault();if(busy)return;lock(true);
+ event.preventDefault();if(busy)return;if(checklistDirty){notify("Save or reload your checklist changes before saving job details.",true);return;}lock(true);
  const body={title:$("title").value,work_type:$("work-type").value,address:$("address").value,locality:$("locality").value,work_date:$("work-date").value||null,notes:$("notes").value};
  if(!selected){const signature=JSON.stringify(body);if(lastCreateBody!==null&&lastCreateBody!==signature)requestId=crypto.randomUUID();lastCreateBody=signature;}
  try{const record=await api(selected?`/api/orders/${selected.id}`:"/api/orders",{method:selected?"PUT":"POST",body:JSON.stringify({...body,...(selected?{expected_version:selected.version}:{request_id:requestId})})});
   open(record);lock(true);notify(`Saved locally · revision ${record.version}.`);try{await loadRows();}catch{notify(`Saved revision ${record.version}, but the job board could not refresh. Use Refresh to try again.`,true);}
  }catch(error){notify(error.message,true);$("save-state").textContent="Save not confirmed · draft retained";}finally{lock(false);}
 });
-async function refresh(){if(busy||!canLeave())return;lock(true);try{const id=selected?.id;await loadRows();const record=rows.find(r=>r.id===id)||rows[0];if(record)open(record);else{selected=null;dirty=false;$("order-form").hidden=true;$("empty-detail").hidden=false;$("atlas-output").replaceChildren();}notify("Loaded the latest saved records.");}catch(error){notify(error.message,true);}finally{lock(false);}}
+async function refresh(){if(busy||!canLeave())return;lock(true);try{const id=selected?.id;await loadRows();const record=rows.find(r=>r.id===id)||rows[0];if(record)open(record);else{resetChecklist();selected=null;dirty=false;$("order-form").hidden=true;$("empty-detail").hidden=false;$("atlas-output").replaceChildren();}notify("Loaded the latest saved records.");}catch(error){notify(error.message,true);}finally{lock(false);}}
 $("refresh").addEventListener("click",refresh);$("reload-order").addEventListener("click",refresh);
 $("prepare").addEventListener("click",async()=>{
  if(busy||dirty||!selected)return;lock(true);$("atlas-output").replaceChildren(el("p","Checking saved job details…","muted"));
@@ -61,5 +62,50 @@ $("prepare").addEventListener("click",async()=>{
 });
 $("atlas-nav").addEventListener("click",()=>{$("atlas-title").scrollIntoView({behavior:"smooth",block:"center"});});
 $("jobs-nav").addEventListener("click",()=>{$("list-title").scrollIntoView({behavior:"smooth",block:"start"});});
-window.addEventListener("beforeunload",event=>{if(dirty){event.preventDefault();event.returnValue="";}});
+window.addEventListener("beforeunload",event=>{if(dirty||checklistDirty){event.preventDefault();event.returnValue="";}});
 (async()=>{try{identities=(await api("/api/identities")).identities;for(const identity of identities){const option=el("option",`${identity.edition==="core"?"Core":"Enterprise"} · ${identity.role} · ${identity.name}`);option.value=identity.id;$("identity").append(option);}$("identity").value="enterprise-admin";await switchIdentity();}catch(error){notify(error.message,true);}})();
+
+function lockChecklist(){
+ const blocked=busy||checklistLoading||!checklistData;
+ const historical=checklistData?.checklist && checklistData.checklist.version!==checklistData.latest_version;
+ for(const control of $("checklist-form").querySelectorAll("select,textarea,button"))control.disabled=blocked||historical||dirty;
+ $("checklist-revision").disabled=busy||checklistLoading||!checklistData;
+}
+function resetChecklist(){checklistGeneration++;checklistData=null;checklistDirty=false;checklistLoading=false;$("checklist-panel").hidden=true;$("checklist-items").replaceChildren();}
+async function loadChecklist(version){
+ const orderId=selected?.id;resetChecklist();if(!orderId)return;
+ const generation=checklistGeneration;checklistLoading=true;$("checklist-panel").hidden=false;$("checklist-state").textContent="Loading checklist…";lockChecklist();
+ try{
+  const data=await api(`/api/orders/${orderId}/checklist${version?'?version='+version:''}`);
+  if(generation!==checklistGeneration)return;
+  checklistData=data;const saved=data.checklist;
+  $("checklist-state").textContent=!saved?"No checklist saved yet.":`Checklist ${saved.version} · job revision ${saved.order_version} · ${saved.author_id} · ${new Date(saved.saved_at).toLocaleString()}${saved.stale?' — Job changed: review every category before saving again.':''}${saved.version!==data.latest_version?' — Historical revision (read only).':''}`;
+  $("checklist-state").classList.toggle("stale",Boolean(saved?.stale));
+  const revisions=$("checklist-revision");revisions.replaceChildren();
+  // Keep large histories bounded in the UI; any revision remains available through the API.
+  for(let n=data.latest_version;n>Math.max(0,data.latest_version-50);n--){const option=el("option",`Revision ${n}${n===data.latest_version?' (latest)':''}`);option.value=n;revisions.append(option);}
+  if(!data.latest_version){const option=el("option","Unsaved");option.value="";revisions.append(option);}
+  revisions.value=saved?.version||"";
+  for(const [key,label] of Object.entries(data.labels)){
+   const field=el("fieldset"),legend=el("legend",label),statusLabel=el("label","Review status"),status=el("select"),notesLabel=el("label","Notes / reason if not applicable"),notes=el("textarea");
+   status.id=`check-${key}`;statusLabel.htmlFor=status.id;status.dataset.key=key;
+   for(const [value,text] of Object.entries({not_reviewed:"Not reviewed",needs_attention:"Needs attention",reported_ready:"Reported ready",not_applicable:"Not applicable"})){const option=el("option",text);option.value=value;status.append(option);}
+   status.value=saved?.items[key].status||"not_reviewed";
+   notes.id=`check-notes-${key}`;notesLabel.htmlFor=notes.id;notes.rows=2;notes.maxLength=2000;notes.value=saved?.items[key].notes||"";
+   field.append(legend,statusLabel,status,notesLabel,notes);$("checklist-items").append(field);
+  }
+ }catch(error){if(generation===checklistGeneration){$("checklist-state").textContent="Checklist unavailable. Use Reload saved to retry.";notify(error.message,true);}}
+ finally{if(generation===checklistGeneration){checklistLoading=false;lock(busy);}}
+}
+$("checklist-form").addEventListener("input",()=>{checklistDirty=true;lock(busy);});
+$("checklist-revision").addEventListener("change",()=>{
+ if(checklistDirty&&!confirm("Discard unsaved checklist changes?")){$("checklist-revision").value=checklistData.checklist?.version||"";return;}
+ loadChecklist($("checklist-revision").value);
+});
+$("checklist-form").addEventListener("submit",async event=>{
+ event.preventDefault();if(busy||dirty||!selected||!checklistData||checklistLoading)return;
+ const items={};for(const key of Object.keys(checklistData.labels)){items[key]={status:$("check-"+key).value,notes:$("check-notes-"+key).value.trim()};if(items[key].status==="not_applicable"&&!items[key].notes){notify("Explain each item marked not applicable before saving.",true);return;}}
+ lock(true);
+ try{await api(`/api/orders/${selected.id}/checklist`,{method:"PUT",body:JSON.stringify({expected_version:checklistData.latest_version,expected_order_version:selected.version,items})});checklistDirty=false;await loadChecklist();notify("Checklist saved locally. It does not authorize field use.");}
+ catch(error){notify(error.message,true);}finally{lock(false);}
+});

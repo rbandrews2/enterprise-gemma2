@@ -117,6 +117,64 @@ class WorkspacePreviewTests(unittest.TestCase):
         self.assertTrue(data["attention_items"])
         self.assertEqual(data["order_id"], row["id"])
 
+    def checklist_payload(self, version=0, order_version=1):
+        from services.workspace_preview.app import CHECKLIST_ITEMS
+        return {"expected_version": version, "expected_order_version": order_version,
+                "items": {key: {"status": "not_reviewed", "notes": ""} for key in CHECKLIST_ITEMS}}
+
+    def test_checklist_history_staleness_conflicts_and_restart(self):
+        order = self.create("enterprise-general")
+        path = f"/api/orders/{order['id']}/checklist"
+        self.assertIsNone(self.client.get(path, headers=self.headers()).json()["checklist"])
+        body = self.checklist_payload()
+        saved = self.client.put(path, headers=self.headers(), json=body)
+        self.assertEqual(saved.status_code, 200, saved.text)
+        self.assertFalse(saved.json()["approved_for_field_use"])
+        self.assertEqual(self.client.put(path, headers=self.headers(), json=body).status_code, 409)
+        update = self.payload(title="Changed limits")
+        update.pop("request_id")
+        self.client.put(f"/api/orders/{order['id']}", headers=self.headers(), json={**update, "expected_version": 1})
+        self.assertTrue(self.client.get(path, headers=self.headers()).json()["checklist"]["stale"])
+        self.assertEqual(self.client.put(path, headers=self.headers(), json=self.checklist_payload(1, 1)).status_code, 409)
+        body = self.checklist_payload(1, 2)
+        body["items"]["site"] = {"status": "needs_attention", "notes": "Measure changed limits"}
+        response = self.client.put(path, headers=self.headers("enterprise-general"), json=body)
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.json()["checklist"]["stale"])
+        with TestClient(create_app(self.db)) as client:
+            latest = client.get(path, headers=self.headers()).json()
+            self.assertEqual(latest["latest_version"], 2)
+            self.assertEqual(latest["checklist"]["author_id"], "enterprise-general")
+            old = client.get(path + "?version=1", headers=self.headers()).json()["checklist"]
+            self.assertTrue(old["stale"])
+            self.assertEqual(old["items"]["site"]["status"], "not_reviewed")
+            self.assertEqual(client.get(path + "?version=3", headers=self.headers()).status_code, 404)
+
+    def test_checklist_access_validation_and_core_support(self):
+        for actor_id in ACTORS:
+            order = self.create(actor_id)
+            path = f"/api/orders/{order['id']}/checklist"
+            self.assertEqual(self.client.put(path, headers=self.headers(actor_id), json=self.checklist_payload()).status_code, 200)
+            forbidden = "enterprise-admin" if actor_id.startswith("core") else "core-admin"
+            for suffix in ("", "?version=1"):
+                self.assertEqual(self.client.get(path + suffix, headers=self.headers(forbidden)).status_code, 404)
+            self.assertEqual(self.client.put(path, headers=self.headers(forbidden), json=self.checklist_payload()).status_code, 404)
+            if actor_id.endswith("admin"):
+                general = actor_id.replace("admin", "general")
+                self.assertEqual(self.client.get(path, headers=self.headers(general)).status_code, 404)
+                self.assertEqual(self.client.put(path, headers=self.headers(general), json=self.checklist_payload()).status_code, 404)
+        path = f"/api/orders/{self.create()['id']}/checklist"
+        for change in ("missing", "extra", "approval", "reason", "spoof"):
+            body = self.checklist_payload()
+            if change == "missing": body["items"].pop("site")
+            if change == "extra": body["items"]["unknown"] = {"status": "not_reviewed"}
+            if change == "approval": body["items"]["site"]["status"] = "approved"
+            if change == "reason": body["items"]["site"]["status"] = "not_applicable"
+            if change == "spoof": body["author_id"] = "someone-else"
+            self.assertEqual(self.client.put(path, headers=self.headers(), json=body).status_code, 422, change)
+        self.assertEqual(self.client.get(path).status_code, 401)
+        self.assertEqual(self.client.get(path + "?version=0", headers=self.headers()).status_code, 422)
+
     def test_assets_and_missing_routes(self):
         for path in ("/", "/workspace.js", "/workspace.css"):
             response = self.client.get(path)

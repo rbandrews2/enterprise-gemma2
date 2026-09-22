@@ -9,9 +9,9 @@ from pathlib import Path
 from typing import Literal
 from uuid import UUID, uuid4
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, Query
 from fastapi.responses import FileResponse, JSONResponse
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from services.v2.intake import assess
 from shared.intake import IntakeRequest
@@ -45,6 +45,40 @@ class UpdateOrder(OrderInput):
     expected_version: int = Field(ge=1, strict=True)
 
 
+CHECKLIST_ITEMS = {
+    "site": "Site details and measured limits",
+    "authority": "Governing authority and source references",
+    "forms": "Required and recommended forms / permits",
+    "crew": "Crew, training and equipment",
+    "communication": "Communication, access and coordination",
+}
+
+
+class ChecklistItem(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+    status: Literal["not_reviewed", "needs_attention", "reported_ready", "not_applicable"]
+    notes: str = Field(default="", max_length=2000)
+
+    @model_validator(mode="after")
+    def reason_for_exclusion(self):
+        if self.status == "not_applicable" and not self.notes:
+            raise ValueError("Explain why the item is not applicable")
+        return self
+
+
+class ChecklistInput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    expected_version: int = Field(ge=0, strict=True)
+    expected_order_version: int = Field(ge=1, strict=True)
+    items: dict[str, ChecklistItem]
+
+    @model_validator(mode="after")
+    def complete_items(self):
+        if set(self.items) != set(CHECKLIST_ITEMS):
+            raise ValueError("Include exactly the five checklist categories")
+        return self
+
+
 def create_app(db_path: Path | None = None):
     if os.getenv("WZOS_WORKSPACE_PREVIEW") != "1" or any(os.getenv(k) for k in ("K_SERVICE", "GAE_ENV", "NETLIFY")):
         raise RuntimeError("Synthetic preview requires explicit local opt-in and refuses cloud runtime markers")
@@ -62,6 +96,10 @@ def create_app(db_path: Path | None = None):
             conn.close()
 
     with connect() as conn:
+        conn.execute("""CREATE TABLE IF NOT EXISTS preview_checklists (
+            order_id TEXT NOT NULL, version INTEGER NOT NULL, order_version INTEGER NOT NULL,
+            payload TEXT NOT NULL, author_id TEXT NOT NULL, saved_at TEXT NOT NULL,
+            PRIMARY KEY(order_id, version))""")
         conn.execute("""CREATE TABLE IF NOT EXISTS preview_orders (
             id TEXT PRIMARY KEY, organization_id TEXT NOT NULL, owner_id TEXT NOT NULL,
             version INTEGER NOT NULL, payload TEXT NOT NULL, updated_at TEXT NOT NULL,
@@ -186,6 +224,39 @@ def create_app(db_path: Path | None = None):
             conn.execute("UPDATE preview_orders SET payload=?,version=version+1,updated_at=? WHERE id=?",
                          (packed, datetime.now(timezone.utc).isoformat(), order_id))
             return serialize(permitted_row(conn, order_id, selected))
+
+    def checklist_record(row, order_version):
+        return {"version": row["version"], "order_version": row["order_version"],
+                "items": json.loads(row["payload"]), "author_id": row["author_id"],
+                "saved_at": row["saved_at"], "stale": row["order_version"] != order_version}
+
+    @app.get("/api/orders/{order_id}/checklist")
+    def read_checklist(order_id: str, request: Request, version: int | None = Query(None, ge=1)):
+        with connect() as conn:
+            order = permitted_row(conn, order_id, actor(request))
+            latest = conn.execute("SELECT MAX(version) FROM preview_checklists WHERE order_id=?", (order_id,)).fetchone()[0] or 0
+            row = conn.execute("SELECT * FROM preview_checklists WHERE order_id=? AND version=?", (order_id, version or latest)).fetchone()
+            if version and not row:
+                raise HTTPException(404, "Checklist revision not found")
+            return {"order_id": order_id, "current_order_version": order["version"],
+                    "latest_version": latest, "labels": CHECKLIST_ITEMS,
+                    "approved_for_field_use": False,
+                    "checklist": checklist_record(row, order["version"]) if row else None}
+
+    @app.put("/api/orders/{order_id}/checklist")
+    def save_checklist(order_id: str, payload: ChecklistInput, request: Request):
+        selected = actor(request)
+        with connect() as conn:
+            conn.execute("BEGIN IMMEDIATE")
+            order = permitted_row(conn, order_id, selected)
+            latest = conn.execute("SELECT MAX(version) FROM preview_checklists WHERE order_id=?", (order_id,)).fetchone()[0] or 0
+            if order["version"] != payload.expected_order_version or latest != payload.expected_version:
+                raise HTTPException(409, "Job or checklist changed. Reload saved records before reviewing again.")
+            packed = json.dumps({key: item.model_dump() for key, item in payload.items.items()}, sort_keys=True)
+            conn.execute("INSERT INTO preview_checklists VALUES (?,?,?,?,?,?)", (order_id, latest + 1,
+                         order["version"], packed, selected["id"], datetime.now(timezone.utc).isoformat()))
+            row = conn.execute("SELECT * FROM preview_checklists WHERE order_id=? AND version=?", (order_id, latest + 1)).fetchone()
+            return {"checklist": checklist_record(row, order["version"]), "approved_for_field_use": False}
 
     @app.post("/api/orders/{order_id}/preparation")
     def preparation(order_id: str, request: Request, expected_version: int):
