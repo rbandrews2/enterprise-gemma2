@@ -18,6 +18,7 @@ from shared.intake import SiteContext
 from shared.job_geometry import JobGeometry
 from services.v2.knowledge.store import Store
 from services.workspace_preview.atlas_adapter import prepare_order
+from services.workspace_preview import timeclock
 from services.workspace_preview.intelligence import ChatInput, ClientDisconnected, LocalIntelligence, ModelUnavailable, navigation_for, reply_until_disconnected
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -170,6 +171,10 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
     def script():
         return FileResponse(STATIC / "workspace.js", media_type="text/javascript")
 
+    @app.get("/timeclock.js")
+    def timeclock_script():
+        return FileResponse(STATIC / "timeclock.js", media_type="text/javascript")
+
     @app.get("/workspace.css")
     def styles():
         return FileResponse(STATIC / "workspace.css", media_type="text/css")
@@ -204,7 +209,8 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
     @app.post("/api/assistant/chat")
     async def assistant_chat(payload: ChatInput, request: Request):
         selected = actor(request)
-        context = {"edition": selected["edition"], "role": selected["role"], "page": "work_orders"}
+        context = {"edition": selected["edition"], "role": selected["role"], "page": payload.page}
+        context["time_clock"] = timeclock.summary(connect, selected)
         citations = []
         checklist_basis = None
         if payload.order_id:
@@ -250,7 +256,7 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
             raise HTTPException(503, str(error)) from error
         return {"answer": answer, "model_called": True, "actions_performed": [],
                 "navigation": navigation_for(payload.question, selected["edition"], bool(payload.order_id)),
-                "approved_for_field_use": False, "citations": citations, "checklist_basis": checklist_basis,
+                "approved_for_field_use": False, "citations": citations, "checklist_basis": checklist_basis, "time_basis": context["time_clock"],
                 "order_version": payload.expected_version if payload.order_id else None}
 
     @app.get("/api/orders")
@@ -348,4 +354,5 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
             record = serialize(row)
         return prepare_order(record, knowledge_store)
 
+    timeclock.register(app, connect, actor, permitted_row)
     return app

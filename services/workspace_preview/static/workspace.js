@@ -11,7 +11,7 @@ function notify(message,error=false){$("notice").hidden=false;$("notice").textCo
 async function api(path, options={}) {
  const response=await fetch(path,{...options,headers:{"Content-Type":"application/json","X-Preview-Actor":session?.id || $("identity").value,...options.headers}});
  const data=await response.json();
- if(!response.ok)throw new Error(typeof data.detail==="string"?data.detail:"Check the job fields and try again. Nothing was confirmed saved.");
+ if(!response.ok){const error=new Error(typeof data.detail==="string"?data.detail:"Check the fields and try again. Nothing was confirmed saved.");error.status=response.status;throw error;}
  return data;
 }
 function lock(value){busy=value;lockChecklist();$("identity").disabled=value;$("new-order").disabled=value;$("refresh").disabled=value;$("reload-order").disabled=value;$("save-order").disabled=value;$("prepare").disabled=value||dirty||!selected||!session?.can_prepare_atlas;for(const input of $("order-form").querySelectorAll("input,select,textarea,button"))input.disabled=value||checklistDirty;}
@@ -43,7 +43,7 @@ async function switchIdentity(){
  $("scope-note").textContent=session.can_manage_team?"Manage the team's draft work orders.":"Your assigned work orders and new drafts.";$("metric-scope").textContent=session.can_manage_team?"This test organization":"Assigned to this test user";
  $("atlas-description").textContent=session.can_prepare_atlas?"Check a saved job for missing site details before planning.":"Advanced job preparation is available in Enterprise. Core assistant integration is still pending.";
  await loadRows();if(rows.length)open(rows[0]);
- }catch(error){notify(error.message,true);}finally{lock(false);}
+ }catch(error){notify(error.message,true);}finally{lock(false);document.dispatchEvent(new CustomEvent("wzos:session"));}
 }
 $("identity").addEventListener("change",()=>{if(!canLeave()){$("identity").value=session.id;return;}switchIdentity();});
 $("search").addEventListener("input",renderList);
@@ -73,7 +73,7 @@ $("prepare").addEventListener("click",async()=>{
  catch(error){$("atlas-output").replaceChildren();notify(error.message,true);}finally{lock(false);}
 });
 $("atlas-nav").addEventListener("click",()=>{document.dispatchEvent(new CustomEvent("wzos:assistant-open"));});
-$("jobs-nav").addEventListener("click",()=>{$("list-title").scrollIntoView({behavior:"smooth",block:"start"});});
+$("jobs-nav").addEventListener("click",()=>{window.showWzosView("orders");$("list-title").scrollIntoView({behavior:"smooth",block:"start"});});
 window.addEventListener("beforeunload",event=>{if(dirty||checklistDirty){event.preventDefault();event.returnValue="";}});
 (async()=>{try{identities=(await api("/api/identities")).identities;for(const identity of identities){const option=el("option",`${identity.edition==="core"?"Core":"Enterprise"} · ${identity.role} · ${identity.name}`);option.value=identity.id;$("identity").append(option);}$("identity").value="enterprise-admin";await switchIdentity();}catch(error){notify(error.message,true);}})();
 
@@ -123,15 +123,27 @@ $("checklist-form").addEventListener("submit",async event=>{
 });
 
 window.askAtlas=async(question,history,signal)=>{
- if(busy||dirty||checklistDirty)throw Error('Save or reload your changes before asking Atlas about the current job.');
- return api('/api/assistant/chat',{method:'POST',signal,body:JSON.stringify({question,history,...(selected?{order_id:selected.id,expected_version:selected.version}:{})})});
+ const clockPage=!$("clock-view").hidden;
+ if(!clockPage&&(busy||dirty||checklistDirty))throw Error('Save or reload your changes before asking Atlas about the current job.');
+ return api('/api/assistant/chat',{method:'POST',signal,body:JSON.stringify({question,history,page:clockPage?"time_clock":"work_orders",...(!clockPage&&selected?{order_id:selected.id,expected_version:selected.version}:{})})});
 };
 
 window.atlasStatus=()=>api("/api/assistant/status");
 
 window.atlasNavigate=id=>{
+ if(id==='time_clock'){window.showWzosView("clock");return true;}
+ window.showWzosView("orders");
  const targets={job_board:'list-title',checklist:'checklist-panel',geometry:'geometry-fields',planning:'atlas-title'};
  if(!targets[id]||(id!=='job_board'&&!selected)||(id==='planning'&&!session?.can_prepare_atlas))return false;
  const target=$(targets[id]);if(id==='geometry')target.closest('details').open=true;
  target.scrollIntoView({behavior:'smooth',block:'center'});target.setAttribute('tabindex','-1');target.focus({preventScroll:true});return true;
 };
+
+window.wzosClock={api,getSession:()=>session,getOrders:()=>rows};
+window.showWzosView=view=>{
+ $("orders-view").hidden=view!=="orders";$("clock-view").hidden=view!=="clock";
+ for(const [id,on] of [["jobs-nav",view==="orders"],["clock-nav",view==="clock"]]){ $(id).classList.toggle("active",on);if(on)$(id).setAttribute("aria-current","page");else $(id).removeAttribute("aria-current");}
+ document.querySelector(".breadcrumb + strong").textContent=view==="clock"?"Time clock":"Work orders";
+ if(view==="clock")document.dispatchEvent(new CustomEvent("wzos:clock-open"));
+};
+$("clock-nav").addEventListener("click",()=>window.showWzosView("clock"));

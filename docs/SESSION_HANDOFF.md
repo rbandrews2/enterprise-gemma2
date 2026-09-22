@@ -4,6 +4,10 @@ Resumed at Ray's request. Development remains local; production deployment is no
 
 ## Latest resume checkpoint
 
+Time clock integration: read `docs/TIME_CLOCK_INTEGRATION.md` and recovery manifest. Inspected clock.superiorllc.org Netlify deployment 69fbb890a565ad9951a85943, preserved compiled assets locally, and adapted its task/shift/break workflow into V2. Time clock now shares the workspace and work orders in both editions. Server timestamps, command receipts, expected versions and a unique active-shift constraint protect recording; admins can view scoped team history. Atlas has time-clock guidance and own-user saved status but cannot mutate attendance. Supabase is still blocked; no new project or cloud deployment was made.
+
+108 automated tests and JavaScript syntax checks passed. Core general isolation and Atlas quick-guide navigation were checked in the browser. Browser test completed and reloaded one synthetic shift with three task intervals, 31 work seconds and 14 break seconds. Next time-clock work: production database/identity design, audited corrections, date filters/export, then GPS/offline reconciliation. Full parity and actual payroll use are not claimed. Older AI latency follow-ups remain unresolved.
+
 Live checklist evaluation: the real local request timed out after 110.2 seconds with HTTP 503 and the explicit retry message. Checklist context is verified by tests, but real generated checklist-answer quality remains unverified. Six focused intelligence tests passed after the HTTP 499 regression. Prioritize CPU inference performance before further model-heavy browser testing.
 
 Checklist-aware Atlas increment: the assistant receives the selected accessible work order's latest saved checklist, category statuses, bounded notes (300 characters each with truncation flags), saved job revision and staleness. The response exposes checklist basis separately from generated prose. No checklist saved is distinct from work not done. Cancellation now uses an explicit disconnected state and HTTP 499 instead of propagating task cancellation through middleware as a server error.

@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>WZOS · Operations workspace</title><link rel="stylesheet" href="/workspace.css"><script src="/geometry.js" defer></script><script src="/workspace.js" defer></script><script src="/assistant.js" defer></script></head>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>WZOS · Operations workspace</title><link rel="stylesheet" href="/workspace.css"><script src="/geometry.js" defer></script><script src="/workspace.js" defer></script><script src="/timeclock.js" defer></script><script src="/assistant.js" defer></script></head>
 <body>
 <a class="skip" href="#main">Skip to workspace</a>
 <aside class="sidebar">
@@ -11,7 +11,7 @@
   <button class="nav-item active" id="jobs-nav" aria-current="page"><span aria-hidden="true">▤</span> Work orders <span class="nav-count" id="nav-count">0</span></button>
   <button class="nav-item" id="atlas-nav"><span aria-hidden="true">✦</span> Atlas assistant</button>
   <button class="nav-item" disabled title="Not connected in this preview"><span aria-hidden="true">□</span> Forms</button>
-  <button class="nav-item" disabled title="Not connected in this preview"><span aria-hidden="true">◷</span> Time clock</button>
+  <button class="nav-item" id="clock-nav"><span aria-hidden="true">◷</span> Time clock</button>
   <button class="nav-item" disabled title="Not connected in this preview"><span aria-hidden="true">▦</span> Schedule & dispatch</button>
   <button class="nav-item" disabled title="Not connected in this preview"><span aria-hidden="true">◇</span> Maps & navigation</button>
   <button class="nav-item" disabled title="Not connected in this preview"><span aria-hidden="true">▱</span> Messages</button>
@@ -22,7 +22,7 @@
 <div class="app">
  <header class="topbar"><div><span class="breadcrumb">Workspace /</span> <strong>Work orders</strong></div><div class="profile"><span id="role-pill" class="pill">General</span><span class="avatar">JL</span><span id="actor-name">Test user</span></div></header>
  <section class="preview-bar" aria-label="Preview controls"><div><strong>LOCAL PREVIEW</strong><span>Synthetic records · no production sign-in</span></div><label for="identity">Test identity <select id="identity" disabled></select></label></section>
- <main id="main">
+ <main id="main"><div id="orders-view">
   <div class="page-heading"><div><p class="eyebrow">FIELD OPERATIONS</p><h1>Work orders</h1><p id="scope-note">Your jobs, ready for the next step.</p></div><button id="new-order" class="primary" disabled>+ New work order</button></div>
   <div id="notice" role="status" aria-live="polite" hidden></div>
   <section class="metrics" aria-label="Work order summary"><div><span>Visible work orders</span><strong id="metric-total">—</strong><small id="metric-scope">Current test identity</small></div><div><span>Drafts</span><strong id="metric-drafts">—</strong><small>Not approved for field use</small></div><div><span>Need a work date</span><strong id="metric-date">—</strong><small>Complete the job details</small></div></section>
@@ -52,7 +52,20 @@
     <section class="atlas-card" aria-labelledby="atlas-title"><div class="atlas-top"><div><p class="eyebrow">WZOS powered by Atlas AI Assistant</p><h3 id="atlas-title">Prepare the next step</h3></div><span class="atlas-symbol" aria-hidden="true">✦</span></div><p id="atlas-description">Check a saved job for missing site details before planning.</p><button id="prepare" class="secondary" disabled>Let Atlas help</button><p class="fine">Uses saved job details and the local agency library. Imagery generation and field approval are not connected. Ask Atlas in the conversation bubble for help.</p><div id="atlas-output" role="status" aria-live="polite"></div></section>
    </section>
   </div>
- </main>
+ </div>
+<section id="clock-view" hidden aria-labelledby="clock-title">
+ <div class="page-heading"><div><p class="eyebrow">CREW OPERATIONS</p><h1 id="clock-title">Time clock</h1><p>Your shift, tasks and breaks in one place.</p></div><button id="clock-refresh" class="secondary">Refresh clock</button></div>
+ <p id="clock-message" role="status" aria-live="polite"></p>
+ <div class="workspace-grid"><section class="panel">
+ <p id="clock-state" class="eyebrow">Loading clock</p><strong id="clock-timer" class="clock-timer">00:00:00</strong><p class="fine">Recorded work time excludes tracked breaks. This is not a payroll calculation.</p>
+ <p id="clock-active-job"></p>
+ <label>Work order (optional)<select id="clock-order"><option value="">Unassigned</option></select></label>
+ <label>Task / work area<select id="clock-task"><option value="job_site">Job Site</option><option value="setup">Setup</option><option value="teardown">Teardown</option><option value="travel">Travel Time</option><option value="other">Other</option></select></label>
+ <label>Shift note<textarea id="clock-note" maxlength="1000" rows="2"></textarea></label>
+ <div class="clock-actions"><button id="clock-in" class="primary">Clock in</button><button id="clock-switch" class="secondary">Switch task</button><button id="clock-break" class="secondary">Start break</button><button id="clock-out" class="secondary">Clock out</button><button id="clock-retry" class="secondary" hidden>Retry unconfirmed action</button></div>
+ <p class="fine">Local synthetic records. GPS and offline recording are not enabled. Reconnect before recording a change.</p>
+ </section><section class="panel"><div class="panel-heading"><h2>Time history</h2><label id="clock-team-label" hidden><input id="clock-team" type="checkbox"> Team records</label></div><div id="clock-history"></div><div class="clock-actions"><button id="clock-prev" class="secondary">Previous</button><button id="clock-next" class="secondary">Next</button></div><p id="clock-page" class="fine"></p></section></div>
+</section></main>
  <footer class="app-footer"><span>WZOS / Core + Enterprise</span><span>All records on this page are synthetic.</span></footer>
 </div>
 <div class="assistant-dock" id="assistant-dock">

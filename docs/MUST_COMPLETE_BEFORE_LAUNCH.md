@@ -91,3 +91,7 @@ Live browser checks against an isolated synthetic Norfolk project (36.8508, -76.
 
 - [ ] Benchmark Atlas response quality/latency and implement streaming/cancellation before production. First local CPU response took about 64 seconds; this is not production performance acceptance.
 - [ ] Preserve the customer-facing brand "WZOS powered by Atlas AI Assistant" across all imported screens. Backend model/runtime names remain operator-only, subject to any required license notices.
+
+## Time clock integration launch gates
+
+Read `docs/TIME_CLOCK_INTEGRATION.md`. Local clock-in/out, breaks, task intervals and scoped history now work. Before real attendance use: production identity and database policies; durable database/backup/restore; approved correction audit trail; GPS consent and retention; offline reconciliation; date-filtered exports; pay/break/overtime policy; import crosswalk from standalone `_2` tables and Core tables. Supabase access is still blocked; a replacement project is an option, not yet provisioned. Atlas cannot record or alter attendance.

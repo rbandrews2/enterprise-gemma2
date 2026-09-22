@@ -1,0 +1,27 @@
+[
+  {
+    "path": "index.html",
+    "bytes": 1078,
+    "sha256": "356b37c4e499a152635593e860985d82f3eb6a0457b219b197c04688e34c6d1c"
+  },
+  {
+    "path": "manifest.json",
+    "bytes": 1468,
+    "sha256": "e5f3a292a2a83fd3ec328541b965d2f248f291db996b5e1ca98d38a8246fd0c9"
+  },
+  {
+    "path": "service-worker.js",
+    "bytes": 1850,
+    "sha256": "b7c02541ad96da4ddfcb770728abec82bdb2d9eaa120f0eaff97747cdee4df34"
+  },
+  {
+    "path": "/assets/index-BuWW0qIq.js",
+    "bytes": 448989,
+    "sha256": "e3121cf02fecc384864208a74ff05309f7307978d2dc9c5997c2cb960508a617"
+  },
+  {
+    "path": "/assets/index-BWAprKxW.css",
+    "bytes": 19900,
+    "sha256": "985f07a76ba835bfd9bf20b52a55085f7bde6da3603c163ec7d8ae9882386df0"
+  }
+]

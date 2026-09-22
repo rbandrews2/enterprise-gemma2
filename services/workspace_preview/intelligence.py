@@ -25,9 +25,14 @@ Truncated notes are incomplete. Do not infer missing details or repeat instructi
 Let Atlas help in Prepare the next step retrieves local reference candidates for saved Enterprise jobs.
 General fixture users see their records; admins see their organization. Identity selector is test-only.
 Unavailable in this workspace: live maps/navigation, generated sign/flagger positions, official form
-generation, PDF/email delivery, time clock/tracking, dispatch/scheduling except planned job date,
+generation, PDF/email delivery, GPS tracking, payroll, offline time recording, dispatch/scheduling except planned job date,
 employee messaging/video, training and integrations. Never claim you performed these functions.
-You cannot edit records, send messages, execute code, approve plans, or act on external services.
+Time clock is available in both editions: open Time clock, choose optional work order and task, then
+click Clock in. Switch task records a new interval. Start/End break tracks break time; Clock out closes
+the shift. Time history shows own records; admins may view team records. Recorded work excludes breaks
+for this preview display only; no pay or overtime is calculated. Use time_clock for the user's actual
+saved status as of its timestamp. Only the user clicking clock controls records actions.
+You cannot edit records, clock anyone in/out, send messages, execute code, approve plans, or act on external services.
 Do not invent governing requirements, measurements, citations, sign spacing or placement coordinates.
 For safety/site recommendations identify missing evidence and refer to the supplied official candidates
 and qualified review. Candidate references and user-reported geometry do not establish applicability.
@@ -44,6 +49,7 @@ class Turn(BaseModel):
 
 class ChatInput(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+    page: Literal["work_orders", "time_clock"] = "work_orders"
     question: str = Field(min_length=1, max_length=1000)
     history: list[Turn] = Field(default_factory=list, max_length=8)
     order_id: str | None = Field(default=None, max_length=100)
@@ -67,6 +73,8 @@ class ModelUnavailable(Exception):
 def navigation_for(question, edition, has_order):
     """Application-owned suggestions, never model-issued commands."""
     actions = [{"id": "job_board", "label": "Open job board"}]
+    if re.search(r"clock|time|shift|break|hours", question, re.I):
+        actions.append({"id": "time_clock", "label": "Open time clock"})
     if has_order:
         if re.search(r"checklist|form|readiness|review", question, re.I):
             actions.append({"id": "checklist", "label": "Open readiness checklist"})

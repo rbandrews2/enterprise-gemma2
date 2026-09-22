@@ -8,7 +8,7 @@
   checklist:{match:/checklist|readiness|revision|stale/i,target:"checklist-panel",text:"Save a work order first, then use its Job readiness checklist. Review all five categories, record notes and save the checklist separately. Explain any item marked Not applicable. Older revisions stay read-only, and a job change flags the checklist for review. Reported ready is not field approval."},
   planning:{match:/atlas|planning|reference|source|sign|flagger|mutcd|vdot|osha|gemma|recommend/i,target:"atlas-title",text:"For a saved Enterprise job, select Let Atlas help in Prepare the next step. I can surface missing information and candidate agency passages with page references. Review their applicability and edition. Automatic sign placement is not connected in this preview. Core app guidance remains available here."},
   forms:{match:/form|pdf|document|permit|jsa|email/i,text:"Forms and document delivery are planned shared workflows. The saved readiness checklist is available now; official form selection, PDF creation and email delivery are not connected to this workspace yet. I can explain their availability, but cannot create or send those documents here."},
-  time:{match:/clock|timesheet|track|hours|payroll/i,text:"Time clock and tracking are part of WZOS Core and Enterprise. The recovered Core workflow is being integrated; clock-in, clock-out and timesheet changes are unavailable in this preview. No time entry has been recorded."},
+  time:{match:/clock|timesheet|track|hours|payroll|break|shift/i,target:"clock-title",text:"Open Time clock to start your own shift, select an optional work order and task, switch tasks, record breaks, or clock out. Time history saves locally; admins can view their test team's records. Work time excludes tracked breaks in this preview. GPS, offline recording, pay calculations and corrections are not enabled. I can guide you, but only your clicks on the clock controls record time."},
   dispatch:{match:/dispatch|schedul|assign|crew/i,text:"Scheduling and dispatch will organize work windows, assignments and crew coordination. They are not connected here yet. You can save a planned work date and job notes now; that does not dispatch anyone or send a notification."},
   maps:{match:/map|navigat|street|image|route|gps/i,text:"Maps and navigation are being brought into this workspace from the existing V2 implementation. Use Work limits and measured approaches to save reported geometry. This page cannot yet open imagery, navigate a crew or place signs."},
   messages:{match:/message|chat|video|meeting|contact/i,text:"Employee messaging and video meetings are planned communication tools. They are not connected to this preview. Asking me for help here sends no message to another person and starts no meeting."},
@@ -51,6 +51,7 @@
    if(epoch!==chatEpoch)return;
    byId("assistant-answer").textContent=data.answer;
    if(data.order_version){const basis=document.createElement("p");basis.className="fine";basis.textContent=`Based on saved job revision ${data.order_version}. No actions were performed.`;byId("assistant-answer").append(basis);}
+   if(data.time_basis && !byId('clock-view').hidden){const basis=document.createElement('p');basis.className='fine';basis.textContent=`Saved clock status: ${data.time_basis.status.replaceAll('_',' ')} · ${new Date(data.time_basis.as_of).toLocaleTimeString()}. Atlas performed no clock action.`;byId('assistant-answer').append(basis);}
    if(data.checklist_basis){const basis=document.createElement('p');basis.className='fine';const c=data.checklist_basis;basis.textContent=c.status==='not_saved'?'No saved readiness checklist.':`Checklist revision ${c.version} · job revision ${c.order_version}${c.stale?' · Job changed: review needed.':''}`;byId('assistant-answer').append(basis);}
    for(const action of data.navigation||[]){const button=document.createElement('button');button.type='button';button.className='secondary';button.textContent=action.label;button.addEventListener('click',()=>{closeAssistant();if(!window.atlasNavigate(action.id))openAssistant();});byId('assistant-navigation').append(button);}
    chatHistory=[...chatHistory,{role:'user',content:question},{role:'assistant',content:data.answer}].slice(-8);while(chatHistory.reduce((sum,turn)=>sum+turn.content.length,0)>8000)chatHistory.shift();
@@ -61,7 +62,9 @@
  function clearContext(){chatController?.abort();chatEpoch++;chatHistory=[];byId("assistant-question").value="";byId("assistant-topic").value="orders";answer("orders");}
  byId("assistant-stop").addEventListener("click",()=>chatController?.abort());
  document.addEventListener('wzos:job-context',clearContext);
+ document.addEventListener('wzos:time-context',clearContext);
  byId("assistant-go").addEventListener("click",()=>{
+  if(target==="clock-title")window.showWzosView("clock");else window.showWzosView("orders");
   const node=target&&byId(target);
   if(!node||node.hidden){byId("assistant-answer").textContent="Choose or save a work order first so I can show you that section.";return;}
   closeAssistant();node.scrollIntoView({behavior:"smooth",block:"center"});node.setAttribute("tabindex","-1");node.focus({preventScroll:true});
