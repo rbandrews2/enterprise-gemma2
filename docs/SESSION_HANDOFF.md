@@ -4,6 +4,8 @@ Ray authorized a separate restricted Google Cloud V2 staging deployment. Product
 
 ## Latest resume checkpoint
 
+Storage groundwork: extracted SQLite transaction component and added operator consistent snapshot/restore-to-new-file command. See docs/WORKSPACE_STORAGE.md. No cloud persistence or identity enablement yet; next inspect existing cloud database resources and choose the persistent adapter while preserving clock transaction guarantees.
+
 Final staging revision: `wzos-v2-staging-00004-swh`, app image commit `3a69b4200ff664dc79fcca71cd913f46fded8ee9`. Final browser reload passed. Next: durable cloud data and server-verified user/organization identity, followed by cloud Atlas inference and preserved source-library integration. Continue using synthetic records until those gates are complete.
 
 Restricted staging deployed and verified (authenticated API 200, anonymous 403, browser clock-in/out succeeded); Ray authorized this environment; production apps and DNS stay in place. Gloss-black surfaces now dominate, with orange/amber accents verified against live app.superiorllc.org. Dedicated staging factory and Dockerfile reuse the tested workspace with Cloud Run IAM as the outer boundary, one fixed synthetic reviewer, and explicit ephemeral-data warnings. No customer authentication, durable storage or cloud model is claimed. See docs/CLOUD_STAGING.md for deployment verification and limits.

@@ -4,7 +4,6 @@ import json
 import os
 import re
 import sqlite3
-from contextlib import contextmanager
 from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Literal
@@ -18,6 +17,7 @@ from shared.intake import SiteContext
 from shared.job_geometry import JobGeometry
 from services.v2.knowledge.store import Store
 from services.workspace_preview.atlas_adapter import prepare_order
+from services.workspace_preview.storage import SQLiteStorage
 from services.workspace_preview import timeclock
 from services.workspace_preview.intelligence import ChatInput, ClientDisconnected, LocalIntelligence, ModelUnavailable, navigation_for, reply_until_disconnected
 
@@ -98,15 +98,7 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
     knowledge_store = knowledge_store if knowledge_store is not None else Store()
     intelligence = intelligence if intelligence is not None else LocalIntelligence()
 
-    @contextmanager
-    def connect():
-        conn = sqlite3.connect(db_path, timeout=5)
-        conn.row_factory = sqlite3.Row
-        try:
-            with conn:
-                yield conn
-        finally:
-            conn.close()
+    connect = SQLiteStorage(db_path).connect
 
     with connect() as conn:
         conn.execute("""CREATE TABLE IF NOT EXISTS preview_checklists (
