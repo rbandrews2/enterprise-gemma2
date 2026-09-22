@@ -1,6 +1,6 @@
 # Must complete before launch
 
-Owner: Molecular Project Development LLC. Product: WZOS / Atlas powered by Gemma.
+Owner: Molecular Project Development LLC. Product: WZOS powered by Atlas AI Assistant.
 Updated 2026-09-20. Open checklist; no production date or deployment approval is implied. Close an item only with recorded evidence. Explicitly defer optional modules when defining the pilot scope.
 
 ## Verified Google Maps credential findings
@@ -30,7 +30,7 @@ Approved setup completed 2026-09-20: enabled Maps JavaScript and API Keys API in
 
 ## 2. Atlas intelligence and official knowledge
 
-- [ ] Select, benchmark and connect a functioning Gemma inference deployment; pin model/runtime versions and test timeouts, failures and output validation. Current Atlas is deterministic preparation, not model inference.
+- [ ] Select, benchmark and connect a functioning Gemma inference deployment; pin model/runtime versions and test timeouts, failures and output validation. Local development inference is now connected; production deployment and acceptance are still pending (see ATLAS_LOCAL_INTELLIGENCE.md).
 - [ ] Verify governing road authority and applicable document editions by location, date, contract and permit conditions; add locality coverage, including Norfolk where relevant.
 - [ ] Fill OSHA/VOSH coverage gaps, resolve unavailable sources and add an official form inventory. Track existing/equivalent customer records and applicability rather than recommending duplicates.
 - [ ] Implement controlled official-source discovery/update checks, edition/revision review and stale-source handling. Operator ingestion exists; automatic updates do not.
@@ -86,5 +86,8 @@ Live browser checks against an isolated synthetic Norfolk project (36.8508, -76.
 
 - [ ] Integrate the recovered Core global assistant into the shared routed app with the supplied Atlas character and optional, unobtrusive greeting in both editions.
 - [ ] Maintain verified instructions and availability for every module; provide page, edition and role context. Test that help matches real workflows and never implies completion of an unavailable action.
-- [ ] Connect Gemma conversation and controlled tool actions with production identity/organization permissions. Local keyword help on port 8083 is only a preview; no Gemma conversation or autonomous actions are connected.
+- [ ] Connect Gemma conversation and controlled tool actions with production identity/organization permissions. Port 8083 now has real local conversation plus quick guides; production inference and authorized action tools remain unconnected.
 - [ ] Verify mobile/keyboard accessibility, per-user greeting preferences, context clearing on account changes and appropriate handling of conversation data.
+
+- [ ] Benchmark Atlas response quality/latency and implement streaming/cancellation before production. First local CPU response took about 64 seconds; this is not production performance acceptance.
+- [ ] Preserve the customer-facing brand "WZOS powered by Atlas AI Assistant" across all imported screens. Backend model/runtime names remain operator-only, subject to any required license notices.

@@ -2,6 +2,7 @@
 import hashlib
 import json
 import os
+import re
 import sqlite3
 from contextlib import contextmanager
 from datetime import date, datetime, timezone
@@ -17,6 +18,7 @@ from shared.intake import SiteContext
 from shared.job_geometry import JobGeometry
 from services.v2.knowledge.store import Store
 from services.workspace_preview.atlas_adapter import prepare_order
+from services.workspace_preview.intelligence import ChatInput, LocalIntelligence, ModelUnavailable
 
 ROOT = Path(__file__).resolve().parents[2]
 STATIC = Path(__file__).with_name("static")
@@ -84,12 +86,13 @@ class ChecklistInput(BaseModel):
         return self
 
 
-def create_app(db_path: Path | None = None, knowledge_store=None):
+def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=None):
     if os.getenv("WZOS_WORKSPACE_PREVIEW") != "1" or any(os.getenv(k) for k in ("K_SERVICE", "GAE_ENV", "NETLIFY")):
         raise RuntimeError("Synthetic preview requires explicit local opt-in and refuses cloud runtime markers")
     db_path = db_path or ROOT / ".local-data/workspace-preview/orders.sqlite"
     db_path.parent.mkdir(parents=True, exist_ok=True)
     knowledge_store = knowledge_store if knowledge_store is not None else Store()
+    intelligence = intelligence if intelligence is not None else LocalIntelligence()
 
     @contextmanager
     def connect():
@@ -175,6 +178,10 @@ def create_app(db_path: Path | None = None, knowledge_store=None):
     def assistant_avatar():
         return FileResponse(STATIC / "atlas-assistant.png", media_type="image/png")
 
+    @app.get("/geometry.js")
+    def geometry_script():
+        return FileResponse(STATIC / "geometry.js", media_type="text/javascript")
+
     @app.get("/assistant.js")
     def assistant_script():
         return FileResponse(STATIC / "assistant.js", media_type="text/javascript")
@@ -188,6 +195,44 @@ def create_app(db_path: Path | None = None, knowledge_store=None):
         selected = actor(request)
         return {**selected, "can_prepare_atlas": selected["edition"] == "enterprise",
                 "can_manage_team": selected["role"] == "admin", "production_authenticated": False}
+
+    @app.get("/api/assistant/status")
+    async def assistant_status(request: Request):
+        actor(request)
+        return {"ready": await intelligence.ready(), "mode": "local", "actions_enabled": False}
+
+    @app.post("/api/assistant/chat")
+    async def assistant_chat(payload: ChatInput, request: Request):
+        selected = actor(request)
+        context = {"edition": selected["edition"], "role": selected["role"], "page": "work_orders"}
+        citations = []
+        if payload.order_id:
+            with connect() as conn:
+                order = serialize(permitted_row(conn, payload.order_id, selected))
+            if payload.expected_version != order["version"]:
+                raise HTTPException(409, "Work order changed. Reload before asking about this job.")
+            context["saved_job"] = {k: v for k, v in order.items() if k != "job_geometry"}
+            geometry = order.get("job_geometry") or {}
+            context["geometry_summary"] = {k: v for k, v in geometry.items() if k not in {"approaches", "work_limits"}}
+            context["geometry_summary"].update(approach_count=len(geometry.get("approaches", [])), work_limit_points=len(geometry.get("work_limits", [])), verification_status="customer_reported")
+            if selected["edition"] == "enterprise" and re.search(r"sign|flagger|placement|safety|mutcd|vdot|osha|reference|source|requirement|work.zone", payload.question, re.I):
+                packet = prepare_order(order, knowledge_store)
+                context["questions"] = packet["questions"]
+                context["evidence_review"] = packet["evidence_review"]
+                # Bounded candidates; official citation metadata stays outside generated text.
+                for topic in packet["references"]["topics"]:
+                    if topic["candidates"]:
+                        citations.append(topic["candidates"][0])
+                    if len(citations) == 3:
+                        break
+                context["candidate_references"] = [{**ref, "text": ref["text"][:600]} for ref in citations]
+        try:
+            answer = await intelligence.reply(payload, context)
+        except ModelUnavailable as error:
+            raise HTTPException(503, str(error)) from error
+        return {"answer": answer, "model_called": True, "actions_performed": [],
+                "approved_for_field_use": False, "citations": citations,
+                "order_version": payload.expected_version if payload.order_id else None}
 
     @app.get("/api/orders")
     def orders(request: Request):

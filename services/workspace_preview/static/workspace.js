@@ -3,6 +3,7 @@ const $ = id => document.getElementById(id);
 let identities = [], session = null, rows = [], selected = null, dirty = false, busy = false;
 let requestId = crypto.randomUUID();
 let lastCreateBody = null;
+let readGeometry=()=>null;
 let checklistDirty=false, checklistData=null, checklistGeneration=0, checklistLoading=false;
 const types = {line_striping:"Line striping",underground_utility:"Underground utility",road_maintenance:"Road maintenance",other:"Other"};
 function el(tag, text, className) {const node=document.createElement(tag); if(text!==undefined)node.textContent=text; if(className)node.className=className;return node;}
@@ -13,7 +14,7 @@ async function api(path, options={}) {
  if(!response.ok)throw new Error(typeof data.detail==="string"?data.detail:"Check the job fields and try again. Nothing was confirmed saved.");
  return data;
 }
-function lock(value){busy=value;lockChecklist();$("identity").disabled=value;$("new-order").disabled=value;$("refresh").disabled=value;$("reload-order").disabled=value;$("save-order").disabled=value;$("prepare").disabled=value||dirty||!selected||!session?.can_prepare_atlas;for(const input of $("order-form").querySelectorAll("input,select,textarea"))input.disabled=value||checklistDirty;}
+function lock(value){busy=value;lockChecklist();$("identity").disabled=value;$("new-order").disabled=value;$("refresh").disabled=value;$("reload-order").disabled=value;$("save-order").disabled=value;$("prepare").disabled=value||dirty||!selected||!session?.can_prepare_atlas;for(const input of $("order-form").querySelectorAll("input,select,textarea,button"))input.disabled=value||checklistDirty;}
 function canLeave(){return !(dirty||checklistDirty)||confirm("Discard unsaved job or checklist changes?");}
 function renderList(){
  const query=$("search").value.toLowerCase();$("job-list").replaceChildren();
@@ -23,6 +24,8 @@ function renderList(){
  $("metric-total").textContent=rows.length;$("metric-drafts").textContent=rows.length;$("metric-date").textContent=rows.filter(r=>!r.work_date).length;$("nav-count").textContent=rows.length;
 }
 function open(record){
+ readGeometry=window.WzosGeometry.mount($("geometry-fields"),record?.job_geometry);
+ document.dispatchEvent(new CustomEvent("wzos:job-context"));
  selected=record;dirty=false;requestId=crypto.randomUUID();lastCreateBody=null;$("atlas-output").replaceChildren();$("order-form").hidden=false;$("empty-detail").hidden=true;
  $("detail-title").textContent=record?record.title:"New work order";$("record-meta").textContent=record?`SAVED DRAFT · REVISION ${record.version}`:"NEW DRAFT";
  for(const name of ["title","address","locality","notes"])$(name).value=record?.[name]||"";
@@ -47,8 +50,8 @@ $("search").addEventListener("input",renderList);
 $("new-order").addEventListener("click",()=>{if(canLeave()){open(null);$("title").focus();}});
 $("order-form").addEventListener("input",()=>{dirty=true;$("save-state").textContent="Unsaved changes";$("atlas-output").replaceChildren();$("prepare").disabled=true;lockChecklist();});
 $("order-form").addEventListener("submit",async event=>{
- event.preventDefault();if(busy)return;if(checklistDirty){notify("Save or reload your checklist changes before saving job details.",true);return;}lock(true);
- const body={title:$("title").value,work_type:$("work-type").value,address:$("address").value,locality:$("locality").value,work_date:$("work-date").value||null,notes:$("notes").value,road_authority:$("road-authority").value.trim()||null,site:{...selected?.site,speed_limit_mph:$("speed-limit").value?Number($("speed-limit").value):null,lane_count:$("lane-count").value?Number($("lane-count").value):null,work_period:$("work-period").value},job_geometry:selected?.job_geometry||null};
+ event.preventDefault();if(busy)return;if(checklistDirty){notify("Save or reload your checklist changes before saving job details.",true);return;}let geometry;try{geometry=readGeometry();}catch(error){notify(error.message,true);return;}lock(true);
+ const body={title:$("title").value,work_type:$("work-type").value,address:$("address").value,locality:$("locality").value,work_date:$("work-date").value||null,notes:$("notes").value,road_authority:$("road-authority").value.trim()||null,site:{...selected?.site,speed_limit_mph:$("speed-limit").value?Number($("speed-limit").value):null,lane_count:$("lane-count").value?Number($("lane-count").value):null,work_period:$("work-period").value},job_geometry:geometry};
  if(!selected){const signature=JSON.stringify(body);if(lastCreateBody!==null&&lastCreateBody!==signature)requestId=crypto.randomUUID();lastCreateBody=signature;}
  try{const record=await api(selected?`/api/orders/${selected.id}`:"/api/orders",{method:selected?"PUT":"POST",body:JSON.stringify({...body,...(selected?{expected_version:selected.version}:{request_id:requestId})})});
   open(record);lock(true);notify(`Saved locally · revision ${record.version}.`);try{await loadRows();}catch{notify(`Saved revision ${record.version}, but the job board could not refresh. Use Refresh to try again.`,true);}
@@ -118,3 +121,10 @@ $("checklist-form").addEventListener("submit",async event=>{
  try{await api(`/api/orders/${selected.id}/checklist`,{method:"PUT",body:JSON.stringify({expected_version:checklistData.latest_version,expected_order_version:selected.version,items})});checklistDirty=false;await loadChecklist();notify("Checklist saved locally. It does not authorize field use.");}
  catch(error){notify(error.message,true);}finally{lock(false);}
 });
+
+window.askAtlas=async(question,history)=>{
+ if(busy||dirty||checklistDirty)throw Error('Save or reload your changes before asking Atlas about the current job.');
+ return api('/api/assistant/chat',{method:'POST',body:JSON.stringify({question,history,...(selected?{order_id:selected.id,expected_version:selected.version}:{})})});
+};
+
+window.atlasStatus=()=>api("/api/assistant/status");

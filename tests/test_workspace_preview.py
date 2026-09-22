@@ -147,6 +147,19 @@ class WorkspacePreviewTests(unittest.TestCase):
         body["job_geometry"] = {"work_limits": [{"latitude": 36.8, "longitude": -76.2}]}
         self.assertEqual(self.client.put(path, headers=self.headers(), json={**body, "expected_version": 2}).status_code, 422)
 
+    def test_measured_approach_saved_and_invalid_geometry_rejected(self):
+        approach = {"id": "north", "travel_direction": "southbound", "measurement_source": "Synthetic fixture",
+                    "measured_on": "2026-09-01", "lane_width_ft": 12.0, "available_sight_distance_ft": 400.0,
+                    "obstruction_notes": "Synthetic only", "path": [{"latitude": 36.86, "longitude": -76.28},
+                    {"latitude": 36.85, "longitude": -76.28}]}
+        body = self.payload(job_geometry={"closure_type": "shoulder", "placement_scenario": "stationary_shoulder",
+                                         "approaches": [approach]})
+        order = self.create(body=body)
+        self.assertEqual(order["job_geometry"]["approaches"][0]["path"], approach["path"])
+        body["request_id"] = str(uuid4())
+        body["job_geometry"]["approaches"].append(approach)
+        self.assertEqual(self.client.post("/api/orders", headers=self.headers(), json=body).status_code, 422)
+
     def checklist_payload(self, version=0, order_version=1):
         from services.workspace_preview.app import CHECKLIST_ITEMS
         return {"expected_version": version, "expected_order_version": order_version,
@@ -206,7 +219,7 @@ class WorkspacePreviewTests(unittest.TestCase):
         self.assertEqual(self.client.get(path + "?version=0", headers=self.headers()).status_code, 422)
 
     def test_assets_and_missing_routes(self):
-        for path in ("/", "/workspace.js", "/workspace.css", "/assistant.js", "/atlas-assistant.png"):
+        for path in ("/", "/workspace.js", "/workspace.css", "/assistant.js", "/geometry.js", "/atlas-assistant.png"):
             response = self.client.get(path)
             self.assertEqual(response.status_code, 200)
             self.assertEqual(response.headers["Cache-Control"], "no-store")
