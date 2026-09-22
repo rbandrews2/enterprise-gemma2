@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>WZOS · Operations workspace</title><link rel="stylesheet" href="/workspace.css"><script src="/geometry.js" defer></script><script src="/workspace.js" defer></script><script src="/timeclock.js" defer></script><script src="/assistant.js" defer></script></head>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>WZOS · Operations workspace</title><link rel="stylesheet" href="/workspace.css"><script src="/geometry.js" defer></script><script src="/workspace.js" defer></script><script src="/timeclock.js" defer></script><script src="/modules.js" defer></script><script src="/assistant.js" defer></script></head>
 <body>
 <a class="skip" href="#main">Skip to workspace</a>
 <aside class="sidebar">
@@ -11,9 +11,9 @@
   <button class="nav-item active" id="jobs-nav" aria-current="page"><span aria-hidden="true">▤</span> Work orders <span class="nav-count" id="nav-count">0</span></button>
   <button class="nav-item" disabled title="Full report module not connected yet"><span aria-hidden="true">▧</span> Work Zone Report</button>
   <button class="nav-item" id="atlas-nav"><span aria-hidden="true">✦</span> Atlas assistant</button>
-  <button class="nav-item" disabled title="Not connected in this preview"><span aria-hidden="true">□</span> Forms hub</button>
+  <button class="nav-item" id="forms-nav">Forms hub</button>
   <button class="nav-item" id="clock-nav"><span aria-hidden="true">◷</span> Time clock</button>
-  <button class="nav-item" disabled title="Not connected in this preview"><span aria-hidden="true">▦</span> Schedule management</button>
+  <button class="nav-item" id="schedule-nav">Schedule management</button>
   <button class="nav-item" disabled title="Not connected in this preview"><span aria-hidden="true">◇</span> Navigation</button>
   <button class="nav-item" disabled title="Not connected in this preview"><span aria-hidden="true">▱</span> Messaging</button>
   <button class="nav-item" disabled title="Not connected in this preview"><span aria-hidden="true">▷</span> Video training</button>
@@ -54,6 +54,20 @@
    </section>
   </div>
  </div>
+<section id="modules-view" hidden aria-labelledby="module-title">
+ <div class="page-heading"><div><p class="eyebrow">TEAM WORKSPACE</p><h1 id="module-title"></h1><p id="module-description"></p></div><button id="module-new" class="primary">New draft</button></div>
+ <p id="module-notice" role="status" aria-live="polite"></p>
+ <div class="workspace-grid"><section class="panel"><h2>Saved records</h2><button id="module-refresh" class="secondary">Refresh</button><div id="module-list"></div><p id="module-page"></p><button id="module-prev" class="secondary">Previous</button><button id="module-next" class="secondary">Next</button></section>
+ <section class="panel"><h2 id="module-editor-title">Draft details</h2><form id="module-form" hidden>
+ <label>Title<input id="module-name" maxlength="120" required></label>
+ <label>Linked work order<select id="module-order"></select></label>
+ <label>Location<input id="module-location" maxlength="500"></label>
+ <div id="module-times"><label>Start (your device timezone)<input id="module-start" type="datetime-local"></label><label>End (your device timezone)<input id="module-end" type="datetime-local"></label></div>
+ <label id="module-details-label">Details<textarea id="module-details" maxlength="4000" rows="6"></textarea></label>
+ <label>Status<select id="module-status"><option value="draft">Draft</option><option value="cancelled">Cancelled</option></select></label>
+ <p id="module-version" class="fine"></p><button id="module-save" class="primary">Save draft</button>
+ </form></section></div>
+</section>
 <section id="clock-view" hidden aria-labelledby="clock-title">
  <div class="page-heading"><div><p class="eyebrow">CREW OPERATIONS</p><h1 id="clock-title">Time clock</h1><p>Your shift, tasks and breaks in one place.</p></div><button id="clock-refresh" class="secondary">Refresh clock</button></div>
  <p id="clock-message" role="status" aria-live="polite"></p>

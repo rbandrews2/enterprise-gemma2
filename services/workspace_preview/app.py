@@ -18,7 +18,7 @@ from shared.job_geometry import JobGeometry
 from services.v2.knowledge.store import Store
 from services.workspace_preview.atlas_adapter import prepare_order
 from services.workspace_preview.storage import SQLiteStorage
-from services.workspace_preview import timeclock
+from services.workspace_preview import timeclock, modules
 from services.workspace_preview.intelligence import ChatInput, ClientDisconnected, LocalIntelligence, ModelUnavailable, navigation_for, reply_until_disconnected
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -177,6 +177,10 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
     @app.get("/workspace.js")
     def script():
         return FileResponse(STATIC / "workspace.js", media_type="text/javascript")
+
+    @app.get("/modules.js")
+    def modules_script():
+        return FileResponse(STATIC / "modules.js", media_type="text/javascript")
 
     @app.get("/timeclock.js")
     def timeclock_script():
@@ -362,5 +366,6 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
             record = serialize(row)
         return prepare_order(record, knowledge_store)
 
+    modules.register(app, connect, actor, permitted_row)
     timeclock.register(app, connect, actor, permitted_row)
     return app

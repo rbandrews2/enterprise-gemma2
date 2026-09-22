@@ -46,7 +46,7 @@ async function switchIdentity(){
  await loadRows();if(rows.length)open(rows[0]);
  }catch(error){notify(error.message,true);}finally{lock(false);document.dispatchEvent(new CustomEvent("wzos:session"));}
 }
-$("identity").addEventListener("change",()=>{if(!canLeave()){$("identity").value=session.id;return;}switchIdentity();});
+$("identity").addEventListener("change",()=>{if(!canLeave() || (window.wzosModulesCanLeave && !window.wzosModulesCanLeave())){$("identity").value=session.id;return;}switchIdentity();});
 $("search").addEventListener("input",renderList);
 $("new-order").addEventListener("click",()=>{if(canLeave()){open(null);$("title").focus();}});
 $("order-form").addEventListener("input",()=>{dirty=true;$("save-state").textContent="Unsaved changes";$("atlas-output").replaceChildren();$("prepare").disabled=true;lockChecklist();});
@@ -142,9 +142,11 @@ window.atlasNavigate=id=>{
 
 window.wzosClock={api,getSession:()=>session,getOrders:()=>rows};
 window.showWzosView=view=>{
- $("orders-view").hidden=view!=="orders";$("clock-view").hidden=view!=="clock";
- for(const [id,on] of [["jobs-nav",view==="orders"],["clock-nav",view==="clock"]]){ $(id).classList.toggle("active",on);if(on)$(id).setAttribute("aria-current","page");else $(id).removeAttribute("aria-current");}
- document.querySelector(".breadcrumb + strong").textContent=view==="clock"?"Time clock":"Work orders";
+ if(!canLeave() || (window.wzosModulesCanLeave && !window.wzosModulesCanLeave()))return;
+ $("orders-view").hidden=view!=="orders";$("clock-view").hidden=view!=="clock";$("modules-view").hidden=!["forms","schedule"].includes(view);
+ for(const [id,on] of [["jobs-nav",view==="orders"],["clock-nav",view==="clock"],["forms-nav",view==="forms"],["schedule-nav",view==="schedule"]]){ $(id).classList.toggle("active",on);if(on)$(id).setAttribute("aria-current","page");else $(id).removeAttribute("aria-current");}
+ document.querySelector(".breadcrumb + strong").textContent=({clock:"Time clock",forms:"Forms hub",schedule:"Schedule management"})[view]||"Work orders";
+ document.dispatchEvent(new CustomEvent("wzos:view",{detail:view}));
  if(view==="clock")document.dispatchEvent(new CustomEvent("wzos:clock-open"));
 };
 $("clock-nav").addEventListener("click",()=>window.showWzosView("clock"));
