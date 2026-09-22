@@ -1,0 +1,45 @@
+"use strict";
+(() => {
+ const $=id=>document.getElementById(id), api=(...args)=>window.wzosClock.api(...args);
+ let epoch=0, current=null;
+ const node=(tag,value)=>{const n=document.createElement(tag);n.textContent=value;return n;};
+ function section(title){const s=node("section","");s.className="panel report-section";s.append(node("h2",title));$("report-content").append(s);return s;}
+ function reset(){epoch++;current=null;$("report-content").replaceChildren();$("report-references").replaceChildren();$("report-prepare").disabled=true;}
+ async function load(){
+  reset();const generation=epoch,id=$("report-order").value;if(!id)return;
+  $("report-message").textContent="Loading saved report basis…";
+  try{const data=await api(`/api/orders/${encodeURIComponent(id)}/report`);if(generation!==epoch)return;current=data;
+   $("report-message").textContent=`Work-order revision ${data.order.version} · assembled ${new Date(data.generated_at).toLocaleString()}`;
+   const job=section("Work order");job.append(node("h3",data.order.title),node("p",`${data.order.work_type.replaceAll("_"," ")} · ${data.order.address}`),node("p",data.order.notes||"No job notes."));
+   const geometry=section("Reported geometry");
+   if(data.order.job_geometry){const details=node("details","");details.append(node("summary","View saved measurements and approach paths"));const pre=node("pre",JSON.stringify(data.order.job_geometry,null,2));pre.className="report-data";details.append(pre);geometry.append(details);}else geometry.append(node("p","Missing: enter work limits and measured approaches in Work orders."));
+   const checklist=section("Readiness review");
+   if(!data.checklist)checklist.append(node("p","No saved checklist. Review the job in Work orders."));
+   else{checklist.append(node("p",`Checklist revision ${data.checklist.version} · based on work-order revision ${data.checklist.order_version}${data.checklist.stale?" · STALE: job changed; review every category":" · user-reported review only"}`));for(const [key,item] of Object.entries(data.checklist.items))checklist.append(node("h3",key.replaceAll("_"," ")),node("p",`${item.status.replaceAll("_"," ")}: ${item.notes||"No notes"}`));}
+   const forms=section("Linked incident drafts");forms.append(node("p",`${data.forms.length} of ${data.forms_total} linked records shown. These do not establish required-form completion.`));
+   for(const form of data.forms){const d=node("details","");d.append(node("summary",`${form.title} · revision ${form.version} · ${form.status}`),node("p",form.details));forms.append(d);}
+   const limits=section("Sections still requiring work");for(const value of data.limitations)limits.append(node("p",value));
+   $("report-prepare").disabled=false;
+  }catch(error){if(generation===epoch)$("report-message").textContent=error.message;}
+ }
+ async function enter(){reset();$("report-order").replaceChildren();$("report-message").textContent="";
+  if(!window.wzosClock.getSession()?.can_prepare_atlas){$("report-message").textContent="Work Zone Report is an Enterprise feature. Core work orders remain available.";return;}
+  const generation=epoch;
+  try{const result=await api('/api/orders');if(generation!==epoch)return;for(const order of result.items){const option=node("option",order.title);option.value=order.id;$("report-order").append(option);}if(!result.items.length)$("report-message").textContent="Create and save a work order first.";else load();}catch(error){if(generation===epoch)$("report-message").textContent=error.message;}
+ }
+ $("report-nav").onclick=()=>window.showWzosView("report");
+ document.addEventListener("wzos:view",event=>{if(event.detail==="report")enter();else reset();});
+ document.addEventListener("wzos:session",()=>{reset();if(!$("report-view").hidden)enter();});
+ $("report-order").onchange=load;$("report-refresh").onclick=load;
+ $("report-prepare").onclick=async()=>{
+  if(!current)return;const generation=epoch,basis=current.order;$("report-prepare").disabled=true;const output=$("report-references");output.replaceChildren(node("p","Checking saved job against the reference library…"));
+  try{const data=await api(`/api/orders/${encodeURIComponent(basis.id)}/preparation?expected_version=${basis.version}`,{method:"POST"});if(generation!==epoch)return;output.replaceChildren(node("h2","Atlas reference preparation"),node("p",data.note));
+   for(const question of data.questions||[])output.append(node("p",question.question));
+   for(const recommendation of data.form_recommendations||[]) {output.append(node("h3",recommendation.title),node("p",recommendation.priority.replaceAll("_"," ")),node("p",recommendation.reason));}
+   for(const topic of data.references.topics){const d=node("details","");d.append(node("summary",`${topic.id.replaceAll("_"," ")} · ${topic.candidates.length} candidates`));
+    for(const c of topic.candidates){d.append(node("h3",c.title),node("p",`${c.agency} · ${c.edition||"Edition unverified"} · ${c.page?"page "+c.page:c.section||"section unavailable"} · ${c.review_status} · ${c.publication_status}`),node("p",c.text),node("p","Revision: "+c.revision));if(c.url.startsWith("https://")){const link=node("a","Official source");link.href=c.url;link.target="_blank";link.rel="noopener noreferrer";d.append(link);}}
+    output.append(d);}
+   for(const gap of data.references.coverage_gaps)output.append(node("p",gap));
+  }catch(error){if(generation===epoch)output.replaceChildren(node("p",error.message));}finally{if(generation===epoch)$("report-prepare").disabled=false;}
+ };
+})();

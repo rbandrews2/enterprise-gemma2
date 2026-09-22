@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>WZOS · Operations workspace</title><link rel="stylesheet" href="/workspace.css"><script src="/geometry.js" defer></script><script src="/workspace.js" defer></script><script src="/timeclock.js" defer></script><script src="/modules.js" defer></script><script src="/assistant.js" defer></script></head>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>WZOS · Operations workspace</title><link rel="stylesheet" href="/workspace.css"><script src="/geometry.js" defer></script><script src="/workspace.js" defer></script><script src="/timeclock.js" defer></script><script src="/modules.js" defer></script><script src="/report.js" defer></script><script src="/assistant.js" defer></script></head>
 <body>
 <a class="skip" href="#main">Skip to workspace</a>
 <aside class="sidebar">
@@ -9,7 +9,7 @@
  <p class="nav-label">WORKSPACE</p>
  <nav aria-label="Workspace navigation">
   <button class="nav-item active" id="jobs-nav" aria-current="page"><span aria-hidden="true">▤</span> Work orders <span class="nav-count" id="nav-count">0</span></button>
-  <button class="nav-item" disabled title="Full report module not connected yet"><span aria-hidden="true">▧</span> Work Zone Report</button>
+  <button class="nav-item" id="report-nav">Work Zone Report</button>
   <button class="nav-item" id="atlas-nav"><span aria-hidden="true">✦</span> Atlas assistant</button>
   <button class="nav-item" id="forms-nav">Forms hub</button>
   <button class="nav-item" id="clock-nav"><span aria-hidden="true">◷</span> Time clock</button>
@@ -54,6 +54,12 @@
    </section>
   </div>
  </div>
+<section id="report-view" hidden aria-labelledby="report-title">
+ <div class="page-heading"><div><p class="eyebrow">ENTERPRISE PLANNING</p><h1 id="report-title">Work Zone Report</h1><p>Draft review workspace · not approved for field use</p></div></div>
+ <label>Saved work order<select id="report-order"></select></label><button id="report-refresh" class="secondary">Refresh report</button>
+ <p id="report-message" role="status" aria-live="polite"></p><div id="report-content"></div>
+ <button id="report-prepare" class="primary" disabled>Let Atlas help</button><div id="report-references" aria-live="polite"></div>
+</section>
 <section id="modules-view" hidden aria-labelledby="module-title">
  <div class="page-heading"><div><p class="eyebrow">TEAM WORKSPACE</p><h1 id="module-title"></h1><p id="module-description"></p></div><button id="module-new" class="primary">New draft</button></div>
  <p id="module-notice" role="status" aria-live="polite"></p>

@@ -178,6 +178,10 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
     def script():
         return FileResponse(STATIC / "workspace.js", media_type="text/javascript")
 
+    @app.get("/report.js")
+    def report_script():
+        return FileResponse(STATIC / "report.js", media_type="text/javascript")
+
     @app.get("/modules.js")
     def modules_script():
         return FileResponse(STATIC / "modules.js", media_type="text/javascript")
@@ -357,6 +361,33 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
                          order["version"], packed, selected["id"], datetime.now(timezone.utc).isoformat()))
             row = conn.execute("SELECT * FROM preview_checklists WHERE order_id=? AND version=?", (order_id, latest + 1)).fetchone()
             return {"checklist": checklist_record(row, order["version"]), "approved_for_field_use": False}
+
+    @app.get("/api/orders/{order_id}/report")
+    def report(order_id: str, request: Request):
+        selected = actor(request)
+        if selected["edition"] != "enterprise":
+            raise HTTPException(403, "Work Zone Report requires Enterprise")
+        with connect() as conn:
+            conn.execute("BEGIN")
+            order = serialize(permitted_row(conn, order_id, selected))
+            checklist = conn.execute("SELECT * FROM preview_checklists WHERE order_id=? ORDER BY version DESC LIMIT 1", (order_id,)).fetchone()
+            clause = "organization_id=? AND kind='forms'"
+            params = [selected["organization_id"]]
+            if selected["role"] != "admin":
+                clause += " AND owner_id=?"
+                params.append(selected["id"])
+            # Filter by saved job link before applying the result bound.
+            clause += " AND json_extract(payload, '$.order_id')=?"
+            params.append(order_id)
+            total = conn.execute("SELECT COUNT(*) FROM module_records WHERE " + clause, params).fetchone()[0]
+            forms = conn.execute("SELECT * FROM module_records WHERE " + clause + " ORDER BY updated_at DESC, id LIMIT 50", params).fetchall()
+            return {"order": order, "checklist": checklist_record(checklist, order["version"]) if checklist else None,
+                    "forms": [{"id": row["id"], "version": row["version"], **json.loads(row["payload"])} for row in forms],
+                    "forms_total": total, "generated_at": datetime.now(timezone.utc).isoformat(),
+                    "approved_for_field_use": False,
+                    "limitations": ["Live draft view; refresh after changes. No approved or frozen report has been issued.",
+                        "Incident drafts are supporting records, not required agency forms.",
+                        "Site imagery, annotated placements, diagrams, PDF and email delivery are not connected."]}
 
     @app.post("/api/orders/{order_id}/preparation")
     def preparation(order_id: str, request: Request, expected_version: int):

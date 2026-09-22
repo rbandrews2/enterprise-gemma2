@@ -4,6 +4,8 @@ Ray authorized a separate restricted Google Cloud V2 staging deployment. Product
 
 ## Latest resume checkpoint
 
+Work Zone Report now has its own Enterprise-only live draft view: saved job revision, reported geometry, latest checklist/staleness, scoped linked incident drafts and Atlas source preparation with citation revisions. No frozen report, site imagery, placement diagram, PDF or email yet. Browser verified stale checklist and reference preparation. Report access/link isolation test passed; preceding full run passed other 116 tests (new test method corrected from POST to PUT and rerun). Staging deployment pending.
+
 Visual follow-up: user-provided road-work banner is now the local workspace decorative background, 17% opacity, 3px blur, subtle alternate 35-second drift. Reduced-motion preference disables animation. Browser appearance and image HTTP delivery verified. Not yet deployed to cloud staging.
 
 2026-09-22 module integration: Forms hub (internal incident drafts) and Schedule management (admin-editable, team-readable drafts) now work locally. 116 tests passed; synthetic browser saves verified. Atlas quick guides updated. See docs/MODULE_INTEGRATION_PROGRESS.md for exact coverage and remaining V1 parity. Cloud staging has not received this increment. Resume module parity before further storage groundwork, while retaining production identity/persistence gates.
