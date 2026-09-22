@@ -171,6 +171,14 @@ def create_app(db_path: Path | None = None, knowledge_store=None):
     def styles():
         return FileResponse(STATIC / "workspace.css", media_type="text/css")
 
+    @app.get("/atlas-assistant.png")
+    def assistant_avatar():
+        return FileResponse(STATIC / "atlas-assistant.png", media_type="image/png")
+
+    @app.get("/assistant.js")
+    def assistant_script():
+        return FileResponse(STATIC / "assistant.js", media_type="text/javascript")
+
     @app.get("/api/identities")
     def identities():
         return {"mode": "synthetic_local_preview", "identities": list(ACTORS.values())}

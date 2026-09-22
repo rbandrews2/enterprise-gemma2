@@ -4,6 +4,8 @@ Resumed at Ray's request. Development remains local; production deployment is no
 
 ## Latest resume checkpoint
 
+2026-09-21 Atlas scope correction: Atlas is the app-wide assistant for all functions and both editions. Restored the user-supplied image, persistent avatar, dismissible greeting, local topic/question guide and section navigation in the single-page preview. Recovered Core assistant components and knowledge inventory remain the React reuse foundation. This guide is explicitly local keyword-based help, not Gemma chat. Browser guidance/dismissal checks and 11 preview tests passed. Next preserve this companion while integrating measured geometry; later wire verified module context and Gemma/tool guidance across all routed pages.
+
 2026-09-21: connected the work-order preview to existing V2 Atlas preparation through `services/workspace_preview/atlas_adapter.py`. One saved work-order record feeds ProjectDraft, source discovery, evidence review and placement readiness without writing a second project. Added reported authority/speed/lane-count/work-period fields and preserved API-supplied JobGeometry during browser edits. Gloss-black theme retains recovered V17 green/gold styling cues. Read `docs/V1_REUSE_DECISIONS.md` and `docs/WORKSPACE_PREVIEW.md`.
 
 All 95 tests pass. Real browser saved the Norfolk sample at job revision 4 and returned 17 candidate passages across six topics, with VDOT/FHWA citation details visibly checked. Checklist revision 2 is now correctly stale. Preview remains at http://127.0.0.1:8083; run `.venv/Scripts/python.exe scripts/start_workspace_preview.py` if stopped. No Gemma call, new download, imagery generation, field approval, production/cloud change or paid service.

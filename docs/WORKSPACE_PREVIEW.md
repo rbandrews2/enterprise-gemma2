@@ -55,3 +55,11 @@ Browser checklist verification (2026-09-21): persisted across server restart, sa
 The final functional app remains targeted at `app.workzoneos.org`; public module explanations remain on `workzoneos.org`. Existing live services are unchanged.
 
 2026-09-21: browser saved reported speed/lane count/night-work context at work-order revision 4 and returned 17 reference candidates across six topics from the local library. Expanded advance-warning results showed VDOT/FHWA links, page references and unresolved applicability. Gloss-black theme uses the recovered V17 dark green/gold palette, clear focus rings and expandable reference groups.
+
+## App-wide Atlas companion (2026-09-21)
+
+Ray clarified that Atlas assists with every app function, in both editions, rather than serving only the Enterprise planning flow. Restored his supplied `atlas-assistant.png` unchanged, with the persistent launcher and dismissible greeting: "I'm here if you need assistance". The sidebar Atlas entry opens the same guide. This preview has one workspace page; persistence across future routed pages remains part of the shared React integration.
+
+The recovered Core `AiAvatar`, `AssistantBubble`, `GlobalAssistant` and `assistantKnowledge` files informed the interaction and module inventory. The preview provides reviewed local guidance for work orders, checklists, planning, forms, time clock, dispatch, maps, messages/video, training, integrations and admin access. Typed questions use keyword topic routing; this is not live Gemma conversation. Unavailable functions are clearly labeled. "Show me where" scrolls to available sections without saving, sending or triggering paid actions. No transcript is stored or sent externally. The greeting dismisses for the page lifetime; the avatar stays available. Escape closes the nonmodal panel and restores focus.
+
+Validation: all 11 workspace tests passed including image/script routes and existing access boundaries; JavaScript syntax checks passed. Browser verified avatar/panel, time-clock question, navigation to checklist, and greeting dismissal.

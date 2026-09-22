@@ -69,7 +69,7 @@ $("prepare").addEventListener("click",async()=>{
  const gaps=el("details");gaps.append(el("summary","Coverage gaps and review limits"));for(const gap of data.references.coverage_gaps)gaps.append(el("p",gap));output.append(gaps);}
  catch(error){$("atlas-output").replaceChildren();notify(error.message,true);}finally{lock(false);}
 });
-$("atlas-nav").addEventListener("click",()=>{$("atlas-title").scrollIntoView({behavior:"smooth",block:"center"});});
+$("atlas-nav").addEventListener("click",()=>{document.dispatchEvent(new CustomEvent("wzos:assistant-open"));});
 $("jobs-nav").addEventListener("click",()=>{$("list-title").scrollIntoView({behavior:"smooth",block:"start"});});
 window.addEventListener("beforeunload",event=>{if(dirty||checklistDirty){event.preventDefault();event.returnValue="";}});
 (async()=>{try{identities=(await api("/api/identities")).identities;for(const identity of identities){const option=el("option",`${identity.edition==="core"?"Core":"Enterprise"} · ${identity.role} · ${identity.name}`);option.value=identity.id;$("identity").append(option);}$("identity").value="enterprise-admin";await switchIdentity();}catch(error){notify(error.message,true);}})();

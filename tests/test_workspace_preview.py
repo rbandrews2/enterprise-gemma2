@@ -206,7 +206,7 @@ class WorkspacePreviewTests(unittest.TestCase):
         self.assertEqual(self.client.get(path + "?version=0", headers=self.headers()).status_code, 422)
 
     def test_assets_and_missing_routes(self):
-        for path in ("/", "/workspace.js", "/workspace.css"):
+        for path in ("/", "/workspace.js", "/workspace.css", "/assistant.js", "/atlas-assistant.png"):
             response = self.client.get(path)
             self.assertEqual(response.status_code, 200)
             self.assertEqual(response.headers["Cache-Control"], "no-store")

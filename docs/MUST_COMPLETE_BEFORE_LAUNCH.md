@@ -81,3 +81,10 @@ These remain part of the product vision. Their appearance in Atlas advice is not
 The dedicated browser key is configured locally in `.local-data/credentials/wzos-v2-browser-key.txt` (Git ignored). Run `./scripts/start_v2_local.ps1` from PowerShell; it loads the key into the child server environment without printing it, binds to 127.0.0.1:8081, and restores the prior environment on exit. An alternate key file can be supplied with `-BrowserKeyFile`.
 
 Live browser checks against an isolated synthetic Norfolk project (36.8508, -76.2859) successfully loaded Google's hybrid map with attribution and a nearby Street View panorama. Street View reported capture date 2022-09 and a nearby location, not the exact requested coordinate. No customer project was created or changed. The test server was stopped. All 76 tests passed; launcher syntax parsing passed. No imagery was downloaded or exported. Production referrer behavior, quotas/cost limits, marker overlays, missing imagery cases and export permissions still need validation.
+
+### Atlas across the application
+
+- [ ] Integrate the recovered Core global assistant into the shared routed app with the supplied Atlas character and optional, unobtrusive greeting in both editions.
+- [ ] Maintain verified instructions and availability for every module; provide page, edition and role context. Test that help matches real workflows and never implies completion of an unavailable action.
+- [ ] Connect Gemma conversation and controlled tool actions with production identity/organization permissions. Local keyword help on port 8083 is only a preview; no Gemma conversation or autonomous actions are connected.
+- [ ] Verify mobile/keyboard accessibility, per-user greeting preferences, context clearing on account changes and appropriate handling of conversation data.
