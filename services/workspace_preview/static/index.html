@@ -66,6 +66,10 @@
  <p id="module-notice" role="status" aria-live="polite"></p>
  <div class="workspace-grid"><section class="panel"><h2>Saved records</h2><button id="module-refresh" class="secondary">Refresh</button><div id="module-list"></div><p id="module-page"></p><button id="module-prev" class="secondary">Previous</button><button id="module-next" class="secondary">Next</button></section>
  <section class="panel"><h2 id="module-editor-title">Draft details</h2><form id="module-form" hidden>
+ <label id="module-type-label">Form template<select id="module-type"><option value="incident">Incident draft</option><option value="dvir">Vehicle inspection (DVIR draft)</option></select></label>
+ <fieldset id="module-inspection" hidden><legend>Vehicle inspection</legend><p class="fine">Internal draft only. Unchecked items are not passes. This does not certify the vehicle or authorize operation.</p>
+ <label>Vehicle ID<input id="dvir-vehicle" maxlength="120"></label><label>Odometer (miles)<input id="dvir-odometer" type="number" min="0" max="10000000" step="1"></label>
+ <label>Trip type<select id="dvir-trip"><option value="pre-trip">Pre-trip</option><option value="post-trip">Post-trip</option></select></label><div id="dvir-checks"></div><label>Defects / failed items<textarea id="dvir-defects" maxlength="4000"></textarea></label></fieldset>
  <label>Title<input id="module-name" maxlength="120" required></label>
  <label>Linked work order<select id="module-order"></select></label>
  <label>Location<input id="module-location" maxlength="500"></label>

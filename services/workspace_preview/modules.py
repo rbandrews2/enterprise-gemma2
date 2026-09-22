@@ -6,10 +6,32 @@ from uuid import UUID
 from fastapi import HTTPException, Request, Query
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+class VehicleInspection(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+    vehicle_id: str = Field(min_length=1, max_length=120)
+    odometer: int | None = Field(default=None, ge=0, le=10000000, strict=True)
+    trip_type: Literal["pre-trip", "post-trip"] = "pre-trip"
+    tires: Literal["not_checked", "pass", "fail"] = "not_checked"
+    fluids: Literal["not_checked", "pass", "fail"] = "not_checked"
+    brakes: Literal["not_checked", "pass", "fail"] = "not_checked"
+    ebrake: Literal["not_checked", "pass", "fail"] = "not_checked"
+    mirrors: Literal["not_checked", "pass", "fail"] = "not_checked"
+    windows: Literal["not_checked", "pass", "fail"] = "not_checked"
+    defects: str = Field(default="", max_length=4000)
+
+    @model_validator(mode="after")
+    def defect_details(self):
+        if any(getattr(self, key) == "fail" for key in ("tires", "fluids", "brakes", "ebrake", "mirrors", "windows")) and not self.defects:
+            raise ValueError("Describe any failed inspection item in Defects")
+        return self
+
+
 class ModuleRecord(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
     request_id: UUID
     expected_version: int = Field(default=0, ge=0, strict=True)
+    form_type: Literal["incident", "dvir"] = "incident"
+    inspection: VehicleInspection | None = None
     title: str = Field(min_length=1, max_length=120)
     location: str = Field(default="", max_length=500)
     details: str = Field(default="", max_length=4000)
@@ -67,7 +89,13 @@ def register(app, connect, actor, permitted_row):
                 raise HTTPException(403, "Only admins can edit the team schedule")
             if not payload.start or not payload.end:
                 raise HTTPException(422, "Start and end times are required")
-        elif payload.start or payload.end:
+        elif payload.form_type == "dvir" and payload.inspection is None:
+            raise HTTPException(422, "Vehicle inspection details are required")
+        if payload.form_type == "incident" and payload.inspection is not None:
+            raise HTTPException(422, "Incident drafts cannot contain vehicle inspection fields")
+        if kind == "schedule" and (payload.inspection is not None or payload.form_type != "incident"):
+            raise HTTPException(422, "Vehicle inspections belong in Forms hub")
+        if kind == "forms" and (payload.start or payload.end):
             raise HTTPException(422, "Incident drafts do not use schedule times")
         packed = payload.model_dump(mode="json", exclude={"expected_version", "request_id"})
         for key in ("start", "end"):
@@ -82,6 +110,8 @@ def register(app, connect, actor, permitted_row):
                                   (selected["organization_id"], kind, str(record_id))).fetchone()
             if existing and not row:
                 raise HTTPException(404, "Record not found")
+            if row and kind == "forms" and json.loads(row["payload"]).get("form_type", "incident") != payload.form_type:
+                raise HTTPException(409, "Create a new draft to use a different form template")
             if payload.order_id:
                 permitted_row(db, payload.order_id, selected)
             version = row["version"] if row else 0

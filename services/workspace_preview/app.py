@@ -386,7 +386,7 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
                     "forms_total": total, "generated_at": datetime.now(timezone.utc).isoformat(),
                     "approved_for_field_use": False,
                     "limitations": ["Live draft view; refresh after changes. No approved or frozen report has been issued.",
-                        "Incident drafts are supporting records, not required agency forms.",
+                        "Linked drafts are supporting records, not proof of required-form completion or vehicle clearance.",
                         "Site imagery, annotated placements, diagrams, PDF and email delivery are not connected."]}
 
     @app.post("/api/orders/{order_id}/preparation")

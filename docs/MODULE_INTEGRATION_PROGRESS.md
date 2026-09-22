@@ -26,3 +26,8 @@ This increment is available at http://127.0.0.1:8083/ and is committed to enterp
 4. Messaging requires verified identity and membership before enabling real delivery.
 5. Compose the dedicated Work Zone Report from shared jobs, geometry, reference preparation, imagery, forms and delivery; current preparation is not a complete report.
 6. Persist cloud data, integrate real user identity and connect cloud Atlas. Then deploy the next tested staging increment. Production apps and DNS remain unchanged.
+
+
+## Vehicle inspection template — 2026-09-22
+
+Adapted fields from preserved Core `src/components/dvir/DVIRpage.tsx` and `src/pages/forms/DVIR.tsx`, source baseline e5d7167bd1834a393fae8e2e19ed8b515f08c0e9. Reused vehicle ID, odometer, trip type, tires/fluids/brakes/emergency brake/mirrors/windows checks, defects and comments (shared Details). Templates are selected for new Forms hub drafts; existing incident records remain readable. Saved template type is fixed; edits retain optimistic revision checks and existing organization/owner permissions. Not checked is explicit. A reported failure needs defect notes. Work Zone Report and saved snapshots include linked inspection data without granting vehicle clearance. Signatures, repairs/reinspection, official submission, print/PDF and full regulatory-template validation remain pending. No changes made to Netlify or recovered originals. 118 tests passed; browser saved a synthetic failed-brake draft with defect notes.

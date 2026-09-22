@@ -27,8 +27,8 @@
    const checklist=section("Readiness review");
    if(!data.checklist)checklist.append(node("p","No saved checklist. Review the job in Work orders."));
    else{checklist.append(node("p",`Checklist revision ${data.checklist.version} · based on work-order revision ${data.checklist.order_version}${data.checklist.stale?" · STALE: job changed; review every category":" · user-reported review only"}`));for(const [key,item] of Object.entries(data.checklist.items))checklist.append(node("h3",key.replaceAll("_"," ")),node("p",`${item.status.replaceAll("_"," ")}: ${item.notes||"No notes"}`));}
-   const forms=section("Linked incident drafts");forms.append(node("p",`${data.forms.length} of ${data.forms_total} linked records shown. These do not establish required-form completion.`));
-   for(const form of data.forms){const d=node("details","");d.append(node("summary",`${form.title} · revision ${form.version} · ${form.status}`),node("p",form.details));forms.append(d);}
+   const forms=section("Linked form drafts");forms.append(node("p",`${data.forms.length} of ${data.forms_total} linked records shown. These do not establish required-form completion.`));
+   for(const form of data.forms){const d=node("details","");d.append(node("summary",`${form.title} · revision ${form.version} · ${form.status}`),node("p",form.details));if(form.inspection){const v=form.inspection;d.append(node("p",`Vehicle ${v.vehicle_id} · ${v.trip_type} · Odometer: ${v.odometer??"not recorded"} miles`));for(const [key,label] of Object.entries({tires:"Tires",fluids:"Fluids",brakes:"Brakes",ebrake:"Emergency brake",mirrors:"Mirrors",windows:"Windows"}))d.append(node("p",`${label}: ${v[key].replaceAll("_"," ")}`));d.append(node("p",`Defects: ${v.defects||"None recorded"}`));}forms.append(d);}
    const limits=section("Sections still requiring work");for(const value of data.limitations)limits.append(node("p",value));
    $("report-prepare").disabled=false;$("report-save").disabled=saving;
  }

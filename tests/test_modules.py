@@ -59,3 +59,21 @@ class ModuleTests(unittest.TestCase):
         page=self.client.get('/api/modules/forms?limit=2&offset=2',headers=self.headers('enterprise-admin')).json()
         self.assertEqual(page['total'],3);self.assertEqual(len(page['items']),1)
         self.assertEqual(self.client.get('/api/modules/messages',headers=self.headers('enterprise-admin')).status_code,422)
+
+    def test_vehicle_inspection_roundtrip_and_validation(self):
+        body=self.body();body.update(form_type="dvir",inspection={"vehicle_id":"TEST-7","brakes":"fail","defects":"Synthetic brake issue"})
+        record=str(uuid4())
+        response=self.save('forms',body,'enterprise-general',record)
+        self.assertEqual(response.status_code,200)
+        self.assertEqual(response.json()['inspection']['tires'],'not_checked')
+        self.assertEqual(response.json()['inspection']['brakes'],'fail')
+        rows=self.client.get('/api/modules/forms',headers=self.headers('enterprise-general')).json()['items']
+        self.assertEqual(rows[0]['inspection']['vehicle_id'],'TEST-7')
+        body['inspection']['defects']=''
+        self.assertEqual(self.save('forms',body).status_code,422)
+        body['inspection']['brakes']='pass';body['inspection']['odometer']=-1
+        self.assertEqual(self.save('forms',body).status_code,422)
+        body['inspection']['odometer']=100
+        self.assertEqual(self.save('schedule',body).status_code,422)
+        other=self.body();other['expected_version']=1
+        self.assertEqual(self.save('forms',other,'enterprise-general',record).status_code,409)

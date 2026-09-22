@@ -1,12 +1,18 @@
 "use strict";
 (() => {
  const $=id=>document.getElementById(id), api=(...args)=>window.wzosClock.api(...args);
+ const checks={tires:"Tires",fluids:"Fluids",brakes:"Brakes",ebrake:"Emergency brake",mirrors:"Mirrors",windows:"Windows"};
+ for(const [key,label] of Object.entries(checks)){const wrap=document.createElement("label");wrap.textContent=label;const select=document.createElement("select");select.id="dvir-"+key;for(const [value,title] of Object.entries({not_checked:"Not checked",pass:"Pass (reported)",fail:"Fail (reported)"})){const option=document.createElement("option");option.value=value;option.textContent=title;select.append(option);}wrap.append(select);$("dvir-checks").append(wrap);}
+ function template(){const enabled=kind==="forms"&&$("module-type").value==="dvir";$("module-inspection").hidden=!enabled;$("dvir-vehicle").required=enabled;}
+ $("module-type").onchange=template;
  let kind="forms", current=null, dirty=false, saving=false, epoch=0, offset=0, total=0;
  const text=(tag,value)=>{const n=document.createElement(tag);n.textContent=value;return n;};
  const notice=value=>{$("module-notice").textContent=value;};
  window.wzosModulesCanLeave=()=>!saving&&(!dirty||confirm("Leave unsaved module changes?"));
  function localTime(value){if(!value)return "";const d=new Date(value);return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,16);}
  function edit(row){
+  $("module-type").value=row?.form_type||"incident";$("module-type").disabled=Boolean(row);
+  const inspection=row?.inspection;$("dvir-vehicle").value=inspection?.vehicle_id||"";$("dvir-odometer").value=inspection?.odometer??"";$("dvir-trip").value=inspection?.trip_type||"pre-trip";$("dvir-defects").value=inspection?.defects||"";for(const key of Object.keys(checks))$("dvir-"+key).value=inspection?.[key]||"not_checked";template();
   current=row||{id:crypto.randomUUID(),version:0};dirty=false;$("module-form").hidden=false;
   for(const [id,key] of [["name","title"],["location","location"],["details","details"]])$("module-"+id).value=row?.[key]||"";
   const none=text("option","No linked work order");none.value="";$("module-order").replaceChildren(none);
@@ -16,6 +22,7 @@
   $("module-version").textContent=row?`Saved revision ${row.version} · ${new Date(row.updated_at).toLocaleString()}`:"Unsaved draft";
   const readOnly=kind==="schedule"&&window.wzosClock.getSession()?.role!=="admin";
   for(const input of $("module-form").elements)input.disabled=readOnly;
+  $("module-type").disabled=readOnly||Boolean(row);
  }
  async function refresh(){
   const generation=++epoch;
@@ -31,7 +38,8 @@
   if(!["forms","schedule"].includes(view))return;
   kind=view;offset=0;dirty=false;current=null;$("module-form").hidden=true;notice("");
   $("module-title").textContent=kind==="forms"?"Forms hub":"Schedule management";
-  $("module-description").textContent=kind==="forms"?"Incident drafts: record title, location and description. These are internal drafts, not agency submissions. Other V1 form templates are pending.":"Team schedule drafts. Admins edit; team members can read. Saving does not dispatch or notify anyone.";
+  $("module-description").textContent=kind==="forms"?"Incident and vehicle inspection drafts. Save, reopen and link to a work order. Official submissions and other templates are pending.":"Team schedule drafts. Admins edit; team members can read. Saving does not dispatch or notify anyone.";
+  $("module-type-label").hidden=kind!=="forms";
   $("module-times").hidden=kind!=="schedule";$("module-start").required=$("module-end").required=kind==="schedule";
   refresh();
  }
@@ -48,9 +56,10 @@
   event.preventDefault();if(saving)return;
   const generation=epoch, record=current;
   const body={request_id:record.id,expected_version:record.version,title:$("module-name").value,location:$("module-location").value,details:$("module-details").value,order_id:$("module-order").value||null,status:$("module-status").value,start:null,end:null};
+  if(kind==="forms"){body.form_type=$("module-type").value;if(body.form_type==="dvir"){body.inspection={vehicle_id:$("dvir-vehicle").value,odometer:$("dvir-odometer").value===""?null:Number($("dvir-odometer").value),trip_type:$("dvir-trip").value,defects:$("dvir-defects").value};for(const key of Object.keys(checks))body.inspection[key]=$("dvir-"+key).value;if(Object.keys(checks).some(key=>body.inspection[key]==="fail")&&!body.inspection.defects.trim()){notice("Describe the failed inspection items in Defects.");return;}}}
   if(kind==="schedule"){body.start=new Date($("module-start").value).toISOString();body.end=new Date($("module-end").value).toISOString();if(body.end<=body.start){notice("End must be after start.");return;}}
   saving=true;for(const input of $("module-form").elements)input.disabled=true;$("identity").disabled=true;
   try{const saved=await api(`/api/modules/${kind}/${record.id}`,{method:"PUT",body:JSON.stringify(body)});if(generation!==epoch)return;edit(saved);notice("Draft saved. No submission or notification was sent.");await refresh();}
-  catch(error){notice(error.message);}finally{saving=false;for(const input of $("module-form").elements)input.disabled=false;$("identity").disabled=false;}
+  catch(error){notice(error.message);}finally{saving=false;for(const input of $("module-form").elements)input.disabled=false;$("identity").disabled=false;$("module-type").disabled=Boolean(current?.version);}
  };
 })();
