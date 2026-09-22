@@ -1,5 +1,7 @@
 # Must complete before launch
 
+See [PRODUCTION_ROADMAP.md](PRODUCTION_ROADMAP.md) for the current ordered delivery plan and production acceptance endpoint. The dated findings below are historical evidence; verify current configuration before closing any gate.
+
 Owner: Molecular Project Development LLC. Product: WZOS powered by Atlas AI Assistant.
 Updated 2026-09-20. Open checklist; no production date or deployment approval is implied. Close an item only with recorded evidence. Explicitly defer optional modules when defining the pilot scope.
 
