@@ -41,3 +41,10 @@ body::before{content:"";position:fixed;inset:-4%;z-index:-1;pointer-events:none;
 @media(prefers-reduced-motion:reduce){body::before{animation:none;transform:scale(1.04)}}
 
 .report-section{margin:18px 0;padding:22px}.report-data{white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.6 monospace}#report-references{padding:20px 0}#report-references details{padding:14px;border-bottom:1px solid var(--border)}
+
+/* Keep report controls and reference passages on readable gloss-black cards. */
+#report-view{background:linear-gradient(145deg,#202223,#090a0b 28%,#030404);border:1px solid #383b3b;border-radius:14px;padding:24px;box-shadow:inset 0 1px 0 #ffffff20,0 16px 35px #0007}
+#report-references:empty{display:none}
+#report-references:not(:empty){background:linear-gradient(145deg,#1d1f20,#060707);border:1px solid #383b3b;border-radius:12px;padding:22px;margin-top:20px;overflow-wrap:anywhere}
+.report-section{border-radius:12px}.report-measurements{display:grid;grid-template-columns:minmax(120px,1fr) 2fr;gap:12px 20px}.report-measurements dt{color:#b8bbb9}.report-measurements dd{margin:0;overflow-wrap:anywhere}
+@media(max-width:600px){#report-view{padding:16px}.report-measurements{grid-template-columns:1fr;gap:6px}.report-measurements dd{margin-bottom:10px}}

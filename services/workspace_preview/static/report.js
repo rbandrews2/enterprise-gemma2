@@ -12,7 +12,14 @@
    $("report-message").textContent=`Work-order revision ${data.order.version} · assembled ${new Date(data.generated_at).toLocaleString()}`;
    const job=section("Work order");job.append(node("h3",data.order.title),node("p",`${data.order.work_type.replaceAll("_"," ")} · ${data.order.address}`),node("p",data.order.notes||"No job notes."));
    const geometry=section("Reported geometry");
-   if(data.order.job_geometry){const details=node("details","");details.append(node("summary","View saved measurements and approach paths"));const pre=node("pre",JSON.stringify(data.order.job_geometry,null,2));pre.className="report-data";details.append(pre);geometry.append(details);}else geometry.append(node("p","Missing: enter work limits and measured approaches in Work orders."));
+   if(data.order.job_geometry){
+    const g=data.order.job_geometry, list=node("dl","");list.className="report-measurements";
+    const fact=(label,value,unit="")=>{list.append(node("dt",label),node("dd",value==null||value===""?"Not recorded":String(value).replaceAll("_"," ")+unit));};
+    fact("Closure",g.closure_type);fact("Road class",g.road_class);fact("Placement scenario",g.placement_scenario);fact("Travel direction",g.travel_direction);fact("Duration",g.duration_hours," hours");fact("Lane width",g.lane_width_ft," ft");fact("Available sight distance",g.available_sight_distance_ft," ft");fact("Measurement source",g.geometry_source);geometry.append(list,node("p","Customer-reported measurements · verification required."));
+    function points(title,values){if(!values?.length)return;const d=node("details","");d.append(node("summary",title));const ol=node("ol","");for(const point of values)ol.append(node("li",`${point.latitude.toFixed(6)}, ${point.longitude.toFixed(6)}`));d.append(ol);geometry.append(d);}
+    points("Work-limit coordinates",g.work_limits);
+    for(const [index,approach] of (g.approaches||[]).entries()){geometry.append(node("h3",`Approach ${index+1} · ${approach.travel_direction}`),node("p",`Lane width: ${approach.lane_width_ft} ft · Sight distance: ${approach.available_sight_distance_ft} ft`),node("p",`Measured ${approach.measured_on} · ${approach.measurement_source}`),node("p",approach.obstruction_notes));points("Approach coordinates · upstream toward work area",approach.path);}
+   }else geometry.append(node("p","Missing: enter work limits and measured approaches in Work orders."));
    const checklist=section("Readiness review");
    if(!data.checklist)checklist.append(node("p","No saved checklist. Review the job in Work orders."));
    else{checklist.append(node("p",`Checklist revision ${data.checklist.version} · based on work-order revision ${data.checklist.order_version}${data.checklist.stale?" · STALE: job changed; review every category":" · user-reported review only"}`));for(const [key,item] of Object.entries(data.checklist.items))checklist.append(node("h3",key.replaceAll("_"," ")),node("p",`${item.status.replaceAll("_"," ")}: ${item.notes||"No notes"}`));}
