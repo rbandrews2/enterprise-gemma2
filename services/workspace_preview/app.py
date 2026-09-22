@@ -18,7 +18,7 @@ from shared.intake import SiteContext
 from shared.job_geometry import JobGeometry
 from services.v2.knowledge.store import Store
 from services.workspace_preview.atlas_adapter import prepare_order
-from services.workspace_preview.intelligence import ChatInput, LocalIntelligence, ModelUnavailable, navigation_for, reply_until_disconnected
+from services.workspace_preview.intelligence import ChatInput, ClientDisconnected, LocalIntelligence, ModelUnavailable, navigation_for, reply_until_disconnected
 
 ROOT = Path(__file__).resolve().parents[2]
 STATIC = Path(__file__).with_name("static")
@@ -206,12 +206,28 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
         selected = actor(request)
         context = {"edition": selected["edition"], "role": selected["role"], "page": "work_orders"}
         citations = []
+        checklist_basis = None
         if payload.order_id:
             with connect() as conn:
                 order = serialize(permitted_row(conn, payload.order_id, selected))
+                checklist_row = conn.execute(
+                    "SELECT * FROM preview_checklists WHERE order_id=? ORDER BY version DESC LIMIT 1",
+                    (payload.order_id,),
+                ).fetchone()
             if payload.expected_version != order["version"]:
                 raise HTTPException(409, "Work order changed. Reload before asking about this job.")
             context["saved_job"] = {k: v for k, v in order.items() if k != "job_geometry"}
+            checklist_basis = {"status": "not_saved", "version": None, "order_version": None, "stale": False}
+            checklist_context = {**checklist_basis, "items": {}}
+            if checklist_row:
+                saved_checklist = checklist_record(checklist_row, order["version"])
+                checklist_basis = {"status": "saved", **{key: saved_checklist[key] for key in ("version", "order_version", "stale")}}
+                checklist_context = {**checklist_basis, "items": {
+                    key: {"label": CHECKLIST_ITEMS[key], "status": item["status"],
+                          "notes": item["notes"][:300], "notes_truncated": len(item["notes"]) > 300}
+                    for key, item in saved_checklist["items"].items()
+                }}
+            context["readiness_checklist"] = checklist_context
             geometry = order.get("job_geometry") or {}
             context["geometry_summary"] = {k: v for k, v in geometry.items() if k not in {"approaches", "work_limits"}}
             context["geometry_summary"].update(approach_count=len(geometry.get("approaches", [])), work_limit_points=len(geometry.get("work_limits", [])), verification_status="customer_reported")
@@ -228,11 +244,13 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
                 context["candidate_references"] = [{**ref, "text": ref["text"][:600]} for ref in citations]
         try:
             answer = await reply_until_disconnected(request, intelligence, payload, context)
+        except ClientDisconnected:
+            return JSONResponse({"detail": "Reply stopped"}, status_code=499)
         except ModelUnavailable as error:
             raise HTTPException(503, str(error)) from error
         return {"answer": answer, "model_called": True, "actions_performed": [],
                 "navigation": navigation_for(payload.question, selected["edition"], bool(payload.order_id)),
-                "approved_for_field_use": False, "citations": citations,
+                "approved_for_field_use": False, "citations": citations, "checklist_basis": checklist_basis,
                 "order_version": payload.expected_version if payload.order_id else None}
 
     @app.get("/api/orders")

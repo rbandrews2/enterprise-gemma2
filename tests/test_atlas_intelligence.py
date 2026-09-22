@@ -56,6 +56,9 @@ class IntelligenceTests(unittest.TestCase):
                 self.assertEqual(client.post(path,json={**body,"expected_version":2},headers=headers).status_code,409)
                 self.assertEqual(fake.calls,[])
                 result=client.post(path,json=body,headers=headers).json()
+                from services.workspace_preview.intelligence import ClientDisconnected
+                with patch('services.workspace_preview.app.reply_until_disconnected', side_effect=ClientDisconnected):
+                    self.assertEqual(client.post(path,json=body,headers=headers).status_code,499)
                 self.assertEqual(result["actions_performed"],[])
                 self.assertFalse(result["approved_for_field_use"])
                 self.assertTrue(result["model_called"])
@@ -73,7 +76,7 @@ class IntelligenceTests(unittest.TestCase):
         self.assertEqual([a['id'] for a in navigation_for(question, 'enterprise', True)], ['job_board', 'checklist', 'geometry', 'planning'])
 
     def test_disconnect_cancels_inference_and_releases_gate(self):
-        from services.workspace_preview.intelligence import reply_until_disconnected
+        from services.workspace_preview.intelligence import reply_until_disconnected, ClientDisconnected
         async def check():
             started = asyncio.Event()
             cancelled = asyncio.Event()
@@ -88,8 +91,51 @@ class IntelligenceTests(unittest.TestCase):
                     await started.wait()
                     return {"type": "http.disconnect"}
             engine = LocalIntelligence(httpx.MockTransport(transport))
-            with self.assertRaises(asyncio.CancelledError):
+            with self.assertRaises(ClientDisconnected):
                 await reply_until_disconnected(Request(), engine, ChatInput(question='Help'), {})
             self.assertTrue(cancelled.is_set())
             self.assertFalse(engine.gate.locked())
         with patch.dict(os.environ, {'WZOS_ATLAS_LOCAL_MODEL': '1'}): asyncio.run(check())
+
+    def test_saved_checklist_context_latest_stale_and_bounded(self):
+        from services.workspace_preview.app import CHECKLIST_ITEMS
+        import sqlite3
+        class Fake:
+            context = None
+            async def reply(self, payload, context): self.context = context; return 'Review checklist.'
+        fake = Fake()
+        with tempfile.TemporaryDirectory() as directory, patch.dict(os.environ, {'WZOS_WORKSPACE_PREVIEW':'1','K_SERVICE':'','GAE_ENV':'','NETLIFY':''}):
+            db = Path(directory)/'db.sqlite'
+            with TestClient(create_app(db, Store(Path(directory)/'sources', {}), fake)) as client:
+                headers = {'X-Preview-Actor':'core-general'}
+                chat = {'question':'Review my checklist','order_id':'core-sample','expected_version':1}
+                response = client.post('/api/assistant/chat',json=chat,headers=headers)
+                self.assertEqual(response.json()['checklist_basis']['status'], 'not_saved')
+                body = {'expected_version':0,'expected_order_version':1,'items':{
+                    key:{'status':'not_reviewed','notes':''} for key in CHECKLIST_ITEMS}}
+                body['items']['site'] = {'status':'needs_attention','notes':'x'*2000}
+                self.assertEqual(client.put('/api/orders/core-sample/checklist',json=body,headers=headers).status_code,200)
+                body['expected_version']=1
+                body['items']['forms']['status']='reported_ready'
+                self.assertEqual(client.put('/api/orders/core-sample/checklist',json=body,headers=headers).status_code,200)
+                with sqlite3.connect(db) as conn:
+                    conn.execute("UPDATE preview_orders SET version=2 WHERE id='core-sample'")
+                conn.close()
+                chat['expected_version']=2
+                response=client.post('/api/assistant/chat',json=chat,headers=headers)
+                self.assertEqual(response.status_code,200)
+                context=fake.context['readiness_checklist']
+                self.assertTrue(context['stale'])
+                self.assertEqual(context['version'],2)
+                self.assertEqual(context['order_version'],1)
+                self.assertEqual(context['items']['forms']['status'],'reported_ready')
+                self.assertEqual(len(context['items']['site']['notes']),300)
+                self.assertTrue(context['items']['site']['notes_truncated'])
+                self.assertEqual(response.json()['checklist_basis']['version'],2)
+                self.assertNotIn('items',response.json()['checklist_basis'])
+                fake.context=None
+                self.assertEqual(client.post('/api/assistant/chat',json=chat,headers={'X-Preview-Actor':'enterprise-admin'}).status_code,404)
+                self.assertIsNone(fake.context)
+                response=client.post('/api/assistant/chat',json={'question':'Help'},headers=headers)
+                self.assertIsNone(response.json()['checklist_basis'])
+                self.assertNotIn('readiness_checklist',fake.context)

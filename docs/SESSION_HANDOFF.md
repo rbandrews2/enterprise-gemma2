@@ -4,6 +4,12 @@ Resumed at Ray's request. Development remains local; production deployment is no
 
 ## Latest resume checkpoint
 
+Live checklist evaluation: the real local request timed out after 110.2 seconds with HTTP 503 and the explicit retry message. Checklist context is verified by tests, but real generated checklist-answer quality remains unverified. Six focused intelligence tests passed after the HTTP 499 regression. Prioritize CPU inference performance before further model-heavy browser testing.
+
+Checklist-aware Atlas increment: the assistant receives the selected accessible work order's latest saved checklist, category statuses, bounded notes (300 characters each with truncation flags), saved job revision and staleness. The response exposes checklist basis separately from generated prose. No checklist saved is distinct from work not done. Cancellation now uses an explicit disconnected state and HTTP 499 instead of propagating task cancellation through middleware as a server error.
+
+102 full-suite tests passed, covering latest/stale/missing checklist context and cross-organization isolation. Next: improve local inference latency/streaming and verify completed-reply navigation in the browser; then reuse Maps display. Production remains unchanged.
+
 
 2026-09-21 integration follow-up: Atlas replies now offer application-owned navigation to the job board, readiness checklist, measured approaches and Enterprise planning references. Stop reply aborts the browser request and cancels server inference on disconnect. A real browser test exposed the middleware/polling disconnect issue; replaced polling with a receive watcher and retested cancellation followed by another request. No autonomous mutations added.
 

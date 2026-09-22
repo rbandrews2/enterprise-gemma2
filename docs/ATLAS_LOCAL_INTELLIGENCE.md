@@ -61,3 +61,12 @@ Real browser verification: asked "Can you clock me in now? Answer in two sentenc
 - This small evaluation is not a comprehensive quality or safety certification. CPU speed, streaming, checklist-aware context and production hosting remain unfinished.
 
 The post-cancellation browser request was accepted but reached the bounded timeout; the UI displayed the explicit retry message and re-enabled controls. Successful geometry navigation metadata was verified through real HTTP; button click-through remains to be checked with a completed browser reply.
+
+
+## Saved checklist context
+
+The scoped chat endpoint reads the latest saved checklist after work-order authorization. It supplies five category statuses, notes capped at 300 characters each with explicit truncation flags, checklist revision, linked job revision and staleness. No saved checklist is an explicit state; Atlas is instructed not to equate absent records with unfinished work or user-reported readiness with approval. The browser shows the checklist basis outside generated prose. Requests without a selected job include no checklist context.
+
+102 full-suite tests passed after this integration. A focused regression also covers HTTP 499 for a disconnected reply, avoiding a misleading middleware server error. No model actions or automatic approvals were introduced.
+
+Live checklist evaluation: the real local request timed out after 110.2 seconds with HTTP 503 and the explicit retry message. Checklist context is verified by tests, but real generated checklist-answer quality remains unverified. Six focused intelligence tests passed after the HTTP 499 regression. Prioritize CPU inference performance before further model-heavy browser testing.
