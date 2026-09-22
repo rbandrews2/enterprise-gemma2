@@ -186,6 +186,10 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
     def timeclock_script():
         return FileResponse(STATIC / "timeclock.js", media_type="text/javascript")
 
+    @app.get("/road-work-background.png")
+    def road_work_background():
+        return FileResponse(STATIC / "road-work-background.png", media_type="image/png")
+
     @app.get("/workspace.css")
     def styles():
         return FileResponse(STATIC / "workspace.css", media_type="text/css")
