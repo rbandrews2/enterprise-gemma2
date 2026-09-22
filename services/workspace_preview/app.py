@@ -143,7 +143,9 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
             allowed_origins = {expected_origin, *os.getenv("WZOS_STAGING_ORIGINS", "").split(",")}
         else:
             allowed_origins = {expected_origin}
-        if (origin and origin not in allowed_origins) or request.headers.get("sec-fetch-site") == "cross-site":
+        staging_navigation = (private_staging and request.method == "GET" and request.url.path == "/"
+                              and request.headers.get("sec-fetch-mode") == "navigate")
+        if not staging_navigation and ((origin and origin not in allowed_origins) or request.headers.get("sec-fetch-site") == "cross-site"):
             return JSONResponse({"error": "same_origin_only"}, status_code=403)
         response = await call_next(request)
         response.headers["Cache-Control"] = "no-store"

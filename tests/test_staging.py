@@ -24,3 +24,9 @@ class StagingTests(unittest.TestCase):
                 self.assertEqual(client.get('/api/session',headers={'Origin':'https://evil.example'}).status_code,403)
                 self.assertEqual(client.get('/api/session',headers={'Origin':'https://stage.run.app'}).status_code,200)
                 self.assertEqual(client.get('/api/orders/core-sample').status_code,404)
+                navigation={'Sec-Fetch-Site':'cross-site','Sec-Fetch-Mode':'navigate'}
+                self.assertEqual(client.get('/',headers=navigation).status_code,200)
+                self.assertEqual(client.get('/api/session',headers=navigation).status_code,403)
+                with patch.dict(os.environ,{'WZOS_STAGING_ORIGINS':'https://specific.cloudshell.dev'}):
+                    self.assertEqual(client.get('/api/session',headers={'Origin':'https://specific.cloudshell.dev'}).status_code,200)
+                    self.assertEqual(client.get('/api/session',headers={'Origin':'https://another.cloudshell.dev'}).status_code,403)

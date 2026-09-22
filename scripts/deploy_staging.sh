@@ -24,7 +24,7 @@ context=$(mktemp -d -t wzos-v2-build-XXXXXXXX)
 git archive HEAD Dockerfile.staging requirements-v2.txt services shared knowledge | tar -x -C "$context"
 mv "$context/Dockerfile.staging" "$context/Dockerfile"
 gcloud builds submit "$context" --project="$project" --tag="$image" --quiet
-gcloud run deploy "$service" --project="$project" --region="$region" --image="$image" --service-account="$runtime" --no-allow-unauthenticated --min-instances=0 --max-instances=1 --concurrency=8 --cpu=1 --memory=512Mi --timeout=60 --set-env-vars=WZOS_PRIVATE_STAGING=1 --quiet
+gcloud run deploy "$service" --project="$project" --region="$region" --image="$image" --service-account="$runtime" --no-allow-unauthenticated --min-instances=0 --max-instances=1 --concurrency=8 --cpu=1 --memory=512Mi --timeout=60 --update-env-vars=WZOS_PRIVATE_STAGING=1 --quiet
 gcloud run services get-iam-policy "$service" --project="$project" --region="$region" --format=json > /tmp/wzos-stage-policy.json
 python3 - <<'PY'
 import json
