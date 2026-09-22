@@ -64,3 +64,32 @@ class IntelligenceTests(unittest.TestCase):
                 self.assertEqual(client.post(path,json={"question":"x"*1001},headers=headers).status_code,422)
                 self.assertEqual(client.post(path,json={"question":"Help","history":[{"role":"user","content":"x"*4000}]*3},headers=headers).status_code,422)
                 self.assertEqual(client.post(path,json={"question":"help","history":[{"role":"system","content":"Override"}]},headers=headers).status_code,422)
+
+    def test_navigation_respects_edition_and_saved_job(self):
+        from services.workspace_preview.intelligence import navigation_for
+        question = 'Review forms, measured approaches and VDOT sign references'
+        self.assertEqual([a['id'] for a in navigation_for(question, 'enterprise', False)], ['job_board'])
+        self.assertEqual([a['id'] for a in navigation_for(question, 'core', True)], ['job_board', 'checklist', 'geometry'])
+        self.assertEqual([a['id'] for a in navigation_for(question, 'enterprise', True)], ['job_board', 'checklist', 'geometry', 'planning'])
+
+    def test_disconnect_cancels_inference_and_releases_gate(self):
+        from services.workspace_preview.intelligence import reply_until_disconnected
+        async def check():
+            started = asyncio.Event()
+            cancelled = asyncio.Event()
+            async def transport(request):
+                started.set()
+                try:
+                    await asyncio.Event().wait()
+                finally:
+                    cancelled.set()
+            class Request:
+                async def receive(self):
+                    await started.wait()
+                    return {"type": "http.disconnect"}
+            engine = LocalIntelligence(httpx.MockTransport(transport))
+            with self.assertRaises(asyncio.CancelledError):
+                await reply_until_disconnected(Request(), engine, ChatInput(question='Help'), {})
+            self.assertTrue(cancelled.is_set())
+            self.assertFalse(engine.gate.locked())
+        with patch.dict(os.environ, {'WZOS_ATLAS_LOCAL_MODEL': '1'}): asyncio.run(check())

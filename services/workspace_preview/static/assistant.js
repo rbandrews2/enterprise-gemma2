@@ -16,9 +16,10 @@
   integrations:{match:/integrat|connect|external|sync/i,text:"Integrations will connect approved outside services to WZOS. Connections are not configurable from this preview. Each integration needs its own tested permissions and settings; I will show its actual connection status when that workflow is available."},
   admin:{match:/admin|organization|permission|access|role|edition|account/i,text:"Both editions will have general and admin access. In this local preview, general test identities see their own work orders; admins see their test organization's orders. The Test identity selector is a demonstration tool, not production sign-in. Advanced planning is Enterprise-only; app guidance is available in both editions."}
  };
- let returnFocus=null, target=null, greetingDismissed=false, chatBusy=false, chatEpoch=0, chatHistory=[];
+ let returnFocus=null, target=null, greetingDismissed=false, chatBusy=false, chatEpoch=0, chatHistory=[], chatController=null;
  const panel=byId("assistant-panel"), dock=byId("assistant-dock");
  function answer(key){
+  byId("assistant-navigation").replaceChildren();
   const topic=topics[key];target=topic?.target||null;
   byId("assistant-answer").textContent=topic?.text||"I can help with WZOS functions. Choose a topic above so I can give you the right steps. Use the question box for a conversational reply.";
   byId("assistant-go").hidden=!target;
@@ -43,19 +44,21 @@
  byId("assistant-question-form").addEventListener("submit",async event=>{
   event.preventDefault();if(chatBusy)return;
   const question=byId("assistant-question").value.trim();if(!question)return;
-  const epoch=chatEpoch;chatBusy=true;const submit=byId("assistant-question-form").querySelector('button');submit.disabled=true;
+  const epoch=chatEpoch;chatBusy=true;chatController=new AbortController();byId("assistant-stop").hidden=false;byId("assistant-topic").disabled=true;byId("assistant-navigation").replaceChildren();const submit=byId("assistant-question-form").querySelector('button');submit.disabled=true;
   byId("assistant-go").hidden=true;byId("assistant-answer").textContent="Atlas is thinking...";
   try{
-   const data=await window.askAtlas(question,chatHistory);
+   const data=await window.askAtlas(question,chatHistory,chatController.signal);
    if(epoch!==chatEpoch)return;
    byId("assistant-answer").textContent=data.answer;
    if(data.order_version){const basis=document.createElement("p");basis.className="fine";basis.textContent=`Based on saved job revision ${data.order_version}. No actions were performed.`;byId("assistant-answer").append(basis);}
+   for(const action of data.navigation||[]){const button=document.createElement('button');button.type='button';button.className='secondary';button.textContent=action.label;button.addEventListener('click',()=>{closeAssistant();if(!window.atlasNavigate(action.id))openAssistant();});byId('assistant-navigation').append(button);}
    chatHistory=[...chatHistory,{role:'user',content:question},{role:'assistant',content:data.answer}].slice(-8);while(chatHistory.reduce((sum,turn)=>sum+turn.content.length,0)>8000)chatHistory.shift();
    if(data.citations.length){const note=document.createElement('p');note.textContent='Candidate references supplied to Atlas (applicability unreviewed):';byId("assistant-answer").append(note);for(const ref of data.citations){const link=document.createElement('a');link.textContent=`${ref.agency}: ${ref.title} - ${ref.page?'PDF page '+ref.page:ref.section||'section'} (${ref.review_status})`;link.href=ref.url;link.target='_blank';link.rel='noopener noreferrer';byId("assistant-answer").append(link,document.createElement('br'));}}
-  }catch(error){if(epoch===chatEpoch)byId("assistant-answer").textContent=error.message;}
-  finally{chatBusy=false;submit.disabled=false;}
+  }catch(error){if(epoch===chatEpoch)byId("assistant-answer").textContent=error.name==="AbortError"?"Reply stopped. Your saved work is unchanged.":error.message;}
+  finally{chatBusy=false;submit.disabled=false;chatController=null;byId("assistant-stop").hidden=true;byId("assistant-topic").disabled=false;}
  });
- function clearContext(){chatEpoch++;chatHistory=[];byId("assistant-question").value="";byId("assistant-topic").value="orders";answer("orders");}
+ function clearContext(){chatController?.abort();chatEpoch++;chatHistory=[];byId("assistant-question").value="";byId("assistant-topic").value="orders";answer("orders");}
+ byId("assistant-stop").addEventListener("click",()=>chatController?.abort());
  document.addEventListener('wzos:job-context',clearContext);
  byId("assistant-go").addEventListener("click",()=>{
   const node=target&&byId(target);

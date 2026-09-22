@@ -63,7 +63,7 @@
  <header><img src="/atlas-assistant.png" alt="" width="48" height="48"><div><h2 id="assistant-heading">Atlas</h2><small>Your WZOS AI assistant</small></div><button type="button" id="assistant-close" aria-label="Close Atlas assistant">&#215;</button></header>
  <p class="assistant-mode">Local development assistant. AI replies can be mistaken; verify project guidance.</p>
  <label for="assistant-topic">Help me with<select id="assistant-topic"><option value="orders">Work orders</option><option value="checklist">Readiness checklist</option><option value="planning">Atlas planning &amp; references</option><option value="forms">Forms &amp; documents</option><option value="time">Time clock &amp; tracking</option><option value="dispatch">Scheduling &amp; dispatch</option><option value="maps">Maps &amp; navigation</option><option value="messages">Messages &amp; video meetings</option><option value="training">Training</option><option value="integrations">Integrations</option><option value="admin">Organization &amp; admin access</option></select></label>
- <div id="assistant-answer" role="status" aria-live="polite"></div>
+ <div id="assistant-answer" role="status" aria-live="polite"></div><div id="assistant-navigation"></div><button type="button" id="assistant-stop" class="secondary" hidden>Stop reply</button>
  <button type="button" class="secondary" id="assistant-go">Show me where</button>
  <form id="assistant-question-form"><label for="assistant-question">Ask about an app function<input id="assistant-question" maxlength="300" required placeholder="How do I save a work order?" autocomplete="off"></label><button type="submit" class="primary">Ask Atlas</button></form>
 </section>

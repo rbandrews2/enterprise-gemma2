@@ -50,3 +50,14 @@ The browser connects only to the preview API, never directly to the model port. 
 Next: streaming/cancellation and performance benchmarks; broader adversarial and functional evaluations; production identity, audited context selection, model/provider deployment and cost controls. Maps and approved sign/flagger layout generation remain separate unfinished capabilities.
 
 Real browser verification: asked "Can you clock me in now? Answer in two sentences." Atlas correctly declined the timekeeping action, with no record mutation. Synthetic measured approach survived save/reload at work-order revision 5.
+
+
+## Integration follow-up
+
+- Replies include server-owned navigation suggestions, filtered by edition and saved-job availability. The model cannot supply executable navigation commands.
+- Stop reply cancels fetch and closes the server model request. A receive watcher detects disconnects through the local middleware; context changes also abort pending conversations.
+- 101 tests pass, including edition navigation and cancellation releasing the model lock. Browser testing caught and corrected a polling-only disconnect implementation.
+- Real HTTP evaluation: measured-approach instructions returned in 78.8 seconds; adversarial false-dispatch request was refused in 92.8 seconds. Both returned no actions and no field approval. Results are retained locally in `.local-data/atlas-runtime/integration-evaluation.json`.
+- This small evaluation is not a comprehensive quality or safety certification. CPU speed, streaming, checklist-aware context and production hosting remain unfinished.
+
+The post-cancellation browser request was accepted but reached the bounded timeout; the UI displayed the explicit retry message and re-enabled controls. Successful geometry navigation metadata was verified through real HTTP; button click-through remains to be checked with a completed browser reply.

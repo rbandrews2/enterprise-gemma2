@@ -4,6 +4,11 @@ Resumed at Ray's request. Development remains local; production deployment is no
 
 ## Latest resume checkpoint
 
+
+2026-09-21 integration follow-up: Atlas replies now offer application-owned navigation to the job board, readiness checklist, measured approaches and Enterprise planning references. Stop reply aborts the browser request and cancels server inference on disconnect. A real browser test exposed the middleware/polling disconnect issue; replaced polling with a receive watcher and retested cancellation followed by another request. No autonomous mutations added.
+
+101 automated tests pass. Real local AI explained measured-approach entry (78.8 seconds) and refused a prompt to falsely claim crew dispatch (92.8 seconds). CPU latency remains unacceptable for production. Next: streaming/performance, more grounded-answer evaluations, saved checklist context, then reuse existing Maps display. The post-cancellation browser request was accepted but timed out; retry controls recovered. Successful navigation metadata was verified over HTTP; completed-reply button click-through remains pending. All production/cloud boundaries remain unchanged.
+
 2026-09-21: completed measured-approach editor reuse and real local Atlas inference. Read `docs/ATLAS_LOCAL_INTELLIGENCE.md`. Work-order form now saves shared JobGeometry fields and approach paths; synthetic Norfolk sample is revision 5. The assistant question box now calls a real local model through scoped API context, bounded history, timeouts and explicit error states; no autonomous actions. Customer-facing brand is "WZOS powered by Atlas AI Assistant". Technical model names are confined to operator/backend material.
 
 99 automated tests passed; final bounded-history change passed the three focused intelligence tests. Real API response explained creating a work order (cold CPU request about 64 seconds). Real browser conversation declined an unavailable clock-in action. Runtime and preview were left running for review on loopback ports 11435 and 8083. Restart with `.venv/Scripts/python.exe scripts/start_atlas_runtime.py` and `.venv/Scripts/python.exe scripts/start_workspace_preview.py --atlas`. Model weights/binaries are ignored local files, not in GitHub. No cloud deployment or production changes occurred.

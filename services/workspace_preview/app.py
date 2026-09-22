@@ -18,7 +18,7 @@ from shared.intake import SiteContext
 from shared.job_geometry import JobGeometry
 from services.v2.knowledge.store import Store
 from services.workspace_preview.atlas_adapter import prepare_order
-from services.workspace_preview.intelligence import ChatInput, LocalIntelligence, ModelUnavailable
+from services.workspace_preview.intelligence import ChatInput, LocalIntelligence, ModelUnavailable, navigation_for, reply_until_disconnected
 
 ROOT = Path(__file__).resolve().parents[2]
 STATIC = Path(__file__).with_name("static")
@@ -227,10 +227,11 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
                         break
                 context["candidate_references"] = [{**ref, "text": ref["text"][:600]} for ref in citations]
         try:
-            answer = await intelligence.reply(payload, context)
+            answer = await reply_until_disconnected(request, intelligence, payload, context)
         except ModelUnavailable as error:
             raise HTTPException(503, str(error)) from error
         return {"answer": answer, "model_called": True, "actions_performed": [],
+                "navigation": navigation_for(payload.question, selected["edition"], bool(payload.order_id)),
                 "approved_for_field_use": False, "citations": citations,
                 "order_version": payload.expected_version if payload.order_id else None}
 

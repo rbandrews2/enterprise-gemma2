@@ -122,9 +122,16 @@ $("checklist-form").addEventListener("submit",async event=>{
  catch(error){notify(error.message,true);}finally{lock(false);}
 });
 
-window.askAtlas=async(question,history)=>{
+window.askAtlas=async(question,history,signal)=>{
  if(busy||dirty||checklistDirty)throw Error('Save or reload your changes before asking Atlas about the current job.');
- return api('/api/assistant/chat',{method:'POST',body:JSON.stringify({question,history,...(selected?{order_id:selected.id,expected_version:selected.version}:{})})});
+ return api('/api/assistant/chat',{method:'POST',signal,body:JSON.stringify({question,history,...(selected?{order_id:selected.id,expected_version:selected.version}:{})})});
 };
 
 window.atlasStatus=()=>api("/api/assistant/status");
+
+window.atlasNavigate=id=>{
+ const targets={job_board:'list-title',checklist:'checklist-panel',geometry:'geometry-fields',planning:'atlas-title'};
+ if(!targets[id]||(id!=='job_board'&&!selected)||(id==='planning'&&!session?.can_prepare_atlas))return false;
+ const target=$(targets[id]);if(id==='geometry')target.closest('details').open=true;
+ target.scrollIntoView({behavior:'smooth',block:'center'});target.setAttribute('tabindex','-1');target.focus({preventScroll:true});return true;
+};

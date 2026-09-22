@@ -2,6 +2,8 @@
 import asyncio
 import json
 import os
+import re
+from contextlib import suppress
 
 import httpx
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -52,6 +54,40 @@ class ChatInput(BaseModel):
 
 class ModelUnavailable(Exception):
     pass
+
+
+def navigation_for(question, edition, has_order):
+    """Application-owned suggestions, never model-issued commands."""
+    actions = [{"id": "job_board", "label": "Open job board"}]
+    if has_order:
+        if re.search(r"checklist|form|readiness|review", question, re.I):
+            actions.append({"id": "checklist", "label": "Open readiness checklist"})
+        if re.search(r"geometry|approach|coordinate|measure|lane|sight", question, re.I):
+            actions.append({"id": "geometry", "label": "Open measured approaches"})
+        if edition == "enterprise" and re.search(r"source|reference|sign|flagger|planning|vdot|mutcd", question, re.I):
+            actions.append({"id": "planning", "label": "Open planning references"})
+    return actions
+
+
+async def reply_until_disconnected(request, engine, payload, context):
+    async def disconnected():
+        while True:
+            message = await request.receive()
+            if message["type"] == "http.disconnect":
+                return
+    task = asyncio.create_task(engine.reply(payload, context))
+    watcher = asyncio.create_task(disconnected())
+    try:
+        done, _ = await asyncio.wait({task, watcher}, return_when=asyncio.FIRST_COMPLETED)
+        if task in done:
+            return await task
+        raise asyncio.CancelledError()
+    finally:
+        for pending in (task, watcher):
+            if not pending.done():
+                pending.cancel()
+            with suppress(asyncio.CancelledError):
+                await pending
 
 
 class LocalIntelligence:
