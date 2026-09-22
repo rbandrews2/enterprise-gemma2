@@ -11,3 +11,22 @@ body{background:#080b0a;color:#eef3ef}.sidebar{background:linear-gradient(135deg
 
 .geometry-editor{border:1px solid #46574a;border-radius:8px;padding:14px;margin-bottom:20px}.geometry-editor summary{cursor:pointer;color:#edcf79}.geometry-editor fieldset{min-width:0;border:1px solid #46574a;border-radius:8px;margin:14px 0;padding:14px}.geometry-editor button{background:#294633;color:#eef5ee;padding:10px;border-radius:6px;margin:8px 0}
 .clock-timer{display:block;font-size:clamp(2.5rem,6vw,4rem);font-variant-numeric:tabular-nums;color:var(--gold,#f4c542);margin:1rem 0}.clock-actions{display:flex;flex-wrap:wrap;gap:.65rem;margin:1rem 0}.clock-entry{padding:1rem 0;border-bottom:1px solid #34423c}.clock-entry p{overflow-wrap:anywhere}.clock-entry details{font-size:.85rem}#clock-view .panel{padding:1.5rem}#clock-team-label{display:flex;align-items:center;gap:.4rem}#clock-team{width:auto}#clock-view [hidden]{display:none!important}
+/* V2 visual direction: neutral gloss-black surfaces; WZOS green/gold only as accents. */
+:root{--border:#343638;--muted:#b6bbba;--green:#263a31;--yellow:#f4c542;background:#030404;color:#f3f4f3}
+body{background:radial-gradient(ellipse at 95% 0%,#16312955,transparent 45%),radial-gradient(ellipse at 5% 95%,#80631420,transparent 40%),#030404}
+.sidebar{background:linear-gradient(135deg,#242627 0%,#090a0b 24%,#030404 72%);border-color:#373a39}
+.topbar{background:linear-gradient(180deg,#242627 0%,#0b0c0d 48%,#060707 100%);border-color:#363938}
+.preview-bar{background:#111313;border-color:#303333}.preview-bar select{background:#090a0a}
+.panel,.metrics>div{background:linear-gradient(145deg,#262829 0%,#111213 12%,#08090a 50%,#030404 100%);border-color:#383b3b;box-shadow:inset 0 1px 0 #ffffff20,inset 0 -1px 0 #000,0 16px 35px #0007}
+.org-card{background:linear-gradient(#1b1d1e,#0a0b0c);border-color:#343a37}.avatar{background:#232827}
+input,select,textarea,#search{background:#070809;color:#f1f3f2;border-color:#414646;box-shadow:inset 0 2px 5px #0009}
+.job{background:linear-gradient(#17191a,#08090a);border-color:#343838}.job[aria-pressed=true]{background:linear-gradient(110deg,#202522,#090b0a);border-color:#8b7944;box-shadow:inset 3px 0 #edc85d}.job:hover{background:#202323}
+.primary{background:linear-gradient(#f1d071,#c7a445);color:#111513;border:1px solid #e3c76f;box-shadow:inset 0 1px #fff6,0 3px 10px #0005}.primary:hover{background:linear-gradient(#ffe08a,#d8b552)}
+.secondary,.geometry-editor button{background:linear-gradient(#303334,#111314);color:#f0f3f1;border:1px solid #515956;box-shadow:inset 0 1px #ffffff15}.secondary:hover,.geometry-editor button:hover{background:linear-gradient(#3a403d,#1a201d)}
+.nav-item:not(:disabled):not(.active):hover{background:#252a28}.nav-item.active{background:linear-gradient(#edce78,#c4a44e);color:#141815}
+.atlas-card{background:radial-gradient(ellipse at top right,#28403244,transparent 65%),linear-gradient(130deg,#202223,#080909);border-color:#484b40}
+.assistant-panel,.assistant-greeting{background:linear-gradient(140deg,#2b2d2f,#101112 22%,#050607 85%);border-color:#686345}.assistant-panel form{border-color:#3c4140}
+.geometry-editor,.geometry-editor fieldset,.checklist-panel fieldset,#atlas-output details{border-color:#3b4140}.clock-entry{border-color:#343938}
+/* Match the live WZOS orange/amber palette behind the dominant black surfaces. */
+body{background:radial-gradient(ellipse at 95% 0%,#ad4c1530,transparent 45%),radial-gradient(ellipse at 5% 95%,#bc821c18,transparent 40%),#030404}
+:root{--yellow:#ffb547}.brand-mark{background:linear-gradient(#ffba60,#f68024);color:#15110c}.nav-item.active{background:linear-gradient(#ffc16d,#e68c34);color:#17110a}.nav-count{background:#a9551f;color:#fff4dc}.primary{background:linear-gradient(#ffb652,#ed862b);border-color:#ffbc70;color:#17110b}.primary:hover{background:linear-gradient(#ffc575,#fa963b)}.atlas-card{background:radial-gradient(ellipse at top right,#ad581322,transparent 65%),linear-gradient(130deg,#202223,#080909)}.clock-timer,.atlas-symbol{color:#ffb85b}.job[aria-pressed=true]{border-color:#8c5b32;box-shadow:inset 3px 0 #f7a449}.eyebrow,.job-type{color:#d6bc9c}

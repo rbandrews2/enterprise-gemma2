@@ -1,0 +1,11 @@
+FROM python:3.11-slim
+WORKDIR /app
+COPY requirements-v2.txt ./requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
+COPY services/ ./services/
+COPY shared/ ./shared/
+COPY knowledge/ ./knowledge/
+RUN useradd --uid 10001 --create-home wzos
+USER 10001
+ENV PORT=8080
+CMD ["sh", "-c", "uvicorn services.staging.app:app_factory --factory --host 0.0.0.0 --port ${PORT} --no-proxy-headers"]

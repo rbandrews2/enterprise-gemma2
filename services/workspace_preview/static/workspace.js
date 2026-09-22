@@ -38,6 +38,7 @@ async function loadRows(){rows=(await api("/api/orders")).items;renderList();}
 async function switchIdentity(){
  lock(true);resetChecklist();$("notice").hidden=true;
  try{session=null;session=await api("/api/session");selected=null;dirty=false;rows=[];$("atlas-output").replaceChildren();$("order-form").hidden=true;$("empty-detail").hidden=false;$("detail-title").textContent="Select a work order";
+ if(session.restricted_staging){document.querySelector('.preview-bar>div').textContent='RESTRICTED CLOUD STAGING · Shared synthetic records reset on restart. Do not enter real attendance or customer data.';$("identity").closest('label').hidden=true;document.querySelector('.sidebar-foot').textContent='Restricted staging · WZOS V2';document.querySelector('.app-footer').textContent='WZOS V2 staging · Test data only · Storage and cloud AI integration pending.';}
  $("org-name").textContent=session.organization;$("edition").textContent=`${session.edition==="core"?"Core":"Enterprise"} edition Â· synthetic`;
  $("actor-name").textContent=session.name;document.querySelector(".avatar").textContent=session.name.split(" ").map(n=>n[0]).join("");$("role-pill").textContent=session.role==="admin"?"Admin":"General";
  $("scope-note").textContent=session.can_manage_team?"Manage the team's draft work orders.":"Your assigned work orders and new drafts.";$("metric-scope").textContent=session.can_manage_team?"This test organization":"Assigned to this test user";

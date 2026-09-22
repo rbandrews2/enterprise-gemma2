@@ -87,8 +87,11 @@ class ChecklistInput(BaseModel):
         return self
 
 
-def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=None):
-    if os.getenv("WZOS_WORKSPACE_PREVIEW") != "1" or any(os.getenv(k) for k in ("K_SERVICE", "GAE_ENV", "NETLIFY")):
+def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=None, *, private_staging=False):
+    if private_staging:
+        if os.getenv("K_SERVICE") != "wzos-v2-staging" or os.getenv("WZOS_PRIVATE_STAGING") != "1":
+            raise RuntimeError("Restricted staging requires its dedicated Cloud Run service")
+    elif os.getenv("WZOS_WORKSPACE_PREVIEW") != "1" or any(os.getenv(k) for k in ("K_SERVICE", "GAE_ENV", "NETLIFY")):
         raise RuntimeError("Synthetic preview requires explicit local opt-in and refuses cloud runtime markers")
     db_path = db_path or ROOT / ".local-data/workspace-preview/orders.sqlite"
     db_path.parent.mkdir(parents=True, exist_ok=True)
@@ -130,11 +133,17 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
     @app.middleware("http")
     async def local_boundary(request: Request, call_next):
         hosts = {"127.0.0.1:8083", "localhost:8083", "testserver"}
-        if (not request.client or request.client.host not in {"127.0.0.1", "::1", "testclient"}
+        if not private_staging and (not request.client or request.client.host not in {"127.0.0.1", "::1", "testclient"}
                 or request.headers.get("host") not in hosts):
             return JSONResponse({"error": "local_preview_only"}, status_code=403)
         origin = request.headers.get("origin")
-        if (origin and origin != f"http://{request.headers['host']}") or request.headers.get("sec-fetch-site") == "cross-site":
+        expected_origin = f"http://{request.headers.get('host', '')}"
+        if private_staging:
+            expected_origin = f"https://{request.headers.get('host', '')}"
+            allowed_origins = {expected_origin, *os.getenv("WZOS_STAGING_ORIGINS", "").split(",")}
+        else:
+            allowed_origins = {expected_origin}
+        if (origin and origin not in allowed_origins) or request.headers.get("sec-fetch-site") == "cross-site":
             return JSONResponse({"error": "same_origin_only"}, status_code=403)
         response = await call_next(request)
         response.headers["Cache-Control"] = "no-store"
@@ -147,6 +156,10 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
         return JSONResponse({"detail": "Local storage is unavailable. Your unsaved draft remains in the form."}, status_code=503)
 
     def actor(request):
+        if private_staging:
+            # Cloud Run IAM is the outer access boundary. One shared synthetic reviewer,
+            # never a customer identity; client-supplied role headers are ignored.
+            return ACTORS["enterprise-admin"]
         selected = ACTORS.get(request.headers.get("X-Preview-Actor"))
         if not selected:
             raise HTTPException(401, "Select a valid synthetic preview identity")
@@ -193,13 +206,14 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
 
     @app.get("/api/identities")
     def identities():
-        return {"mode": "synthetic_local_preview", "identities": list(ACTORS.values())}
+        return {"mode": "restricted_staging" if private_staging else "synthetic_local_preview",
+                "identities": [ACTORS["enterprise-admin"]] if private_staging else list(ACTORS.values())}
 
     @app.get("/api/session")
     def session(request: Request):
         selected = actor(request)
         return {**selected, "can_prepare_atlas": selected["edition"] == "enterprise",
-                "can_manage_team": selected["role"] == "admin", "production_authenticated": False}
+                "can_manage_team": selected["role"] == "admin", "production_authenticated": False, "restricted_staging": private_staging}
 
     @app.get("/api/assistant/status")
     async def assistant_status(request: Request):

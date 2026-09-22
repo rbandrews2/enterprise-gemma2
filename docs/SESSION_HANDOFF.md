@@ -1,8 +1,10 @@
 # WZOS V2 pause and resume handoff
 
-Resumed at Ray's request. Development remains local; production deployment is not scheduled.
+Ray authorized a separate restricted Google Cloud V2 staging deployment. Production cutover is not scheduled.
 
 ## Latest resume checkpoint
+
+Restricted staging authorized by Ray; production apps and DNS stay in place. Gloss-black surfaces now dominate, with orange/amber accents verified against live app.superiorllc.org. Dedicated staging factory and Dockerfile reuse the tested workspace with Cloud Run IAM as the outer boundary, one fixed synthetic reviewer, and explicit ephemeral-data warnings. No customer authentication, durable storage or cloud model is claimed. See docs/CLOUD_STAGING.md for deployment verification and limits.
 
 Module structure clarification: inspected signed-in V1 at app.superiorllc.org, including navigation and Access modules cards. See docs/WZOS_MODULE_STRUCTURE.md. Time clock remains a separate top-level module in the unified app. Work Zone Report is the comprehensive module combining the basic work order with imagery, Atlas recommendations, diagrams and required/recommended forms. Sidebar labels now reflect the user's module vocabulary; full Work Zone Report remains visibly unavailable until connected. Existing preparation tools are only part of that future workflow.
 
