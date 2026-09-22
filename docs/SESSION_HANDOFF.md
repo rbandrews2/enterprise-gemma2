@@ -4,6 +4,8 @@ Ray authorized a separate restricted Google Cloud V2 staging deployment. Product
 
 ## Latest resume checkpoint
 
+Cloud reconnect pass: deployed a450a3c successfully as wzos-v2-staging-00005-s4j from new isolated checkout /tmp/wzos-v2-staging-SNTUgzHm. Browser shows report/forms/schedule modules. Added saved personal report revisions with immutable input/reference snapshots and changed-input detection; 117 tests passed and local browser save/reopen verified. See docs/REPORT_REVISIONS.md. Final snapshot-feature cloud rollout pending.
+
 Work Zone Report now has its own Enterprise-only live draft view: saved job revision, reported geometry, latest checklist/staleness, scoped linked incident drafts and Atlas source preparation with citation revisions. No frozen report, site imagery, placement diagram, PDF or email yet. Browser verified stale checklist and reference preparation. Report access/link isolation test passed; preceding full run passed other 116 tests (new test method corrected from POST to PUT and rerun). Staging deployment pending: Cloud Shell browser control failed during the deployment attempt, and reconnecting the existing tab also failed. No new build/revision was verified. Resume by checking Cloud Shell command history/build state before retrying `git fetch origin enterprise-v2 && git checkout 3429138 && bash scripts/deploy_staging.sh` in the isolated staging checkout. App commit 3429138 is pushed.
 
 Visual follow-up: user-provided road-work banner is now the local workspace decorative background, 17% opacity, 3px blur, subtle alternate 35-second drift. Reduced-motion preference disables animation. Browser appearance and image HTTP delivery verified. Not yet deployed to cloud staging.

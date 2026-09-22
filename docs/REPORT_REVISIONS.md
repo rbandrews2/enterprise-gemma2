@@ -1,0 +1,9 @@
+# Saved Work Zone Report drafts
+
+Enterprise users can save a personal immutable draft from the dedicated report workspace. Each snapshot preserves the exact work-order revision, checklist, visible linked incident drafts (up to 50, with total shown), Atlas preparation questions/form suggestions and source candidates with revision/page/section/official URL. A SHA-256 identifies the stored JSON. Retries reuse the save UUID; there is no update/delete endpoint. This is not an approved engineering report, agency submission, PDF or delivery receipt.
+
+Read access requires current work-order access, Enterprise entitlement and the same creator in the same organization. Admins cannot open another creator's saved snapshot; this prevents a report from broadening access to private supporting drafts. Shared review permissions are future work. Source retrieval dates are preserved, not revalidated on open. A changed-input flag compares current job, checklist and visible form basis. Reopen is read-only; Refresh returns to live inputs. Saved reference preparation makes no model call.
+
+The input bundle is read in one SQLite transaction; reference preparation runs afterward. Concurrent edits do not rewrite the captured input bundle. The save response compares the current inputs again and later reads recompute the changed flag. History is paginated (20 default, 50 maximum); current UI shows the latest 20. Staging snapshots remain temporary with the staging database. Durable storage, customer identity, shared review, imagery, annotated diagrams, required agency forms, PDF and email remain unfinished.
+
+Validation: full suite 117 tests passed. Report test checks retry deduplication, creator-only access, input changes without snapshot mutation, stable hash, missing/cross-edition access and pagination bounds. Browser saved and reopened a synthetic report and preserved its reference preparation.

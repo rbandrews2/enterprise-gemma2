@@ -27,6 +27,17 @@ class ReportTests(unittest.TestCase):
                 self.assertEqual(client.put('/api/modules/forms/'+str(uuid4()),headers=admin,json=body).status_code,200)
                 self.assertEqual(client.get(path,headers=general).json()['forms_total'],0)
                 self.assertEqual(client.get(path,headers=admin).json()['forms_total'],1)
+                snapshot_id=str(uuid4())
+                save_body={"request_id":snapshot_id,"expected_order_version":1}
+                saved=client.post('/api/orders/enterprise-sample/reports',headers=general,json=save_body)
+                self.assertEqual(saved.status_code,200)
+                self.assertEqual(client.post('/api/orders/enterprise-sample/reports',headers=general,json=save_body).json()['id'],snapshot_id)
+                snapshot_path='/api/orders/enterprise-sample/reports/'+snapshot_id
+                self.assertEqual(client.get(snapshot_path,headers=admin).status_code,404)
+                snapshot=client.get(snapshot_path,headers=general).json()
+                self.assertFalse(snapshot['basis_changed'])
+                self.assertEqual(snapshot['report']['forms'],[])
+                self.assertIn('references',snapshot['report']['preparation'])
                 order=original['order'];payload={key:order[key] for key in ('title','work_type','address','locality','work_date','notes')}
                 payload.update(expected_version=1,notes='Changed scope')
                 self.assertEqual(client.put('/api/orders/enterprise-sample',headers=general,json=payload).status_code,200)
@@ -34,3 +45,11 @@ class ReportTests(unittest.TestCase):
                 self.assertEqual(report['order']['version'],2)
                 self.assertTrue(report['checklist']['stale'])
 
+
+                frozen=client.get(snapshot_path,headers=general).json()
+                self.assertTrue(frozen['basis_changed'])
+                self.assertEqual(frozen['report']['order']['version'],1)
+                self.assertEqual(frozen['sha256'],snapshot['sha256'])
+                self.assertEqual(client.get('/api/orders/enterprise-sample/reports',headers=general).json()['total'],1)
+                self.assertEqual(client.get('/api/orders/enterprise-sample/reports?limit=51',headers=general).status_code,422)
+                self.assertEqual(client.post('/api/orders/enterprise-sample/reports',headers=general,json={"request_id":str(uuid4()),"expected_order_version":1}).status_code,409)
