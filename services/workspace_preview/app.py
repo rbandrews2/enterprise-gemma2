@@ -19,7 +19,7 @@ from shared.job_geometry import JobGeometry
 from services.v2.knowledge.store import Store
 from services.workspace_preview.atlas_adapter import prepare_order
 from services.workspace_preview.storage import SQLiteStorage
-from services.workspace_preview import timeclock, modules, report_history
+from services.workspace_preview import timeclock, modules, report_history, team_modules
 from services.workspace_preview.intelligence import ChatInput, ClientDisconnected, LocalIntelligence, ModelUnavailable, navigation_for, reply_until_disconnected
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -208,6 +208,10 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
     @app.get("/report.js")
     def report_script():
         return FileResponse(STATIC / "report.js", media_type="text/javascript")
+
+    @app.get("/team-modules.js")
+    def team_script():
+        return FileResponse(STATIC / "team-modules.js", media_type="text/javascript")
 
     @app.get("/modules.js")
     def modules_script():
@@ -428,7 +432,8 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
             record = serialize(row)
         return prepare_order(record, knowledge_store)
 
-    modules.register(app, connect, actor, permitted_row)
+    team_modules.register(app, connect, actor, ACTORS)
+    modules.register(app, connect, actor, permitted_row, ACTORS)
     report_history.register(app, connect, actor, report, knowledge_store)
     timeclock.register(app, connect, actor, permitted_row)
     return app

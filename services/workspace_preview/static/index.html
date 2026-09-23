@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>WZOS · Operations workspace</title><link rel="stylesheet" href="/workspace.css"><script src="/geometry.js" defer></script><script src="/workspace.js" defer></script><script src="/timeclock.js" defer></script><script src="/modules.js" defer></script><script src="/report-map.js" defer></script><script src="/report.js" defer></script><script src="/assistant.js" defer></script></head>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>WZOS · Operations workspace</title><link rel="stylesheet" href="/workspace.css"><script src="/geometry.js" defer></script><script src="/workspace.js" defer></script><script src="/timeclock.js" defer></script><script src="/modules.js" defer></script><script src="/report-map.js" defer></script><script src="/report.js" defer></script><script src="/team-modules.js" defer></script><script src="/assistant.js" defer></script></head>
 <body>
 <a class="skip" href="#main">Skip to workspace</a>
 <aside class="sidebar">
@@ -14,9 +14,9 @@
   <button class="nav-item" id="forms-nav">Forms hub</button>
   <button class="nav-item" id="clock-nav"><span aria-hidden="true">◷</span> Time clock</button>
   <button class="nav-item" id="schedule-nav">Schedule management</button>
-  <button class="nav-item" disabled title="Not connected in this preview"><span aria-hidden="true">◇</span> Navigation</button>
-  <button class="nav-item" disabled title="Not connected in this preview"><span aria-hidden="true">▱</span> Messaging</button>
-  <button class="nav-item" disabled title="Not connected in this preview"><span aria-hidden="true">▷</span> Video training</button>
+  <button class="nav-item" id="navigation-nav">Navigation</button>
+  <button class="nav-item" id="messages-nav">Messaging</button>
+  <button class="nav-item" id="training-nav">Video training</button>
  </nav>
  <div class="sidebar-foot"><span class="status-dot"></span> Local development <small>Unavailable modules are dimmed.</small><p>Molecular Project Development LLC</p></div>
 </aside>
@@ -54,6 +54,7 @@
    </section>
   </div>
  </div>
+<section id="team-view" class="panel report-section" hidden><h1 id="team-title"></h1><p id="team-notice" role="status"></p><div id="team-content"></div></section>
 <section id="report-view" hidden aria-labelledby="report-title">
  <div class="page-heading"><div><p class="eyebrow">ENTERPRISE PLANNING</p><h1 id="report-title">Work Zone Report</h1><p>Draft review workspace · not approved for field use</p></div></div>
  <label>Saved work order<select id="report-order"></select></label><button id="report-refresh" class="secondary">Refresh report</button>
@@ -64,20 +65,20 @@
 <section id="modules-view" hidden aria-labelledby="module-title">
  <div class="page-heading"><div><p class="eyebrow">TEAM WORKSPACE</p><h1 id="module-title"></h1><p id="module-description"></p></div><button id="module-new" class="primary">New draft</button></div>
  <p id="module-notice" role="status" aria-live="polite"></p>
- <div class="workspace-grid"><section class="panel"><h2>Saved records</h2><button id="module-refresh" class="secondary">Refresh</button><div id="module-list"></div><p id="module-page"></p><button id="module-prev" class="secondary">Previous</button><button id="module-next" class="secondary">Next</button></section>
+ <div class="workspace-grid"><section class="panel"><h2>Saved records</h2><button id="module-refresh" class="secondary">Refresh</button><label id="module-day-label">Schedule start date (UTC)<input id="module-day" type="date"></label><div id="module-list"></div><p id="module-page"></p><button id="module-prev" class="secondary">Previous</button><button id="module-next" class="secondary">Next</button></section>
  <section class="panel"><h2 id="module-editor-title">Draft details</h2><form id="module-form" hidden>
- <label id="module-type-label">Form template<select id="module-type"><option value="incident">Incident draft</option><option value="dvir">Vehicle inspection (DVIR draft)</option></select></label>
- <fieldset id="module-inspection" hidden><legend>Vehicle inspection</legend><p class="fine">Internal draft only. Unchecked items are not passes. This does not certify the vehicle or authorize operation.</p>
+ <label id="module-type-label">Form template<select id="module-type"><option value="incident">Incident draft</option><option value="dvir">Vehicle inspection (DVIR draft)</option><option value="jsa">JSA planning worksheet</option></select></label>
+ <fieldset id="module-safety" hidden><legend>Job Safety Analysis — internal worksheet</legend><p>Planning notes adapted from V1; not a complete agency form or approval.</p><div id="safety-fields"></div></fieldset><fieldset id="module-inspection" hidden><legend>Vehicle inspection</legend><p class="fine">Internal draft only. Unchecked items are not passes. This does not certify the vehicle or authorize operation.</p>
  <label>Vehicle ID<input id="dvir-vehicle" maxlength="120"></label><label>Odometer (miles)<input id="dvir-odometer" type="number" min="0" max="10000000" step="1"></label>
  <label>Trip type<select id="dvir-trip"><option value="pre-trip">Pre-trip</option><option value="post-trip">Post-trip</option></select></label><div id="dvir-checks"></div><label>Defects / failed items<textarea id="dvir-defects" maxlength="4000"></textarea></label></fieldset>
  <label>Title<input id="module-name" maxlength="120" required></label>
  <label>Linked work order<select id="module-order"></select></label>
  <label>Location<input id="module-location" maxlength="500"></label>
- <div id="module-times"><label>Start (your device timezone)<input id="module-start" type="datetime-local"></label><label>End (your device timezone)<input id="module-end" type="datetime-local"></label></div>
+ <label id="module-assignees-label">Assigned test members<select id="module-assignees" multiple></select></label><div id="module-times"><label>Start (your device timezone)<input id="module-start" type="datetime-local"></label><label>End (your device timezone)<input id="module-end" type="datetime-local"></label></div>
  <label id="module-details-label">Details<textarea id="module-details" maxlength="4000" rows="6"></textarea></label>
  <label>Status<select id="module-status"><option value="draft">Draft</option><option value="cancelled">Cancelled</option></select></label>
  <p id="module-version" class="fine"></p><button id="module-save" class="primary">Save draft</button>
- </form></section></div>
+ </form><div id="module-history"></div></section></div>
 </section>
 <section id="clock-view" hidden aria-labelledby="clock-title">
  <div class="page-heading"><div><p class="eyebrow">CREW OPERATIONS</p><h1 id="clock-title">Time clock</h1><p>Your shift, tasks and breaks in one place.</p></div><button id="clock-refresh" class="secondary">Refresh clock</button></div>
@@ -90,7 +91,7 @@
  <label>Shift note<textarea id="clock-note" maxlength="1000" rows="2"></textarea></label>
  <div class="clock-actions"><button id="clock-in" class="primary">Clock in</button><button id="clock-switch" class="secondary">Switch task</button><button id="clock-break" class="secondary">Start break</button><button id="clock-out" class="secondary">Clock out</button><button id="clock-retry" class="secondary" hidden>Retry unconfirmed action</button></div>
  <p class="fine">Local synthetic records. GPS and offline recording are not enabled. Reconnect before recording a change.</p>
- </section><section class="panel"><div class="panel-heading"><h2>Time history</h2><label id="clock-team-label" hidden><input id="clock-team" type="checkbox"> Team records</label></div><div id="clock-history"></div><div class="clock-actions"><button id="clock-prev" class="secondary">Previous</button><button id="clock-next" class="secondary">Next</button></div><p id="clock-page" class="fine"></p></section></div>
+ </section><section class="panel"><div class="panel-heading"><h2>Time history</h2><label id="clock-team-label" hidden><input id="clock-team" type="checkbox"> Team records</label></div><label>Shift start date from (UTC)<input type="date" id="clock-from"></label><label>Through (UTC)<input type="date" id="clock-to"></label><button type="button" class="secondary" id="clock-export">Export filtered shifts (CSV)</button><div id="clock-history"></div><div class="clock-actions"><button id="clock-prev" class="secondary">Previous</button><button id="clock-next" class="secondary">Next</button></div><p id="clock-page" class="fine"></p></section></div>
 </section></main>
  <footer class="app-footer"><span>WZOS / Core + Enterprise</span><span>All records on this page are synthetic.</span></footer>
 </div>

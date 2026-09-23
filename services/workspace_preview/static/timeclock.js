@@ -4,6 +4,7 @@
  let active=null, loaded=false, busy=false, generation=0, offset=0, observed=0, baseSeconds=0, pending=null, actorId=null;
  const format=n=>[Math.floor(n/3600),Math.floor(n%3600/60),n%60].map(v=>String(v).padStart(2,'0')).join(':');
  const message=value=>{node('clock-message').textContent=value;};
+ const dateQuery=()=>`${node('clock-from').value?'&start_date='+node('clock-from').value:''}${node('clock-to').value?'&end_date='+node('clock-to').value:''}`;
  function controls(){
   const blocked=busy||!loaded||!!pending, onBreak=active?.status==='on_break';
   node('clock-in').hidden=!!active;node('clock-out').hidden=!active;node('clock-break').hidden=!active;node('clock-switch').hidden=!active;
@@ -28,7 +29,7 @@
   node('clock-team-label').hidden=session.role!=='admin';if(session.role!=='admin')node('clock-team').checked=false;
   const options=[text('option','Unassigned')];options[0].value='';for(const row of window.wzosClock.getOrders()){const o=text('option',row.title);o.value=row.id;options.push(o);}node('clock-order').replaceChildren(...options);
   try{
-   const [state,history]=await Promise.all([window.wzosClock.api('/api/time/status'),window.wzosClock.api(`/api/time/entries?offset=${offset}&team=${node('clock-team').checked}`)]);
+   const [state,history]=await Promise.all([window.wzosClock.api('/api/time/status'),window.wzosClock.api(`/api/time/entries?offset=${offset}&team=${node('clock-team').checked}${dateQuery()}`)]);
    if(epoch!==generation||session.id!==window.wzosClock.getSession()?.id)return;
    renderActive(state);node('clock-history').replaceChildren();
    for(const entry of history.items){const article=document.createElement('article');article.className='clock-entry';article.append(text('strong',entry.order_title||'Unassigned work'),text('p',`${entry.employee_id} · ${new Date(entry.clock_in).toLocaleString()} → ${entry.clock_out?new Date(entry.clock_out).toLocaleString():'Active'}`),text('p',`${format(entry.work_seconds)} work · ${format(entry.break_seconds)} breaks`));
@@ -54,6 +55,8 @@
  node('clock-switch').addEventListener('click',()=>send('switch_task'));node('clock-break').addEventListener('click',()=>send(active?.status==='on_break'?'break_end':'break_start'));
  node('clock-retry').addEventListener('click',()=>send(null,true));node('clock-refresh').addEventListener('click',refresh);node('clock-task').addEventListener('change',controls);
  node('clock-team').addEventListener('change',()=>{offset=0;refresh();});node('clock-prev').addEventListener('click',()=>{offset=Math.max(0,offset-20);refresh();});node('clock-next').addEventListener('click',()=>{offset+=20;refresh();});
+ for(const id of ['clock-from','clock-to'])node(id).onchange=()=>{offset=0;refresh();};
+ node('clock-export').onclick=async()=>{const button=node('clock-export');button.disabled=true;try{const response=await fetch(`/api/time/export?team=${node('clock-team').checked}${dateQuery()}`,{headers:{'X-Preview-Actor':window.wzosClock.getSession().id}});if(!response.ok){const error=await response.json();throw Error(typeof error.detail==='string'?error.detail:'Check export dates');}const url=URL.createObjectURL(await response.blob());const a=document.createElement('a');a.href=url;a.download='wzos-test-time.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}catch(error){message(error.message);}finally{button.disabled=false;}};
  document.addEventListener('wzos:clock-open',refresh);
  document.addEventListener('wzos:session',()=>{const id=window.wzosClock.getSession()?.id;if(id!==actorId){actorId=id;pending=null;active=null;baseSeconds=0;offset=0;node('clock-note').value='';node('clock-team').checked=false;node('clock-history').replaceChildren();node('clock-state').textContent='Loading clock';tick();message('');}refresh();});
  window.addEventListener('beforeunload',event=>{if(pending){event.preventDefault();event.returnValue='';}});

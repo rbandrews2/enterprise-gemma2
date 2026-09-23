@@ -1,0 +1,113 @@
+[
+  {
+    "id": "pmt",
+    "title": "Project Management Technician (PMT)",
+    "description": "Field leadership, crew coordination, documentation responsibility, and operational oversight.",
+    "topics": [
+      "leadership",
+      "documentation",
+      "planning",
+      "communication"
+    ],
+    "status": "content_review_pending",
+    "certificate_available": false
+  },
+  {
+    "id": "flagger",
+    "title": "Flagger Study & Refresher",
+    "description": "Traffic control signaling, positioning, and live-traffic awareness.",
+    "topics": [
+      "flagger",
+      "traffic_control",
+      "safety",
+      "signals"
+    ],
+    "status": "content_review_pending",
+    "certificate_available": false
+  },
+  {
+    "id": "ttc",
+    "title": "Temporary Traffic Control (TTC)",
+    "description": "MUTCD-aligned lane closures, tapers, signage, and device placement.",
+    "topics": [
+      "traffic_control",
+      "setup",
+      "cones",
+      "signing"
+    ],
+    "status": "content_review_pending",
+    "certificate_available": false
+  },
+  {
+    "id": "work_zone_safety",
+    "title": "Work Zone Safety Fundamentals",
+    "description": "General work zone safety awareness and hazard prevention.",
+    "topics": [
+      "safety"
+    ],
+    "status": "content_review_pending",
+    "certificate_available": false
+  },
+  {
+    "id": "night_work",
+    "title": "Night Work Safety",
+    "description": "Low-visibility operations, lighting, reflective PPE, and fatigue management.",
+    "topics": [
+      "night_work",
+      "visibility",
+      "lighting",
+      "fatigue"
+    ],
+    "status": "content_review_pending",
+    "certificate_available": false
+  },
+  {
+    "id": "ppe",
+    "title": "PPE & Jobsite Safety",
+    "description": "Proper PPE usage, inspection, and compliance.",
+    "topics": [
+      "safety"
+    ],
+    "status": "content_review_pending",
+    "certificate_available": false
+  },
+  {
+    "id": "dvir",
+    "title": "DVIR & Vehicle Safety Awareness",
+    "description": "Pre-trip inspections, defect reporting, and vehicle readiness.",
+    "topics": [
+      "dvir",
+      "equipment",
+      "inspection",
+      "maintenance"
+    ],
+    "status": "content_review_pending",
+    "certificate_available": false
+  },
+  {
+    "id": "harassment",
+    "title": "Workplace Harassment & Professional Conduct",
+    "description": "Harassment prevention, reporting procedures, and conduct expectations.",
+    "topics": [
+      "hr",
+      "conduct",
+      "workplace"
+    ],
+    "status": "content_review_pending",
+    "certificate_available": false
+  },
+  {
+    "id": "cdl_prep",
+    "title": "CDL Preparation",
+    "description": "CDL knowledge prep including pre-trip inspection, vehicle systems, and safety rules.",
+    "topics": [
+      "cdl",
+      "driving",
+      "pre_trip",
+      "regulations",
+      "safety"
+    ],
+    "status": "content_review_pending",
+    "certificate_available": false
+  }
+]

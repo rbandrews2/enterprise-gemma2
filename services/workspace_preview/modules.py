@@ -1,6 +1,6 @@
 """Scoped synthetic scheduling and incident drafts adapted from recovered Core fields."""
 import json
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from typing import Literal
 from uuid import UUID
 from fastapi import HTTPException, Request, Query
@@ -26,12 +26,23 @@ class VehicleInspection(BaseModel):
         return self
 
 
+class SafetyWorksheet(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+    competent_person: str = Field(default="", max_length=200)
+    tasks: str = Field(default="", max_length=4000)
+    hazards: str = Field(default="", max_length=4000)
+    controls: str = Field(default="", max_length=4000)
+    emergency_plan: str = Field(default="", max_length=2000)
+    ppe: str = Field(default="", max_length=1000)
+
 class ModuleRecord(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
     request_id: UUID
     expected_version: int = Field(default=0, ge=0, strict=True)
-    form_type: Literal["incident", "dvir"] = "incident"
+    form_type: Literal["incident", "dvir", "jsa"] = "incident"
     inspection: VehicleInspection | None = None
+    safety: SafetyWorksheet | None = None
+    assignees: list[str] = Field(default_factory=list, max_length=50)
     title: str = Field(min_length=1, max_length=120)
     location: str = Field(default="", max_length=500)
     details: str = Field(default="", max_length=4000)
@@ -50,12 +61,22 @@ class ModuleRecord(BaseModel):
         return self
 
 
-def register(app, connect, actor, permitted_row):
+def register(app, connect, actor, permitted_row, actors):
     with connect() as db:
         db.execute("""CREATE TABLE IF NOT EXISTS module_records (
             id TEXT NOT NULL, kind TEXT NOT NULL, organization_id TEXT NOT NULL,
             owner_id TEXT NOT NULL, version INTEGER NOT NULL, payload TEXT NOT NULL,
             updated_at TEXT NOT NULL, PRIMARY KEY(organization_id, kind, id))""")
+
+        db.execute("""CREATE TABLE IF NOT EXISTS module_revisions (
+            organization_id TEXT NOT NULL, kind TEXT NOT NULL, id TEXT NOT NULL,
+            version INTEGER NOT NULL, payload TEXT NOT NULL, author_id TEXT NOT NULL,
+            saved_at TEXT NOT NULL, PRIMARY KEY(organization_id,kind,id,version))""")
+
+    @app.get("/api/modules/roster")
+    def roster(request: Request):
+        selected=actor(request)
+        return {"items":[{"id":a["id"],"name":a["name"],"role":a["role"]} for a in actors.values() if a["organization_id"]==selected["organization_id"]], "synthetic":True}
 
     def scope(kind, selected):
         clause = "organization_id=? AND kind=?"
@@ -71,9 +92,12 @@ def register(app, connect, actor, permitted_row):
 
     @app.get("/api/modules/{kind}")
     def listing(kind: Literal["forms", "schedule"], request: Request,
-                offset: int = Query(0, ge=0), limit: int = Query(25, ge=1, le=50)):
+                offset: int = Query(0, ge=0), limit: int = Query(25, ge=1, le=50), day: date | None = None):
         selected = actor(request)
         clause, params = scope(kind, selected)
+        if day and kind == "schedule":
+            clause += " AND substr(json_extract(payload, '$.start'),1,10)=?"
+            params.append(day.isoformat())
         with connect() as db:
             total = db.execute("SELECT COUNT(*) FROM module_records WHERE " + clause, params).fetchone()[0]
             rows = db.execute("SELECT * FROM module_records WHERE " + clause +
@@ -91,12 +115,19 @@ def register(app, connect, actor, permitted_row):
                 raise HTTPException(422, "Start and end times are required")
         elif payload.form_type == "dvir" and payload.inspection is None:
             raise HTTPException(422, "Vehicle inspection details are required")
-        if payload.form_type == "incident" and payload.inspection is not None:
+        if kind == "forms" and payload.form_type == "jsa" and payload.safety is None:
+            raise HTTPException(422, "Safety worksheet fields are required")
+        if payload.form_type != "jsa" and payload.safety is not None:
+            raise HTTPException(422, "Safety fields belong to the JSA worksheet")
+        if payload.form_type != "dvir" and payload.inspection is not None:
             raise HTTPException(422, "Incident drafts cannot contain vehicle inspection fields")
         if kind == "schedule" and (payload.inspection is not None or payload.form_type != "incident"):
             raise HTTPException(422, "Vehicle inspections belong in Forms hub")
         if kind == "forms" and (payload.start or payload.end):
             raise HTTPException(422, "Incident drafts do not use schedule times")
+        allowed={a["id"] for a in actors.values() if a["organization_id"]==selected["organization_id"]}
+        if len(set(payload.assignees)) != len(payload.assignees) or not set(payload.assignees)<=allowed or (kind=="forms" and payload.assignees):
+            raise HTTPException(422, "Assignments must be distinct members of this organization on a schedule")
         packed = payload.model_dump(mode="json", exclude={"expected_version", "request_id"})
         for key in ("start", "end"):
             if getattr(payload, key):
@@ -120,8 +151,27 @@ def register(app, connect, actor, permitted_row):
                 return unpack(row)
             if version != payload.expected_version:
                 raise HTTPException(409, "Record changed. Reload before editing")
+            if kind=="schedule" and payload.status!="cancelled" and payload.assignees:
+                others=db.execute("SELECT id,payload FROM module_records WHERE organization_id=? AND kind='schedule' AND id<>?",(selected["organization_id"],str(record_id))).fetchall()
+                for other in others:
+                    event=json.loads(other["payload"])
+                    if event.get("status")!="cancelled" and set(event.get("assignees",[])) & set(payload.assignees) and event.get("start") and event.get("end"):
+                        if datetime.fromisoformat(event['start']) < payload.end and datetime.fromisoformat(event['end']) > payload.start:
+                            raise HTTPException(409,"An assigned member has an overlapping schedule draft")
+            if row:
+                db.execute("INSERT OR IGNORE INTO module_revisions VALUES (?,?,?,?,?,?,?)",(selected["organization_id"],kind,str(record_id),row['version'],row['payload'],row['owner_id'],row['updated_at']))
+            db.execute("INSERT INTO module_revisions VALUES (?,?,?,?,?,?,?)",(selected["organization_id"],kind,str(record_id),version+1,serialized,selected['id'],datetime.now(timezone.utc).isoformat()))
             db.execute("INSERT OR REPLACE INTO module_records VALUES (?,?,?,?,?,?,?)",
                        (str(record_id), kind, selected["organization_id"], row["owner_id"] if row else selected["id"],
                         version + 1, serialized, datetime.now(timezone.utc).isoformat()))
             return unpack(db.execute("SELECT * FROM module_records WHERE organization_id=? AND kind=? AND id=?",
                                      (selected["organization_id"], kind, str(record_id))).fetchone())
+
+    @app.get('/api/modules/{kind}/{record_id}/history')
+    def history(kind: Literal['forms','schedule'], record_id: UUID, request: Request, offset: int=Query(0,ge=0)):
+        selected=actor(request);clause,params=scope(kind,selected)
+        with connect() as db:
+            current=db.execute('SELECT * FROM module_records WHERE '+clause+' AND id=?',(*params,str(record_id))).fetchone()
+            if not current: raise HTTPException(404,'Record not found')
+            rows=db.execute('SELECT * FROM module_revisions WHERE organization_id=? AND kind=? AND id=? ORDER BY version DESC LIMIT 20 OFFSET ?', (selected['organization_id'],kind,str(record_id),offset)).fetchall()
+        return {"items":[{"version":r['version'],"saved_at":r['saved_at'],"author_id":r['author_id'],"record":json.loads(r['payload'])} for r in rows]}

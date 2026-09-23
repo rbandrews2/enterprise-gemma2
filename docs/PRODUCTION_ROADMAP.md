@@ -12,6 +12,8 @@ Working test scope: work orders; measured geometry; readiness checklists; time c
 
 ## Ordered delivery plan and completion criteria
 
+2026-09-23: Ray combined steps 2 and 3 into one integrated workstream. Track execution and acceptance in [COMBINED_MODULE_ACCEPTANCE.md](COMBINED_MODULE_ACCEPTANCE.md). The original requirements below remain in force; this is not a scope reduction.
+
 ### 1. Site imagery inside Work Zone Report — next implementation task
 
 - Reuse existing V2 Maps/Street View/geometry components and recovered V1 integrations.

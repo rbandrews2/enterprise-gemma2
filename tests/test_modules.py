@@ -77,3 +77,39 @@ class ModuleTests(unittest.TestCase):
         self.assertEqual(self.save('schedule',body).status_code,422)
         other=self.body();other['expected_version']=1
         self.assertEqual(self.save('forms',other,'enterprise-general',record).status_code,409)
+
+    def test_jsa_history_and_schedule_conflicts(self):
+        record=str(uuid4());body=self.body();body.update(form_type='jsa',safety={'hazards':'Synthetic hazard','controls':'Synthetic control'})
+        self.assertEqual(self.save('forms',body,record=record).status_code,200)
+        body.update(expected_version=1,details='Updated review')
+        self.assertEqual(self.save('forms',body,record=record).status_code,200)
+        history=self.client.get('/api/modules/forms/'+record+'/history',headers=self.headers('enterprise-admin')).json()['items']
+        self.assertEqual([r['version'] for r in history],[2,1])
+        self.assertEqual(history[1]['record']['details'],'Test only')
+        self.assertEqual(self.client.get('/api/modules/forms/'+record+'/history',headers=self.headers('enterprise-general')).status_code,404)
+        event=self.body();event.update(start='2026-09-25T08:00:00Z',end='2026-09-25T10:00:00Z',assignees=['enterprise-general'])
+        self.assertEqual(self.save('schedule',event).status_code,200)
+        self.assertEqual(self.save('schedule',event).status_code,409)
+        event['assignees']=['core-general']
+        self.assertEqual(self.save('schedule',event).status_code,422)
+        page=self.client.get('/api/modules/schedule?day=2026-09-26',headers=self.headers('enterprise-admin')).json()
+        self.assertEqual(page['total'],0)
+
+    def test_test_messages_and_study_isolation(self):
+        admin=self.headers('enterprise-admin');general=self.headers('enterprise-general')
+        body={'request_id':str(uuid4()),'recipient_id':'enterprise-general','text':'Synthetic message'}
+        self.assertEqual(self.client.post('/api/messages',headers=admin,json=body).status_code,200)
+        self.assertEqual(self.client.post('/api/messages',headers=admin,json=body).status_code,200)
+        self.assertEqual(len(self.client.get('/api/messages',headers=general).json()['items']),1)
+        self.assertEqual(self.client.get('/api/messages',headers=self.headers('core-admin')).json()['items'],[])
+        body.update(request_id=str(uuid4()),recipient_id='core-general')
+        self.assertEqual(self.client.post('/api/messages',headers=admin,json=body).status_code,404)
+        catalog=self.client.get('/api/training',headers=admin).json();course=catalog['items'][0]['id']
+        self.assertFalse(catalog['certification_enabled'])
+        self.assertEqual(self.client.put('/api/training/'+course,headers=admin,json={'status':'studying'}).status_code,200)
+        self.assertEqual(self.client.get('/api/training',headers=general).json()['items'][0]['study_status'],'not_started')
+        self.assertEqual(self.client.put('/api/training/'+course,headers=admin,json={'status':'certified'}).status_code,422)
+        self.assertEqual(self.client.get('/api/time/export?team=true',headers=general).status_code,403)
+        response=self.client.get('/api/time/export',headers=admin)
+        self.assertEqual(response.status_code,200);self.assertIn('Payroll calculated',response.text)
+        self.assertEqual(self.client.get('/api/time/entries?start_date=2026-09-25&end_date=2026-09-24',headers=admin).status_code,422)

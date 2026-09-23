@@ -1,10 +1,13 @@
 """Local timekeeping workflow; storage isolated from any Supabase account."""
 import json
-from datetime import datetime, timezone
+import csv
+import io
+from datetime import date, datetime, timezone
 from typing import Literal
 from uuid import UUID, uuid4
 
 from fastapi import HTTPException, Query, Request
+from fastapi.responses import Response
 from pydantic import BaseModel, ConfigDict, Field
 
 TASKS = {"job_site": "Job Site", "setup": "Setup", "teardown": "Teardown", "travel": "Travel Time", "other": "Other"}
@@ -76,7 +79,7 @@ def register(app, connect, actor, permitted_order):
         return {"active": present(row, now) if row else None, "server_time": now, "tasks": TASKS}
 
     @app.get("/api/time/entries")
-    def entries(request: Request, team: bool = False, offset: int = Query(0, ge=0), limit: int = Query(20, ge=1, le=50)):
+    def entries(request: Request, team: bool = False, offset: int = Query(0, ge=0), limit: int = Query(20, ge=1, le=50), start_date: date | None = None, end_date: date | None = None):
         selected = actor(request)
         if team and selected["role"] != "admin":
             raise HTTPException(403, "Team time history requires admin access")
@@ -85,11 +88,33 @@ def register(app, connect, actor, permitted_order):
         if not team:
             where += " AND employee_id=?"
             values.append(selected["id"])
+        if start_date and end_date and end_date < start_date:
+            raise HTTPException(422, "End date must not precede start date")
+        if start_date:
+            where += " AND substr(json_extract(payload,'$.clock_in'),1,10)>=?"
+            values.append(start_date.isoformat())
+        if end_date:
+            where += " AND substr(json_extract(payload,'$.clock_in'),1,10)<=?"
+            values.append(end_date.isoformat())
         now = utc_now()
         with connect() as conn:
             count = conn.execute("SELECT COUNT(*) FROM preview_shifts WHERE " + where, values).fetchone()[0]
             rows = conn.execute("SELECT * FROM preview_shifts WHERE " + where + " ORDER BY json_extract(payload,'$.clock_in') DESC,id DESC LIMIT ? OFFSET ?", [*values,limit,offset]).fetchall()
         return {"items": [present(row, now) for row in rows], "total": count, "offset": offset, "limit": limit, "server_time": now}
+
+    @app.get("/api/time/export")
+    def export(request: Request, team: bool=False, start_date: date | None=None, end_date: date | None=None):
+        result=entries(request,team,0,50,start_date,end_date)
+        if result['total']>50:
+            raise HTTPException(422,"Narrow the date range to 50 shifts or fewer before export")
+        output=io.StringIO(newline='');writer=csv.writer(output)
+        writer.writerow(['Employee','Work order','Clock in UTC','Clock out UTC','Work seconds','Break seconds','Status','Payroll calculated'])
+        def safe(value):
+            value=str(value or '')
+            return "'"+value if value.lstrip().startswith(('=','+','-','@')) else value
+        for item in result['items']:
+            writer.writerow([safe(item['employee_id']),safe(item.get('order_title')),item['clock_in'],item['clock_out'] or '',item['work_seconds'],item['break_seconds'],item['status'],'No'])
+        return Response(output.getvalue(),media_type='text/csv',headers={'Content-Disposition':'attachment; filename="wzos-test-time.csv"'})
 
     @app.post("/api/time/commands")
     def command(payload: ClockCommand, request: Request):
