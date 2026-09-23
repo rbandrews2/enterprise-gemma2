@@ -116,6 +116,14 @@ class Accounts:
         return token
 
     def register(self, app):
+        @app.get('/api/account/members')
+        def members(request: Request):
+            selected=self.actor(request)
+            if selected['role']!='admin': raise HTTPException(403,'Administrator access required')
+            with self.connect() as db:
+                rows=db.execute('SELECT a.id,a.name,a.email,m.role,m.active FROM accounts a JOIN memberships m ON a.id=m.user_id WHERE m.organization_id=? ORDER BY a.name,a.id LIMIT 100',(selected['organization_id'],)).fetchall()
+            return {'items':[dict(r) for r in rows], 'can_change_access':selected['membership_role']=='owner'}
+
         @app.get('/api/account')
         def account(request: Request):
             user = self.identity(request)

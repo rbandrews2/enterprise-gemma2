@@ -26,6 +26,7 @@ function renderList(){
 function open(record){
  readGeometry=window.WzosGeometry.mount($("geometry-fields"),record?.job_geometry);
  document.dispatchEvent(new CustomEvent("wzos:job-context"));
+ let attachments=$("order-attachments");if(!attachments){attachments=el("div");attachments.id="order-attachments";$("order-form").after(attachments);}window.wzosFiles.mount(attachments,"order",record?.id);
  selected=record;dirty=false;requestId=crypto.randomUUID();lastCreateBody=null;$("atlas-output").replaceChildren();$("order-form").hidden=false;$("empty-detail").hidden=true;
  $("detail-title").textContent=record?record.title:"New work order";$("record-meta").textContent=record?`SAVED DRAFT · REVISION ${record.version}`:"NEW DRAFT";
  for(const name of ["title","address","locality","notes"])$(name).value=record?.[name]||"";
@@ -36,7 +37,7 @@ function open(record){
 }
 async function loadRows(){rows=(await api("/api/orders")).items;renderList();}
 async function switchIdentity(){
- lock(true);resetChecklist();$("notice").hidden=true;
+ lock(true);$("order-attachments")?.replaceChildren();resetChecklist();$("notice").hidden=true;
  try{session=null;session=await api("/api/session");selected=null;dirty=false;rows=[];$("atlas-output").replaceChildren();$("order-form").hidden=true;$("empty-detail").hidden=false;$("detail-title").textContent="Select a work order";
  if(session.restricted_staging){document.querySelector('.preview-bar>div').textContent='RESTRICTED CLOUD STAGING · Shared synthetic records reset on restart. Do not enter real attendance or customer data.';$("identity").closest('label').hidden=true;document.querySelector('.sidebar-foot').textContent='Restricted staging · WZOS V2';document.querySelector('.app-footer').textContent='WZOS V2 staging · Test data only · Storage and cloud AI integration pending.';}
  $("org-name").textContent=session.organization;$("edition").textContent=`${session.edition==="core"?"Core":"Enterprise"} edition · synthetic`;
@@ -76,7 +77,7 @@ $("prepare").addEventListener("click",async()=>{
 $("atlas-nav").addEventListener("click",()=>{document.dispatchEvent(new CustomEvent("wzos:assistant-open"));});
 $("jobs-nav").addEventListener("click",()=>{window.showWzosView("orders");$("list-title").scrollIntoView({behavior:"smooth",block:"start"});});
 window.addEventListener("beforeunload",event=>{if(dirty||checklistDirty){event.preventDefault();event.returnValue="";}});
-(async()=>{try{const config=await api("/api/identities");identities=config.identities;if(config.mode==="verified_accounts"){identities=[await window.wzosAccount.start(config)];}for(const identity of identities){const option=el("option",`${identity.edition==="core"?"Core":"Enterprise"} · ${identity.role} · ${identity.name}`);option.value=identity.id;$("identity").append(option);}$("identity").value=identities[0]?.id||"enterprise-admin";await switchIdentity();if(config.mode==="verified_accounts"){$("identity").disabled=true;$("identity").closest("label").hidden=true;}}catch(error){notify(error.message,true);}})();
+(async()=>{try{const config=await api("/api/identities");identities=config.identities;if(config.mode==="verified_accounts"){identities=[await window.wzosAccount.start(config)];}for(const identity of identities){const option=el("option",`${identity.edition==="core"?"Core":"Enterprise"} · ${identity.role} · ${identity.name}`);option.value=identity.id;$("identity").append(option);}$("identity").value=config.mode==="verified_accounts"?identities[0]?.id:"enterprise-admin";await switchIdentity();if(config.mode==="verified_accounts"){$("identity").disabled=true;$("identity").closest("label").hidden=true;}}catch(error){notify(error.message,true);}})();
 
 function lockChecklist(){
  const blocked=busy||checklistLoading||!checklistData;

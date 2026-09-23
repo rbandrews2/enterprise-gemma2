@@ -154,7 +154,7 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
             allowed_origins = {expected_origin, *os.getenv("WZOS_ACCOUNT_ORIGINS" if account_workspace else "WZOS_STAGING_ORIGINS", "").split(",")}
         else:
             allowed_origins = {expected_origin}
-        staging_navigation = (private_staging and request.method == "GET" and request.url.path == "/"
+        staging_navigation = (hosted and request.method == "GET" and request.url.path == "/"
                               and request.headers.get("sec-fetch-mode") == "navigate")
         if not staging_navigation and ((origin and origin not in allowed_origins) or request.headers.get("sec-fetch-site") == "cross-site"):
             return JSONResponse({"error": "same_origin_only"}, status_code=403)
@@ -274,7 +274,7 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
     def session(request: Request):
         selected = actor(request)
         return {**selected, "can_prepare_atlas": selected["edition"] == "enterprise",
-                "can_manage_team": selected["role"] == "admin", "production_authenticated": account_workspace, "restricted_staging": private_staging}
+                "can_manage_team": selected["role"] == "admin", "production_authenticated": account_workspace, "file_storage_enabled": file_store is not None, "restricted_staging": private_staging}
 
     @app.get("/api/assistant/status")
     async def assistant_status(request: Request):
@@ -357,7 +357,7 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
             prior = conn.execute("SELECT * FROM preview_orders WHERE owner_id=? AND request_id=?",
                                  (selected["id"], str(payload.request_id))).fetchone()
             if prior:
-                if prior["request_hash"] != digest:
+                if prior["organization_id"] != selected["organization_id"] or prior["request_hash"] != digest:
                     raise HTTPException(409, "Retry identifier was already used with different content")
                 return serialize(prior)
             order_id = str(uuid4())
@@ -465,6 +465,10 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
     if file_store is not None:
         from services.workspace_preview.files import register as register_files
         register_files(app, connect, actor, permitted_row, file_store)
+    @app.get("/files.js")
+    def files_script():
+        return FileResponse(STATIC / "files.js", media_type="text/javascript")
+
     @app.get("/account.js")
     def account_script():
         return FileResponse(STATIC / "account.js", media_type="text/javascript")

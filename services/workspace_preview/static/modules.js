@@ -14,6 +14,7 @@
  window.wzosModulesCanLeave=()=>!saving&&(!dirty||confirm("Leave unsaved module changes?"));
  function localTime(value){if(!value)return "";const d=new Date(value);return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,16);}
  function edit(row){
+  let attachments=$("module-attachments");if(!attachments){attachments=text("div","");attachments.id="module-attachments";$("module-form").after(attachments);}window.wzosFiles.mount(attachments,"form",kind==="forms"?row?.id:null);
   $("module-type").value=row?.form_type||"incident";$("module-type").disabled=Boolean(row);
   const inspection=row?.inspection;$("dvir-vehicle").value=inspection?.vehicle_id||"";$("dvir-odometer").value=inspection?.odometer??"";$("dvir-trip").value=inspection?.trip_type||"pre-trip";$("dvir-defects").value=inspection?.defects||"";for(const key of Object.keys(checks))$("dvir-"+key).value=inspection?.[key]||"not_checked";template();
   for(const key of Object.keys(safetyFields))$("safety-"+key).value=row?.safety?.[key]||"";
@@ -42,7 +43,7 @@
  }
  async function show(view){
   if(!["forms","schedule"].includes(view))return;
-  const showGeneration=++epoch;kind=view;offset=0;dirty=false;current=null;$("module-form").hidden=true;notice("");
+  $("module-attachments")?.replaceChildren();const showGeneration=++epoch;kind=view;offset=0;dirty=false;current=null;$("module-form").hidden=true;notice("");
   $("module-title").textContent=kind==="forms"?"Forms hub":"Schedule management";
   $("module-description").textContent=kind==="forms"?"Incident, vehicle inspection and JSA planning drafts. Save, reopen and link to a work order. Official submissions and other templates are pending.":"Team schedule drafts. Admins edit; team members can read. Assignments use test members; overlapping active drafts are rejected. Saving does not dispatch or notify anyone.";
   $("module-day-label").hidden=kind!=="schedule";$("module-assignees-label").hidden=kind!=="schedule";$("module-history").replaceChildren();
@@ -53,7 +54,7 @@
  }
  for(const key of ["forms","schedule"])$(key+"-nav").onclick=()=>window.showWzosView(key);
  document.addEventListener("wzos:view",event=>show(event.detail));
- document.addEventListener("wzos:session",()=>{epoch++;dirty=false;current=null;$("module-list").replaceChildren();$("module-form").hidden=true;if(!$("modules-view").hidden)show(kind);});
+ document.addEventListener("wzos:session",()=>{$("module-attachments")?.replaceChildren();epoch++;dirty=false;current=null;$("module-list").replaceChildren();$("module-form").hidden=true;if(!$("modules-view").hidden)show(kind);});
  $("module-day").onchange=()=>{offset=0;refresh();};
  async function loadHistory(row){const selectedKind=kind;try{const data=await api(`/api/modules/${kind}/${row.id}/history`);if(current?.id!==row.id||selectedKind!==kind)return;$("module-history").append(text("h3","Saved revision history"));for(const entry of data.items){const d=text("details","");d.append(text("summary",`Revision ${entry.version} · ${new Date(entry.saved_at).toLocaleString()}`),text("p",entry.record.title),text("p",entry.record.details||"No notes"));for(const [key,value] of Object.entries(entry.record.safety||{}))d.append(text("p",`${safetyFields[key]}: ${value||"Not recorded"}`));$("module-history").append(d);}}catch(error){notice(error.message);}}
  $("module-new").onclick=()=>{if(window.wzosModulesCanLeave())edit(null);};

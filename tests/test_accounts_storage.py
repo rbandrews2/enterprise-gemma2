@@ -98,6 +98,26 @@ class AccountStorageTests(unittest.TestCase):
         self.assertEqual(self.client.get('/api/modules/forms',headers=self.headers('other',other)).json()['total'],0)
         self.assertEqual(self.client.get('/api/orders/'+order,headers=self.headers('other',other)).status_code,404)
 
+    def test_same_user_retry_cannot_cross_organization(self):
+        body={'request_id':str(uuid4()),'title':'Private job','work_type':'other','address':'Test road','locality':'Norfolk'}
+        first=self.client.post('/api/orders',headers=self.headers(),json=body)
+        self.assertEqual(first.status_code,201)
+        second=self.create_org('owner')
+        self.assertEqual(self.client.post('/api/orders',headers=self.headers('owner',second),json=body).status_code,409)
+
+    def test_report_snapshots_and_checklists_persist(self):
+        self.add('member');order=self.order()
+        items={key:{'status':'needs_attention','notes':'Synthetic test'} for key in ('site','authority','forms','crew','communication')}
+        r=self.client.put('/api/orders/'+order+'/checklist',headers=self.headers('member'),json={'expected_version':0,'expected_order_version':1,'items':items})
+        self.assertEqual(r.status_code,200,r.text)
+        report_id=str(uuid4())
+        r=self.client.post('/api/orders/'+order+'/reports',headers=self.headers('member'),json={'request_id':report_id,'expected_order_version':1})
+        self.assertEqual(r.status_code,200,r.text)
+        self.client.close();self.build()
+        r=self.client.get('/api/orders/'+order+'/reports/'+report_id,headers=self.headers('member'))
+        self.assertEqual(r.status_code,200,r.text)
+        self.assertEqual(r.json()['report']['checklist']['version'],1)
+
     def test_files_private_idempotent_and_survive_restart(self):
         self.add('member');order=self.order();file_id=str(uuid4())
         path='/api/files/'+file_id+'?entity_kind=order&entity_id='+order+'&filename=site.pdf'
