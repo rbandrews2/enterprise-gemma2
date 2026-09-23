@@ -1,0 +1,4 @@
+-r requirements-v2.txt
+psycopg[binary]==3.3.6
+firebase-admin==7.6.0
+google-cloud-storage==3.14.1

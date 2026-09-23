@@ -17,7 +17,7 @@ class Study(BaseModel):
     model_config=ConfigDict(extra="forbid")
     status: Literal['not_started','studying','review_requested']
 
-def register(app,connect,actor,actors):
+def register(app,connect,actor,actors,synthetic=True):
     catalog=json.loads(Path(__file__).with_name('training_catalog.json').read_text(encoding='utf-8'))
     with connect() as db:
         db.execute('CREATE TABLE IF NOT EXISTS study_plans (organization_id TEXT,owner_id TEXT,course_id TEXT,status TEXT,updated_at TEXT,PRIMARY KEY(organization_id,owner_id,course_id))')
@@ -33,17 +33,17 @@ def register(app,connect,actor,actors):
     def study(course_id:str,body:Study,request:Request):
         user=actor(request)
         if course_id not in {c['id'] for c in catalog}:raise HTTPException(404,'Course not found')
-        with connect() as db:db.execute('INSERT OR REPLACE INTO study_plans VALUES (?,?,?,?,?)',(user['organization_id'],user['id'],course_id,body.status,datetime.now(timezone.utc).isoformat()))
+        with connect() as db:db.execute('INSERT INTO study_plans VALUES (?,?,?,?,?) ON CONFLICT(organization_id,owner_id,course_id) DO UPDATE SET status=excluded.status,updated_at=excluded.updated_at',(user['organization_id'],user['id'],course_id,body.status,datetime.now(timezone.utc).isoformat()))
         return {'status':body.status,'certificate_issued':False,'review_notification_sent':False}
     @app.get('/api/messages')
     def messages(request:Request,offset:int=Query(0,ge=0)):
         user=actor(request)
         with connect() as db:
             rows=db.execute('SELECT * FROM fixture_messages WHERE organization_id=? AND (sender_id=? OR recipient_id=?) ORDER BY created_at DESC,id LIMIT 50 OFFSET ?',(user['organization_id'],user['id'],user['id'],offset)).fetchall()
-        return {'items':[dict(r) for r in rows],'synthetic_only':True,'external_delivery':False}
+        return {'items':[dict(r) for r in rows],'synthetic_only':synthetic,'external_delivery':False}
     @app.post('/api/messages')
     def send(body:Message,request:Request):
-        user=actor(request);recipient=actors.get(body.recipient_id)
+        user=actor(request);recipient=actors(user).get(body.recipient_id)
         if not recipient or recipient['organization_id']!=user['organization_id']:raise HTTPException(404,'Test member not found')
         with connect() as db:
             db.execute('BEGIN IMMEDIATE')
@@ -51,4 +51,4 @@ def register(app,connect,actor,actors):
             if prior:
                 if prior['organization_id']!=user['organization_id'] or prior['sender_id']!=user['id'] or prior['recipient_id']!=body.recipient_id or prior['body']!=body.text:raise HTTPException(409,'Message retry identifier conflict')
             else:db.execute('INSERT INTO fixture_messages VALUES (?,?,?,?,?,?)',(str(body.request_id),user['organization_id'],user['id'],body.recipient_id,body.text,datetime.now(timezone.utc).isoformat()))
-        return {'id':str(body.request_id),'status':'stored_for_test_recipient','external_delivery':False}
+        return {'id':str(body.request_id),'status':'stored_for_test_recipient' if synthetic else 'stored_for_recipient','external_delivery':False}

@@ -9,7 +9,7 @@ const types = {line_striping:"Line striping",underground_utility:"Underground ut
 function el(tag, text, className) {const node=document.createElement(tag); if(text!==undefined)node.textContent=text; if(className)node.className=className;return node;}
 function notify(message,error=false){$("notice").hidden=false;$("notice").textContent=message;$("notice").classList.toggle("error",error);}
 async function api(path, options={}) {
- const response=await fetch(path,{...options,headers:{"Content-Type":"application/json","X-Preview-Actor":session?.id || $("identity").value,...options.headers}});
+ const response=await fetch(path,{...options,headers:{"Content-Type":"application/json","X-Preview-Actor":session?.id || $("identity").value,...await window.wzosAccount.headers(),...options.headers}});
  const data=await response.json();
  if(!response.ok){const error=new Error(typeof data.detail==="string"?data.detail:"Check the fields and try again. Nothing was confirmed saved.");error.status=response.status;throw error;}
  return data;
@@ -76,7 +76,7 @@ $("prepare").addEventListener("click",async()=>{
 $("atlas-nav").addEventListener("click",()=>{document.dispatchEvent(new CustomEvent("wzos:assistant-open"));});
 $("jobs-nav").addEventListener("click",()=>{window.showWzosView("orders");$("list-title").scrollIntoView({behavior:"smooth",block:"start"});});
 window.addEventListener("beforeunload",event=>{if(dirty||checklistDirty){event.preventDefault();event.returnValue="";}});
-(async()=>{try{identities=(await api("/api/identities")).identities;for(const identity of identities){const option=el("option",`${identity.edition==="core"?"Core":"Enterprise"} · ${identity.role} · ${identity.name}`);option.value=identity.id;$("identity").append(option);}$("identity").value="enterprise-admin";await switchIdentity();}catch(error){notify(error.message,true);}})();
+(async()=>{try{const config=await api("/api/identities");identities=config.identities;if(config.mode==="verified_accounts"){identities=[await window.wzosAccount.start(config)];}for(const identity of identities){const option=el("option",`${identity.edition==="core"?"Core":"Enterprise"} · ${identity.role} · ${identity.name}`);option.value=identity.id;$("identity").append(option);}$("identity").value=identities[0]?.id||"enterprise-admin";await switchIdentity();if(config.mode==="verified_accounts"){$("identity").disabled=true;$("identity").closest("label").hidden=true;}}catch(error){notify(error.message,true);}})();
 
 function lockChecklist(){
  const blocked=busy||checklistLoading||!checklistData;

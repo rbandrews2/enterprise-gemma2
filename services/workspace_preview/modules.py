@@ -61,7 +61,7 @@ class ModuleRecord(BaseModel):
         return self
 
 
-def register(app, connect, actor, permitted_row, actors):
+def register(app, connect, actor, permitted_row, actors, synthetic=True):
     with connect() as db:
         db.execute("""CREATE TABLE IF NOT EXISTS module_records (
             id TEXT NOT NULL, kind TEXT NOT NULL, organization_id TEXT NOT NULL,
@@ -76,7 +76,7 @@ def register(app, connect, actor, permitted_row, actors):
     @app.get("/api/modules/roster")
     def roster(request: Request):
         selected=actor(request)
-        return {"items":[{"id":a["id"],"name":a["name"],"role":a["role"]} for a in actors.values() if a["organization_id"]==selected["organization_id"]], "synthetic":True}
+        return {"items":[{"id":a["id"],"name":a["name"],"role":a["role"]} for a in actors(selected).values() if a["organization_id"]==selected["organization_id"]], "synthetic":synthetic}
 
     def scope(kind, selected):
         clause = "organization_id=? AND kind=?"
@@ -125,7 +125,7 @@ def register(app, connect, actor, permitted_row, actors):
             raise HTTPException(422, "Vehicle inspections belong in Forms hub")
         if kind == "forms" and (payload.start or payload.end):
             raise HTTPException(422, "Incident drafts do not use schedule times")
-        allowed={a["id"] for a in actors.values() if a["organization_id"]==selected["organization_id"]}
+        allowed={a["id"] for a in actors(selected).values() if a["organization_id"]==selected["organization_id"]}
         if len(set(payload.assignees)) != len(payload.assignees) or not set(payload.assignees)<=allowed or (kind=="forms" and payload.assignees):
             raise HTTPException(422, "Assignments must be distinct members of this organization on a schedule")
         packed = payload.model_dump(mode="json", exclude={"expected_version", "request_id"})
@@ -159,9 +159,9 @@ def register(app, connect, actor, permitted_row, actors):
                         if datetime.fromisoformat(event['start']) < payload.end and datetime.fromisoformat(event['end']) > payload.start:
                             raise HTTPException(409,"An assigned member has an overlapping schedule draft")
             if row:
-                db.execute("INSERT OR IGNORE INTO module_revisions VALUES (?,?,?,?,?,?,?)",(selected["organization_id"],kind,str(record_id),row['version'],row['payload'],row['owner_id'],row['updated_at']))
+                db.execute("INSERT INTO module_revisions VALUES (?,?,?,?,?,?,?) ON CONFLICT DO NOTHING",(selected["organization_id"],kind,str(record_id),row['version'],row['payload'],row['owner_id'],row['updated_at']))
             db.execute("INSERT INTO module_revisions VALUES (?,?,?,?,?,?,?)",(selected["organization_id"],kind,str(record_id),version+1,serialized,selected['id'],datetime.now(timezone.utc).isoformat()))
-            db.execute("INSERT OR REPLACE INTO module_records VALUES (?,?,?,?,?,?,?)",
+            db.execute("INSERT INTO module_records VALUES (?,?,?,?,?,?,?) ON CONFLICT(organization_id,kind,id) DO UPDATE SET version=excluded.version,payload=excluded.payload,updated_at=excluded.updated_at",
                        (str(record_id), kind, selected["organization_id"], row["owner_id"] if row else selected["id"],
                         version + 1, serialized, datetime.now(timezone.utc).isoformat()))
             return unpack(db.execute("SELECT * FROM module_records WHERE organization_id=? AND kind=? AND id=?",

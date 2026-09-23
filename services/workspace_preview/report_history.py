@@ -51,7 +51,7 @@ def register(app, connect, actor, report, knowledge):
         with connect() as db:
             db.execute('BEGIN IMMEDIATE')
             # The snapshot deliberately preserves the basis read above, even if newer input now exists.
-            db.execute('INSERT OR IGNORE INTO report_snapshots VALUES (?,?,?,?,?,?,?,?)',
+            db.execute('INSERT INTO report_snapshots VALUES (?,?,?,?,?,?,?,?) ON CONFLICT DO NOTHING',
                        (str(body.request_id),order_id,selected['organization_id'],selected['id'],
                         body.expected_order_version,saved_at,packed,digest))
             row=db.execute('SELECT * FROM report_snapshots WHERE id=?',(str(body.request_id),)).fetchone()

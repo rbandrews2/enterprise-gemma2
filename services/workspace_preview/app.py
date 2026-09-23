@@ -88,8 +88,21 @@ class ChecklistInput(BaseModel):
         return self
 
 
-def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=None, *, private_staging=False):
-    if private_staging:
+def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=None, *, private_staging=False, account_workspace=False, storage=None, verifier=None, file_store=None):
+    if account_workspace:
+        if private_staging or os.getenv("WZOS_ACCOUNT_WORKSPACE") != "1":
+            raise RuntimeError("Account workspace requires explicit opt-in")
+        if os.getenv("K_SERVICE") and os.getenv("K_SERVICE") != "wzos-v2-accounts":
+            raise RuntimeError("Account workspace requires its separate Cloud Run service")
+        if storage is None:
+            from services.workspace_preview.postgres import PostgreSQLStorage
+            storage = PostgreSQLStorage(os.environ["WZOS_DATABASE_URL"])
+            storage.initialize()
+        if os.getenv("K_SERVICE"):
+            from services.workspace_preview.postgres import PostgreSQLStorage
+            if not isinstance(storage, PostgreSQLStorage) or file_store is None or not getattr(file_store, 'cloud', False):
+                raise RuntimeError("Hosted accounts require PostgreSQL and private cloud file storage")
+    elif private_staging:
         if os.getenv("K_SERVICE") != "wzos-v2-staging" or os.getenv("WZOS_PRIVATE_STAGING") != "1":
             raise RuntimeError("Restricted staging requires its dedicated Cloud Run service")
     elif os.getenv("WZOS_WORKSPACE_PREVIEW") != "1" or any(os.getenv(k) for k in ("K_SERVICE", "GAE_ENV", "NETLIFY")):
@@ -99,7 +112,7 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
     knowledge_store = knowledge_store if knowledge_store is not None else Store()
     intelligence = intelligence if intelligence is not None else LocalIntelligence()
 
-    connect = SQLiteStorage(db_path).connect
+    connect = (storage or SQLiteStorage(db_path)).connect
 
     with connect() as conn:
         conn.execute("""CREATE TABLE IF NOT EXISTS preview_checklists (
@@ -111,29 +124,34 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
             version INTEGER NOT NULL, payload TEXT NOT NULL, updated_at TEXT NOT NULL,
             request_id TEXT NOT NULL, request_hash TEXT NOT NULL,
             UNIQUE(owner_id, request_id))""")
-        for edition in ("core", "enterprise"):
+        for edition in (() if account_workspace else ("core", "enterprise")):
             payload = {"title": "Granby Street markings" if edition == "enterprise" else "Morning pavement inspection",
                        "work_type": "line_striping" if edition == "enterprise" else "road_maintenance",
                        "address": "Granby Street, Norfolk, VA" if edition == "enterprise" else "Main Street, Richmond, VA",
                        "locality": "Norfolk" if edition == "enterprise" else "Richmond",
                        "work_date": None, "notes": "Synthetic example. Verify exact site limits before planning."}
-            conn.execute("INSERT OR IGNORE INTO preview_orders VALUES (?,?,?,?,?,?,?,?)",
+            conn.execute("INSERT INTO preview_orders VALUES (?,?,?,?,?,?,?,?) ON CONFLICT DO NOTHING",
                          (edition + "-sample", edition + "-demo", edition + "-general", 1,
                           json.dumps(payload), datetime.now(timezone.utc).isoformat(), "seed", "seed"))
 
+    accounts = None
+    if account_workspace:
+        from services.workspace_preview.accounts import Accounts, FirebaseVerifier
+        accounts = Accounts(connect, verifier or FirebaseVerifier(os.environ["WZOS_AUTH_PROJECT"]))
+    hosted = private_staging or (account_workspace and bool(os.getenv("K_SERVICE")))
     app = FastAPI(title="WZOS synthetic workspace preview", docs_url=None, redoc_url=None, openapi_url=None)
 
     @app.middleware("http")
     async def local_boundary(request: Request, call_next):
         hosts = {"127.0.0.1:8081", "localhost:8081", "127.0.0.1:8083", "localhost:8083", "testserver"}
-        if not private_staging and (not request.client or request.client.host not in {"127.0.0.1", "::1", "testclient"}
+        if not hosted and (not request.client or request.client.host not in {"127.0.0.1", "::1", "testclient"}
                 or request.headers.get("host") not in hosts):
             return JSONResponse({"error": "local_preview_only"}, status_code=403)
         origin = request.headers.get("origin")
         expected_origin = f"http://{request.headers.get('host', '')}"
-        if private_staging:
+        if hosted:
             expected_origin = f"https://{request.headers.get('host', '')}"
-            allowed_origins = {expected_origin, *os.getenv("WZOS_STAGING_ORIGINS", "").split(",")}
+            allowed_origins = {expected_origin, *os.getenv("WZOS_ACCOUNT_ORIGINS" if account_workspace else "WZOS_STAGING_ORIGINS", "").split(",")}
         else:
             allowed_origins = {expected_origin}
         staging_navigation = (private_staging and request.method == "GET" and request.url.path == "/"
@@ -153,14 +171,18 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
                 "connect-src 'self' https://*.googleapis.com https://*.google.com https://*.gstatic.com; "
                 "font-src 'self' https://fonts.gstatic.com; frame-src https://*.google.com; worker-src blob:; "
                 "frame-ancestors 'none'; base-uri 'none'; form-action 'self'")
+        if account_workspace:
+            response.headers["Content-Security-Policy"] = response.headers["Content-Security-Policy"].replace("connect-src 'self'", "connect-src 'self' https://identitytoolkit.googleapis.com https://securetoken.googleapis.com")
         response.headers["X-Content-Type-Options"] = "nosniff"
         return response
 
     @app.exception_handler(sqlite3.DatabaseError)
     async def database_error(request, error):
-        return JSONResponse({"detail": "Local storage is unavailable. Your unsaved draft remains in the form."}, status_code=503)
+        return JSONResponse({"detail": "Storage is unavailable. Your unsaved draft remains in the form."}, status_code=503)
 
     def actor(request):
+        if accounts:
+            return accounts.actor(request)
         if private_staging:
             # Cloud Run IAM is the outer access boundary. One shared synthetic reviewer,
             # never a customer identity; client-supplied role headers are ignored.
@@ -242,7 +264,9 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
         return FileResponse(STATIC / "assistant.js", media_type="text/javascript")
 
     @app.get("/api/identities")
-    def identities():
+    def identities(request: Request):
+        if accounts:
+            return {"mode":"verified_accounts", "identities":[], "auth_api_key":os.getenv("WZOS_AUTH_WEB_API_KEY","")}
         return {"mode": "restricted_staging" if private_staging else "synthetic_local_preview",
                 "identities": [ACTORS["enterprise-admin"]] if private_staging else list(ACTORS.values())}
 
@@ -250,7 +274,7 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
     def session(request: Request):
         selected = actor(request)
         return {**selected, "can_prepare_atlas": selected["edition"] == "enterprise",
-                "can_manage_team": selected["role"] == "admin", "production_authenticated": False, "restricted_staging": private_staging}
+                "can_manage_team": selected["role"] == "admin", "production_authenticated": account_workspace, "restricted_staging": private_staging}
 
     @app.get("/api/assistant/status")
     async def assistant_status(request: Request):
@@ -432,8 +456,18 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
             record = serialize(row)
         return prepare_order(record, knowledge_store)
 
-    team_modules.register(app, connect, actor, ACTORS)
-    modules.register(app, connect, actor, permitted_row, ACTORS)
+    roster = accounts.roster if accounts else lambda selected: ACTORS
+    team_modules.register(app, connect, actor, roster, synthetic=not account_workspace)
+    modules.register(app, connect, actor, permitted_row, roster, synthetic=not account_workspace)
+    if accounts:
+        accounts.register(app)
+        app.state.accounts = accounts
+    if file_store is not None:
+        from services.workspace_preview.files import register as register_files
+        register_files(app, connect, actor, permitted_row, file_store)
+    @app.get("/account.js")
+    def account_script():
+        return FileResponse(STATIC / "account.js", media_type="text/javascript")
     report_history.register(app, connect, actor, report, knowledge_store)
     timeclock.register(app, connect, actor, permitted_row)
     return app
