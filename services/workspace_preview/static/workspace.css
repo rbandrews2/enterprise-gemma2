@@ -48,3 +48,5 @@ body::before{content:"";position:fixed;inset:-4%;z-index:-1;pointer-events:none;
 #report-references:not(:empty){background:linear-gradient(145deg,#1d1f20,#060707);border:1px solid #383b3b;border-radius:12px;padding:22px;margin-top:20px;overflow-wrap:anywhere}
 .report-section{border-radius:12px}.report-measurements{display:grid;grid-template-columns:minmax(120px,1fr) 2fr;gap:12px 20px}.report-measurements dt{color:#b8bbb9}.report-measurements dd{margin:0;overflow-wrap:anywhere}
 @media(max-width:600px){#report-view{padding:16px}.report-measurements{grid-template-columns:1fr;gap:6px}.report-measurements dd{margin-bottom:10px}}
+
+.report-map{height:380px;width:100%;margin-top:16px;border-radius:8px;overflow:hidden}.report-map[hidden]{display:none}

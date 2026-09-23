@@ -4,7 +4,7 @@
  let epoch=0, current=null, saveRequest=null, saving=false;
  const node=(tag,value)=>{const n=document.createElement(tag);n.textContent=value;return n;};
  function section(title){const s=node("section","");s.className="panel report-section";s.append(node("h2",title));$("report-content").append(s);return s;}
- function reset(){epoch++;current=null;saveRequest=null;$("report-save").disabled=true;$("report-history").replaceChildren();$("report-content").replaceChildren();$("report-references").replaceChildren();$("report-prepare").disabled=true;}
+ function reset(){window.WzosReportMap?.clear();epoch++;current=null;saveRequest=null;$("report-save").disabled=true;$("report-history").replaceChildren();$("report-content").replaceChildren();$("report-references").replaceChildren();$("report-prepare").disabled=true;}
  async function load(){
   reset();const generation=epoch,id=$("report-order").value;if(!id)return;
   $("report-message").textContent="Loading saved report basis…";
@@ -12,7 +12,7 @@
    render(data);history(id,generation);
   }catch(error){if(generation===epoch)$("report-message").textContent=error.message;}
  }
- function render(data){$("report-content").replaceChildren();
+ function render(data){window.WzosReportMap?.clear();$("report-content").replaceChildren();
    $("report-message").textContent=`Work-order revision ${data.order.version} · assembled ${new Date(data.generated_at).toLocaleString()}`;
    const job=section("Work order");job.append(node("h3",data.order.title),node("p",`${data.order.work_type.replaceAll("_"," ")} · ${data.order.address}`),node("p",data.order.notes||"No job notes."));
    const geometry=section("Reported geometry");
@@ -24,6 +24,7 @@
     points("Work-limit coordinates",g.work_limits);
     for(const [index,approach] of (g.approaches||[]).entries()){geometry.append(node("h3",`Approach ${index+1} · ${approach.travel_direction}`),node("p",`Lane width: ${approach.lane_width_ft} ft · Sight distance: ${approach.available_sight_distance_ft} ft`),node("p",`Measured ${approach.measured_on} · ${approach.measurement_source}`),node("p",approach.obstruction_notes));points("Approach coordinates · upstream toward work area",approach.path);}
    }else geometry.append(node("p","Missing: enter work limits and measured approaches in Work orders."));
+   window.WzosReportMap.mount(section("Site imagery"),data.order);
    const checklist=section("Readiness review");
    if(!data.checklist)checklist.append(node("p","No saved checklist. Review the job in Work orders."));
    else{checklist.append(node("p",`Checklist revision ${data.checklist.version} · based on work-order revision ${data.checklist.order_version}${data.checklist.stale?" · STALE: job changed; review every category":" · user-reported review only"}`));for(const [key,item] of Object.entries(data.checklist.items))checklist.append(node("h3",key.replaceAll("_"," ")),node("p",`${item.status.replaceAll("_"," ")}: ${item.notes||"No notes"}`));}

@@ -30,3 +30,15 @@ class StagingTests(unittest.TestCase):
                 with patch.dict(os.environ,{'WZOS_STAGING_ORIGINS':'https://specific.cloudshell.dev'}):
                     self.assertEqual(client.get('/api/session',headers={'Origin':'https://specific.cloudshell.dev'}).status_code,200)
                     self.assertEqual(client.get('/api/session',headers={'Origin':'https://another.cloudshell.dev'}).status_code,403)
+
+    def test_maps_browser_key_and_nonce_boundary(self):
+        with tempfile.TemporaryDirectory() as directory, patch.dict(os.environ,{'WZOS_WORKSPACE_PREVIEW':'1','WZOS_GOOGLE_MAPS_BROWSER_KEY':'synthetic-browser-key','GOOGLE_MAPS_API_KEY':'server-secret'}):
+            with TestClient(create_app(Path(directory)/'db',Store(Path(directory)/'sources',{}))) as client:
+                self.assertEqual(client.get('/api/maps/config').status_code,401)
+                config=client.get('/api/maps/config',headers={'X-Preview-Actor':'enterprise-admin'}).json()
+                self.assertEqual(config['browser_key'],'synthetic-browser-key')
+                root=client.get('/')
+                self.assertNotIn('server-secret',root.text)
+                self.assertIn("'strict-dynamic'",root.headers['content-security-policy'])
+                self.assertIn('<script nonce=',root.text)
+                self.assertNotEqual(root.headers['content-security-policy'],client.get('/').headers['content-security-policy'])

@@ -3,6 +3,7 @@ import hashlib
 import json
 import os
 import re
+import secrets
 import sqlite3
 from datetime import date, datetime, timezone
 from pathlib import Path
@@ -10,7 +11,7 @@ from typing import Literal
 from uuid import UUID, uuid4
 
 from fastapi import FastAPI, HTTPException, Request, Query
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, HTMLResponse
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from shared.intake import SiteContext
@@ -124,7 +125,7 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
 
     @app.middleware("http")
     async def local_boundary(request: Request, call_next):
-        hosts = {"127.0.0.1:8083", "localhost:8083", "testserver"}
+        hosts = {"127.0.0.1:8081", "localhost:8081", "127.0.0.1:8083", "localhost:8083", "testserver"}
         if not private_staging and (not request.client or request.client.host not in {"127.0.0.1", "::1", "testclient"}
                 or request.headers.get("host") not in hosts):
             return JSONResponse({"error": "local_preview_only"}, status_code=403)
@@ -139,9 +140,19 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
                               and request.headers.get("sec-fetch-mode") == "navigate")
         if not staging_navigation and ((origin and origin not in allowed_origins) or request.headers.get("sec-fetch-site") == "cross-site"):
             return JSONResponse({"error": "same_origin_only"}, status_code=403)
+        request.state.maps_nonce = secrets.token_urlsafe(24) if os.getenv("WZOS_GOOGLE_MAPS_BROWSER_KEY", "").strip() else None
         response = await call_next(request)
         response.headers["Cache-Control"] = "no-store"
         response.headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self' data:; frame-ancestors 'none'; base-uri 'none'; form-action 'self'"
+        if request.state.maps_nonce and request.url.path == "/":
+            nonce = request.state.maps_nonce
+            response.headers["Content-Security-Policy"] = (
+                "default-src 'self'; script-src 'nonce-" + nonce + "' 'strict-dynamic' 'unsafe-eval' https://maps.googleapis.com; "
+                "style-src 'self' 'nonce-" + nonce + "' https://fonts.googleapis.com; "
+                "img-src 'self' data: https://*.googleapis.com https://*.gstatic.com https://*.google.com https://*.googleusercontent.com; "
+                "connect-src 'self' https://*.googleapis.com https://*.google.com https://*.gstatic.com; "
+                "font-src 'self' https://fonts.gstatic.com; frame-src https://*.google.com; worker-src blob:; "
+                "frame-ancestors 'none'; base-uri 'none'; form-action 'self'")
         response.headers["X-Content-Type-Options"] = "nosniff"
         return response
 
@@ -171,12 +182,28 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
         return row
 
     @app.get("/")
-    def index():
-        return FileResponse(STATIC / "index.html")
+    def index(request: Request):
+        nonce = request.state.maps_nonce
+        if not nonce:
+            return FileResponse(STATIC / "index.html")
+        html = (STATIC / "index.html").read_text(encoding="utf-8")
+        html = html.replace("<script ", f'<script nonce="{nonce}" ')
+        html = html.replace("</head>", f'<style nonce="{nonce}"></style></head>')
+        return HTMLResponse(html)
 
     @app.get("/workspace.js")
     def script():
         return FileResponse(STATIC / "workspace.js", media_type="text/javascript")
+
+    @app.get("/api/maps/config")
+    def maps_config(request: Request):
+        actor(request)
+        key = os.getenv("WZOS_GOOGLE_MAPS_BROWSER_KEY", "").strip()
+        return {"enabled": bool(key), "browser_key": key or None}
+
+    @app.get("/report-map.js")
+    def report_map_script():
+        return FileResponse(STATIC / "report-map.js", media_type="text/javascript")
 
     @app.get("/report.js")
     def report_script():
@@ -387,7 +414,7 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
                     "approved_for_field_use": False,
                     "limitations": ["Live draft view; refresh after changes. No approved or frozen report has been issued.",
                         "Linked drafts are supporting records, not proof of required-form completion or vehicle clearance.",
-                        "Site imagery, annotated placements, diagrams, PDF and email delivery are not connected."]}
+                        "Site imagery is a live optional display, not stored in this report. Annotated placements, diagrams, PDF and email delivery are not connected."]}
 
     @app.post("/api/orders/{order_id}/preparation")
     def preparation(order_id: str, request: Request, expected_version: int):
