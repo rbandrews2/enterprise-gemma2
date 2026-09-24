@@ -94,6 +94,8 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
             raise RuntimeError("Account workspace requires explicit opt-in")
         if os.getenv("K_SERVICE") and os.getenv("K_SERVICE") != "wzos-v2-accounts":
             raise RuntimeError("Account workspace requires its separate Cloud Run service")
+        if os.getenv("K_SERVICE") and os.getenv("FIREBASE_AUTH_EMULATOR_HOST"):
+            raise RuntimeError("Hosted accounts must not use the authentication emulator")
         if storage is None:
             from services.workspace_preview.postgres import PostgreSQLStorage
             storage = PostgreSQLStorage(os.environ["WZOS_DATABASE_URL"])

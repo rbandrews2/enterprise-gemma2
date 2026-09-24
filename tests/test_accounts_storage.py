@@ -53,6 +53,11 @@ class AccountStorageTests(unittest.TestCase):
         self.assertEqual(self.client.get('/api/account',headers=self.headers('other')).status_code,403)
         self.assertEqual(self.client.get('/api/orders',headers=self.headers()).json()['items'],[])
 
+    def test_hosted_accounts_refuse_auth_emulator(self):
+        with patch.dict(os.environ, {'K_SERVICE':'wzos-v2-accounts', 'FIREBASE_AUTH_EMULATOR_HOST':'127.0.0.1:9099'}):
+            with self.assertRaisesRegex(RuntimeError, 'authentication emulator'):
+                self.build()
+
     def test_member_admin_owner_and_revocation(self):
         self.add('member');self.add('admin','admin')
         self.assertEqual(self.client.get('/api/session',headers=self.headers('member')).json()['role'],'general')

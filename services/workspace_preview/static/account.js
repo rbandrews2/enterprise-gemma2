@@ -31,15 +31,16 @@ window.wzosAccount = (() => {
   const signin=element('button','Sign in');signin.type='submit';signin.disabled=!key;
   const signup=element('button','Create account');signup.type='button';signup.disabled=!key;
   const reset=element('button','Reset password');reset.type='button';reset.disabled=!key;
+  const verify=element('button','Resend verification email');verify.type='button';verify.disabled=!key;
   const message=element('p');message.setAttribute('role','status');
-  form.append(emailLabel,passwordLabel,signin,signup,reset);panel.append(title,note,form,message);document.body.append(panel);panel.addEventListener('cancel',e=>e.preventDefault());panel.showModal();
+  form.append(emailLabel,passwordLabel,signin,signup,reset,verify);panel.append(title,note,form,message);document.body.append(panel);panel.addEventListener('cancel',e=>e.preventDefault());panel.showModal();
   const session=await new Promise(resolve=>{
    let working=false;
    async function run(task){if(working)return;working=true;for(const b of panel.querySelectorAll('button'))b.disabled=true;try{await task();}catch(e){message.textContent=e.message;}finally{working=false;for(const b of panel.querySelectorAll('button'))b.disabled=!key;}}
    async function choose(){
     const account=await api('/api/account');password.value='';form.hidden=true;title.textContent='Your organization';note.textContent='Select an organization or use your activation code or invitation.';
     let choices=panel.querySelector('.account-choices');if(choices)choices.remove();choices=element('div');choices.className='account-choices';
-    for(const org of account.organizations){const button=element('button',`${org.name} · ${org.role} · ${org.edition}`);button.onclick=()=>run(async()=>{organization=org.id;const current=await api('/api/session');panel.close();panel.remove();resolve(current);});choices.append(button);}
+    for(const org of account.organizations){const button=element('button',`${org.name} Â· ${org.role} Â· ${org.edition}`);button.onclick=()=>run(async()=>{organization=org.id;const current=await api('/api/session');panel.close();panel.remove();resolve(current);});choices.append(button);}
     const name=element('input');name.placeholder='Organization name';name.setAttribute('aria-label','Organization name');
     const activation=element('input');activation.placeholder='Activation code';activation.setAttribute('aria-label','Activation code');
     const create=element('button','Create organization');create.onclick=()=>run(async()=>{await api('/api/account/organizations',{name:name.value,activation_code:activation.value});await choose();});
@@ -51,11 +52,16 @@ window.wzosAccount = (() => {
     if(!email.reportValidity()||!password.reportValidity())return;
     const data=await provider(create?'signUp':'signInWithPassword',{email:email.value.trim(),password:password.value,returnSecureToken:true});
     token=data.idToken;refresh=data.refreshToken;expires=Date.now()+Number(data.expiresIn)*1000;
-    if(create){await provider('sendOobCode',{requestType:'VERIFY_EMAIL',idToken:token});message.textContent='Check your email to verify your account, then sign in.';token=null;refresh=null;password.value='';return;}
+    if(create){try{await provider('sendOobCode',{requestType:'VERIFY_EMAIL',idToken:token});message.textContent='Check your email to verify your account, then sign in.';}finally{token=null;refresh=null;expires=0;password.value='';}return;}
     await choose();
    }
    form.onsubmit=e=>{e.preventDefault();run(()=>login(false));};signup.onclick=()=>run(()=>login(true));
    reset.onclick=()=>run(async()=>{if(!email.reportValidity())return;await provider('sendOobCode',{requestType:'PASSWORD_RESET',email:email.value.trim()});message.textContent='If the account is eligible, a reset email will arrive.';});
+   verify.onclick=()=>run(async()=>{
+    if(!email.reportValidity()||!password.reportValidity())return;
+    const data=await provider('signInWithPassword',{email:email.value.trim(),password:password.value,returnSecureToken:true});
+    try{await provider('sendOobCode',{requestType:'VERIFY_EMAIL',idToken:data.idToken});message.textContent='Check your email to verify your account, then sign in.';}finally{password.value='';}
+   });
   });
   const controls=document.querySelector('.preview-bar');
   if(session.can_manage_team){const manage=element('button','Team access');manage.onclick=async()=>{
@@ -64,7 +70,7 @@ window.wzosAccount = (() => {
     const email=element('input');email.type='email';email.placeholder='Member email';email.setAttribute('aria-label','Member email');
     const role=element('select');role.setAttribute('aria-label','Invitation role');for(const value of (data.can_change_access?['member','admin']:['member'])){const option=element('option',value);option.value=value;role.append(option);}
     const invite=element('button','Create invitation');invite.onclick=async()=>{invite.disabled=true;try{const result=await api('/api/account/invitations',{email:email.value,role:role.value});const output=element('textarea');output.readOnly=true;output.value=result.token;output.setAttribute('aria-label','Private invitation token');dialog.append(output);status.textContent='Invitation created for this email. Share privately. No message was sent.';}catch(e){status.textContent=e.message;}finally{invite.disabled=false;}};dialog.append(email,role,invite);
-    for(const member of data.items){const row=element('section');row.append(element('p',`${member.name} � ${member.role} � ${member.active?'Active':'Disabled'}`));if(data.can_change_access){const select=element('select');select.setAttribute('aria-label','Role for '+member.name);for(const value of ['member','admin','owner']){const option=element('option',value);option.value=value;select.append(option);}select.value=member.role;const active=element('input');active.type='checkbox';active.checked=Boolean(member.active);const label=element('label','Active membership');label.append(active);const save=element('button','Save access');save.onclick=async()=>{save.disabled=true;try{await api('/api/account/members/'+encodeURIComponent(member.id),{role:select.value,active:active.checked},'PUT');status.textContent='Access updated. Changes apply on the next request.';if(member.id===session.id)location.reload();}catch(e){status.textContent=e.message;}finally{save.disabled=false;}};row.append(select,label,save);}dialog.append(row);}
+    for(const member of data.items){const row=element('section');row.append(element('p',`${member.name}  Â·  ${member.role}  Â·  ${member.active?'Active':'Disabled'}`));if(data.can_change_access){const select=element('select');select.setAttribute('aria-label','Role for '+member.name);for(const value of ['member','admin','owner']){const option=element('option',value);option.value=value;select.append(option);}select.value=member.role;const active=element('input');active.type='checkbox';active.checked=Boolean(member.active);const label=element('label','Active membership');label.append(active);const save=element('button','Save access');save.onclick=async()=>{save.disabled=true;try{await api('/api/account/members/'+encodeURIComponent(member.id),{role:select.value,active:active.checked},'PUT');status.textContent='Access updated. Changes apply on the next request.';if(member.id===session.id)location.reload();}catch(e){status.textContent=e.message;}finally{save.disabled=false;}};row.append(select,label,save);}dialog.append(row);}
    }catch(e){status.textContent=e.message;}
   };controls.append(manage);}
   controls.querySelector('strong').textContent='WZOS ACCOUNT';controls.querySelector('span').textContent=session.organization;
