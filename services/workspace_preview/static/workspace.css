@@ -34,16 +34,25 @@ body{background:radial-gradient(ellipse at 95% 0%,#ad4c1530,transparent 45%),rad
 /* Clock reference: verified clock.superiorllc.org .app-bg, 2026-09-24.
    Reuse black/orange/gold halo and screen-blended sheen; retain WZOS road image. */
 body{isolation:isolate;min-height:100vh;background:linear-gradient(145deg,#000000fc,#0a0806fa 44%,#000000fc),#000}
-body::after{content:"";position:fixed;inset:-18%;z-index:-2;pointer-events:none;
- background:radial-gradient(circle at 18% 18%,rgba(249,115,22,.18),transparent 28%),radial-gradient(circle at 82% 12%,rgba(234,179,8,.12),transparent 24%),radial-gradient(circle at 60% 88%,rgba(249,115,22,.1),transparent 30%);filter:blur(8px)}
-body::before{content:"";position:fixed;inset:-4%;z-index:-1;pointer-events:none;
+/* Broad moving reflections give the warm background a liquid-glass finish. */
+body::after{content:"";position:fixed;inset:-6%;z-index:-1;pointer-events:none;
+ background:linear-gradient(115deg,transparent 28%,rgba(255,227,163,.14) 40%,rgba(255,244,217,.24) 43%,rgba(255,194,88,.10) 48%,transparent 60%),radial-gradient(ellipse at 18% 18%,rgba(249,115,22,.38),transparent 48%),radial-gradient(ellipse at 82% 12%,rgba(234,179,8,.32),transparent 46%),radial-gradient(ellipse at 60% 88%,rgba(249,153,35,.24),transparent 50%);
+ background-size:220% 180%,140% 130%,150% 140%,140% 150%;
+ background-position:0% 40%,0% 0%,100% 0%,50% 100%;
+ filter:blur(12px);mix-blend-mode:screen;will-change:transform;
+ animation:liquid-amber-flow 24s ease-in-out infinite alternate}
+@keyframes liquid-amber-flow{
+ from{transform:translate3d(-1.5%,-1%,0) scale(1.02);background-position:0% 40%,0% 0%,100% 0%,50% 100%}
+ 50%{background-position:48% 55%,35% 25%,65% 35%,30% 70%}
+ to{transform:translate3d(1.5%,1%,0) scale(1.06);background-position:100% 65%,65% 45%,30% 65%,0% 40%}}
+body::before{content:"";position:fixed;inset:-4%;z-index:-2;pointer-events:none;
  background:linear-gradient(115deg,transparent 0 20%,rgba(255,255,255,.08) 21%,transparent 28% 100%),url("/road-work-background.png");
  background-size:220% 220%,cover;background-position:0% 50%,center;background-repeat:no-repeat;
- opacity:.28;mix-blend-mode:screen;filter:blur(3px) saturate(.65);transform:scale(1.04);
+ opacity:.16;mix-blend-mode:screen;filter:blur(3px) saturate(.65);transform:scale(1.04);
  animation:road-work-drift 35s ease-in-out infinite alternate,clock-sheen-drift 18s ease-in-out infinite alternate}
 @keyframes road-work-drift{from{transform:translate3d(-.7%,0,0) scale(1.04)}to{transform:translate3d(.7%,-.5%,0) scale(1.075)}}
 @keyframes clock-sheen-drift{from{background-position:0% 50%,center}to{background-position:100% 50%,center}}
-@media(prefers-reduced-motion:reduce){body::before{animation:none;transform:scale(1.04)}}
+@media(prefers-reduced-motion:reduce){body::before,body::after{animation:none;transform:scale(1.04);will-change:auto}}
 
 .report-section{margin:18px 0;padding:22px}.report-data{white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.6 monospace}#report-references{padding:20px 0}#report-references details{padding:14px;border-bottom:1px solid var(--border)}
 
