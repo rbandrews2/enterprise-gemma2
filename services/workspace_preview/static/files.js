@@ -9,13 +9,13 @@ window.wzosFiles = {
   const upload=node('button','Upload attachment');upload.type='button';
   const notice=node('p');notice.setAttribute('role','status');const list=node('div');
   section.append(title,node('p','PDF, PNG or JPEG · up to 10 MiB. Downloaded files are not malware-scanned.'),input,upload,notice,list);host.append(section);
-  let requestId=null,selectedFile=null;
+  let requestId=null,selectedFile=null,downloadUrl=null;
   input.onchange=()=>{requestId=crypto.randomUUID();selectedFile=input.files[0];};
   const active=()=>host.contains(section);
   const requestHeaders=async()=>({'X-Preview-Actor':window.wzosClock.getSession()?.id||'',...await window.wzosAccount.headers()});
   async function load(){
    try{const data=await window.wzosClock.api(`/api/files?entity_kind=${kind}&entity_id=${encodeURIComponent(id)}`);if(!active())return;list.replaceChildren();
-    for(const file of data.items){const button=node('button',`${file.filename} · ${Math.ceil(file.size_bytes/1024)} KB`);button.type='button';button.onclick=async()=>{button.disabled=true;try{const response=await fetch('/api/files/'+file.id,{headers:await requestHeaders()});if(!response.ok)throw Error('Download unavailable. Your access or the file may have changed.');const url=URL.createObjectURL(await response.blob());if(active()){const a=node('a');a.href=url;a.download=file.filename;a.click();}setTimeout(()=>URL.revokeObjectURL(url),1000);}catch(e){if(active())notice.textContent=e.message;}finally{button.disabled=false;}};list.append(button);}
+    for(const file of data.items){const button=node('button',`${file.filename} · ${Math.ceil(file.size_bytes/1024)} KB`);button.type='button';button.onclick=async()=>{button.disabled=true;try{const response=await fetch('/api/files/'+file.id,{headers:await requestHeaders()});if(!response.ok)throw Error('Download unavailable. Your access or the file may have changed.');const blob=await response.blob();if(!active())return;if(downloadUrl)URL.revokeObjectURL(downloadUrl);const url=URL.createObjectURL(blob);downloadUrl=url;const a=node('a','Save '+file.filename);a.href=url;a.download=file.filename;notice.replaceChildren(node('span','Download ready. If it does not start, '),a);a.click();setTimeout(()=>{URL.revokeObjectURL(url);if(downloadUrl===url){downloadUrl=null;if(a.isConnected)a.replaceWith(node('span','select the attachment again.'));}},60000);}catch(e){if(active())notice.textContent=e.message;}finally{button.disabled=false;}};list.append(button);}
    }catch(e){if(active())notice.textContent=e.message;}
   }
   upload.onclick=async()=>{

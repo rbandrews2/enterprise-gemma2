@@ -19,11 +19,11 @@ function canLeave(){return !(dirty||checklistDirty)||confirm("Discard unsaved jo
 function renderList(){
  const query=$("search").value.toLowerCase();$("job-list").replaceChildren();
  const filtered=rows.filter(r=>`${r.title} ${r.address} ${r.locality}`.toLowerCase().includes(query));
- for(const row of filtered){const button=el("button",undefined,"job");button.type="button";button.setAttribute("aria-pressed",String(selected?.id===row.id));const top=el("span",undefined,"job-top");top.append(el("span",types[row.work_type],"job-type"),el("span","Draft","pill draft"));button.append(top,el("strong",row.title),el("small",row.address),el("small",row.work_date?`Planned ${row.work_date}`:"Work date needed"));button.addEventListener("click",()=>{if(!busy&&canLeave())open(row);});$("job-list").append(button);}
+ for(const row of filtered){const button=el("button",undefined,"job");button.type="button";button.setAttribute("aria-pressed",String(selected?.id===row.id));const top=el("span",undefined,"job-top");top.append(el("span",types[row.work_type],"job-type"),el("span","Draft","pill draft"));button.append(top,el("strong",row.title),el("small",row.address),el("small",row.work_date?`Planned ${row.work_date}`:"Work date needed"));button.addEventListener("click",()=>{if(!busy&&canLeave())openWorkOrder(row);});$("job-list").append(button);}
  if(!filtered.length)$("job-list").append(el("p",query?"No matching jobs. Try another search.":"No work orders yet. Create your first draft.","muted"));
  $("metric-total").textContent=rows.length;$("metric-drafts").textContent=rows.length;$("metric-date").textContent=rows.filter(r=>!r.work_date).length;$("nav-count").textContent=rows.length;
 }
-function open(record){
+function openWorkOrder(record){
  readGeometry=window.WzosGeometry.mount($("geometry-fields"),record?.job_geometry);
  document.dispatchEvent(new CustomEvent("wzos:job-context"));
  let attachments=$("order-attachments");if(!attachments){attachments=el("div");attachments.id="order-attachments";$("order-form").after(attachments);}window.wzosFiles.mount(attachments,"order",record?.id);
@@ -44,22 +44,22 @@ async function switchIdentity(){
  $("actor-name").textContent=session.name;document.querySelector(".avatar").textContent=session.name.split(" ").map(n=>n[0]).join("");$("role-pill").textContent=session.role==="admin"?"Admin":"General";
  $("scope-note").textContent=session.can_manage_team?"Manage the team's draft work orders.":"Your assigned work orders and new drafts.";$("metric-scope").textContent=session.can_manage_team?"This test organization":"Assigned to this test user";
  $("atlas-description").textContent=session.can_prepare_atlas?"Check a saved job for missing site details before planning.":"Advanced job preparation is available in Enterprise. Core assistant integration is still pending.";
- await loadRows();if(rows.length)open(rows[0]);
+ await loadRows();if(rows.length)openWorkOrder(rows[0]);
  }catch(error){notify(error.message,true);}finally{lock(false);document.dispatchEvent(new CustomEvent("wzos:session"));}
 }
 $("identity").addEventListener("change",()=>{if(!canLeave() || (window.wzosModulesCanLeave && !window.wzosModulesCanLeave())){$("identity").value=session.id;return;}switchIdentity();});
 $("search").addEventListener("input",renderList);
-$("new-order").addEventListener("click",()=>{if(canLeave()){open(null);$("title").focus();}});
+$("new-order").addEventListener("click",()=>{if(canLeave()){openWorkOrder(null);$("title").focus();}});
 $("order-form").addEventListener("input",()=>{dirty=true;$("save-state").textContent="Unsaved changes";$("atlas-output").replaceChildren();$("prepare").disabled=true;lockChecklist();});
 $("order-form").addEventListener("submit",async event=>{
  event.preventDefault();if(busy)return;if(checklistDirty){notify("Save or reload your checklist changes before saving job details.",true);return;}let geometry;try{geometry=readGeometry();}catch(error){notify(error.message,true);return;}lock(true);
  const body={title:$("title").value,work_type:$("work-type").value,address:$("address").value,locality:$("locality").value,work_date:$("work-date").value||null,notes:$("notes").value,road_authority:$("road-authority").value.trim()||null,site:{...selected?.site,speed_limit_mph:$("speed-limit").value?Number($("speed-limit").value):null,lane_count:$("lane-count").value?Number($("lane-count").value):null,work_period:$("work-period").value},job_geometry:geometry};
  if(!selected){const signature=JSON.stringify(body);if(lastCreateBody!==null&&lastCreateBody!==signature)requestId=crypto.randomUUID();lastCreateBody=signature;}
  try{const record=await api(selected?`/api/orders/${selected.id}`:"/api/orders",{method:selected?"PUT":"POST",body:JSON.stringify({...body,...(selected?{expected_version:selected.version}:{request_id:requestId})})});
-  open(record);lock(true);notify(`Saved locally · revision ${record.version}.`);try{await loadRows();}catch{notify(`Saved revision ${record.version}, but the job board could not refresh. Use Refresh to try again.`,true);}
+  openWorkOrder(record);lock(true);notify(`Saved locally · revision ${record.version}.`);try{await loadRows();}catch{notify(`Saved revision ${record.version}, but the job board could not refresh. Use Refresh to try again.`,true);}
  }catch(error){notify(error.message,true);$("save-state").textContent="Save not confirmed · draft retained";}finally{lock(false);}
 });
-async function refresh(){if(busy||!canLeave())return;lock(true);try{const id=selected?.id;await loadRows();const record=rows.find(r=>r.id===id)||rows[0];if(record)open(record);else{resetChecklist();selected=null;dirty=false;$("order-form").hidden=true;$("empty-detail").hidden=false;$("atlas-output").replaceChildren();}notify("Loaded the latest saved records.");}catch(error){notify(error.message,true);}finally{lock(false);}}
+async function refresh(){if(busy||!canLeave())return;lock(true);try{const id=selected?.id;await loadRows();const record=rows.find(r=>r.id===id)||rows[0];if(record)openWorkOrder(record);else{resetChecklist();selected=null;dirty=false;$("order-form").hidden=true;$("empty-detail").hidden=false;$("atlas-output").replaceChildren();}notify("Loaded the latest saved records.");}catch(error){notify(error.message,true);}finally{lock(false);}}
 $("refresh").addEventListener("click",refresh);$("reload-order").addEventListener("click",refresh);
 $("prepare").addEventListener("click",async()=>{
  if(busy||dirty||!selected)return;lock(true);$("atlas-output").replaceChildren(el("p","Checking saved job details…","muted"));

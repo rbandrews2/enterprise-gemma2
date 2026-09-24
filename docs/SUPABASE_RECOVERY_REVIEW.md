@@ -59,3 +59,36 @@ as a test.
    duplicate handling and reconciliation. Production migration is not performed.
 
 Ignored recovery material is local-only and is not backed up by GitHub.
+
+
+## Completed preservation pass — 2026-09-24
+
+All 23 deployed Core edge-function ZIP archives are preserved under ignored
+`.local-recovery/supabase-20260924/`, including bundled shared source files.
+`download-manifest.json` records archive names, source download association,
+ZIP contents, byte sizes and SHA-256. ZIP CRC checks passed. Some Chrome files
+remained temporary download names; complete ZIP bytes were verified and copied
+into stable recovery filenames. Aliases: aira-assistant uses quick-api;
+search-youtube uses swift-function. No function was invoked or redeployed.
+
+A read-only catalog export using scripts/export_legacy_definitions.sql produced
+3,205 metadata definitions: 91 tables, 25 functions, 257 policies, 31 triggers,
+213 indexes, 2 views, 2 enums, 2,578 table grants and 6 bucket configurations.
+Preserved schema-definitions.csv, parsed schema-definitions.json and
+schema-manifest.json. Parsed record count matched the SQL result count.
+CSV SHA-256: 283e89e21cd8b9596b9c49da3b614c1cf0fcb2c15bb4be44942cb17563e7a641.
+
+The current schema includes time_entries_2, time_entry_segments_2, profiles_2,
+multiple scheduling tables and AIRA operator/call/message tables. Compare these
+with older time_entries and assistant tables before selecting migration sources.
+Table existence does not prove active use, correctness or data completeness.
+
+This preserves current public table columns/constraints/RLS flags, public
+functions/indexes/views/enums/table grants, public and storage policies,
+noninternal public/auth/storage triggers, and bucket configuration. It is not a
+complete pg_dump, saved-query history, function deployment-settings export or
+customer-data/object backup. Secrets and customer/auth rows were not exported.
+Remaining: migration mapping, data/object backup when authorized, function
+security review and provider configuration. All recovered definitions stay out
+of Git; they are not an off-device backup. The export query and this summary are
+tracked so the recovery can be repeated.

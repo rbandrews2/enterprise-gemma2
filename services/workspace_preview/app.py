@@ -89,13 +89,20 @@ class ChecklistInput(BaseModel):
 
 
 def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=None, *, private_staging=False, account_workspace=False, storage=None, verifier=None, file_store=None):
+    auth_emulator = None
     if account_workspace:
         if private_staging or os.getenv("WZOS_ACCOUNT_WORKSPACE") != "1":
             raise RuntimeError("Account workspace requires explicit opt-in")
         if os.getenv("K_SERVICE") and os.getenv("K_SERVICE") != "wzos-v2-accounts":
             raise RuntimeError("Account workspace requires its separate Cloud Run service")
-        if os.getenv("K_SERVICE") and os.getenv("FIREBASE_AUTH_EMULATOR_HOST"):
-            raise RuntimeError("Hosted accounts must not use the authentication emulator")
+        if os.getenv("FIREBASE_AUTH_EMULATOR_HOST"):
+            if any(os.getenv(k) for k in ("K_SERVICE", "GAE_ENV", "NETLIFY")):
+                raise RuntimeError("Hosted accounts must not use the authentication emulator")
+            if (os.getenv("WZOS_AUTH_EMULATOR") != "1"
+                    or os.getenv("FIREBASE_AUTH_EMULATOR_HOST") != "127.0.0.1:9099"
+                    or not os.getenv("WZOS_AUTH_PROJECT", "").startswith("demo-")):
+                raise RuntimeError("Authentication emulator requires explicit local demo configuration")
+            auth_emulator = "http://127.0.0.1:9099"
         if storage is None:
             from services.workspace_preview.postgres import PostgreSQLStorage
             storage = PostgreSQLStorage(os.environ["WZOS_DATABASE_URL"])
@@ -156,7 +163,7 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
             allowed_origins = {expected_origin, *os.getenv("WZOS_ACCOUNT_ORIGINS" if account_workspace else "WZOS_STAGING_ORIGINS", "").split(",")}
         else:
             allowed_origins = {expected_origin}
-        staging_navigation = (hosted and request.method == "GET" and request.url.path == "/"
+        staging_navigation = ((hosted or account_workspace) and request.method == "GET" and request.url.path == "/"
                               and request.headers.get("sec-fetch-mode") == "navigate")
         if not staging_navigation and ((origin and origin not in allowed_origins) or request.headers.get("sec-fetch-site") == "cross-site"):
             return JSONResponse({"error": "same_origin_only"}, status_code=403)
@@ -175,6 +182,8 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
                 "frame-ancestors 'none'; base-uri 'none'; form-action 'self'")
         if account_workspace:
             response.headers["Content-Security-Policy"] = response.headers["Content-Security-Policy"].replace("connect-src 'self'", "connect-src 'self' https://identitytoolkit.googleapis.com https://securetoken.googleapis.com")
+            if auth_emulator:
+                response.headers["Content-Security-Policy"] = response.headers["Content-Security-Policy"].replace("connect-src 'self'", "connect-src 'self' " + auth_emulator)
         response.headers["X-Content-Type-Options"] = "nosniff"
         return response
 
@@ -268,7 +277,7 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
     @app.get("/api/identities")
     def identities(request: Request):
         if accounts:
-            return {"mode":"verified_accounts", "identities":[], "auth_api_key":os.getenv("WZOS_AUTH_WEB_API_KEY","")}
+            return {"mode":"verified_accounts", "identities":[], "auth_api_key":os.getenv("WZOS_AUTH_WEB_API_KEY",""), "auth_emulator":auth_emulator}
         return {"mode": "restricted_staging" if private_staging else "synthetic_local_preview",
                 "identities": [ACTORS["enterprise-admin"]] if private_staging else list(ACTORS.values())}
 

@@ -58,6 +58,25 @@ class AccountStorageTests(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError, 'authentication emulator'):
                 self.build()
 
+    def test_emulator_requires_local_demo_opt_in(self):
+        for configuration in (
+            {'FIREBASE_AUTH_EMULATOR_HOST':'127.0.0.1:9099'},
+            {'FIREBASE_AUTH_EMULATOR_HOST':'example.com:9099','WZOS_AUTH_EMULATOR':'1','WZOS_AUTH_PROJECT':'demo-test'},
+            {'FIREBASE_AUTH_EMULATOR_HOST':'127.0.0.1:9099','WZOS_AUTH_EMULATOR':'1','WZOS_AUTH_PROJECT':'real-project'},
+        ):
+            with self.subTest(configuration=configuration), patch.dict(os.environ, configuration):
+                with self.assertRaisesRegex(RuntimeError, 'explicit local demo'):
+                    self.build()
+        with patch.dict(os.environ, {'FIREBASE_AUTH_EMULATOR_HOST':'127.0.0.1:9099','WZOS_AUTH_EMULATOR':'1','WZOS_AUTH_PROJECT':'demo-test'}):
+            self.build()
+            self.assertEqual(self.client.get('/api/identities').json()['auth_emulator'],'http://127.0.0.1:9099')
+
+    def test_account_login_navigation_does_not_open_cross_site_api_access(self):
+        headers={'Sec-Fetch-Site':'cross-site','Sec-Fetch-Mode':'navigate'}
+        self.assertEqual(self.client.get('/',headers=headers).status_code,200)
+        self.assertEqual(self.client.get('/api/account',headers={**headers,**self.headers()}).status_code,403)
+        self.assertEqual(self.client.get('/',headers={**headers,'Host':'outside.example'}).status_code,403)
+
     def test_member_admin_owner_and_revocation(self):
         self.add('member');self.add('admin','admin')
         self.assertEqual(self.client.get('/api/session',headers=self.headers('member')).json()['role'],'general')

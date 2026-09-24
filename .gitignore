@@ -20,3 +20,4 @@ work-zone-visual-aid.png
 # Local recovery copies may contain historical or customer material.
 .local-recovery/
 .local-data/
+firebase-debug.log

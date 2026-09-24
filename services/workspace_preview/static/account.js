@@ -2,16 +2,17 @@
 // Google handles passwords. Tokens remain in memory and are never persisted in localStorage.
 window.wzosAccount = (() => {
  let token=null, refresh=null, expires=0, organization=null, key=null, refreshing=null;
+ let authBase='https://identitytoolkit.googleapis.com', tokenBase='https://securetoken.googleapis.com';
  const element=(tag,text)=>{const n=document.createElement(tag);if(text)n.textContent=text;return n;};
  async function provider(action,body){
-  const r=await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:${action}?key=${encodeURIComponent(key)}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  const r=await fetch(`${authBase}/v1/accounts:${action}?key=${encodeURIComponent(key)}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
   const data=await r.json();if(!r.ok)throw Error('Account request could not be completed. Check your details or try again.');return data;
  }
  async function headers(){
   if(!token)return {};
   if(Date.now()>expires-60000){
    if(!refreshing)refreshing=(async()=>{
-    const r=await fetch(`https://securetoken.googleapis.com/v1/token?key=${encodeURIComponent(key)}`,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({grant_type:'refresh_token',refresh_token:refresh})});
+    const r=await fetch(`${tokenBase}/v1/token?key=${encodeURIComponent(key)}`,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({grant_type:'refresh_token',refresh_token:refresh})});
     if(!r.ok)throw Error('Sign in again to continue.');const d=await r.json();token=d.id_token;refresh=d.refresh_token;expires=Date.now()+Number(d.expires_in)*1000;
    })().finally(()=>refreshing=null);
    await refreshing;
@@ -23,6 +24,10 @@ window.wzosAccount = (() => {
  }
  async function start(config){
   key=config.auth_api_key;
+  if(config.auth_emulator){
+   if(!['127.0.0.1','localhost'].includes(location.hostname)||config.auth_emulator!=='http://127.0.0.1:9099')throw Error('Local authentication configuration refused.');
+   authBase=config.auth_emulator+'/identitytoolkit.googleapis.com';tokenBase=config.auth_emulator+'/securetoken.googleapis.com';
+  }
   const panel=element('dialog');panel.className='account-dialog';
   const title=element('h2','Welcome to WZOS');const note=element('p',key?'Sign in to your organization.':'Account sign-in is awaiting Google authentication configuration.');
   const email=element('input');email.type='email';email.autocomplete='username';email.required=true;
@@ -38,9 +43,9 @@ window.wzosAccount = (() => {
    let working=false;
    async function run(task){if(working)return;working=true;for(const b of panel.querySelectorAll('button'))b.disabled=true;try{await task();}catch(e){message.textContent=e.message;}finally{working=false;for(const b of panel.querySelectorAll('button'))b.disabled=!key;}}
    async function choose(){
-    const account=await api('/api/account');password.value='';form.hidden=true;title.textContent='Your organization';note.textContent='Select an organization or use your activation code or invitation.';
+    const account=await api('/api/account');message.textContent='';password.value='';form.hidden=true;title.textContent='Your organization';note.textContent='Select an organization or use your activation code or invitation.';
     let choices=panel.querySelector('.account-choices');if(choices)choices.remove();choices=element('div');choices.className='account-choices';
-    for(const org of account.organizations){const button=element('button',`${org.name} Â· ${org.role} Â· ${org.edition}`);button.onclick=()=>run(async()=>{organization=org.id;const current=await api('/api/session');panel.close();panel.remove();resolve(current);});choices.append(button);}
+    for(const org of account.organizations){const button=element('button',`${org.name}  -  ${org.role}  -  ${org.edition}`);button.onclick=()=>run(async()=>{organization=org.id;const current=await api('/api/session');panel.close();panel.remove();resolve(current);});choices.append(button);}
     const name=element('input');name.placeholder='Organization name';name.setAttribute('aria-label','Organization name');
     const activation=element('input');activation.placeholder='Activation code';activation.setAttribute('aria-label','Activation code');
     const create=element('button','Create organization');create.onclick=()=>run(async()=>{await api('/api/account/organizations',{name:name.value,activation_code:activation.value});await choose();});
@@ -70,7 +75,7 @@ window.wzosAccount = (() => {
     const email=element('input');email.type='email';email.placeholder='Member email';email.setAttribute('aria-label','Member email');
     const role=element('select');role.setAttribute('aria-label','Invitation role');for(const value of (data.can_change_access?['member','admin']:['member'])){const option=element('option',value);option.value=value;role.append(option);}
     const invite=element('button','Create invitation');invite.onclick=async()=>{invite.disabled=true;try{const result=await api('/api/account/invitations',{email:email.value,role:role.value});const output=element('textarea');output.readOnly=true;output.value=result.token;output.setAttribute('aria-label','Private invitation token');dialog.append(output);status.textContent='Invitation created for this email. Share privately. No message was sent.';}catch(e){status.textContent=e.message;}finally{invite.disabled=false;}};dialog.append(email,role,invite);
-    for(const member of data.items){const row=element('section');row.append(element('p',`${member.name}  Â·  ${member.role}  Â·  ${member.active?'Active':'Disabled'}`));if(data.can_change_access){const select=element('select');select.setAttribute('aria-label','Role for '+member.name);for(const value of ['member','admin','owner']){const option=element('option',value);option.value=value;select.append(option);}select.value=member.role;const active=element('input');active.type='checkbox';active.checked=Boolean(member.active);const label=element('label','Active membership');label.append(active);const save=element('button','Save access');save.onclick=async()=>{save.disabled=true;try{await api('/api/account/members/'+encodeURIComponent(member.id),{role:select.value,active:active.checked},'PUT');status.textContent='Access updated. Changes apply on the next request.';if(member.id===session.id)location.reload();}catch(e){status.textContent=e.message;}finally{save.disabled=false;}};row.append(select,label,save);}dialog.append(row);}
+    for(const member of data.items){const row=element('section');row.append(element('p',`${member.name}   -   ${member.role}   -   ${member.active?'Active':'Disabled'}`));if(data.can_change_access){const select=element('select');select.setAttribute('aria-label','Role for '+member.name);for(const value of ['member','admin','owner']){const option=element('option',value);option.value=value;select.append(option);}select.value=member.role;const active=element('input');active.type='checkbox';active.checked=Boolean(member.active);const label=element('label','Active membership');label.append(active);const save=element('button','Save access');save.onclick=async()=>{save.disabled=true;try{await api('/api/account/members/'+encodeURIComponent(member.id),{role:select.value,active:active.checked},'PUT');status.textContent='Access updated. Changes apply on the next request.';if(member.id===session.id)location.reload();}catch(e){status.textContent=e.message;}finally{save.disabled=false;}};row.append(select,label,save);}dialog.append(row);}
    }catch(e){status.textContent=e.message;}
   };controls.append(manage);}
   controls.querySelector('strong').textContent='WZOS ACCOUNT';controls.querySelector('span').textContent=session.organization;
