@@ -39,6 +39,8 @@ body::after{content:"";position:fixed;inset:-6%;z-index:-1;pointer-events:none;
  background:linear-gradient(115deg,transparent 28%,rgba(255,227,163,.14) 40%,rgba(255,244,217,.24) 43%,rgba(255,194,88,.10) 48%,transparent 60%),radial-gradient(ellipse at 18% 18%,rgba(249,115,22,.38),transparent 48%),radial-gradient(ellipse at 82% 12%,rgba(234,179,8,.32),transparent 46%),radial-gradient(ellipse at 60% 88%,rgba(249,153,35,.24),transparent 50%);
  background-size:220% 180%,140% 130%,150% 140%,140% 150%;
  background-position:0% 40%,0% 0%,100% 0%,50% 100%;
+ /* Soft charcoal ribbons interrupt the glow without darkening the cards. */
+ mask-image:linear-gradient(115deg,#000 12%,#0007 28%,#000 44%,#0006 64%,#000 82%);
  filter:blur(12px);mix-blend-mode:screen;will-change:transform;
  animation:liquid-amber-flow 24s ease-in-out infinite alternate}
 @keyframes liquid-amber-flow{
