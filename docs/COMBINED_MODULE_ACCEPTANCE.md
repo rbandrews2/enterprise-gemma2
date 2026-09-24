@@ -19,7 +19,11 @@ Ray requested one integrated workstream on 2026-09-23. This matrix supersedes tr
 
 The roadmap's production identity/durable storage milestone is a dependency before real attendance or communications. It does not justify pretending those features are completed. Persisting records in local SQLite or temporary staging is only test workflow validation. Training catalog text comes from recovered V1 data/trainingCatalog.json, commit e5d7167bd1834a393fae8e2e19ed8b515f08c0e9; certification flags were removed and all entries marked content_review_pending. JSA is explicitly a reduced internal planning worksheet, not full recovered form parity.
 
-## Resume order
+## Priority update — 2026-09-24
+
+Accounts and durable storage now precede additional parity work. Ray requested local preparation and pricing before provisioning. Enterprise-only dispatch through Messaging is required, tracked in [ENTERPRISE_DISPATCH.md](ENTERPRISE_DISPATCH.md). Neither dispatch nor live Twilio delivery is implemented.
+
+## Previous resume order
 
 1. Restore browser access and test all new views, account switches, dirty-state prompts, saves/retries and errors.
 2. Finish forms and scheduling acceptance gaps using preserved V1 source and Netlify references.

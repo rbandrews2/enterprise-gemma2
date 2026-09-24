@@ -3,6 +3,7 @@
 Ray authorized a separate restricted Google Cloud V2 staging deployment. Production cutover is not scheduled.
 
 ## Latest resume checkpoint
+2026-09-24 current checkpoint: account/storage implementation committed through fb18777 on enterprise-v2. Local suite: 128 passed, seven PostgreSQL-specific cases skipped (135 total). PostgreSQL native test was started in an isolated Cloud Shell checkout but its result has not been confirmed; recover that result before claiming adapter validation. See docs/ACCOUNTS_AND_STORAGE.md and docs/CLOUD_COST_ESTIMATE.md. Verified-provider signup, live private GCS attachment checks and browser acceptance remain open. No managed database/bucket or new account service provisioned. Ray explicitly chose prepare locally and price before provisioning; live V1 and current staging remain unchanged. Enterprise-only dispatch through Messaging is now specified in docs/ENTERPRISE_DISPATCH.md, not implemented. Next: confirm PostgreSQL tests, complete account/files browser and provider acceptance, then present exact priced staging configuration before provisioning.
 
 2026-09-23 combined steps 2/3: see docs/COMBINED_MODULE_ACCEPTANCE.md. Added JSA planning drafts, module revision history, schedule assignments/conflicts/UTC start-date filtering, training study planner, synthetic member inbox, job-address navigation handoff and date-filtered time CSV. 121 tests and local HTTP passed. Browser access remains blocked; no deployment for this pass. Full combined scope remains OPEN with exact remaining gaps in the matrix. Preview running on 8081 with Maps option.
 
@@ -138,3 +139,4 @@ Live browser checks against an isolated synthetic Norfolk project (36.8508, -76.
 
 ## Placement readiness — 2026-09-20
 Atlas now returns versioned placement-readiness checks and displays them in the workspace. All 78 tests passed plus real HTTP workspace-script verification. See docs/PLACEMENT_RULES.md for the reviewed-rule provenance and geometry contract. No numeric agency rule or automatic placement is enabled. Next: review one stationary closure typical application, its tables/notes and measured approach geometry before implementing a narrowly scoped rule.
+

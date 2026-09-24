@@ -10,6 +10,12 @@ App image c4ff228, restricted Cloud Run staging wzos-v2-staging-00007-8fs in ent
 
 Working test scope: work orders; measured geometry; readiness checklists; time clock with breaks/task intervals; incident and vehicle-inspection drafts; admin-editable team schedule drafts; Enterprise report assembly and personal immutable report snapshots; local agency-reference preparation; Atlas quick guides; gloss-black interface and reduced-motion-aware road-work background. Local model conversation exists but has unacceptable CPU latency. Cloud model and cloud source-library data are not connected. Restricted staging uses one shared synthetic reviewer and temporary SQLite data: it is not a customer-ready deployment.
 
+## Current priority update — 2026-09-24
+
+Ray moved durable storage and real account/role separation ahead of further module expansion. Prepare locally and provide prices before provisioning; no new paid cloud resources are authorized yet. Supabase will not be used for the new database, functions or file storage. See [accounts and storage](ACCOUNTS_AND_STORAGE.md).
+
+Enterprise-only AI-assisted dispatch through Messaging is now an explicit requirement. See [dispatch workflow and acceptance tasks](ENTERPRISE_DISPATCH.md): owner employee setup, qualification/availability checks, Atlas assignment proposals, admin review, SMS/MMS delivery and acknowledgements. Core messaging remains separate from this Enterprise entitlement.
+
 ## Ordered delivery plan and completion criteria
 
 2026-09-23: Ray combined steps 2 and 3 into one integrated workstream. Track execution and acceptance in [COMBINED_MODULE_ACCEPTANCE.md](COMBINED_MODULE_ACCEPTANCE.md). The original requirements below remain in force; this is not a scope reduction.

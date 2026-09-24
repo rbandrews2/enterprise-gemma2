@@ -75,7 +75,7 @@ writes activation material to an exclusive output file; do not commit that file.
 Backend file APIs: PUT `/api/files/{uuid}` with raw binary and entity_kind,
 entity_id, filename query fields; GET `/api/files` for scoped metadata; GET
 `/api/files/{uuid}` for an authorized attachment download. A magic-byte check
-is not malware scanning. Scanner/quarantine and UI attachment controls remain
+is not malware scanning. Scanner/quarantine and browser acceptance of the new attachment controls remain
 required before accepting customer uploads. Failed DB commits can leave orphan
 objects; same-ID retries recover them, and reconciliation is still needed.
 
@@ -97,11 +97,11 @@ SQL inventory could not run: Cloud SQL Admin API disabled. API list showed no
 enabled SQL Admin/Identity Toolkit/Firestore entry. This does not prove absence
 of historical resources. No existing buckets were changed.
 
-Cloud provisioning awaits the requested monthly operating budget. Still needed:
+Ray explicitly selected local preparation and pricing before provisioning (2026-09-24). Do not provision new paid resources until the priced configuration is accepted. Still needed:
 enable APIs; choose/price database tier and backups; dedicated runtime identity;
 database/user/Secret Manager; private versioned bucket; authentication provider
 and authorized domains; verified sign-up/login/recovery; cloud restart/restore
-drill; attachment UI and scanning; durable source library; V1-data import if
+drill; attachment browser acceptance and scanning; durable source library; V1-data import if
 recoverable; real-user permission/browser acceptance; Twilio configuration.
 No production cutover, real customer migration, or completed durable cloud
 deployment is claimed by the local implementation.
