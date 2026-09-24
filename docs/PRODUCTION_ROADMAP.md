@@ -2,7 +2,20 @@
 
 Owner: Molecular Project Development LLC (formerly Superior Consultation LLC).
 Product: WZOS powered by Atlas AI Assistant. Updated 2026-09-22.
-Target: Core and Enterprise editions at app.workzoneos.org, with general/admin access; marketing stays at workzoneos.org. No production date or cutover approval is implied.
+Target: Core and Enterprise editions at app.workzoneos.org, with member/admin access; marketing stays at workzoneos.org. No production date or cutover approval is implied.
+
+## Active next steps (2026-09-24)
+
+Two access levels: admin (high level) and member (basic). Owner is normalized to
+admin; all admins have equal organization authority. See DATA_CONSOLIDATION_PLAN.md
+for the combined recovered/new-data migration and release-cleanup sequence.
+
+1. Local form attachment browser upload completed; live provider/scanning acceptance remains open.
+2. Inventory recovered and new V2 data; implement a dry-run migration with explicit identity/organization crosswalks and reconciliation.
+3. Finish exact priced Google provider configuration and obtain acceptance before paid provisioning.
+4. Validate durable identity/storage, then resume the remaining module and release gates below.
+
+The earlier deployment/test counts below are historical checkpoints, not current local results.
 
 ## Current verified checkpoint
 
@@ -14,7 +27,7 @@ Working test scope: work orders; measured geometry; readiness checklists; time c
 
 Ray moved durable storage and real account/role separation ahead of further module expansion. Prepare locally and provide prices before provisioning; no new paid cloud resources are authorized yet. Supabase will not be used for the new database, functions or file storage. See [accounts and storage](ACCOUNTS_AND_STORAGE.md).
 
-Enterprise-only AI-assisted dispatch through Messaging is now an explicit requirement. See [dispatch workflow and acceptance tasks](ENTERPRISE_DISPATCH.md): owner employee setup, qualification/availability checks, Atlas assignment proposals, admin review, SMS/MMS delivery and acknowledgements. Core messaging remains separate from this Enterprise entitlement.
+Enterprise-only AI-assisted dispatch through Messaging is now an explicit requirement. See [dispatch workflow and acceptance tasks](ENTERPRISE_DISPATCH.md): admin employee setup, qualification/availability checks, Atlas assignment proposals, admin review, SMS/MMS delivery and acknowledgements. Core messaging remains separate from this Enterprise entitlement.
 
 ## Ordered delivery plan and completion criteria
 

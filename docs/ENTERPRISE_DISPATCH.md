@@ -6,13 +6,13 @@ assignment and delivery record must stay within its organization.
 
 ## Intended workflow
 
-1. Organization owner completes setup: employee name, employee number, address,
+1. Organization admin completes setup: employee name, employee number, address,
    verified contact number, qualifications/certifications and expiration dates.
    Collect shifts, availability, assigned jobs, agreed starting location, travel
    limits and relevant equipment/vehicle eligibility. Missing data is explicit.
 2. Work orders record jobsite, scheduled start/end, required crew size/roles,
    qualifications, equipment and any location-specific requirements.
-3. Enterprise owner/admin selects **Let Atlas plan assignments** in Messaging /
+3. Enterprise admin selects **Let Atlas plan assignments** in Messaging /
    Dispatch. Atlas produces a proposed crew-to-job assignment plan with reasons,
    missing information, conflicts and unfilled roles. It must not silently infer
    that an employee is qualified or available.

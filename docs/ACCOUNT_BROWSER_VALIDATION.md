@@ -82,3 +82,13 @@ files parse successfully. The CLI reported export complete followed by a Windows
 shutdown assertion, so restore has not been claimed tested. For a resume test,
 add `--import .local-data/browser-validation/auth-export` to the emulator command
 and verify the synthetic account IDs still match the local SQLite memberships.
+
+## Follow-up: 2026-09-24 role and form validation
+
+Restored the preserved Auth emulator export and signed in using the existing synthetic
+account. Organization chooser now shows admin after owner normalization. Chrome
+file-URL permission worked; uploaded attachment.png to the existing synthetic form,
+and the UI confirmed Attachment saved and listed the file. An old browser token
+was rejected before fresh sign-in, as expected. App 8083 and Auth emulator 9099 are
+running for review. This verifies local form upload, not live Google storage or scanning.
+Current full suite: 133 passed, 12 PostgreSQL skipped (145 total).

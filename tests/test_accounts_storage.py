@@ -20,15 +20,15 @@ class AccountStorageTests(unittest.TestCase):
         self.env=patch.dict(os.environ,{'WZOS_ACCOUNT_WORKSPACE':'1'});self.env.start();self.addCleanup(self.env.stop)
         self.root=Path(self.temp.name);self.storage=self.make_storage(self.root)
         self.files=LocalFiles(self.root/'files')
-        self.claims={name:{'uid':name,'email':name+'@example.test','email_verified':True} for name in ('owner','member','other','admin')}
+        self.claims={name:{'uid':name,'email':name+'@example.test','email_verified':True} for name in ('creator','member','other','admin')}
         self.build()
-        self.org=self.create_org('owner')
+        self.org=self.create_org('creator')
 
     def build(self):
         self.app=create_app(self.root/'unused.sqlite',Store(self.root/'sources',{}),account_workspace=True,storage=self.storage,verifier=lambda token:self.claims[token],file_store=self.files)
         self.client=TestClient(self.app);self.addCleanup(self.client.close)
 
-    def headers(self, who='owner', org=None):
+    def headers(self, who='creator', org=None):
         return {'Authorization':'Bearer '+who,'X-WZOS-Organization':org or getattr(self,'org','')}
 
     def create_org(self, who):
@@ -77,16 +77,39 @@ class AccountStorageTests(unittest.TestCase):
         self.assertEqual(self.client.get('/api/account',headers={**headers,**self.headers()}).status_code,403)
         self.assertEqual(self.client.get('/',headers={**headers,'Host':'outside.example'}).status_code,403)
 
-    def test_member_admin_owner_and_revocation(self):
+    def test_member_admin_equality_and_revocation(self):
         self.add('member');self.add('admin','admin')
         self.assertEqual(self.client.get('/api/session',headers=self.headers('member')).json()['role'],'general')
         self.assertEqual(self.client.get('/api/time/entries?team=true',headers=self.headers('member')).status_code,403)
         self.assertEqual(self.client.get('/api/time/entries?team=true',headers=self.headers('admin')).status_code,200)
         change={'role':'admin','active':True}
-        self.assertEqual(self.client.put('/api/account/members/member',json=change,headers=self.headers('admin')).status_code,403)
-        self.assertEqual(self.client.put('/api/account/members/owner',json={'role':'member','active':False},headers=self.headers()).status_code,409)
-        self.assertEqual(self.client.put('/api/account/members/member',json={'role':'member','active':False},headers=self.headers()).status_code,200)
+        self.assertEqual(self.client.put('/api/account/members/member',json=change,headers=self.headers('admin')).status_code,200)
+        self.assertTrue(self.client.get('/api/account/members',headers=self.headers('admin')).json()['can_change_access'])
+        self.assertEqual(self.client.put('/api/account/members/creator',json={'role':'member','active':True},headers=self.headers('admin')).status_code,200)
+        self.assertEqual(self.client.put('/api/account/members/member',json={'role':'member','active':False},headers=self.headers('admin')).status_code,200)
+        self.assertEqual(self.client.put('/api/account/members/admin',json={'role':'member','active':False},headers=self.headers('admin')).status_code,409)
+        self.assertEqual(self.client.put('/api/account/members/member',json={'role':'member','active':False},headers=self.headers()).status_code,403)
         self.assertEqual(self.client.get('/api/orders',headers=self.headers('member')).status_code,403)
+
+    def test_legacy_owner_normalization_preserves_membership(self):
+        with self.storage.connect() as db:
+            # Recreate the previous schema in this isolated test database.
+            db.execute('DROP TABLE memberships')
+            db.execute("CREATE TABLE memberships (organization_id TEXT NOT NULL,user_id TEXT NOT NULL,role TEXT NOT NULL CHECK(role IN ('owner','admin','member')),active INTEGER NOT NULL,PRIMARY KEY(organization_id,user_id))")
+            db.execute("INSERT INTO memberships VALUES (?,?,'owner',1)",(self.org,'creator'))
+            db.execute("INSERT INTO memberships VALUES (?,?,'owner',0)",(self.org,'other'))
+        self.build()
+        self.build()  # Migration is repeatable and does not reactivate anyone.
+        with self.storage.connect() as db:
+            rows=db.execute('SELECT user_id,role,active FROM memberships ORDER BY user_id').fetchall()
+        self.assertEqual([tuple(r[k] for k in ('user_id','role','active')) for r in rows],[('creator','admin',1),('other','admin',0)])
+
+    def test_two_role_contract(self):
+        self.assertEqual(self.client.get('/api/account',headers=self.headers()).json()['organizations'][0]['role'],'admin')
+        self.assertEqual(self.client.put('/api/account/members/creator',json={'role':'owner','active':True},headers=self.headers()).status_code,422)
+        self.assertEqual(self.client.put('/api/account/members/creator',json={'role':'member','active':True},headers=self.headers()).status_code,409)
+        self.add('admin','admin')
+        self.assertEqual(self.client.post('/api/account/invitations',json={'email':'other@example.test','role':'admin'},headers=self.headers('admin')).status_code,200)
 
     def test_invitation_is_verified_email_bound_and_cannot_self_promote(self):
         self.add('member')
@@ -126,8 +149,8 @@ class AccountStorageTests(unittest.TestCase):
         body={'request_id':str(uuid4()),'title':'Private job','work_type':'other','address':'Test road','locality':'Norfolk'}
         first=self.client.post('/api/orders',headers=self.headers(),json=body)
         self.assertEqual(first.status_code,201)
-        second=self.create_org('owner')
-        self.assertEqual(self.client.post('/api/orders',headers=self.headers('owner',second),json=body).status_code,409)
+        second=self.create_org('creator')
+        self.assertEqual(self.client.post('/api/orders',headers=self.headers('creator',second),json=body).status_code,409)
 
     def test_report_snapshots_and_checklists_persist(self):
         self.add('member');order=self.order()

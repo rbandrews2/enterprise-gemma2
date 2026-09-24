@@ -14,19 +14,25 @@ An older `lib/auth/AdminGuard.tsx` instead depends on `org_creator`. We preserve
 the organization model and remove this conflicting browser-only authorization.
 These originals remain in ignored `.local-recovery/core-build-baseline`.
 
-| Capability | Member | Admin | Owner |
-|---|---|---|---|
-| Own clock, forms, orders, study status | Yes | Yes | Yes |
-| Organization forms/orders and team attendance | No | Yes | Yes |
-| Read team schedule | Yes | Yes | Yes |
-| Edit schedule/assign members | No | Yes | Yes |
-| Read private messages | Participant only | Participant only | Participant only |
-| Invite members | No | Yes | Yes |
-| Invite admins/change roles/disable membership | No | No | Yes |
-| Remove last active owner | No | No | No |
-| Access another organization | No | No | No |
+| Capability | Member (basic) | Admin (high level) |
+|---|---|---|
+| Own clock, forms, orders, study status | Yes | Yes |
+| Organization forms/orders and team attendance | No | Yes |
+| Read team schedule | Yes | Yes |
+| Edit schedule/assign members | No | Yes |
+| Read private messages | Participant only | Participant only |
+| Invite members or admins/change roles/disable membership | No | Yes |
+| Remove last active admin | No | No |
+| Access another organization | No | No |
 
-Owner is an organization role, not unrestricted WZOS platform administration.
+The active role contract is admin/member (Ray, 2026-09-24). All admins have equal
+organization access. Existing owner memberships normalize to admin at startup,
+including inactive memberships without reactivating them. New schemas constrain
+roles to admin/member; legacy database CHECK constraints still permit the historical
+owner value, but API input rejects it and application writes use only two roles.
+Existing internal module value `general` means member; it is not a third access level.
+Record fields such as `owner_id` identify the record creator, not an access tier.
+Admin is organization-scoped, not unrestricted WZOS platform administration.
 Core/Enterprise is a separate server-owned entitlement. New sign-ups get no
 membership automatically. Organization creation consumes a random, hashed,
 expiring operator-issued activation code. Invitations bind to verified email;

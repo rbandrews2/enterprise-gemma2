@@ -1,7 +1,7 @@
 """Verified identity plus database-owned organization membership and entitlement.
 
 No password storage, email-only membership lookup, client-selected role or
-automatic administrator grants. Owners are organization-scoped, not site admins.
+automatic administrator grants. Administrators are organization-scoped, not site admins.
 """
 import hashlib
 import secrets
@@ -49,7 +49,7 @@ class Join(BaseModel):
 
 class MembershipChange(BaseModel):
     model_config = ConfigDict(extra='forbid')
-    role: Literal['owner', 'admin', 'member']
+    role: Literal['admin', 'member']
     active: bool
 
 
@@ -60,12 +60,15 @@ class Accounts:
             for sql in (
                 'CREATE TABLE IF NOT EXISTS accounts (id TEXT PRIMARY KEY,email TEXT NOT NULL,name TEXT NOT NULL)',
                 "CREATE TABLE IF NOT EXISTS organizations (id TEXT PRIMARY KEY,name TEXT NOT NULL,edition TEXT NOT NULL CHECK(edition IN ('core','enterprise')),active INTEGER NOT NULL)",
-                "CREATE TABLE IF NOT EXISTS memberships (organization_id TEXT NOT NULL,user_id TEXT NOT NULL,role TEXT NOT NULL CHECK(role IN ('owner','admin','member')),active INTEGER NOT NULL,PRIMARY KEY(organization_id,user_id))",
+                "CREATE TABLE IF NOT EXISTS memberships (organization_id TEXT NOT NULL,user_id TEXT NOT NULL,role TEXT NOT NULL CHECK(role IN ('admin','member')),active INTEGER NOT NULL,PRIMARY KEY(organization_id,user_id))",
                 'CREATE TABLE IF NOT EXISTS activation_codes (hash TEXT PRIMARY KEY,edition TEXT NOT NULL,expires_at TEXT NOT NULL,used_by TEXT,organization_id TEXT)',
                 'CREATE TABLE IF NOT EXISTS invitations (hash TEXT PRIMARY KEY,organization_id TEXT NOT NULL,email TEXT NOT NULL,role TEXT NOT NULL,expires_at TEXT NOT NULL,accepted_by TEXT)',
                 'CREATE TABLE IF NOT EXISTS access_audit (id TEXT PRIMARY KEY,organization_id TEXT NOT NULL,actor_id TEXT NOT NULL,action TEXT NOT NULL,target_id TEXT NOT NULL,occurred_at TEXT NOT NULL)',
             ):
                 db.execute(sql)
+            # Compatibility migration: preserve existing membership IDs and activity.
+            # Legacy CHECK constraints permit admin; fresh databases use two roles.
+            db.execute("UPDATE memberships SET role='admin' WHERE role='owner'")
 
     def identity(self, request):
         cached = getattr(request.state, 'verified_identity', None)
@@ -96,13 +99,13 @@ class Accounts:
         if not row:
             raise HTTPException(403, 'Active organization membership required')
         return {**user, 'membership_role': row['role'],
-                'role': 'admin' if row['role'] in ('owner','admin') else 'general',
+                'role': 'admin' if row['role'] == 'admin' else 'general',
                 'organization_id': row['id'], 'organization': row['name'], 'edition': row['edition']}
 
     def roster(self, selected):
         with self.connect() as db:
             rows = db.execute('SELECT a.id,a.name,m.role FROM accounts a JOIN memberships m ON a.id=m.user_id WHERE m.organization_id=? AND m.active=1', (selected['organization_id'],)).fetchall()
-        return {r['id']: {'id':r['id'],'name':r['name'],'role':'admin' if r['role'] in ('owner','admin') else 'general','organization_id':selected['organization_id']} for r in rows}
+        return {r['id']: {'id':r['id'],'name':r['name'],'role':'admin' if r['role'] == 'admin' else 'general','organization_id':selected['organization_id']} for r in rows}
 
     def audit(self, db, org, actor, action, target):
         db.execute('INSERT INTO access_audit VALUES (?,?,?,?,?,?)', (str(uuid4()),org,actor,action,target,now()))
@@ -122,7 +125,7 @@ class Accounts:
             if selected['role']!='admin': raise HTTPException(403,'Administrator access required')
             with self.connect() as db:
                 rows=db.execute('SELECT a.id,a.name,a.email,m.role,m.active FROM accounts a JOIN memberships m ON a.id=m.user_id WHERE m.organization_id=? ORDER BY a.name,a.id LIMIT 100',(selected['organization_id'],)).fetchall()
-            return {'items':[dict(r) for r in rows], 'can_change_access':selected['membership_role']=='owner'}
+            return {'items':[dict(r) for r in rows], 'can_change_access':selected['membership_role']=='admin'}
 
         @app.get('/api/account')
         def account(request: Request):
@@ -145,7 +148,7 @@ class Accounts:
                     raise HTTPException(403, 'Activation code is unavailable')
                 org=str(uuid4())
                 db.execute('INSERT INTO organizations VALUES (?,?,?,1)', (org,body.name,code['edition']))
-                db.execute("INSERT INTO memberships VALUES (?,?,'owner',1)", (org,user['id']))
+                db.execute("INSERT INTO memberships VALUES (?,?,'admin',1)", (org,user['id']))
                 db.execute('UPDATE activation_codes SET used_by=?,organization_id=? WHERE hash=?', (user['id'],org,digest(body.activation_code)))
                 self.audit(db,org,user['id'],'organization_created',user['id'])
             return {'id':org}
@@ -153,8 +156,8 @@ class Accounts:
         @app.post('/api/account/invitations')
         def invite(body: Invitation, request: Request):
             selected=self.actor(request)
-            if selected['role'] != 'admin' or (body.role=='admin' and selected['membership_role']!='owner'):
-                raise HTTPException(403,'Only owners can invite administrators; admins may invite members')
+            if selected['role'] != 'admin':
+                raise HTTPException(403,'Administrator access required')
             token=secrets.token_urlsafe(32)
             with self.connect() as db:
                 db.execute('INSERT INTO invitations VALUES (?,?,?,?,?,NULL)', (digest(token),selected['organization_id'],body.email.lower(),body.role,(datetime.now(timezone.utc)+timedelta(days=7)).isoformat()))
@@ -181,13 +184,13 @@ class Accounts:
             with self.connect() as db:
                 db.execute('BEGIN IMMEDIATE')
                 current=db.execute("SELECT role FROM memberships WHERE organization_id=? AND user_id=? AND active=1",(selected['organization_id'],selected['id'])).fetchone()
-                if not current or current['role']!='owner':
-                    raise HTTPException(403,'Only an active organization owner can change access')
+                if not current or current['role']!='admin':
+                    raise HTTPException(403,'Only an active organization admin can change access')
                 target=db.execute('SELECT * FROM memberships WHERE organization_id=? AND user_id=?',(selected['organization_id'],user_id)).fetchone()
                 if not target: raise HTTPException(404,'Member not found')
-                count=db.execute("SELECT COUNT(*) FROM memberships WHERE organization_id=? AND role='owner' AND active=1",(selected['organization_id'],)).fetchone()[0]
-                if target['role']=='owner' and target['active'] and count==1 and (body.role!='owner' or not body.active):
-                    raise HTTPException(409,'Keep at least one active owner')
+                count=db.execute("SELECT COUNT(*) FROM memberships WHERE organization_id=? AND role='admin' AND active=1",(selected['organization_id'],)).fetchone()[0]
+                if target['role']=='admin' and target['active'] and count==1 and (body.role!='admin' or not body.active):
+                    raise HTTPException(409,'Keep at least one active admin')
                 db.execute('UPDATE memberships SET role=?,active=? WHERE organization_id=? AND user_id=?',(body.role,int(body.active),selected['organization_id'],user_id))
                 self.audit(db,selected['organization_id'],selected['id'],'membership_'+body.role+('_enabled' if body.active else '_disabled'),user_id)
             return {'updated':True}
