@@ -31,13 +31,18 @@ input,select,textarea,#search{background:#070809;color:#f1f3f2;border-color:#414
 body{background:radial-gradient(ellipse at 95% 0%,#ad4c1530,transparent 45%),radial-gradient(ellipse at 5% 95%,#bc821c18,transparent 40%),#030404}
 :root{--yellow:#ffb547}.brand-mark{background:linear-gradient(#ffba60,#f68024);color:#15110c}.nav-item.active{background:linear-gradient(#ffc16d,#e68c34);color:#17110a}.nav-count{background:#a9551f;color:#fff4dc}.primary{background:linear-gradient(#ffb652,#ed862b);border-color:#ffbc70;color:#17110b}.primary:hover{background:linear-gradient(#ffc575,#fa963b)}.atlas-card{background:radial-gradient(ellipse at top right,#ad581322,transparent 65%),linear-gradient(130deg,#202223,#080909)}.clock-timer,.atlas-symbol{color:#ffb85b}.job[aria-pressed=true]{border-color:#8c5b32;box-shadow:inset 3px 0 #f7a449}.eyebrow,.job-type{color:#d6bc9c}
 
-/* Decorative road-work image: 35 seconds per gentle shift; controls stay opaque. */
-body{isolation:isolate;min-height:100vh}
+/* Clock reference: verified clock.superiorllc.org .app-bg, 2026-09-24.
+   Reuse black/orange/gold halo and screen-blended sheen; retain WZOS road image. */
+body{isolation:isolate;min-height:100vh;background:linear-gradient(145deg,#000000fc,#0a0806fa 44%,#000000fc),#000}
+body::after{content:"";position:fixed;inset:-18%;z-index:-2;pointer-events:none;
+ background:radial-gradient(circle at 18% 18%,rgba(249,115,22,.18),transparent 28%),radial-gradient(circle at 82% 12%,rgba(234,179,8,.12),transparent 24%),radial-gradient(circle at 60% 88%,rgba(249,115,22,.1),transparent 30%);filter:blur(8px)}
 body::before{content:"";position:fixed;inset:-4%;z-index:-1;pointer-events:none;
- background:url("/road-work-background.png") center center/cover no-repeat;
- opacity:.17;filter:blur(3px) saturate(.65);transform:scale(1.04);
- animation:road-work-drift 35s ease-in-out infinite alternate}
+ background:linear-gradient(115deg,transparent 0 20%,rgba(255,255,255,.08) 21%,transparent 28% 100%),url("/road-work-background.png");
+ background-size:220% 220%,cover;background-position:0% 50%,center;background-repeat:no-repeat;
+ opacity:.28;mix-blend-mode:screen;filter:blur(3px) saturate(.65);transform:scale(1.04);
+ animation:road-work-drift 35s ease-in-out infinite alternate,clock-sheen-drift 18s ease-in-out infinite alternate}
 @keyframes road-work-drift{from{transform:translate3d(-.7%,0,0) scale(1.04)}to{transform:translate3d(.7%,-.5%,0) scale(1.075)}}
+@keyframes clock-sheen-drift{from{background-position:0% 50%,center}to{background-position:100% 50%,center}}
 @media(prefers-reduced-motion:reduce){body::before{animation:none;transform:scale(1.04)}}
 
 .report-section{margin:18px 0;padding:22px}.report-data{white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.6 monospace}#report-references{padding:20px 0}#report-references details{padding:14px;border-bottom:1px solid var(--border)}

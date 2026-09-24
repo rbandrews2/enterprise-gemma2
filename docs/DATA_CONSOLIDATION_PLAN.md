@@ -4,6 +4,41 @@ Updated 2026-09-24. One product: WZOS powered by Atlas AI Assistant.
 Runtime target: Google Cloud. Supabase is a recovery source only.
 This is a mapping plan, not a completed import or authorization to provision.
 
+## Sample-data clarification — supersedes customer-preservation assumptions
+
+Ray confirmed on 2026-09-24 that V1 was never publicly operated and its customer
+accounts/records are artificial placeholders. Migration can replace or discard
+those samples. The preferred path is to consolidate useful schemas, templates,
+business rules and assets, then seed a coherent V2 demonstration dataset. Do not
+spend time reproducing every legacy account, duplicate row or obsolete sample.
+This does not classify deployment credentials or Ray's operator accounts as disposable.
+
+The source-to-target map below remains useful for feature coverage. Detailed legacy
+customer-row crosswalk/import is optional, needed only for samples selected for reuse.
+New V2 demonstration records should retain useful geometry/report examples; rebuild
+others as repeatable fixtures. Keep fixture seeding explicit and local/test-only.
+
+## Inventory tooling and observed result
+
+`scripts/inventory_consolidation.py` reads SQLite databases in read-only transactions
+and reports table names, columns and counts without exporting row values. Supply
+repeated `--database`, optional `--definitions`, and a new `--output` path. Output
+creation is exclusive. This is inventory tooling, not a completed importer.
+
+2026-09-24 local inventory saved to ignored `.local-data/consolidation-inventory-20260924.json`:
+
+- Current account validation: 16 tables, 15 rows; includes two attachment records.
+- Current workspace preview: 9 tables, 15 rows; includes orders, clock events,
+  forms, checklists and a report snapshot.
+- Older checkpoint: 6 tables, 15 rows. Treat as recovery evidence, not an additional
+  dataset to append to the current preview.
+- Legacy catalog: 91 table definitions; customer row exports are unnecessary for
+  disposable samples unless a selected feature example requires them.
+
+Next: select/rebuild representative Core and Enterprise demo scenarios, preserve
+useful new geometry/report fixtures, and create a file-level release reuse/removal
+manifest. No blanket deletion or paid provisioning was performed.
+
 ## Evidence and boundaries
 
 Recovered 91 table definitions, policies, triggers, indexes, bucket configurations

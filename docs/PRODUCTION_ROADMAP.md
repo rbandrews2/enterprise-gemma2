@@ -11,7 +11,7 @@ admin; all admins have equal organization authority. See DATA_CONSOLIDATION_PLAN
 for the combined recovered/new-data migration and release-cleanup sequence.
 
 1. Local form attachment browser upload completed; live provider/scanning acceptance remains open.
-2. Inventory recovered and new V2 data; implement a dry-run migration with explicit identity/organization crosswalks and reconciliation.
+2. Inventory completed for local sample databases. Ray confirmed V1 data is artificial: consolidate reusable capabilities and build repeatable V2 demo scenarios; selectively migrate useful new geometry/report examples. See DATA_CONSOLIDATION_PLAN.md.
 3. Finish exact priced Google provider configuration and obtain acceptance before paid provisioning.
 4. Validate durable identity/storage, then resume the remaining module and release gates below.
 
