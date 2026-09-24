@@ -74,3 +74,11 @@ Final local suite: 141 total, **131 passed and 10 PostgreSQL cases skipped**.
 Node syntax checks passed for account.js, files.js and workspace.js. The previous
 isolated PostgreSQL run passed its seven integration cases; new emulator/navigation
 checks ran locally and do not constitute a new PostgreSQL run.
+
+
+Test services on ports 8083 and 9099 were stopped after validation. A local
+emulator export exists in `.local-data/browser-validation/auth-export`; its JSON
+files parse successfully. The CLI reported export complete followed by a Windows
+shutdown assertion, so restore has not been claimed tested. For a resume test,
+add `--import .local-data/browser-validation/auth-export` to the emulator command
+and verify the synthetic account IDs still match the local SQLite memberships.
