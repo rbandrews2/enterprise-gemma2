@@ -96,7 +96,8 @@ def main():
             invite=call('/api/account/invitations',body={'email':state['users']['member']['email'],'role':'member'},method='POST')
             call('/api/account/join','member',body={'token':invite['token']},method='POST')
             print('Synthetic browser identities:', {k:v['email'] for k,v in state['users'].items()})
-        call('/api/account',include_iam=False,expected=403)
+        # A Firebase bearer without the separate IAM header is rejected by Cloud Run.
+        call('/api/account',include_iam=False,expected=401)
         call('/api/account',token='invalid-test-token',expected=401)
         call('/api/account','unverified',expected=403)
         admin=call('/api/session');member=call('/api/session','member')
