@@ -37,6 +37,7 @@ def main():
     parser.add_argument('--port', type=int, choices=(5544, 5545), required=True)
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--compare', type=Path)
+    parser.add_argument('--file-evidence', type=Path)
     args = parser.parse_args()
     if args.output.exists():
         raise SystemExit('Use a new evidence path; existing evidence is preserved')
@@ -45,9 +46,25 @@ def main():
     with psycopg.connect(host='127.0.0.1', port=args.port, dbname='wzos', user=parsed.username,
                         password=unquote(parsed.password), connect_timeout=10, autocommit=True) as conn:
         result = fingerprint(conn)
+        if args.file_evidence:
+            file = json.loads(args.file_evidence.read_text())
+            row = conn.execute('SELECT organization_id, object_key, sha256, size_bytes FROM workspace_files WHERE id=%s', (file['file_id'],)).fetchone()
+            expected = (file['organization_id'], file['object_key'], file['sha256'], file['size_bytes'])
+            if row != expected:
+                raise SystemExit('FAIL: restored file metadata differs')
+            from google.cloud import storage
+            from validate_managed_files import BUCKET
+            if file['bucket'] != BUCKET:
+                raise SystemExit('Unexpected evidence bucket')
+            blob = storage.Client(project='enterprise-gemma2').bucket(BUCKET).blob(file['object_key'], generation=int(file['generation']))
+            data = blob.download_as_bytes(timeout=30)
+            if len(data) != file['size_bytes'] or hashlib.sha256(data).hexdigest() != file['sha256']:
+                raise SystemExit('FAIL: preserved object differs from restored metadata')
     if not result:
         raise SystemExit('No application tables found')
     evidence = {'tables': result, 'total_rows': sum(t['rows'] for t in result.values())}
+    if args.file_evidence:
+        evidence['restored_file_reference_verified'] = True
     if args.compare:
         previous = json.loads(args.compare.read_text())
         if previous['tables'] != result:
