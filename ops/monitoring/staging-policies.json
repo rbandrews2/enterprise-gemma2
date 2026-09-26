@@ -1,0 +1,147 @@
+[
+  {
+    "displayName": "WZOS staging SQL CPU above 80%",
+    "combiner": "OR",
+    "enabled": true,
+    "userLabels": {
+      "wzos_scope": "restricted-staging"
+    },
+    "conditions": [
+      {
+        "displayName": "CPU above 80%",
+        "conditionThreshold": {
+          "filter": "resource.type=\"cloudsql_database\" AND resource.labels.database_id=\"enterprise-gemma2:wzos-v2-staging-db\" AND metric.type=\"cloudsql.googleapis.com/database/cpu/utilization\"",
+          "comparison": "COMPARISON_GT",
+          "thresholdValue": 0.8,
+          "duration": "600s",
+          "aggregations": [
+            {
+              "alignmentPeriod": "60s",
+              "perSeriesAligner": "ALIGN_MEAN"
+            }
+          ],
+          "trigger": {
+            "count": 1
+          }
+        }
+      }
+    ],
+    "documentation": {
+      "content": "Restricted WZOS staging only. Inspect SQL metrics and connection pool. Do not resize automatically or change V1. Notification delivery is pending recipient configuration.",
+      "mimeType": "text/markdown"
+    },
+    "alertStrategy": {
+      "autoClose": "1800s"
+    },
+    "notificationChannels": []
+  },
+  {
+    "displayName": "WZOS staging SQL Memory above 90%",
+    "combiner": "OR",
+    "enabled": true,
+    "userLabels": {
+      "wzos_scope": "restricted-staging"
+    },
+    "conditions": [
+      {
+        "displayName": "Memory above 90%",
+        "conditionThreshold": {
+          "filter": "resource.type=\"cloudsql_database\" AND resource.labels.database_id=\"enterprise-gemma2:wzos-v2-staging-db\" AND metric.type=\"cloudsql.googleapis.com/database/memory/utilization\"",
+          "comparison": "COMPARISON_GT",
+          "thresholdValue": 0.9,
+          "duration": "600s",
+          "aggregations": [
+            {
+              "alignmentPeriod": "60s",
+              "perSeriesAligner": "ALIGN_MEAN"
+            }
+          ],
+          "trigger": {
+            "count": 1
+          }
+        }
+      }
+    ],
+    "documentation": {
+      "content": "Restricted WZOS staging only. Inspect SQL metrics and connection pool. Do not resize automatically or change V1. Notification delivery is pending recipient configuration.",
+      "mimeType": "text/markdown"
+    },
+    "alertStrategy": {
+      "autoClose": "1800s"
+    },
+    "notificationChannels": []
+  },
+  {
+    "displayName": "WZOS staging SQL Disk above 80%",
+    "combiner": "OR",
+    "enabled": true,
+    "userLabels": {
+      "wzos_scope": "restricted-staging"
+    },
+    "conditions": [
+      {
+        "displayName": "Disk above 80%",
+        "conditionThreshold": {
+          "filter": "resource.type=\"cloudsql_database\" AND resource.labels.database_id=\"enterprise-gemma2:wzos-v2-staging-db\" AND metric.type=\"cloudsql.googleapis.com/database/disk/utilization\"",
+          "comparison": "COMPARISON_GT",
+          "thresholdValue": 0.8,
+          "duration": "300s",
+          "aggregations": [
+            {
+              "alignmentPeriod": "60s",
+              "perSeriesAligner": "ALIGN_MEAN"
+            }
+          ],
+          "trigger": {
+            "count": 1
+          }
+        }
+      }
+    ],
+    "documentation": {
+      "content": "Restricted WZOS staging only. Inspect SQL metrics and connection pool. Do not resize automatically or change V1. Notification delivery is pending recipient configuration.",
+      "mimeType": "text/markdown"
+    },
+    "alertStrategy": {
+      "autoClose": "1800s"
+    },
+    "notificationChannels": []
+  },
+  {
+    "displayName": "WZOS staging service 5xx errors",
+    "combiner": "OR",
+    "enabled": true,
+    "userLabels": {
+      "wzos_scope": "restricted-staging"
+    },
+    "conditions": [
+      {
+        "displayName": "At least 3 server errors in a five-minute window",
+        "conditionThreshold": {
+          "filter": "resource.type=\"cloud_run_revision\" AND resource.labels.service_name=\"wzos-v2-accounts\" AND resource.labels.location=\"us-central1\" AND metric.type=\"run.googleapis.com/request_count\" AND metric.labels.response_code_class=\"5xx\"",
+          "comparison": "COMPARISON_GT",
+          "thresholdValue": 2,
+          "duration": "0s",
+          "aggregations": [
+            {
+              "alignmentPeriod": "300s",
+              "perSeriesAligner": "ALIGN_SUM",
+              "crossSeriesReducer": "REDUCE_SUM"
+            }
+          ],
+          "trigger": {
+            "count": 1
+          }
+        }
+      }
+    ],
+    "documentation": {
+      "content": "Inspect restricted staging Cloud Run request logs and database availability. Excludes expected authentication/client failures. No automatic rollback or changes to V1. Notification delivery pending recipient configuration.",
+      "mimeType": "text/markdown"
+    },
+    "alertStrategy": {
+      "autoClose": "1800s"
+    },
+    "notificationChannels": []
+  }
+]
