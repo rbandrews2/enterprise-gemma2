@@ -16,7 +16,7 @@ from validate_managed_accounts import gc, PROJECT, SERVICE, ORIGIN
 
 BUCKET = 'enterprise-gemma2-wzos-v2-files-staging'
 # One-pixel PNG, immutable synthetic content (no location or personal information).
-DATA = base64.b64decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aX1kAAAAASUVORK5CYII=')
+DATA = base64.b64decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGNgYGD4DwABBAEAX+XDSwAAAABJRU5ErkJggg==')
 
 
 def save(path, value):
