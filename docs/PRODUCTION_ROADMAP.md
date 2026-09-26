@@ -4,22 +4,22 @@ Owner: Molecular Project Development LLC (formerly Superior Consultation LLC).
 Product: WZOS powered by Atlas AI Assistant. Updated 2026-09-22.
 Target: Core and Enterprise editions at app.workzoneos.org, with member/admin access; marketing stays at workzoneos.org. Targets: working test model September 30 and production readiness October 5, 2026. Cutover remains a separate decision.
 
-## Active next steps (2026-09-25)
+## Active next steps (2026-09-26)
 
 Two access levels: admin (high level) and member (basic). Owner is normalized to
 admin; all admins have equal organization authority. See DATA_CONSOLIDATION_PLAN.md
 for the combined recovered/new-data migration and release-cleanup sequence.
 
-1. Local form attachment browser upload completed; live provider/scanning acceptance remains open.
+1. Restricted managed database, identity, private-file persistence and isolated SQL restore acceptance passed. See STAGING_ACCEPTANCE_20260926.md and STORAGE_RESTORE_ACCEPTANCE_20260926.md. Scanning and real email delivery remain open.
 2. Inventory completed for local sample databases. Ray confirmed V1 data is artificial: consolidate reusable capabilities and build repeatable V2 demo scenarios; selectively migrate useful new geometry/report examples. See DATA_CONSOLIDATION_PLAN.md.
-3. Finish exact priced Google provider configuration and obtain acceptance before paid provisioning.
-4. Validate durable identity/storage, then resume the remaining module and release gates below.
+3. Approved priced Google staging is provisioned. Next configure error/capacity alerts and verify notification delivery; no public cutover.
+4. Continue Atlas and integrated module acceptance, followed by remaining security, customer-ingress and release gates below.
 
 The earlier deployment/test counts below are historical checkpoints, not current local results.
 
 See [dated delivery plan](DELIVERY_PLAN_20261005.md) for the current critical path and acceptance criteria.
 
-## Current verified checkpoint
+## Historical September 22 checkpoint
 
 App image c4ff228, restricted Cloud Run staging wzos-v2-staging-00007-8fs in enterprise-gemma2/us-central1. Latest full suite: 118 tests passed. Local save/reopen and cloud DVIR template display verified. Existing production apps and DNS remain unchanged.
 

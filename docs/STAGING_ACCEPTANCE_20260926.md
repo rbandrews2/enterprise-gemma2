@@ -54,8 +54,9 @@ records. No API for ingestion, fixture creation or administrator bypass was expo
 
 ## Remaining separate gates
 
-Private Google object round trips/integrity and instance replacement; malware
-scanning before real uploads; backup restoration; real email verification/recovery
+Private Google object round trips/integrity and instance replacement passed in the
+follow-up documented in STORAGE_RESTORE_ACCEPTANCE_20260926.md. Remaining: malware
+scanning before real uploads; backup restoration (see that follow-up); real email verification/recovery
 delivery; operational alerts; final customer ingress/domain; Atlas and module
 acceptance. These checks do not establish full production readiness or load capacity.
 

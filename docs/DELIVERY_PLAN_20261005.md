@@ -58,7 +58,8 @@ earlier scenarios and a file-level reuse/removal manifest remain next local work
 ## Next cloud action
 
 Priced staging scope was approved and provisioned September 26. Account staging
-revision wzos-v2-accounts-00004-fc6 passed database and identity acceptance;
-see STAGING_ACCEPTANCE_20260926.md for evidence and limitations. Next validate
-private Google file round trips, instance-replacement persistence and backup
-restoration, then operational alerts. Existing V1 services and DNS remain unchanged.
+revision wzos-v2-accounts-00005-2ns now also passes private-file persistence
+and isolated native backup restoration (16 tables / 34 rows). See
+STAGING_ACCEPTANCE_20260926.md and STORAGE_RESTORE_ACCEPTANCE_20260926.md.
+Next: operational alerts and notification validation, then Atlas/module acceptance.
+Scanning and real verification/recovery email delivery remain launch gates. Existing V1 services and DNS remain unchanged.

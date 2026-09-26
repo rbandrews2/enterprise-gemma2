@@ -53,7 +53,7 @@ Resources below are billable now. This is restricted staging, not production acc
 
 ## Follow-up status (September 26)
 
-Items 1 and 2 below are complete for restricted staging. See STAGING_ACCEPTANCE_20260926.md for the final passing evidence and current revision. Earlier failed runs above remain historical evidence. Next: item 3, then item 4.
+Items 1 and 2 below are complete for restricted staging. See STAGING_ACCEPTANCE_20260926.md for the final passing evidence and current revision. Earlier failed runs above remain historical evidence. Follow-up file/replacement and native restore checks (items 3 and 4, synthetic scope) passed; see STORAGE_RESTORE_ACCEPTANCE_20260926.md. Scanning remains open. Next: item 5, then item 6.
 
 ## Acceptance sequence
 

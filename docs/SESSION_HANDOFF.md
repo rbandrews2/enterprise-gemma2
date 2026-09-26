@@ -4,6 +4,8 @@ Ray authorized a separate restricted Google Cloud V2 staging deployment. Product
 
 ## Latest resume checkpoint
 
+September 26 storage/recovery follow-up: private GCS file acceptance passed on revision 00004-fc6 and again after replacement revision wzos-v2-accounts-00005-2ns (same image, 100% traffic). Native Cloud SQL backup 1790400494832 restored into an isolated temporary instance; all 16 tables / 34 rows matched source fingerprints, including private attachment metadata and preserved object generation. Altered-evidence negative control rejected. See STORAGE_RESTORE_ACCEPTANCE_20260926.md for cleanup status and evidence. Next: operational error/capacity alerts and notification validation, then Atlas/integrated module acceptance. Malware scanning and real email/recovery remain launch gates; V1/DNS unchanged.
+
 September 26 follow-up COMPLETE: first two persistent-staging checklist items accepted. Final Cloud Run account revision wzos-v2-accounts-00004-fc6, source 0e47a14. Bounded PostgreSQL pool, non-nested authenticated reads, explicit Cloud Shell application-token header. Managed tests 29/29 passed; local regression 138 passed/16 PostgreSQL skipped locally (all 16 passed on managed SQL); two JS refresh tests passed. Real provider and browser admin/member/email-verification/tenant checks passed; member saved/reloaded a work order. See STAGING_ACCEPTANCE_20260926.md. Next: private Google file round trips/integrity and replacement persistence, then backup restoration. Production remains gated; no V1 changes. Older connection-failure and awaiting-approval entries below are historical.
 
 
