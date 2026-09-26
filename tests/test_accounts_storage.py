@@ -192,13 +192,14 @@ class AccountStorageTests(unittest.TestCase):
 @unittest.skipUnless(os.getenv('WZOS_TEST_DATABASE_URL'),'Dedicated PostgreSQL test database not configured')
 class PostgreSQLAccountStorageTests(AccountStorageTests):
     def make_storage(self, root):
-        import psycopg
         from psycopg.conninfo import make_conninfo
         from services.workspace_preview.postgres import PostgreSQLStorage
         dsn=os.environ['WZOS_TEST_DATABASE_URL'];schema='test_'+uuid4().hex
-        with psycopg.connect(dsn,autocommit=True) as db: db.execute('CREATE SCHEMA '+schema)
+        bootstrap=PostgreSQLStorage(dsn)
+        self.addCleanup(bootstrap.close)
+        with bootstrap.connect() as db: db.execute('CREATE SCHEMA '+schema)
         def cleanup():
-            with psycopg.connect(dsn,autocommit=True) as db: db.execute('DROP SCHEMA '+schema+' CASCADE')
+            with bootstrap.connect() as db: db.execute('DROP SCHEMA '+schema+' CASCADE')
         self.addCleanup(cleanup)
         storage=PostgreSQLStorage(make_conninfo(dsn,options='-c search_path='+schema))
         self.addCleanup(storage.close)
