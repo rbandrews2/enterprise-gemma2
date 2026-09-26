@@ -1,7 +1,7 @@
 # Persistent V2 staging proposal
 
-Prepared September 26, 2026. Approval required before paid provisioning, per Ray's
-instruction to prepare locally and price first. This proposal replaces temporary
+Prepared September 26, 2026. Ray approved this priced scope on September 26.
+Provisioning has begun; see STAGING_PROVISIONING_20260926.md for acceptance evidence and remaining gates. This proposal replaces temporary
 SQLite staging for account acceptance; it is not the production capacity plan.
 
 ## Proposed resources

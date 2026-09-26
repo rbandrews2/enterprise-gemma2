@@ -5,7 +5,7 @@ container="wzos-db-test-$(date +%s)-${RANDOM}"
 test_password=$(python3 -c 'import secrets; print(secrets.token_urlsafe(32))')
 cleanup() { docker rm -f "$container" >/dev/null 2>&1 || true; }
 trap cleanup EXIT
-docker run -d --name "$container" -e POSTGRES_PASSWORD="$test_password" -e POSTGRES_DB=wzos_test -p 127.0.0.1::5432 postgres:17-alpine >/dev/null
+docker run -d --name "$container" -e POSTGRES_PASSWORD="$test_password" -e POSTGRES_DB=wzos_test -p 127.0.0.1::5432 postgres:16-alpine >/dev/null
 for attempt in $(seq 1 40); do
   if docker exec "$container" pg_isready -U postgres -d wzos_test >/dev/null 2>&1; then break; fi
   sleep 1
