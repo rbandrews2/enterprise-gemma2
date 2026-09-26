@@ -57,7 +57,7 @@ class Turn(BaseModel):
 
 class ChatInput(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
-    page: Literal["work_orders", "time_clock"] = "work_orders"
+    page: Literal["work_orders", "time_clock", "forms", "schedule", "training", "messages", "navigation", "report"] = "work_orders"
     question: str = Field(min_length=1, max_length=1000)
     history: list[Turn] = Field(default_factory=list, max_length=8)
     order_id: str | None = Field(default=None, max_length=100)
@@ -78,9 +78,29 @@ class ModelUnavailable(Exception):
     pass
 
 
-def navigation_for(question, edition, has_order):
+def module_context(page, role):
+    """App-owned capabilities, not inferred permissions or unsaved form contents."""
+    guides = {
+        'work_orders': 'Select or create a work order. Save changes before reviewing its checklist or geometry.',
+        'time_clock': 'Record your own shift, task intervals and breaks. Admins can view team time; Atlas cannot change attendance.',
+        'forms': 'Choose Incident, Vehicle inspection or JSA planning. Save a draft; reopen it or inspect revision history. No official submission or PDF delivery.',
+        'schedule': ('Create/edit team schedule drafts and assign members; overlapping assignments are rejected.' if role == 'admin' else 'Read team schedule drafts. Ask an admin to create, edit or assign a schedule.') + ' Saving never sends dispatch notifications.',
+        'training': 'Browse the catalog and update personal study status. Study status is not certification. Approved media and assessments are pending.',
+        'messages': 'Review the synthetic inbox. Real employee SMS/MMS/email delivery is not connected.',
+        'navigation': 'Choose a saved work-order address and open Google Maps for verification. No offline or turn-by-turn navigation inside WZOS.',
+        'report': 'Choose a saved Enterprise job, review reported geometry/checklist/forms, prepare candidate references and save a personal report draft. No automatic sign coordinates, field approval or package delivery.',
+    }
+    return {'module': page, 'guidance': guides[page], 'unsaved_inputs_included': False,
+            'module_records_included': False, 'autonomous_actions_enabled': False}
+
+
+def navigation_for(question, edition, has_order, page='work_orders'):
     """Application-owned suggestions, never model-issued commands."""
     actions = [{"id": "job_board", "label": "Open job board"}]
+    modules = {'forms': 'Forms hub', 'schedule': 'Schedule management', 'training': 'Video training',
+               'messages': 'Messaging', 'navigation': 'Navigation', 'report': 'Work Zone Report'}
+    if page in modules and (page != 'report' or edition == 'enterprise'):
+        actions.append({'id': page, 'label': 'Open ' + modules[page]})
     if re.search(r"clock|time|shift|break|hours", question, re.I):
         actions.append({"id": "time_clock", "label": "Open time clock"})
     if has_order:
@@ -144,7 +164,7 @@ class LocalIntelligence:
                     async with httpx.AsyncClient(transport=self.transport, trust_env=False, timeout=110) as client:
                         async with client.stream("POST", URL + "/api/chat", json={
                             "model": MODEL, "messages": messages, "stream": False,
-                            "options": {"temperature": 0.2, "num_predict": 320, "num_ctx": 8192},
+                            "options": {"temperature": 0.2, "num_predict": 320, "num_ctx": 8192, "num_thread": 2},
                             "keep_alive": "5m",
                         }) as response:
                             response.raise_for_status()

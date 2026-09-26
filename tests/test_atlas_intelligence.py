@@ -11,6 +11,36 @@ from services.workspace_preview.app import create_app
 from services.v2.knowledge.store import Store
 
 class IntelligenceTests(unittest.TestCase):
+    def test_all_module_contexts_and_edition_role_boundaries(self):
+        class Fake:
+            context = None
+            async def reply(self, payload, context):
+                self.context = context
+                return 'Module guidance only.'
+        fake = Fake()
+        pages = ['work_orders', 'time_clock', 'forms', 'schedule', 'training', 'messages', 'navigation', 'report']
+        with tempfile.TemporaryDirectory() as directory, patch.dict(os.environ, {'WZOS_WORKSPACE_PREVIEW':'1','K_SERVICE':'','GAE_ENV':'','NETLIFY':''}):
+            with TestClient(create_app(Path(directory)/'db.sqlite', Store(Path(directory)/'sources', {}), fake)) as client:
+                for identity in ('core-admin', 'core-general', 'enterprise-admin', 'enterprise-general'):
+                    for page in pages:
+                        with self.subTest(identity=identity, page=page):
+                            fake.context = None
+                            response = client.post('/api/assistant/chat', headers={'X-Preview-Actor':identity}, json={'page':page,'question':'What can I do on this screen?'})
+                            if identity.startswith('core') and page == 'report':
+                                self.assertEqual(response.status_code,403)
+                                self.assertIsNone(fake.context)
+                                continue
+                            self.assertEqual(response.status_code,200,response.text)
+                            self.assertEqual(fake.context['page'],page)
+                            self.assertEqual(fake.context['module_help']['module'],page)
+                            self.assertFalse(fake.context['module_help']['module_records_included'])
+                            self.assertNotIn('saved_job',fake.context)
+                            self.assertEqual(response.json()['actions_performed'],[])
+                            if page == 'schedule' and identity.endswith('general'):
+                                self.assertIn('Ask an admin',fake.context['module_help']['guidance'])
+                invalid=client.post('/api/assistant/chat',headers={'X-Preview-Actor':'enterprise-admin'},json={'page':'security_override','question':'Help'})
+                self.assertEqual(invalid.status_code,422)
+
     def test_transport_success_failure_empty_and_oversize(self):
         async def check():
             for response,valid in [(httpx.Response(200,json={"done":True,"message":{"content":"Use Save changes."}}),True),

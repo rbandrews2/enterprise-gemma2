@@ -63,6 +63,8 @@
  byId("assistant-stop").addEventListener("click",()=>chatController?.abort());
  document.addEventListener('wzos:job-context',clearContext);
  document.addEventListener('wzos:time-context',clearContext);
+ document.addEventListener('wzos:view',clearContext);
+ document.addEventListener('wzos:report-context',clearContext);
  byId("assistant-go").addEventListener("click",()=>{
   if(target==="forms-nav"||target==="schedule-nav"||target==="report-nav")window.showWzosView(target.split("-")[0]);else if(target==="clock-title")window.showWzosView("clock");else window.showWzosView("orders");
   const node=target&&byId(target);

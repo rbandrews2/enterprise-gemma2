@@ -307,7 +307,11 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
     @app.post("/api/assistant/chat")
     async def assistant_chat(payload: ChatInput, request: Request):
         selected = actor(request)
-        context = {"edition": selected["edition"], "role": selected["role"], "page": payload.page}
+        if payload.page == 'report' and selected['edition'] != 'enterprise':
+            raise HTTPException(403, 'Work Zone Report requires Enterprise')
+        from services.workspace_preview.intelligence import module_context
+        context = {"edition": selected["edition"], "role": selected["role"], "page": payload.page,
+                   "module_help": module_context(payload.page, selected['role'])}
         context["time_clock"] = timeclock.summary(connect, selected)
         citations = []
         checklist_basis = None
@@ -353,7 +357,7 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
         except ModelUnavailable as error:
             raise HTTPException(503, str(error)) from error
         return {"answer": answer, "model_called": True, "actions_performed": [],
-                "navigation": navigation_for(payload.question, selected["edition"], bool(payload.order_id)),
+                "navigation": navigation_for(payload.question, selected["edition"], bool(payload.order_id), payload.page),
                 "approved_for_field_use": False, "citations": citations, "checklist_basis": checklist_basis, "time_basis": context["time_clock"],
                 "order_version": payload.expected_version if payload.order_id else None}
 

@@ -124,15 +124,21 @@ $("checklist-form").addEventListener("submit",async event=>{
  catch(error){notify(error.message,true);}finally{lock(false);}
 });
 
+let atlasPage="work_orders";
 window.askAtlas=async(question,history,signal)=>{
- const clockPage=!$("clock-view").hidden;
- if(!clockPage&&(busy||dirty||checklistDirty))throw Error('Save or reload your changes before asking Atlas about the current job.');
- return api('/api/assistant/chat',{method:'POST',signal,body:JSON.stringify({question,history,page:clockPage?"time_clock":"work_orders",...(!clockPage&&selected?{order_id:selected.id,expected_version:selected.version}:{})})});
+ const jobPage=atlasPage==="work_orders";
+ const jobBasis=atlasPage==="report"?window.wzosReportAtlasBasis?.():(jobPage&&selected?{order_id:selected.id,expected_version:selected.version}:null);
+ if(jobPage&&(busy||dirty||checklistDirty))throw Error('Save or reload your changes before asking Atlas about the current job.');
+ return api('/api/assistant/chat',{method:'POST',signal,body:JSON.stringify({question,history,page:atlasPage,...(jobBasis||{})})});
 };
 
 window.atlasStatus=()=>api("/api/assistant/status");
 
 window.atlasNavigate=id=>{
+ if(["forms","schedule","training","messages","navigation","report"].includes(id)){
+  if(id==='report'&&!session?.can_prepare_atlas)return false;
+  window.showWzosView(id);return true;
+ }
  if(id==='time_clock'){window.showWzosView("clock");return true;}
  window.showWzosView("orders");
  const targets={job_board:'list-title',checklist:'checklist-panel',geometry:'geometry-fields',planning:'atlas-title'};
@@ -144,6 +150,7 @@ window.atlasNavigate=id=>{
 window.wzosClock={api,getSession:()=>session,getOrders:()=>rows};
 window.showWzosView=view=>{
  if(!canLeave() || (window.wzosModulesCanLeave && !window.wzosModulesCanLeave()))return;
+ atlasPage=({orders:"work_orders",clock:"time_clock",forms:"forms",schedule:"schedule",training:"training",messages:"messages",navigation:"navigation",report:"report"})[view]||"work_orders";
  $("team-view").hidden=!["training","messages","navigation"].includes(view);
  $("report-view").hidden=view!=="report";
  $("orders-view").hidden=view!=="orders";$("clock-view").hidden=view!=="clock";$("modules-view").hidden=!["forms","schedule"].includes(view);
