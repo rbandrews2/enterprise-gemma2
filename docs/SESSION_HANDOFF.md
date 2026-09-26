@@ -4,6 +4,9 @@ Ray authorized a separate restricted Google Cloud V2 staging deployment. Product
 
 ## Latest resume checkpoint
 
+September 26 cloud readiness: read-only Cloud Shell inventory completed. Staging remains wzos-v2-staging-00007-8fs; legacy API gemma-assistant-api-00008-njc; gemma-inference has no latest-ready revision in list. Two existing US buckets; gemma_think_v2 uniform access true/public-access prevention inherited. SQL Admin and Identity Toolkit absent from enabled-API query. No resources changed. STAGING_CONFIGURATION_PROPOSAL.md contains concrete database/auth/private-files/app configuration and cost basis. Await Ray's acceptance of paid staging scope ($50/month planning budget, not hard cap; approximately $28 database/storage baseline; AI/Maps/Twilio excluded). Next after approval: verify final estimate, provision isolated resources and run PostgreSQL/provider/restore acceptance. Local work can continue on geometry fixtures/release manifest meanwhile.
+
+
 RESUMED September 25, 2026 at Ray's request. Targets: integrated test model September 30; production-ready release October 5. Read DELIVERY_PLAN_20261005.md. Created scripts/build_unified_demo.py and two acceptance tests: fresh-directory Core/Enterprise jobs, JSA drafts, schedule assignments, internal messages, study state, one-hour completed shifts and Enterprise checklist/report snapshot. Built ignored .local-data/unified-demo-20260925. Full regression: 137 passed, 12 PostgreSQL skipped (149 total). Tests cover persisted records, last-run destination refusal, member/team and cross-organization boundaries, and cloud refusal. Browser inventory locates the enterprise-gemma2 Cloud Shell tab; resource state has not yet been re-inspected. Next: exact priced cloud configuration/live resource inventory, unified demo geometry and file-level release cleanup manifest. No new paid resources, deployment, external delivery or data deletion.
 
 
