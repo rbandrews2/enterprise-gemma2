@@ -1,5 +1,52 @@
 # Local Atlas intelligence
 
+## September 26 inference repair (current operator instructions)
+
+The original 4B CPU requests timed out. The compact policy now keeps invariant
+rules separate from module guidance, includes related-module facts when asked,
+and retains role/edition boundaries. Operator model choice is allowlisted to
+`gemma3:4b` and `gemma3:1b`; the API caller cannot choose a model or destination.
+The default remains 4B; the local development preview explicitly selects 1B.
+Cut-off (`done_reason=length`) responses are rejected rather than shown as finished.
+Diagnostic logs contain timing/model/token counts and error class, not prompt text.
+
+On this Intel N150 computer, the 1B model completed all eight CPU module cases in
+49-62 seconds. Integrated graphics evaluation is recorded separately in
+ATLAS_INFERENCE_REPAIR_20260926.md. The larger model's warm graphics request took
+85.56 seconds; cold startup still timed out. None of these measurements establishes
+production capacity or work-zone recommendation quality.
+
+Start the runtime, preload, then start the preview (separate terminals):
+
+```powershell
+.venv/Scripts/python.exe scripts/start_atlas_runtime.py --integrated-gpu
+.venv/Scripts/python.exe scripts/warm_atlas_model.py --model gemma3:1b
+.venv/Scripts/python.exe scripts/start_workspace_preview.py --atlas --atlas-model gemma3:1b
+```
+
+The integrated-GPU flag is local and opt-in; it changes no driver, global setting,
+firewall or cloud configuration. Without it, the runtime uses its normal device
+selection. Preloading separates startup from the bounded browser request timeout.
+Chat keeps the model loaded for 15 idle minutes; closing the runtime stops it.
+The 1B model is a development fallback, not the selected production model.
+
+To reproduce real module tests against an isolated synthetic SQLite workspace:
+
+```powershell
+.venv/Scripts/python.exe scripts/evaluate_atlas_modules.py --model gemma3:1b --output .local-data/atlas-runtime/new-evaluation.json
+```
+
+Use a new output filename; `--pages work_orders time_clock` restricts a benchmark.
+The tool records actual responses and latency, fails fast on transport failure,
+and does not claim that HTTP success proves answer quality. Inspect answers.
+
+The additional 1B manifest SHA256 is
+`8648f39daa8fbf5b18c7b4e6a8fb4990c692751d49917417b8842ca5758e7ffc`.
+[Official model details](https://ollama.com/library/gemma3:1b),
+[official GPU documentation](https://github.com/ollama/ollama/blob/main/docs/gpu.mdx),
+and [official preload guidance](https://github.com/ollama/ollama/blob/main/docs/faq.mdx).
+Older measurements and launch commands below describe earlier checkpoints.
+
 ## Product identity
 
 Customer-facing wording: **WZOS powered by Atlas AI Assistant**. Backend model names belong in operator configuration and technical documentation. Atlas helps across all functions and both editions; advanced planning remains an Enterprise entitlement. No production deployment occurred.

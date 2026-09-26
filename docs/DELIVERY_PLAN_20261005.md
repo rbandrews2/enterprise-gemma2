@@ -63,3 +63,7 @@ and isolated native backup restoration (16 tables / 34 rows). See
 STAGING_ACCEPTANCE_20260926.md and STORAGE_RESTORE_ACCEPTANCE_20260926.md.
 Four operational alert policies are now enabled without recipients; notification acceptance is pending. Atlas module-context regression passed, but real local inference timed out. See ALERTS_ATLAS_ACCEPTANCE_20260926.md. Next: recipient/channel delivery validation, then resolve inference latency and finish real Atlas/module acceptance. The September 30 integrated model target is at risk until these gates pass.
 Scanning and real verification/recovery email delivery remain launch gates. Existing V1 services and DNS remain unchanged.
+
+## September 26 evening AI update
+
+Local transport repaired and eight live module requests completed in 13-27 seconds with the small development model and integrated graphics. Answer quality is not accepted: training uncertainty and stale-checklist omission remain. A prompt experiment that misstated member permissions was reverted. See ATLAS_INFERENCE_REPAIR_20260926.md. Next: authenticated cloud inventory and a priced stronger-model test; no new paid inference has been approved or provisioned.

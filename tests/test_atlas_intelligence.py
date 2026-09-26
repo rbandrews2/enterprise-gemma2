@@ -45,6 +45,7 @@ class IntelligenceTests(unittest.TestCase):
         async def check():
             for response,valid in [(httpx.Response(200,json={"done":True,"message":{"content":"Use Save changes."}}),True),
                                    (httpx.Response(503),False),
+                                   (httpx.Response(200,json={"done":True,"done_reason":"length","message":{"content":"Incomplete sentence"}}),False),
                                    (httpx.Response(200,json={"done":True,"message":{"content":""}}),False),
                                    (httpx.Response(200,content=b"x"*70000),False)]:
                 engine=LocalIntelligence(httpx.MockTransport(lambda req:response))
@@ -56,6 +57,38 @@ class IntelligenceTests(unittest.TestCase):
             with self.assertRaises(ModelUnavailable):
                 await LocalIntelligence(httpx.MockTransport(timeout)).reply(ChatInput(question="Help"),{})
         with patch.dict(os.environ,{"WZOS_ATLAS_LOCAL_MODEL":"1"}): asyncio.run(check())
+
+    def test_cross_module_help_keeps_role_and_edition_limits(self):
+        from services.workspace_preview.intelligence import related_module_context
+        result=related_module_context('Assign a schedule and show Work Zone Report', 'forms', 'member', 'core')
+        self.assertEqual([item['module'] for item in result], ['schedule'])
+        self.assertIn('Ask an admin',result[0]['guidance'])
+        result=related_module_context('Where do I enter vehicle inspection defects?', 'work_orders', 'admin', 'enterprise')
+        self.assertEqual([item['module'] for item in result], ['forms'])
+        self.assertIn('never clears',result[0]['guidance'])
+
+    def test_model_selection_and_compact_transport_policy(self):
+        import json
+        from services.workspace_preview.intelligence import GUIDE
+        captured = []
+        def transport(request):
+            if request.method == 'GET':
+                return httpx.Response(200, json={'models':[{'name':'gemma3:1b'}]})
+            captured.append(json.loads(request.content))
+            return httpx.Response(200,json={'done':True,'message':{'content':'Open Forms hub.'}})
+        async def check():
+            engine=LocalIntelligence(httpx.MockTransport(transport))
+            self.assertTrue(await engine.ready())
+            await engine.reply(ChatInput(page='forms',question='Help'), {'role':'member','page':'forms'})
+        with patch.dict(os.environ, {'WZOS_ATLAS_LOCAL_MODEL':'1','WZOS_ATLAS_MODEL':'gemma3:1b'}):
+            asyncio.run(check())
+        self.assertEqual(captured[0]['model'], 'gemma3:1b')
+        self.assertEqual(captured[0]['options']['num_thread'],2)
+        self.assertIn('NO tools', captured[0]['messages'][0]['content'])
+        self.assertIn('never invent requirements', GUIDE)
+        self.assertLess(len(GUIDE),1600)
+        with patch.dict(os.environ, {'WZOS_ATLAS_MODEL':'unreviewed-cloud-model'}):
+            with self.assertRaises(ValueError): LocalIntelligence()
 
     def test_disabled_and_busy(self):
         async def check():
