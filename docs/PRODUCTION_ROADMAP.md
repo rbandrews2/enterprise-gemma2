@@ -2,9 +2,9 @@
 
 Owner: Molecular Project Development LLC (formerly Superior Consultation LLC).
 Product: WZOS powered by Atlas AI Assistant. Updated 2026-09-22.
-Target: Core and Enterprise editions at app.workzoneos.org, with member/admin access; marketing stays at workzoneos.org. No production date or cutover approval is implied.
+Target: Core and Enterprise editions at app.workzoneos.org, with member/admin access; marketing stays at workzoneos.org. Targets: working test model September 30 and production readiness October 5, 2026. Cutover remains a separate decision.
 
-## Active next steps (2026-09-24)
+## Active next steps (2026-09-25)
 
 Two access levels: admin (high level) and member (basic). Owner is normalized to
 admin; all admins have equal organization authority. See DATA_CONSOLIDATION_PLAN.md
@@ -16,6 +16,8 @@ for the combined recovered/new-data migration and release-cleanup sequence.
 4. Validate durable identity/storage, then resume the remaining module and release gates below.
 
 The earlier deployment/test counts below are historical checkpoints, not current local results.
+
+See [dated delivery plan](DELIVERY_PLAN_20261005.md) for the current critical path and acceptance criteria.
 
 ## Current verified checkpoint
 
@@ -97,4 +99,4 @@ Enterprise-only AI-assisted dispatch through Messaging is now an explicit requir
 
 ## Resume procedure
 
-Read SESSION_HANDOFF.md, this roadmap and current Git status before coding. Begin item 1, inspect existing imagery implementation and credential metadata before creating anything new. Keep local/GitHub source synchronized and record exact staging image commits. Cloud Shell proxy links are session-dependent; reconnect and check existing service state before redeploying. Use synthetic records until item 4 passes. Do not retry old deployment commands from historical handoff paragraphs.
+Read SESSION_HANDOFF.md, this roadmap and current Git status before coding. Follow DELIVERY_PLAN_20261005.md and the latest handoff; inspect current cloud state and finalize priced configuration before provisioning. Keep local/GitHub source synchronized and record exact staging image commits. Cloud Shell proxy links are session-dependent; reconnect and check existing service state before redeploying. Use synthetic records until item 4 passes. Do not retry old deployment commands from historical handoff paragraphs.
