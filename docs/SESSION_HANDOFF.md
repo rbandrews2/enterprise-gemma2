@@ -4,6 +4,9 @@ Ray authorized a separate restricted Google Cloud V2 staging deployment. Product
 
 ## Latest resume checkpoint
 
+September 26 follow-up COMPLETE: first two persistent-staging checklist items accepted. Final Cloud Run account revision wzos-v2-accounts-00004-fc6, source 0e47a14. Bounded PostgreSQL pool, non-nested authenticated reads, explicit Cloud Shell application-token header. Managed tests 29/29 passed; local regression 138 passed/16 PostgreSQL skipped locally (all 16 passed on managed SQL); two JS refresh tests passed. Real provider and browser admin/member/email-verification/tenant checks passed; member saved/reloaded a work order. See STAGING_ACCEPTANCE_20260926.md. Next: private Google file round trips/integrity and replacement persistence, then backup restoration. Production remains gated; no V1 changes. Older connection-failure and awaiting-approval entries below are historical.
+
+
 September 26 approved provisioning: persistent account staging is deployed as wzos-v2-accounts-00001-nch from 9e03a8b. Cloud SQL, private files, Identity Platform, scoped secrets/runtime identity and project budget alerts created. Anonymous HTTP 403 / authorized HTTP 200 verified. Managed account test run: 18 passed, four failures, two errors with intermittent SQL proxy connection refusals; acceptance remains OPEN. See STAGING_PROVISIONING_20260926.md for exact resources, evidence, hardening and ordered next steps. Resume with database connectivity and acceptance, then real browser sign-in/private-file and restore tests. No V1 cutover. Older awaiting-approval paragraphs below are historical.
 
 

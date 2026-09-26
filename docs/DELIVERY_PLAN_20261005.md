@@ -57,7 +57,8 @@ earlier scenarios and a file-level reuse/removal manifest remain next local work
 
 ## Next cloud action
 
-Inspect the authorized Cloud Shell's actual project/service/API state and reuse
-existing resources where suitable. Finalize the exact priced staging configuration
-before asking Ray to approve paid provisioning. Earlier cost estimates are dated
-planning evidence, not a current all-in quote. Do not run historical deployment scripts.
+Priced staging scope was approved and provisioned September 26. Account staging
+revision wzos-v2-accounts-00004-fc6 passed database and identity acceptance;
+see STAGING_ACCEPTANCE_20260926.md for evidence and limitations. Next validate
+private Google file round trips, instance-replacement persistence and backup
+restoration, then operational alerts. Existing V1 services and DNS remain unchanged.

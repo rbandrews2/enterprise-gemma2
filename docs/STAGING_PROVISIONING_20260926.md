@@ -51,7 +51,11 @@ Resources below are billable now. This is restricted staging, not production acc
   to CONNECT/CREATE on wzos and USAGE/CREATE on public schema. App owns its tables.
   Separating schema migration credentials from runtime remains a production gate.
 
-## Next acceptance steps (in order)
+## Follow-up status (September 26)
+
+Items 1 and 2 below are complete for restricted staging. See STAGING_ACCEPTANCE_20260926.md for the final passing evidence and current revision. Earlier failed runs above remain historical evidence. Next: item 3, then item 4.
+
+## Acceptance sequence
 
 1. Diagnose intermittent SQL proxy connection failures; repeat PostgreSQL tests from
    a stable connection and confirm deployed runtime behavior. Do not hide failures.

@@ -1,5 +1,7 @@
 # Must complete before launch
 
+Latest evidence (September 26): restricted Google account staging now passes database and identity acceptance; see [acceptance evidence](STAGING_ACCEPTANCE_20260926.md). Production identity/storage gates below remain open for customer ingress, real email/recovery delivery, private cloud-file acceptance, scanning, restore and operational readiness. Older unprovisioned/blocked notes are historical.
+
 See [PRODUCTION_ROADMAP.md](PRODUCTION_ROADMAP.md) for the current ordered delivery plan and production acceptance endpoint. The dated findings below are historical evidence; verify current configuration before closing any gate.
 
 Owner: Molecular Project Development LLC. Product: WZOS powered by Atlas AI Assistant.
