@@ -6,6 +6,8 @@ Target: Core and Enterprise editions at app.workzoneos.org, with member/admin ac
 
 ## Active next steps (2026-09-26)
 
+Current update: restricted account service is now revision 00006-gjq with managed access tests and eight Atlas guides passed. See STAGING_UPDATE_20260926.md. Full-size production Atlas engine is now the priority; see ATLAS_PRODUCTION_ENGINE.md for priced 26B/31B options. Managed adapter is local-only, disabled and not model-quality accepted. New inference spending remains unapproved.
+
 Two access levels: admin (high level) and member (basic). Owner is normalized to
 admin; all admins have equal organization authority. See DATA_CONSOLIDATION_PLAN.md
 for the combined recovered/new-data migration and release-cleanup sequence.

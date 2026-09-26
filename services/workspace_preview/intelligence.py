@@ -211,4 +211,7 @@ def configured_intelligence():
     if provider == 'cloud_run':
         from services.workspace_preview.cloud_intelligence import CloudRunIntelligence
         return CloudRunIntelligence()
+    if provider == 'managed_gemma':
+        from services.workspace_preview.managed_intelligence import ManagedGemmaIntelligence
+        return ManagedGemmaIntelligence()
     raise ValueError('Unsupported Atlas provider configuration')
