@@ -147,7 +147,8 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
     accounts = None
     if account_workspace:
         from services.workspace_preview.accounts import Accounts, FirebaseVerifier
-        accounts = Accounts(connect, verifier or FirebaseVerifier(os.environ["WZOS_AUTH_PROJECT"]))
+        accounts = Accounts(connect, verifier or FirebaseVerifier(os.environ["WZOS_AUTH_PROJECT"]),
+                            auth_header=os.getenv('WZOS_ACCOUNT_AUTH_HEADER', 'Authorization'))
     hosted = private_staging or (account_workspace and bool(os.getenv("K_SERVICE")))
     from contextlib import asynccontextmanager
     @asynccontextmanager
@@ -286,7 +287,7 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
     @app.get("/api/identities")
     def identities(request: Request):
         if accounts:
-            return {"mode":"verified_accounts", "identities":[], "auth_api_key":os.getenv("WZOS_AUTH_WEB_API_KEY",""), "auth_emulator":auth_emulator}
+            return {"mode":"verified_accounts", "identities":[], "auth_api_key":os.getenv("WZOS_AUTH_WEB_API_KEY",""), "auth_emulator":auth_emulator, "auth_header":accounts.auth_header}
         return {"mode": "restricted_staging" if private_staging else "synthetic_local_preview",
                 "identities": [ACTORS["enterprise-admin"]] if private_staging else list(ACTORS.values())}
 

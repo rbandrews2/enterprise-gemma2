@@ -54,7 +54,10 @@ class MembershipChange(BaseModel):
 
 
 class Accounts:
-    def __init__(self, connect, verify):
+    def __init__(self, connect, verify, auth_header='Authorization'):
+        if auth_header not in ('Authorization', 'X-WZOS-Authorization'):
+            raise ValueError('Unsupported authentication header')
+        self.auth_header = auth_header
         self.connect, self.verify = connect, verify
         with connect() as db:
             for sql in (
@@ -74,7 +77,7 @@ class Accounts:
         cached = getattr(request.state, 'verified_identity', None)
         if cached:
             return cached
-        header = request.headers.get('authorization', '')
+        header = request.headers.get(self.auth_header, '')
         if not header.startswith('Bearer ') or len(header) > 8192:
             raise HTTPException(401, 'Sign in to continue')
         try:

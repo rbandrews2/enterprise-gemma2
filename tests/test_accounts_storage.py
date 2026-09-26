@@ -53,6 +53,14 @@ class AccountStorageTests(unittest.TestCase):
         self.assertEqual(self.client.get('/api/account',headers=self.headers('other')).status_code,403)
         self.assertEqual(self.client.get('/api/orders',headers=self.headers()).json()['items'],[])
 
+    def test_explicit_proxy_header_keeps_token_verification_required(self):
+        with patch.dict(os.environ, {'WZOS_ACCOUNT_AUTH_HEADER':'X-WZOS-Authorization'}):
+            self.build()
+        self.assertEqual(self.client.get('/api/identities').json()['auth_header'],'X-WZOS-Authorization')
+        self.assertEqual(self.client.get('/api/account',headers=self.headers()).status_code,401)
+        self.assertEqual(self.client.get('/api/account',headers={'X-WZOS-Authorization':'Bearer creator'}).status_code,200)
+        self.assertEqual(self.client.get('/api/account',headers={'X-WZOS-Authorization':'Bearer forged'}).status_code,401)
+
     def test_hosted_accounts_refuse_auth_emulator(self):
         with patch.dict(os.environ, {'K_SERVICE':'wzos-v2-accounts', 'FIREBASE_AUTH_EMULATOR_HOST':'127.0.0.1:9099'}):
             with self.assertRaisesRegex(RuntimeError, 'authentication emulator'):

@@ -2,6 +2,7 @@
 // Google handles passwords. Tokens remain in memory and are never persisted in localStorage.
 window.wzosAccount = (() => {
  let token=null, refresh=null, expires=0, organization=null, key=null, refreshing=null;
+ let authHeader='Authorization';
  let authBase='https://identitytoolkit.googleapis.com', tokenBase='https://securetoken.googleapis.com';
  const element=(tag,text)=>{const n=document.createElement(tag);if(text)n.textContent=text;return n;};
  async function provider(action,body){
@@ -17,12 +18,14 @@ window.wzosAccount = (() => {
    })().finally(()=>refreshing=null);
    await refreshing;
   }
-  return {Authorization:'Bearer '+token,'X-WZOS-Organization':organization||''};
+  return {[authHeader]:'Bearer '+token,'X-WZOS-Organization':organization||''};
  }
  async function api(path,body,method){
   const r=await fetch(path,{method:method||(body?'POST':'GET'),headers:{'Content-Type':'application/json',...await headers()},...(body?{body:JSON.stringify(body)}:{})});const d=await r.json();if(!r.ok)throw Error(typeof d.detail==='string'?d.detail:'Account request failed');return d;
  }
  async function start(config){
+  authHeader=config.auth_header||'Authorization';
+  if(!['Authorization','X-WZOS-Authorization'].includes(authHeader))throw Error('Sign-in configuration is unavailable.');
   key=config.auth_api_key;
   if(config.auth_emulator){
    if(!['127.0.0.1','localhost'].includes(location.hostname)||config.auth_emulator!=='http://127.0.0.1:9099')throw Error('Local authentication configuration refused.');

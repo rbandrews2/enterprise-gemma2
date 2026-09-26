@@ -62,12 +62,16 @@ def main():
         key = gc('secrets', 'versions', 'access', 'latest', '--secret=wzos-v2-staging-auth-web-key')
         url = gc('run', 'services', 'describe', SERVICE, '--region=us-central1', '--format=value(status.url)')
         iam = gc('auth', 'print-identity-token')
+        config=requests.get(url+'/api/identities',headers={'X-Serverless-Authorization':'Bearer '+iam},timeout=30)
+        assert config.status_code==200
+        auth_header=config.json().get('auth_header','Authorization')
+        assert auth_header in ('Authorization','X-WZOS-Authorization')
         def provider(action, data):
             r = requests.post('https://identitytoolkit.googleapis.com/v1/accounts:' + action, params={'key':key}, json=data, headers={'Referer':ORIGIN+'/'}, timeout=30)
             assert r.status_code == 200, 'Provider request failed: '+str(r.status_code)
             return r.json()
         def call(path, who='admin', org=None, body=None, method='GET', expected=200, token=None, include_iam=True):
-            h = {'Authorization':'Bearer '+(token or state['users'][who]['idToken']), 'Origin':ORIGIN}
+            h = {(auth_header if include_iam else 'Authorization'):'Bearer '+(token or state['users'][who]['idToken']), 'Origin':ORIGIN}
             if include_iam: h['X-Serverless-Authorization'] = 'Bearer '+iam
             h['X-WZOS-Organization'] = org if org is not None else state['orgs'].get('main','')
             r = requests.request(method, url+path, json=body, headers=h, timeout=40)

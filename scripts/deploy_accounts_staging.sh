@@ -17,7 +17,7 @@ gcloud run deploy "$service" --project="$project" --region="$region" \
   --min-instances=0 --max-instances=2 --concurrency=8 --cpu=1 --memory=512Mi \
   --timeout=60 --cpu-throttling \
   --add-cloudsql-instances=enterprise-gemma2:us-central1:wzos-v2-staging-db \
-  --set-env-vars="^|^WZOS_ACCOUNT_WORKSPACE=1|WZOS_AUTH_PROJECT=enterprise-gemma2|WZOS_FILES_BUCKET=enterprise-gemma2-wzos-v2-files-staging|WZOS_ACCOUNT_ORIGINS=${WZOS_ACCOUNT_ORIGINS:-}" \
+  --set-env-vars="^|^WZOS_ACCOUNT_WORKSPACE=1|WZOS_AUTH_PROJECT=enterprise-gemma2|WZOS_FILES_BUCKET=enterprise-gemma2-wzos-v2-files-staging|WZOS_ACCOUNT_ORIGINS=${WZOS_ACCOUNT_ORIGINS:-}|WZOS_ACCOUNT_AUTH_HEADER=${WZOS_ACCOUNT_AUTH_HEADER:-Authorization}" \
   --set-secrets=WZOS_DATABASE_URL=wzos-v2-staging-database-url:latest,WZOS_AUTH_WEB_API_KEY=wzos-v2-staging-auth-web-key:latest --quiet
 gcloud run services get-iam-policy "$service" --project="$project" --region="$region" --format=json > "$context/policy.json"
 python3 - "$context/policy.json" <<'PY'
