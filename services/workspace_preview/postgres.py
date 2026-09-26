@@ -43,14 +43,26 @@ class PostgreSQLStorage:
         if not dsn:
             raise ValueError('Database connection is required')
         self.dsn = dsn
+        from psycopg_pool import ConnectionPool
+        # At most eight database connections across the two staging instances.
+        # Acquire retries happen before work starts; transactions are never replayed.
+        self.pool = ConnectionPool(
+            dsn, min_size=0, max_size=4, open=True, timeout=15,
+            max_waiting=16, max_idle=60, reconnect_timeout=30,
+            kwargs={'row_factory': row_factory, 'connect_timeout': 5},
+            check=ConnectionPool.check_connection,
+        )
+
+    def close(self):
+        self.pool.close()
 
     @contextmanager
     def connect(self):
         import psycopg
         try:
-            with psycopg.connect(self.dsn, row_factory=row_factory, connect_timeout=10) as connection:
-                connection.execute("SET statement_timeout = '15s'")
-                connection.execute("SET lock_timeout = '5s'")
+            with self.pool.connection() as connection:
+                connection.execute("SET LOCAL statement_timeout = '15s'")
+                connection.execute("SET LOCAL lock_timeout = '5s'")
                 yield Connection(connection)
         except psycopg.Error as error:
             raise sqlite3.DatabaseError('Database operation failed') from error

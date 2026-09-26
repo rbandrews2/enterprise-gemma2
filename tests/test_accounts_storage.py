@@ -193,4 +193,25 @@ class PostgreSQLAccountStorageTests(AccountStorageTests):
             with psycopg.connect(dsn,autocommit=True) as db: db.execute('DROP SCHEMA '+schema+' CASCADE')
         self.addCleanup(cleanup)
         storage=PostgreSQLStorage(make_conninfo(dsn,options='-c search_path='+schema))
+        self.addCleanup(storage.close)
         storage.initialize();return storage
+
+    def test_pool_reuses_connection_and_rolls_back_failed_work(self):
+        import sqlite3
+        with self.storage.connect() as db:
+            first=db.execute('SELECT pg_backend_pid()').fetchone()[0]
+        with self.assertRaises(sqlite3.DatabaseError):
+            with self.storage.connect() as db:
+                db.execute("INSERT INTO accounts VALUES ('rollback-user','rollback@example.test','Rollback')")
+                db.execute('SELECT 1/0')
+        with self.storage.connect() as db:
+            self.assertEqual(db.execute('SELECT pg_backend_pid()').fetchone()[0],first)
+            self.assertEqual(db.execute("SELECT count(*) FROM accounts WHERE id='rollback-user'").fetchone()[0],0)
+
+    def test_pool_replaces_closed_connection_before_work(self):
+        with self.storage.connect() as db:
+            first=db.execute('SELECT pg_backend_pid()').fetchone()[0]
+        with self.storage.pool.connection() as connection:
+            connection.close()
+        with self.storage.connect() as db:
+            self.assertNotEqual(db.execute('SELECT pg_backend_pid()').fetchone()[0],first)

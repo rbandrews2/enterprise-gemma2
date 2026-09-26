@@ -89,6 +89,7 @@ class ChecklistInput(BaseModel):
 
 
 def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=None, *, private_staging=False, account_workspace=False, storage=None, verifier=None, file_store=None):
+    owns_storage = account_workspace and storage is None
     auth_emulator = None
     if account_workspace:
         if private_staging or os.getenv("WZOS_ACCOUNT_WORKSPACE") != "1":
@@ -148,7 +149,15 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
         from services.workspace_preview.accounts import Accounts, FirebaseVerifier
         accounts = Accounts(connect, verifier or FirebaseVerifier(os.environ["WZOS_AUTH_PROJECT"]))
     hosted = private_staging or (account_workspace and bool(os.getenv("K_SERVICE")))
-    app = FastAPI(title="WZOS synthetic workspace preview", docs_url=None, redoc_url=None, openapi_url=None)
+    from contextlib import asynccontextmanager
+    @asynccontextmanager
+    async def lifespan(app):
+        try:
+            yield
+        finally:
+            if owns_storage:
+                storage.close()
+    app = FastAPI(title="WZOS synthetic workspace preview", docs_url=None, redoc_url=None, openapi_url=None, lifespan=lifespan)
 
     @app.middleware("http")
     async def local_boundary(request: Request, call_next):
