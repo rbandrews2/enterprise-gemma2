@@ -32,7 +32,7 @@ def main():
     from services.workspace_preview.accounts import Accounts
 
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('action', choices=['prepare', 'verify', 'disable'])
+    parser.add_argument('action', choices=['prepare', 'resume', 'verify', 'disable'])
     parser.add_argument('--state', required=True, type=Path)
     args = parser.parse_args()
     if os.getenv('K_SERVICE') or os.getenv('FIREBASE_AUTH_EMULATOR_HOST'):
@@ -73,10 +73,14 @@ def main():
             r = requests.request(method, url+path, json=body, headers=h, timeout=40)
             assert r.status_code == expected, path+' expected '+str(expected)+' received '+str(r.status_code)
             return r.json() if r.headers.get('content-type','').startswith('application/json') else {}
-        if args.action == 'prepare':
+        if args.action in ('prepare', 'resume'):
             password = os.environ['WZOS_SYNTHETIC_PASSWORD']
             suffix = uuid4().hex[:10]
             for role in ('admin','member','other','unverified'):
+                if role in state['users']:
+                    tokens=provider('signInWithPassword',{'email':state['users'][role]['email'],'password':password,'returnSecureToken':True})
+                    state['users'][role].update(idToken=tokens['idToken'],refreshToken=tokens['refreshToken']);save()
+                    continue
                 email = 'wzos-'+role+'-'+suffix+'@example.test'
                 user = auth.create_user(email=email, password=password, email_verified=role!='unverified', display_name='Synthetic '+role, app=app)
                 state['users'][role]={'uid':user.uid,'email':email};save()
@@ -84,6 +88,8 @@ def main():
                 state['users'][role].update(idToken=tokens['idToken'],refreshToken=tokens['refreshToken']);save()
             accounts=Accounts(db.connect, None)
             for name,who in (('main','admin'),('other','other')):
+                if name in state['orgs']:
+                    continue
                 code=accounts.issue_activation('enterprise',hours=1)
                 result=call('/api/account/organizations',who,body={'name':'Synthetic acceptance '+name+' '+suffix,'activation_code':code},method='POST')
                 state['orgs'][name]=result['id'];save()
