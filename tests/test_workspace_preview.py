@@ -54,6 +54,14 @@ class WorkspacePreviewTests(unittest.TestCase):
                 self.assertEqual((await remote.get("/")).status_code, 403)
         asyncio.run(remote_check())
 
+    def test_external_link_navigation_keeps_api_and_host_protection(self):
+        headers = {"Sec-Fetch-Site": "cross-site", "Sec-Fetch-Mode": "navigate"}
+        self.assertEqual(self.client.get("/", headers=headers).status_code, 200)
+        self.assertEqual(self.client.get("/api/orders", headers={**headers, **self.headers()}).status_code, 403)
+        self.assertEqual(self.client.post("/api/orders", headers={**headers, **self.headers()}, json=self.payload()).status_code, 403)
+        self.assertEqual(self.client.get("/", headers={**headers, "Host": "evil.example"}).status_code, 403)
+        self.assertEqual(self.client.get("/", headers={**headers, "Sec-Fetch-Mode": "cors"}).status_code, 403)
+
     def test_four_combinations_and_tenant_isolation(self):
         for actor_id, actor in ACTORS.items():
             with self.subTest(actor=actor_id):

@@ -173,9 +173,11 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
             allowed_origins = {expected_origin, *os.getenv("WZOS_ACCOUNT_ORIGINS" if account_workspace else "WZOS_STAGING_ORIGINS", "").split(",")}
         else:
             allowed_origins = {expected_origin}
-        staging_navigation = ((hosted or account_workspace) and request.method == "GET" and request.url.path == "/"
-                              and request.headers.get("sec-fetch-mode") == "navigate")
-        if not staging_navigation and ((origin and origin not in allowed_origins) or request.headers.get("sec-fetch-site") == "cross-site"):
+        # Opening the workspace from another page is navigation, not API access.
+        # Keep the loopback/Host boundary above and all API origin checks intact.
+        workspace_navigation = (request.method == "GET" and request.url.path == "/"
+                                and request.headers.get("sec-fetch-mode") == "navigate")
+        if not workspace_navigation and ((origin and origin not in allowed_origins) or request.headers.get("sec-fetch-site") == "cross-site"):
             return JSONResponse({"error": "same_origin_only"}, status_code=403)
         request.state.maps_nonce = secrets.token_urlsafe(24) if os.getenv("WZOS_GOOGLE_MAPS_BROWSER_KEY", "").strip() else None
         response = await call_next(request)
