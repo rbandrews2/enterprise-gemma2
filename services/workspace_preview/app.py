@@ -389,8 +389,9 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
 
     @app.get("/api/orders/{order_id}")
     def read_order(order_id: str, request: Request):
+        selected = actor(request)
         with connect() as conn:
-            return serialize(permitted_row(conn, order_id, actor(request)))
+            return serialize(permitted_row(conn, order_id, selected))
 
     @app.put("/api/orders/{order_id}")
     def update_order(order_id: str, payload: UpdateOrder, request: Request):
@@ -412,8 +413,9 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
 
     @app.get("/api/orders/{order_id}/checklist")
     def read_checklist(order_id: str, request: Request, version: int | None = Query(None, ge=1)):
+        selected = actor(request)
         with connect() as conn:
-            order = permitted_row(conn, order_id, actor(request))
+            order = permitted_row(conn, order_id, selected)
             latest = conn.execute("SELECT MAX(version) FROM preview_checklists WHERE order_id=?", (order_id,)).fetchone()[0] or 0
             row = conn.execute("SELECT * FROM preview_checklists WHERE order_id=? AND version=?", (order_id, version or latest)).fetchone()
             if version and not row:

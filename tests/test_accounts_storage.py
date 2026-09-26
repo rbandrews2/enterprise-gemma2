@@ -223,3 +223,9 @@ class PostgreSQLAccountStorageTests(AccountStorageTests):
             connection.close()
         with self.storage.connect() as db:
             self.assertNotEqual(db.execute('SELECT pg_backend_pid()').fetchone()[0],first)
+
+    def test_reads_do_not_hold_a_connection_while_authenticating(self):
+        self.storage.pool.resize(0, 1)
+        self.add('member');order=self.order()
+        self.assertEqual(self.client.get('/api/orders/'+order,headers=self.headers('member')).status_code,200)
+        self.assertEqual(self.client.get('/api/orders/'+order+'/checklist',headers=self.headers('member')).status_code,200)
