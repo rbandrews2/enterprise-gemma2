@@ -77,13 +77,13 @@ class TimeClockTests(unittest.TestCase):
             async def reply(self,payload,context):self.context=context;return 'Use the time clock controls.'
         fake=Fake();self.command('clock_in',task='travel')
         with TestClient(create_app(self.db,Store(Path(self.temp.name)/'sources',{}),fake)) as client:
-            response=client.post('/api/assistant/chat',headers=self.headers,json={'question':'Am I clocked in?'})
+            response=client.post('/api/assistant/chat',headers=self.headers,json={'question':'Summarize my clock status without changing it.'})
             self.assertEqual(response.status_code,200)
             self.assertEqual(fake.context['time_clock']['status'],'working')
             self.assertEqual(fake.context['time_clock']['task'],'travel')
             self.assertEqual(response.json()['actions_performed'],[])
             self.assertIn('time_clock',[a['id'] for a in response.json()['navigation']])
-            client.post('/api/assistant/chat',headers={'X-Preview-Actor':'core-admin'},json={'question':'Am I clocked in?'})
+            client.post('/api/assistant/chat',headers={'X-Preview-Actor':'core-admin'},json={'question':'Summarize my clock status without changing it.'})
             self.assertEqual(fake.context['time_clock']['status'],'off_clock')
 
     def test_concurrent_clock_ins_allow_one_shift(self):

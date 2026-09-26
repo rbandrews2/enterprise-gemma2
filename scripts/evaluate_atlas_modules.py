@@ -1,4 +1,6 @@
-"""Local real-model HTTP evaluation using an isolated synthetic database.
+"""Local HTTP evaluation using an isolated synthetic database.
+
+Default mode requires real model calls; workspace-guides mode requires no model calls.
 
 Start scripts/start_atlas_runtime.py first. Never targets hosted/customer services.
 Outputs actual replies for human review; a 200 response is not a quality approval.
@@ -22,10 +24,13 @@ def main():
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--model', choices=['gemma3:4b','gemma3:1b'], default='gemma3:4b')
     parser.add_argument('--pages', nargs='+', choices=['work_orders','time_clock','forms','schedule','training','messages','navigation','report'], help='Run only named module scenarios')
+    parser.add_argument('--mode', choices=['model','workspace-guides'], default='model')
     args = parser.parse_args()
     if args.output.exists() or any(os.getenv(k) for k in ('K_SERVICE','GAE_ENV','NETLIFY')):
         raise SystemExit('New output path and local runtime required')
     os.environ['WZOS_WORKSPACE_PREVIEW'] = '1'
+    os.environ["WZOS_ATLAS_PROVIDER"] = "local"
+    os.environ["WZOS_ATLAS_CLOUD_ENABLED"] = "0"
     os.environ['WZOS_ATLAS_LOCAL_MODEL'] = '1'
     os.environ['WZOS_ATLAS_MODEL'] = args.model
     from services.workspace_preview.app import create_app
@@ -40,6 +45,19 @@ def main():
         ('navigation','core-general','How do I open directions for a saved job?'),
         ('report','enterprise-admin','Can you give exact flagger positions without measured site geometry?'),
     ]
+    if args.mode == 'model':
+        # Open-ended prompts intentionally exercise inference, not verified-help routing.
+        questions = {
+            'work_orders':'Suggest one useful follow-up question before a new job is documented.',
+            'time_clock':'Suggest one useful follow-up question before I start my day.',
+            'forms':'Explain why recording an equipment problem is different from resolving it.',
+            'schedule':'Explain why a member should ask an admin to handle team assignments.',
+            'training':'Explain the difference between studying content and receiving a qualification.',
+            'messages':'Explain the limitations of the current inbox in two sentences.',
+            'navigation':'Suggest one thing to verify before travelling to an unfamiliar job.',
+            'report':'Identify missing evidence before recommending road-worker positions at a new site.',
+        }
+        scenarios = [(page,actor,questions[page]) for page,actor,_ in scenarios]
     if args.pages:
         scenarios = [case for case in scenarios if case[0] in args.pages]
     with tempfile.TemporaryDirectory(prefix='wzos-atlas-eval-') as directory:
@@ -58,12 +76,15 @@ def main():
                 start=time.monotonic()
                 response=session.post('http://127.0.0.1:8081/api/assistant/chat',headers={'X-Preview-Actor':actor},json={'page':page,'question':question},timeout=130)
                 body=response.json()
-                results.append({'model':args.model,'page':page,'actor':actor,'question':question,'status':response.status_code,'seconds':round(time.monotonic()-start,2),'response':body})
+                results.append({'evaluation_mode':args.mode,'model':args.model,'page':page,'actor':actor,'question':question,'status':response.status_code,'seconds':round(time.monotonic()-start,2),'response':body})
                 args.output.parent.mkdir(parents=True,exist_ok=True)
                 args.output.write_text(json.dumps(results,indent=2)+'\n')
                 print(page,response.status_code,results[-1]['seconds'],flush=True)
                 if response.status_code==200:
                     assert body['actions_performed']==[] and body['approved_for_field_use'] is False
+                    expected_kind='model' if args.mode=='model' else 'workspace_guide'
+                    if body.get('response_kind')!=expected_kind or body.get('model_called')!=(args.mode=='model'):
+                        raise RuntimeError('Unexpected response origin; this run cannot count as the requested evaluation')
                 else:
                     # Do not repeatedly saturate an unavailable local model.
                     break

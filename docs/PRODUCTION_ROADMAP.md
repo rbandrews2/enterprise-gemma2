@@ -12,8 +12,8 @@ for the combined recovered/new-data migration and release-cleanup sequence.
 
 1. Restricted managed database, identity, private-file persistence and isolated SQL restore acceptance passed. See STAGING_ACCEPTANCE_20260926.md and STORAGE_RESTORE_ACCEPTANCE_20260926.md. Scanning and real email delivery remain open.
 2. Inventory completed for local sample databases. Ray confirmed V1 data is artificial: consolidate reusable capabilities and build repeatable V2 demo scenarios; selectively migrate useful new geometry/report examples. See DATA_CONSOLIDATION_PLAN.md.
-3. Approved priced Google staging is provisioned. Next configure error/capacity alerts and verify notification delivery; no public cutover.
-4. Continue Atlas and integrated module acceptance, followed by remaining security, customer-ingress and release gates below.
+3. Approved priced Google staging is provisioned. Four error/capacity alert policies exist; notification recipient and delivery verification remain open. No public cutover.
+4. Verified app guidance and local inference transport are tested; small-model answer quality remains open. Private cloud adapter is prepared only (see ATLAS_VERIFIED_GUIDANCE_20260926.md). Continue Atlas and integrated module acceptance, followed by remaining security, customer-ingress and release gates below.
 
 The earlier deployment/test counts below are historical checkpoints, not current local results.
 

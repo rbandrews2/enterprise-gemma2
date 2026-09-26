@@ -35,6 +35,9 @@ class IntelligenceTests(unittest.TestCase):
                             self.assertEqual(fake.context['module_help']['module'],page)
                             self.assertFalse(fake.context['module_help']['module_records_included'])
                             self.assertNotIn('saved_job',fake.context)
+                            if page != 'time_clock':
+                                self.assertNotIn('time_clock',fake.context)
+                                self.assertIsNone(response.json()['time_basis'])
                             self.assertEqual(response.json()['actions_performed'],[])
                             if page == 'schedule' and identity.endswith('general'):
                                 self.assertIn('Ask an admin',fake.context['module_help']['guidance'])

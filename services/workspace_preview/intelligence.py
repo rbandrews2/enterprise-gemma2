@@ -135,27 +135,38 @@ async def reply_until_disconnected(request, engine, payload, context):
 
 
 class LocalIntelligence:
+    mode = "local"
+
     def __init__(self, transport=None):
         self.model = os.getenv("WZOS_ATLAS_MODEL", MODEL)
         if self.model not in ALLOWED_MODELS:
             raise ValueError("Unsupported local Atlas model")
         self.transport = transport
+        self.url = URL
         self.gate = asyncio.Lock()
 
+    def enabled(self):
+        return os.getenv("WZOS_ATLAS_LOCAL_MODEL") == "1"
+
+    async def request_headers(self):
+        return {}
+
     async def ready(self):
-        if os.getenv("WZOS_ATLAS_LOCAL_MODEL") != "1":
+        if not self.enabled():
             return False
         try:
-            async with httpx.AsyncClient(transport=self.transport, trust_env=False, timeout=3) as client:
-                response = await client.get(URL + "/api/tags")
-                response.raise_for_status()
-                return any(m.get("name") == self.model for m in response.json().get("models", []))
-        except (httpx.HTTPError, ValueError, TypeError, AttributeError):
+            async with asyncio.timeout(8):
+                headers = await self.request_headers()
+                async with httpx.AsyncClient(transport=self.transport, trust_env=False, timeout=3, follow_redirects=False) as client:
+                    response = await client.get(self.url + "/api/tags", headers=headers)
+                    response.raise_for_status()
+                    return any(m.get("name") == self.model for m in response.json().get("models", []))
+        except (httpx.HTTPError, TimeoutError, ModelUnavailable, ValueError, TypeError, AttributeError):
             return False
 
     async def reply(self, payload, context):
-        if os.getenv("WZOS_ATLAS_LOCAL_MODEL") != "1":
-            raise ModelUnavailable("Atlas conversation is not enabled on this computer.")
+        if not self.enabled():
+            raise ModelUnavailable("Atlas conversation is not enabled in this workspace.")
         if self.gate.locked():
             raise ModelUnavailable("Atlas is answering another request. Please try again shortly.")
         async with self.gate:
@@ -167,8 +178,9 @@ class LocalIntelligence:
             messages.append({"role": "user", "content": payload.question})
             try:
                 async with asyncio.timeout(120):
-                    async with httpx.AsyncClient(transport=self.transport, trust_env=False, timeout=110) as client:
-                        async with client.stream("POST", URL + "/api/chat", json={
+                    headers = await self.request_headers()
+                    async with httpx.AsyncClient(transport=self.transport, trust_env=False, timeout=110, follow_redirects=False) as client:
+                        async with client.stream("POST", self.url + "/api/chat", headers=headers, json={
                             "model": self.model, "messages": messages, "stream": False,
                             "options": {"temperature": 0.2, "num_predict": 192, "num_ctx": 8192, "num_thread": 2},
                             "keep_alive": "15m",
@@ -190,3 +202,13 @@ class LocalIntelligence:
                 logger.warning("Atlas reply failed model=%s elapsed=%.2fs error_type=%s",
                                self.model, time.monotonic()-started, type(error).__name__)
                 raise ModelUnavailable("Atlas could not finish its reply. Your saved work is unchanged; please try again.") from error
+
+
+def configured_intelligence():
+    provider = os.getenv('WZOS_ATLAS_PROVIDER', 'local')
+    if provider == 'local':
+        return LocalIntelligence()
+    if provider == 'cloud_run':
+        from services.workspace_preview.cloud_intelligence import CloudRunIntelligence
+        return CloudRunIntelligence()
+    raise ValueError('Unsupported Atlas provider configuration')

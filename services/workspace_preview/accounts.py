@@ -102,13 +102,13 @@ class Accounts:
         if not row:
             raise HTTPException(403, 'Active organization membership required')
         return {**user, 'membership_role': row['role'],
-                'role': 'admin' if row['role'] == 'admin' else 'general',
+                'role': 'admin' if row['role'] == 'admin' else 'member',
                 'organization_id': row['id'], 'organization': row['name'], 'edition': row['edition']}
 
     def roster(self, selected):
         with self.connect() as db:
             rows = db.execute('SELECT a.id,a.name,m.role FROM accounts a JOIN memberships m ON a.id=m.user_id WHERE m.organization_id=? AND m.active=1', (selected['organization_id'],)).fetchall()
-        return {r['id']: {'id':r['id'],'name':r['name'],'role':'admin' if r['role'] == 'admin' else 'general','organization_id':selected['organization_id']} for r in rows}
+        return {r['id']: {'id':r['id'],'name':r['name'],'role':'admin' if r['role'] == 'admin' else 'member','organization_id':selected['organization_id']} for r in rows}
 
     def audit(self, db, org, actor, action, target):
         db.execute('INSERT INTO access_audit VALUES (?,?,?,?,?,?)', (str(uuid4()),org,actor,action,target,now()))

@@ -87,7 +87,7 @@ class AccountStorageTests(unittest.TestCase):
 
     def test_member_admin_equality_and_revocation(self):
         self.add('member');self.add('admin','admin')
-        self.assertEqual(self.client.get('/api/session',headers=self.headers('member')).json()['role'],'general')
+        self.assertEqual(self.client.get('/api/session',headers=self.headers('member')).json()['role'],'member')
         self.assertEqual(self.client.get('/api/time/entries?team=true',headers=self.headers('member')).status_code,403)
         self.assertEqual(self.client.get('/api/time/entries?team=true',headers=self.headers('admin')).status_code,200)
         change={'role':'admin','active':True}

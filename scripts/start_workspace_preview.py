@@ -23,6 +23,8 @@ if __name__ == "__main__":
         os.environ["WZOS_ATLAS_LOCAL_MODEL"] = "1"
         os.environ["WZOS_ATLAS_MODEL"] = options.atlas_model
     os.environ["WZOS_WORKSPACE_PREVIEW"] = "1"
+    os.environ["WZOS_ATLAS_PROVIDER"] = "local"
+    os.environ["WZOS_ATLAS_CLOUD_ENABLED"] = "0"
     import uvicorn
     uvicorn.run("services.workspace_preview.app:create_app", factory=True,
                 host="127.0.0.1", port=8081 if options.maps else 8083, proxy_headers=False)

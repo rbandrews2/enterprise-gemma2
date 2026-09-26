@@ -20,13 +20,14 @@ from services.v2.knowledge.store import Store
 from services.workspace_preview.atlas_adapter import prepare_order
 from services.workspace_preview.storage import SQLiteStorage
 from services.workspace_preview import timeclock, modules, report_history, team_modules
-from services.workspace_preview.intelligence import ChatInput, ClientDisconnected, LocalIntelligence, ModelUnavailable, navigation_for, reply_until_disconnected
+from services.workspace_preview.assistant_guidance import workspace_guidance
+from services.workspace_preview.intelligence import ChatInput, ClientDisconnected, LocalIntelligence, configured_intelligence, ModelUnavailable, navigation_for, reply_until_disconnected
 
 ROOT = Path(__file__).resolve().parents[2]
 STATIC = Path(__file__).with_name("static")
 ACTORS = {
     f"{edition}-{role}": {"id": f"{edition}-{role}", "edition": edition,
-        "role": role, "organization_id": edition + "-demo",
+        "role": "admin" if role == "admin" else "member", "organization_id": edition + "-demo",
         "organization": "Tidewater Field Team" if edition == "enterprise" else "Piedmont Road Crew",
         "name": "Jordan Lee" if role == "admin" else "Casey Morgan"}
     for edition in ("core", "enterprise") for role in ("admin", "general")
@@ -120,7 +121,7 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
     db_path = db_path or ROOT / ".local-data/workspace-preview/orders.sqlite"
     db_path.parent.mkdir(parents=True, exist_ok=True)
     knowledge_store = knowledge_store if knowledge_store is not None else Store()
-    intelligence = intelligence if intelligence is not None else LocalIntelligence()
+    intelligence = intelligence if intelligence is not None else configured_intelligence()
 
     connect = (storage or SQLiteStorage(db_path)).connect
 
@@ -302,7 +303,7 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
     @app.get("/api/assistant/status")
     async def assistant_status(request: Request):
         actor(request)
-        return {"ready": await intelligence.ready(), "mode": "local", "actions_enabled": False}
+        return {"ready": await intelligence.ready(), "mode": getattr(intelligence, "mode", "local"), "workspace_guides_ready": True, "actions_enabled": False}
 
     @app.post("/api/assistant/chat")
     async def assistant_chat(payload: ChatInput, request: Request):
@@ -312,7 +313,8 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
         from services.workspace_preview.intelligence import module_context
         context = {"edition": selected["edition"], "role": selected["role"], "page": payload.page,
                    "module_help": module_context(payload.page, selected['role'])}
-        context["time_clock"] = timeclock.summary(connect, selected)
+        if payload.page == 'time_clock' or re.search(r'\b(clock(?:ed)?|shift|break|timesheet|payroll)\b', payload.question, re.I):
+            context["time_clock"] = timeclock.summary(connect, selected)
         citations = []
         checklist_basis = None
         if payload.order_id:
@@ -350,15 +352,27 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
                     if len(citations) == 3:
                         break
                 context["candidate_references"] = [{**ref, "text": ref["text"][:600]} for ref in citations]
-        try:
-            answer = await reply_until_disconnected(request, intelligence, payload, context)
-        except ClientDisconnected:
-            return JSONResponse({"detail": "Reply stopped"}, status_code=499)
-        except ModelUnavailable as error:
-            raise HTTPException(503, str(error)) from error
-        return {"answer": answer, "model_called": True, "actions_performed": [],
-                "navigation": navigation_for(payload.question, selected["edition"], bool(payload.order_id), payload.page),
-                "approved_for_field_use": False, "citations": citations, "checklist_basis": checklist_basis, "time_basis": context["time_clock"],
+        guide = workspace_guidance(payload, context)
+        if guide:
+            answer = guide.answer
+        else:
+            try:
+                answer = await reply_until_disconnected(request, intelligence, payload, context)
+            except ClientDisconnected:
+                return JSONResponse({"detail": "Reply stopped"}, status_code=499)
+            except ModelUnavailable as error:
+                raise HTTPException(503, str(error)) from error
+        navigation = navigation_for(payload.question, selected["edition"], bool(payload.order_id), payload.page)
+        if guide and guide.target and guide.target not in {item['id'] for item in navigation}:
+            labels = {'training':'Open Video training','schedule':'Open Schedule management',
+                      'forms':'Open Forms hub','messages':'Open Messaging','navigation':'Open Navigation',
+                      'report':'Open Work Zone Report','checklist':'Open readiness checklist','job_board':'Open job board','time_clock':'Open Time clock'}
+            navigation.append({'id':guide.target,'label':labels[guide.target]})
+        return {"answer": answer, "model_called": guide is None, "actions_performed": [],
+                "response_kind": "workspace_guide" if guide else "model",
+                "guidance_topic": guide.topic if guide else None,
+                "navigation": navigation,
+                "approved_for_field_use": False, "citations": citations, "checklist_basis": checklist_basis, "time_basis": context.get("time_clock"),
                 "order_version": payload.expected_version if payload.order_id else None}
 
     @app.get("/api/orders")
