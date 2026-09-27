@@ -2,6 +2,45 @@
 
 September 26, 2026. Proposal, not a deployed or accepted production engine.
 
+## Selected direction — September 26
+
+Ray selected **self-hosted Gemma on Google Cloud**, following Google's hosting
+recommendations while minimizing charges. This supersedes the managed API
+recommendation and its pending $5 evaluation request below. Do not activate MaaS.
+The selected model target from the compared options is Gemma 4 31B IT.
+
+Use Google's Cloud Run + prebuilt vLLM path, including its advanced large-model
+loading configuration (Direct VPC Egress and Run:ai Model Streamer). Prepare a
+separate private inference service, not the failed legacy service. Reuse existing
+compatible registry/network/storage settings after inspecting them. Preserve V1.
+
+Cost controls for initial evaluation:
+
+- One non-zonally-redundant RTX PRO 6000, 20 vCPU, 80 GiB in us-central1.
+- Minimum instances zero; maximum one at service and revision level. Maximum
+  instances limits capacity, not dollar spend, and transient excess is possible.
+- No always-on instance, keep-warm scheduler, paid health-check inference,
+  reservations or long-term commitments. Cache only authorized results and avoid
+  duplicate model calls; app guides remain deterministic where appropriate.
+- Keep weights in the same region; avoid a continuously billed VPC connector
+  when Direct VPC Egress meets the documented deployment requirements.
+- Validate a pinned image/weight revision, startup settings, quota and vLLM
+  compatibility before deployment. Measure cold starts and latency; scale-to-zero
+  trades idle savings for slower first requests and reduced capacity certainty.
+- Published baseline is about $3.19 per provisioned instance-hour including GPU,
+  CPU and RAM: roughly $6.37 for two hours or $31.87 for ten hours, excluding
+  storage/build/network. Billing includes startup and idle time while an instance
+  exists, not just response generation. Weight storage persists at zero instances.
+- Record an exact bounded first-run estimate and stop procedure before creating
+  paid resources, per the prior price-before-provisioning instruction. A hosting
+  choice does not establish an unlimited monthly spend allowance.
+
+Next implementation: adapt the prepared OpenAI-style transport to private vLLM
+with Cloud Run ID-token authentication, fixed served model and no provider
+fallback. Align request timeouts with measured cold starts without keeping the GPU
+warm just for the status display. Then run the full-size WZOS acceptance suite.
+No paid resources or model calls were made to record this selection.
+
 ## Product direction
 
 Atlas is a central WZOS service across every module. The laptop's Gemma 3 1B
@@ -10,7 +49,7 @@ branding remains **WZOS powered by Atlas AI Assistant**. Use the intended full
 cloud model during restricted acceptance and retain that model for launch once
 quality, capacity, security and availability gates pass.
 
-## Two concrete cloud options
+## Historical comparison (self-hosted selected above)
 
 ### A. Managed Gemma 4 26B A4B IT — recommended first evaluation
 

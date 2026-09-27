@@ -6,6 +6,8 @@ Target: Core and Enterprise editions at app.workzoneos.org, with member/admin ac
 
 ## Active next steps (2026-09-26)
 
+September 26 hosting decision: Ray selected SELF-HOSTED Gemma using Google-recommended Cloud Run/vLLM, minimizing charges. Gemma 4 31B is the selected target; min zero/max one, private IAM, no keep-warm or commitments. The managed API recommendation and pending $5 trial are superseded; do not enable MaaS. Read the selected-direction section of ATLAS_PRODUCTION_ENGINE.md. Next: private vLLM adapter and exact deployment/cost preflight; price-before-provisioning still applies. No resources changed for this decision.
+
 Current update: restricted account service is now revision 00006-gjq with managed access tests and eight Atlas guides passed. See STAGING_UPDATE_20260926.md. Full-size production Atlas engine is now the priority; see ATLAS_PRODUCTION_ENGINE.md for priced 26B/31B options. Managed adapter is local-only, disabled and not model-quality accepted. New inference spending remains unapproved.
 
 Two access levels: admin (high level) and member (basic). Owner is normalized to
