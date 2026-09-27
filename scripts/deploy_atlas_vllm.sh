@@ -14,11 +14,11 @@ for value in "$ATLAS_MODEL_URI" "$ATLAS_RUNTIME_IDENTITY" "$ATLAS_NETWORK" "$ATL
   [[ "$value" != *','* && "$value" != *$'\n'* ]] || exit 2
 done
 image='us-docker.pkg.dev/vertex-ai/vertex-vision-model-garden-dockers/pytorch-vllm-serve@sha256:3fbc0e08c46e7736145c9effbcc8839682c80b15b413335146f4428fc3523c8a'
-args=(serve "$ATLAS_MODEL_URI" --served-model-name google/gemma-4-31B-it
-  --enable-chunked-prefill --enable-prefix-caching --generation-config auto
-  --reasoning-parser gemma4 --dtype bfloat16 --quantization fp8 --kv-cache-dtype fp8
-  --max-num-seqs 2 --max-model-len 32767 --gpu-memory-utilization 0.95
-  --tensor-parallel-size 1 --load-format runai_streamer --port 8080 --host 0.0.0.0)
+args=(serve "$ATLAS_MODEL_URI" --served-model-name=google/gemma-4-31B-it
+  --enable-chunked-prefill --enable-prefix-caching --generation-config=auto
+  --reasoning-parser=gemma4 --dtype=bfloat16 --quantization=fp8 --kv-cache-dtype=fp8
+  --max-num-seqs=2 --max-model-len=32767 --gpu-memory-utilization=0.95
+  --tensor-parallel-size=1 --load-format=runai_streamer --port=8080 --host=0.0.0.0)
 joined=$(IFS=,; echo "${args[*]}")
 cmd=(gcloud beta run deploy wzos-atlas-inference --project enterprise-gemma2
   --labels=wzos-trial=20260926
