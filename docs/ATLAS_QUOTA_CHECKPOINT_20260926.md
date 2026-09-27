@@ -19,9 +19,12 @@ for the same scope. Production, public DNS, V1 and training jobs are outside it.
   It requires actual prepared storage/identity/network values; it is not yet a
   deployed or GPU-validated configuration.
 
-No model bucket, GPU service or live inference was created while quota is pending.
-Avoid paying for unused resources before quota is available. The authorized
-budget has not been used for model compute or weight storage by these actions.
+Subsequent status: quota grantedValue 1000, stateDetail "Quota request approved
+to 1000". Created isolated `wzos-atlas-vpc` / `wzos-atlas-us-central1` subnet
+(10.83.0.0/26, Private Google Access), dedicated `wzos-atlas-inference` service
+identity and private regional `enterprise-gemma2-atlas-models-us-central1` bucket.
+Inference identity has object-viewer access only on that bucket. Model copying
+started directly between Cloud Storage buckets; no local weight download.
 
 ## Resume
 

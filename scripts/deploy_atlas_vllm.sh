@@ -21,6 +21,7 @@ args=(serve "$ATLAS_MODEL_URI" --served-model-name google/gemma-4-31B-it
   --tensor-parallel-size 1 --load-format runai_streamer --port 8080 --host 0.0.0.0)
 joined=$(IFS=,; echo "${args[*]}")
 cmd=(gcloud beta run deploy wzos-atlas-inference --project enterprise-gemma2
+  --labels=wzos-trial=20260926
   --region us-central1 --image "$image" --service-account "$ATLAS_RUNTIME_IDENTITY"
   --execution-environment gen2 --no-allow-unauthenticated --cpu 20 --memory 80Gi
   --gpu 1 --gpu-type nvidia-rtx-pro-6000 --no-gpu-zonal-redundancy
