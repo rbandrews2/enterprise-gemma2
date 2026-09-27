@@ -214,4 +214,7 @@ def configured_intelligence():
     if provider == 'managed_gemma':
         from services.workspace_preview.managed_intelligence import ManagedGemmaIntelligence
         return ManagedGemmaIntelligence()
+    if provider == 'private_vllm':
+        from services.workspace_preview.vllm_intelligence import VLLMIntelligence
+        return VLLMIntelligence()
     raise ValueError('Unsupported Atlas provider configuration')

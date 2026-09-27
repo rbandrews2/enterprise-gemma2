@@ -56,12 +56,22 @@ def valid_token(value):
 
 class ManagedGemmaIntelligence:
     mode = 'managed_gemma'
+    model = MODEL
+    endpoint = ENDPOINT
+    deadline = 50
 
     def __init__(self, transport=None, token_provider=None):
         self.transport = transport
         self.token_provider = token_provider or access_token
         self.gate = asyncio.Lock()
         self.last_success = None
+        self.last_usage = None
+
+    async def request_headers(self):
+        token = await self.token_provider()
+        if not valid_token(token):
+            raise ValueError('Invalid service token')
+        return {'Authorization': 'Bearer ' + token}
 
     def enabled(self):
         return os.getenv('WZOS_ATLAS_MANAGED_ENABLED') == '1'
@@ -77,6 +87,7 @@ class ManagedGemmaIntelligence:
             raise ModelUnavailable('Atlas is answering another request. Please try again shortly.')
         async with self.gate:
             started = time.monotonic()
+            self.last_usage = None
             try:
                 context = {**context, 'related_module_help': related_module_context(
                     payload.question, payload.page, context.get('role', 'member'), context.get('edition', 'core'))}
@@ -85,14 +96,12 @@ class ManagedGemmaIntelligence:
                 messages.append({'role': 'user', 'content': payload.question})
                 if sum(len(message['content']) for message in messages) > 16000:
                     raise ValueError('Context too large')
-                async with asyncio.timeout(50):
-                    token = await self.token_provider()
-                    if not valid_token(token):
-                        raise ValueError('Invalid service token')
+                async with asyncio.timeout(self.deadline):
+                    headers = await self.request_headers()
                     async with httpx.AsyncClient(transport=self.transport, trust_env=False,
-                                                follow_redirects=False, timeout=45) as client:
-                        async with client.stream('POST', ENDPOINT, headers={'Authorization': 'Bearer ' + token}, json={
-                            'model': MODEL, 'stream': False, 'messages': messages,
+                                                follow_redirects=False, timeout=self.deadline-5) as client:
+                        async with client.stream('POST', self.endpoint, headers=headers, json={
+                            'model': self.model, 'stream': False, 'messages': messages,
                             'max_tokens': 1024, 'temperature': 0.2,
                             'chat_template_kwargs': {'enable_thinking': False},
                         }) as response:
@@ -106,6 +115,7 @@ class ManagedGemmaIntelligence:
                 if any(type(count) is not int or count < 0 for count in counts):
                     raise ValueError('Missing usage accounting')
                 self.last_success = time.monotonic()
+                self.last_usage = dict(zip(('prompt_tokens', 'completion_tokens'), counts))
                 logger.info('Atlas managed reply elapsed=%.2fs input_tokens=%d output_tokens=%d',
                             self.last_success - started, *counts)
                 return answer
