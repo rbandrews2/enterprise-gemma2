@@ -33,4 +33,4 @@ Refresh the Cloud Shell operator identity token and confirm positive remaining l
 
 ## Verified shutdown
 
-Synthetic users disabled, tokens revoked and both organizations disabled. Source-enabled app revision `wzos-v2-accounts-00010-sfh` deployed with Atlas enabled=0, 100% traffic; readiness True confirmed. Trial inference service deletion succeeded; subsequent deletion returned service not found, confirming absence. Model weights retained. Cloud Shell disconnected during final helper-process cleanup; verify the old guard/proxy is stopped before a new trial.
+Synthetic users disabled, tokens revoked and both organizations disabled. Source-enabled app revision `wzos-v2-accounts-00010-sfh` deployed with Atlas enabled=0, 100% traffic; readiness True confirmed. Trial inference service deletion succeeded; subsequent deletion returned service not found, confirming absence. Model weights retained. Cloud Shell reconnected into a fresh session; process inspection found no old trial guard or SQL proxy, and the inference-service listing was empty.
