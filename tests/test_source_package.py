@@ -1,7 +1,7 @@
 import tempfile
 import unittest
 from pathlib import Path
-from scripts.package_source_library import package
+from scripts.package_source_library import package, verify
 from services.v2.knowledge.store import Store
 from test_knowledge import source, client_for
 
@@ -18,6 +18,7 @@ class SourcePackageTests(unittest.TestCase):
             report = package(store, root/'snapshot')
             self.assertFalse((root/'snapshot/customer-secret.txt').exists())
             self.assertFalse(report['applicability_verified'])
+            self.assertEqual(verify(root/'snapshot'), report)
             self.assertEqual(report['coverage'][0]['review_status'], 'unreviewed')
             copied = Store(root/'snapshot', store.catalog)
             self.assertTrue(copied.search('Flagger')['results'])
@@ -25,6 +26,9 @@ class SourcePackageTests(unittest.TestCase):
                 package(store, root/'snapshot')
             with self.assertRaises(ValueError):
                 package(store, store.data/'nested')
+            (root/'snapshot/index.sqlite').write_bytes(b'corrupted')
+            with self.assertRaisesRegex(ValueError, 'hash mismatch'):
+                verify(root/'snapshot')
 
     def test_corrupted_original_cannot_be_packaged(self):
         with tempfile.TemporaryDirectory() as directory:

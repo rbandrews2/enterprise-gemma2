@@ -8,10 +8,29 @@ import hashlib
 import json
 from pathlib import Path
 import shutil
+import sqlite3
 import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from services.v2.knowledge.store import Store
+
+
+def verify(destination):
+    destination = Path(destination).resolve()
+    report = json.loads((destination/'snapshot.json').read_text(encoding='utf-8'))
+    for name, digest in report['files'].items():
+        path = (destination/name).resolve()
+        if destination not in path.parents or not path.is_file():
+            raise ValueError('Snapshot path is missing or outside its directory')
+        if hashlib.sha256(path.read_bytes()).hexdigest() != digest:
+            raise ValueError('Snapshot file hash mismatch: '+name)
+    actual = {p.relative_to(destination).as_posix() for p in destination.rglob('*') if p.is_file()}
+    if actual != set(report['files']) | {'snapshot.json'}:
+        raise ValueError('Unexpected snapshot files')
+    with sqlite3.connect((destination/'index.sqlite').as_uri()+'?mode=ro', uri=True) as db:
+        if db.execute('PRAGMA integrity_check').fetchone()[0] != 'ok':
+            raise ValueError('Snapshot index integrity failure')
+    return report
 
 
 def package(store, destination):
@@ -59,9 +78,11 @@ def package(store, destination):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--destination', type=Path, required=True)
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument('--destination', type=Path)
+    group.add_argument('--verify', type=Path)
     args = parser.parse_args()
-    report = package(Store(), args.destination)
+    report = verify(args.verify) if args.verify else package(Store(), args.destination)
     print(json.dumps({'files':len(report['files']), 'coverage':report['coverage']}, indent=2))
 
 
