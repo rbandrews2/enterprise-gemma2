@@ -4,6 +4,9 @@ Ray authorized a separate restricted Google Cloud V2 staging deployment. Product
 
 ## Latest resume checkpoint
 
+Planning update: Ray requested the sequential remaining-task list for review when he returns in Plan mode. See REMAINING_TASKS.md (16 ordered tasks). No implementation resumed; the end-of-day cloud checkpoint below remains unchanged.
+
+
 PAUSED at Ray's request, September 28 end of day. Source-enabled staging image e8b31c99d0a1-sources deployed and hashes/index verified locally, in Cloud Shell and Cloud Build. Added cited saved-job test runner (e2cbea0). Job creation, stale 409 and cross-tenant 403 passed; cited model request blocked by expired Cloud Shell operator identity token (IAM 401), not accepted. See ATLAS_SOURCE_STAGING_20260928.md. Final app 00010-sfh Ready, Atlas disabled; inference service deletion verified, synthetic users/tokens/organizations disabled. Source snapshot preserved locally and Cloud Shell home. Next refresh operator authentication, recheck cumulative trial usage, then bounded saved-job/citation acceptance before cold-start/concurrency/cancellation. Do not repeat previous eight-module acceptance. V1/DNS unchanged.
 
 

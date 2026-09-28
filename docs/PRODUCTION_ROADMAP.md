@@ -1,5 +1,7 @@
 # WZOS V2 — remaining work to production
 
+Current execution order (September 28): see [REMAINING_TASKS.md](REMAINING_TASKS.md). It supersedes older next-step/status ordering below; detailed requirements and evidence remain relevant. Development is paused pending Ray's return.
+
 Owner: Molecular Project Development LLC (formerly Superior Consultation LLC).
 Product: WZOS powered by Atlas AI Assistant. Updated 2026-09-22.
 Target: Core and Enterprise editions at app.workzoneos.org, with member/admin access; marketing stays at workzoneos.org. Targets: working test model September 30 and production readiness October 5, 2026. Cutover remains a separate decision.
