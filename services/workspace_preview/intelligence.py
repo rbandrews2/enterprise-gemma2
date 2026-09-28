@@ -69,7 +69,7 @@ def module_context(page, role):
         'forms': 'Choose Incident, Vehicle inspection or JSA planning, optionally link a work order, and save a draft. Vehicle inspection asks for vehicle ID, mileage, pre/post-trip checks and defect notes; failed checks require notes. Saving never clears a vehicle for operation. Reopen drafts or inspect revision history. No official submission or PDF delivery.',
         'schedule': ('Create/edit team schedule drafts and assign members; overlapping assignments are rejected.' if role == 'admin' else 'Read team schedule drafts. Ask an admin to create, edit or assign a schedule.') + ' Saving never sends dispatch notifications.',
         'training': 'Browse the catalog and update personal study status. Study status is not certification. Approved media and assessments are pending.',
-        'messages': 'Review the synthetic inbox. Real employee SMS/MMS/email delivery is not connected.',
+        'messages': 'Review the synthetic inbox only. It cannot notify a real supervisor. SMS/MMS/email delivery is not connected. Do not instruct users to send a text through this inbox. For a real notification, use an existing communication channel outside WZOS.',
         'navigation': 'Choose a saved work-order address and open Google Maps for verification. No offline or turn-by-turn navigation inside WZOS.',
         'report': 'Choose a saved Enterprise job, review reported geometry/checklist/forms, prepare candidate references and save a personal report draft. No automatic sign coordinates, field approval or package delivery.',
     }
