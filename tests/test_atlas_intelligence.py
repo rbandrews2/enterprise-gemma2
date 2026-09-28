@@ -11,6 +11,64 @@ from services.workspace_preview.app import create_app
 from services.v2.knowledge.store import Store
 
 class IntelligenceTests(unittest.TestCase):
+    def test_saved_job_citations_preserve_revision_and_review_state(self):
+        from test_knowledge import source, client_for
+        class Fake:
+            context = None
+            async def ready(self): return False
+            async def reply(self, payload, context):
+                self.context = context
+                return 'Review the candidate passages.'
+        fake = Fake()
+        with tempfile.TemporaryDirectory() as directory, patch.dict(os.environ, {'WZOS_WORKSPACE_PREVIEW':'1','K_SERVICE':'','GAE_ENV':'','NETLIFY':''}):
+            item = source()
+            store = Store(Path(directory)/'sources', {item.id:item})
+            with client_for() as transport:
+                revision = store.ingest(item.id, transport)['revision']
+            store.rebuild()
+            with TestClient(create_app(Path(directory)/'db.sqlite', store, fake)) as client:
+                response = client.post('/api/assistant/chat', headers={'X-Preview-Actor':'enterprise-general'}, json={
+                    'page':'report','question':'Review flagger references for the saved job.',
+                    'order_id':'enterprise-sample','expected_version':1})
+                self.assertEqual(response.status_code, 200, response.text)
+                body = response.json()
+                self.assertGreater(body['reference_basis']['candidate_count'], 0)
+                self.assertFalse(body['reference_basis']['applicability_verified'])
+                self.assertEqual(body['citations'][0]['revision'], revision)
+                self.assertEqual(body['citations'][0]['review_status'], 'unreviewed')
+                self.assertEqual(fake.context['saved_job']['id'], 'enterprise-sample')
+                self.assertEqual(fake.context['candidate_references'][0]['revision'], revision)
+                self.assertLessEqual(len(fake.context['candidate_references'][0]['text']), 600)
+
+    def test_missing_library_is_explicit_and_cold_status_does_not_call_model(self):
+        class Fake:
+            mode = 'private_vllm'
+            calls = 0
+            context = None
+            def enabled(self): return True
+            async def ready(self): return False
+            async def reply(self, payload, context):
+                self.calls += 1
+                self.context = context
+                return 'No supporting passages are available.'
+        fake = Fake()
+        with tempfile.TemporaryDirectory() as directory, patch.dict(os.environ, {'WZOS_WORKSPACE_PREVIEW':'1','K_SERVICE':'','GAE_ENV':'','NETLIFY':''}):
+            with TestClient(create_app(Path(directory)/'db.sqlite', Store(Path(directory)/'sources', {}), fake)) as client:
+                headers = {'X-Preview-Actor':'enterprise-general'}
+                status = client.get('/api/assistant/status', headers=headers).json()
+                self.assertFalse(status['ready'])
+                self.assertTrue(status['conversation_enabled'])
+                self.assertEqual(fake.calls, 0)
+                response = client.post('/api/assistant/chat', headers=headers, json={
+                    'page':'report', 'question':'Review VDOT sign requirements for this saved job.',
+                    'order_id':'enterprise-sample', 'expected_version':1})
+                self.assertEqual(response.status_code, 200, response.text)
+                basis = response.json()['reference_basis']
+                self.assertEqual(basis, {'library_status':'unavailable','candidate_count':0,'applicability_verified':False})
+                self.assertEqual(fake.context['reference_basis'], basis)
+                self.assertTrue(fake.context['reference_coverage_gaps'])
+                self.assertEqual(response.json()['citations'], [])
+
     def test_all_module_contexts_and_edition_role_boundaries(self):
         class Fake:
             context = None

@@ -1,4 +1,25 @@
 "use strict";
+// Deliberately supports only paragraphs, lists and bold text. Never parses HTML.
+function renderAtlasReply(doc, text) {
+ const root=doc.createElement('div');let list=null;
+ for(const line of String(text).split(/\r?\n/)){
+  if(!line.trim()){list=null;continue;}
+  const match=line.match(/^\s*(?:(\d+)\.|([-*]))\s+(.+)$/);
+  let node,content=line;
+  if(match){const tag=match[1]?'ol':'ul';if(!list||list.tagName.toLowerCase()!==tag){list=doc.createElement(tag);root.append(list);}node=doc.createElement('li');list.append(node);content=match[3];}
+  else{list=null;node=doc.createElement('p');root.append(node);}
+  for(const part of content.split(/(\*\*[^*\n]+\*\*)/g)){
+   if(part.startsWith('**')&&part.endsWith('**')){const strong=doc.createElement('strong');strong.textContent=part.slice(2,-2);node.append(strong);}
+   else node.append(doc.createTextNode(part));
+  }
+ }
+ return root;
+}
+function atlasConnectionMessage(data){
+ if(data.ready)return 'Atlas conversation is ready. Verify AI guidance before use.';
+ if(data.conversation_enabled)return 'Atlas is enabled. The first reply may take a few minutes while it starts. Verified app guidance remains available.';
+ return 'AI conversation is switched off. Verified app guidance and the quick guides remain available.';
+}
 // Adapted interaction pattern from recovered Core GlobalAssistant / AssistantBubble.
 // Quick guides plus server-mediated local inference; no autonomous actions.
 (() => {
@@ -29,7 +50,7 @@
   returnFocus=document.activeElement;panel.hidden=false;dock.hidden=true;
   byId("assistant-open").setAttribute("aria-expanded","true");
   answer(byId("assistant-topic").value);byId("assistant-topic").focus();
-  window.atlasStatus().then(data=>{document.querySelector(".assistant-mode").textContent=data.ready?"Atlas conversation is ready. Verify AI guidance before use.":"AI conversation is unavailable. Verified app guidance and the quick guides remain available.";}).catch(()=>{document.querySelector(".assistant-mode").textContent="Unable to check Atlas connection. Quick guides remain available.";});
+  window.atlasStatus().then(data=>{document.querySelector(".assistant-mode").textContent=atlasConnectionMessage(data);}).catch(()=>{document.querySelector(".assistant-mode").textContent="Unable to check Atlas connection. Quick guides remain available.";});
  }
  function closeAssistant(){
   panel.hidden=true;dock.hidden=false;byId("assistant-open").setAttribute("aria-expanded","false");
@@ -51,8 +72,9 @@
    if(epoch!==chatEpoch)return;
    byId("assistant-answer").replaceChildren();
    const source=document.createElement('p');source.className='fine';source.textContent=data.response_kind==='workspace_guide'?'Verified WZOS guidance · no AI generation':'AI-generated reply · verify before use';
-   const reply=document.createElement('p');reply.textContent=data.answer;
+   const reply=renderAtlasReply(document,data.answer);
    byId("assistant-answer").append(source,reply);
+   if(data.reference_basis){const note=document.createElement('p');note.className='fine';const basis=data.reference_basis;note.textContent=basis.library_status==='unavailable'?'Source library unavailable: no supporting passages were retrieved.':`${basis.candidate_count} candidate source passages retrieved. Applicability has not been verified.`;byId('assistant-answer').append(note);}
    if(data.order_version){const basis=document.createElement("p");basis.className="fine";basis.textContent=`Based on saved job revision ${data.order_version}. No actions were performed.`;byId("assistant-answer").append(basis);}
    if(data.time_basis && !byId('clock-view').hidden){const basis=document.createElement('p');basis.className='fine';basis.textContent=`Saved clock status: ${data.time_basis.status.replaceAll('_',' ')} · ${new Date(data.time_basis.as_of).toLocaleTimeString()}. Atlas performed no clock action.`;byId('assistant-answer').append(basis);}
    if(data.checklist_basis){const basis=document.createElement('p');basis.className='fine';const c=data.checklist_basis;basis.textContent=c.status==='not_saved'?'No saved readiness checklist.':`Checklist revision ${c.version} · job revision ${c.order_version}${c.stale?' · Job changed: review needed.':''}`;byId('assistant-answer').append(basis);}

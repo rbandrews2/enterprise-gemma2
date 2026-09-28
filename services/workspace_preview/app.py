@@ -303,7 +303,7 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
     @app.get("/api/assistant/status")
     async def assistant_status(request: Request):
         actor(request)
-        return {"ready": await intelligence.ready(), "mode": getattr(intelligence, "mode", "local"), "workspace_guides_ready": True, "actions_enabled": False}
+        return {"ready": await intelligence.ready(), "conversation_enabled": bool(getattr(intelligence, 'enabled', lambda: False)()), "mode": getattr(intelligence, "mode", "local"), "workspace_guides_ready": True, "actions_enabled": False}
 
     @app.post("/api/assistant/chat")
     async def assistant_chat(payload: ChatInput, request: Request):
@@ -317,6 +317,7 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
             context["time_clock"] = timeclock.summary(connect, selected)
         citations = []
         checklist_basis = None
+        reference_basis = None
         if payload.order_id:
             with connect() as conn:
                 order = serialize(permitted_row(conn, payload.order_id, selected))
@@ -352,6 +353,10 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
                     if len(citations) == 3:
                         break
                 context["candidate_references"] = [{**ref, "text": ref["text"][:600]} for ref in citations]
+                reference_basis = {"library_status": packet["references"]["library_status"],
+                                   "candidate_count": len(citations), "applicability_verified": False}
+                context["reference_basis"] = reference_basis
+                context["reference_coverage_gaps"] = packet["references"]["coverage_gaps"]
         guide = workspace_guidance(payload, context)
         if guide:
             answer = guide.answer
@@ -372,7 +377,7 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
                 "response_kind": "workspace_guide" if guide else "model",
                 "guidance_topic": guide.topic if guide else None,
                 "navigation": navigation,
-                "approved_for_field_use": False, "citations": citations, "checklist_basis": checklist_basis, "time_basis": context.get("time_clock"),
+                "approved_for_field_use": False, "citations": citations, "reference_basis": reference_basis, "checklist_basis": checklist_basis, "time_basis": context.get("time_clock"),
                 "order_version": payload.expected_version if payload.order_id else None}
 
     @app.get("/api/orders")
