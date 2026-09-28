@@ -4,6 +4,7 @@ No downloads, model calls or review upgrades. Destination must be new. Only
 catalog source revisions and their metadata enter the snapshot, never customer data.
 """
 import argparse
+from contextlib import closing
 import hashlib
 import json
 from pathlib import Path
@@ -27,7 +28,7 @@ def verify(destination):
     actual = {p.relative_to(destination).as_posix() for p in destination.rglob('*') if p.is_file()}
     if actual != set(report['files']) | {'snapshot.json'}:
         raise ValueError('Unexpected snapshot files')
-    with sqlite3.connect((destination/'index.sqlite').as_uri()+'?mode=ro', uri=True) as db:
+    with closing(sqlite3.connect((destination/'index.sqlite').as_uri()+'?mode=ro', uri=True)) as db:
         if db.execute('PRAGMA integrity_check').fetchone()[0] != 'ok':
             raise ValueError('Snapshot index integrity failure')
     return report
