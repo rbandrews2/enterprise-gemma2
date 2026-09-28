@@ -1,5 +1,10 @@
 # Private Atlas vLLM integration
 
+Ray approved the $15 initial trial and approximately $1.17/month weights on
+September 26. Do not repeat that approval request. See ATLAS_LIVE_TRIAL_20260926.md
+for current resource/deployment evidence; earlier proposed wording below is the
+cost basis of the accepted scope.
+
 ## Implemented locally
 
 - `WZOS_ATLAS_PROVIDER=private_vllm`, `WZOS_ATLAS_VLLM_ENABLED=1` and
