@@ -1,0 +1,73 @@
+"""Bounded real-app concurrency and client-disconnect observations (synthetic only).
+Run after cited saved-job acceptance with the same active disposable fixtures.
+Client cancellation is an observation, not proof that GPU generation stopped.
+"""
+import argparse
+import asyncio
+import json
+from pathlib import Path
+import time
+import httpx
+from validate_managed_accounts import gc, ORIGIN, SERVICE
+from validate_atlas_grounding_staging import require_token_lifetime
+
+async def run(state, seed, output):
+    if state.get('disabled') or not seed.get('synthetic'):
+        raise ValueError('Active synthetic fixture and synthetic saved-job evidence required')
+    iam = gc('auth', 'print-identity-token')
+    require_token_lifetime(iam, 'Operator', minimum=1000)
+    member = state['users']['member']['idToken']
+    require_token_lifetime(member, 'Synthetic member', minimum=1000)
+    url = gc('run','services','describe',SERVICE,'--region=us-central1','--format=value(status.url)')
+    with output.open('x',encoding='utf-8') as evidence:
+        def record(row):
+            evidence.write(json.dumps(row)+'\n'); evidence.flush(); print(json.dumps(row),flush=True)
+        async with httpx.AsyncClient(base_url=url,trust_env=False,follow_redirects=False,timeout=310) as client:
+            config = await client.get('/api/identities',headers={'X-Serverless-Authorization':'Bearer '+iam})
+            config.raise_for_status()
+            header = config.json()['auth_header']
+            if header not in ('Authorization','X-WZOS-Authorization'): raise ValueError('Unexpected auth header')
+            client.headers.update({'X-Serverless-Authorization':'Bearer '+iam,header:'Bearer '+member,
+                                   'X-WZOS-Organization':state['orgs']['main'],'Origin':ORIGIN})
+            payload = {'order_id':seed['job_id'],'expected_version':seed['response']['order_version'],
+                       'page':'report','question':seed['question']}
+            async def request(label):
+                start = time.monotonic()
+                try:
+                    reply = await client.post('/api/assistant/chat',json=payload)
+                    body = reply.json()
+                    row = {'stage':label,'http_status':reply.status_code,'seconds':round(time.monotonic()-start,3),
+                           'model_called':body.get('model_called',False)}
+                    if reply.status_code == 200:
+                        assert body['model_called'] and not body['approved_for_field_use'] and body['actions_performed']==[]
+                    record(row)
+                    return reply.status_code
+                except asyncio.CancelledError:
+                    record({'stage':label,'client_cancelled':True,'provider_cancellation_verified':False})
+                    raise
+                except (httpx.HTTPError,ValueError) as error:
+                    record({'stage':label,'error_type':type(error).__name__})
+                    raise
+            statuses = await asyncio.gather(request('concurrent_a'),request('concurrent_b'))
+            if 200 not in statuses or any(s not in (200,503) for s in statuses):
+                raise RuntimeError('Unexpected concurrent outcome; inspect sanitized evidence and cloud logs')
+            pending = asyncio.create_task(request('client_disconnect'))
+            await asyncio.sleep(0.25)
+            if pending.done():
+                await pending
+                record({'stage':'disconnect_observation','inconclusive':'response completed before cancellation'})
+            else:
+                pending.cancel()
+                try: await pending
+                except asyncio.CancelledError: pass
+            await asyncio.sleep(3)
+            if await request('after_disconnect') != 200:
+                raise RuntimeError('Post-disconnect recovery not accepted; no automatic retries')
+            record({'stage':'complete','cold_start_verified':False,'provider_cancellation_verified':False})
+
+if __name__ == '__main__':
+    p=argparse.ArgumentParser(description=__doc__)
+    p.add_argument('--state',type=Path,required=True);p.add_argument('--seed',type=Path,required=True)
+    p.add_argument('--output',type=Path,required=True);a=p.parse_args()
+    seed=json.loads(a.seed.read_text().splitlines()[-1])
+    asyncio.run(run(json.loads(a.state.read_text()),seed,a.output))
