@@ -29,3 +29,29 @@ No cloud deployment or paid inference was performed for these tests. The previou
 6. Retain sanitized timing/status evidence, disable fixtures/app inference, delete the trial service and verify cleanup. Do not keep the GPU warm while waiting for a scale-to-zero observation.
 
 True cloud cold-start, concurrent-user capacity, cancellation propagation and cost-per-workflow remain open acceptance gates.
+
+## Live staging follow-up — partial acceptance
+
+Cloud Build `a2cbfaba-e21e-4485-a945-a5a2316aca94` succeeded. Source-enabled image `bf5e75c242bf-sources` deployed as app revision `00014-m6x`; full-size private inference revision `00001-5bg` reached Ready. Fresh managed identity/role/tenant checks passed. The saved-job seed check succeeded before the reliability runner was allowed to execute.
+
+Observed results:
+
+| Case | Result |
+| --- | --- |
+| Concurrent A | HTTP 200, real model reply, 4.161 seconds |
+| Concurrent B | HTTP 503, 0.442 seconds, no model response |
+| Client disconnect | Client task cancelled after 0.25 seconds; upstream cancellation unverified |
+| Recovery after 3 seconds | HTTP 503, 0.419 seconds; immediate recovery FAILED |
+| Later explicit recovery observation | HTTP 200, real model reply, 4.154 seconds |
+
+The service was not permanently stuck. These results are consistent with the original request continuing behind Cloud Run after client cancellation, but do not independently prove the cause. The current evidence records status, not the 503 response reason. Do not call cloud cancellation accepted or assert that GPU generation stopped. A single concurrent pair is not a customer-capacity benchmark.
+
+Next repair/investigation: capture a safe structured busy/unavailable reason and correlation identifier, verify actual cancellation propagation in app/provider logs, then implement an authenticated cancellation mechanism that remains correct across app instances if transport disconnect is insufficient. Avoid an instance-local cancellation endpoint presented as a distributed solution. Re-test recovery and unchanged saved records before acceptance.
+
+True scale-from-zero timing remains untested. This session observed deployment startup/compilation only. Do not repeat the successful citation test unnecessarily; retain the seeded scenario for the next lifecycle validation.
+
+Evidence is preserved in Cloud Shell `/home/admin_/wzos-grounding-ZCyfzy/`: `reliability-results.jsonl`, `reliability-seed.jsonl`, build/model/proxy logs and disabled fixture state. Runner is `scripts/validate_atlas_reliability_staging.py`, bounded to two concurrent requests, one cancelled attempt and one recovery attempt; the later observation was a separate diagnostic call. No customer sends or production changes.
+
+Pre-run usage: 2,144.485 billable inference-instance seconds, about $1.90 compute at the recorded rate, excluding this run/builds/storage and billing lag. Recheck before further paid work; the approved trial ceiling remains $15.
+
+Cleanup: synthetic users disabled/tokens revoked/organizations disabled; inference service deletion confirmed; SQL proxy and cleanup guard stopped. Final account revision 00015-qfq is Ready after disabling Atlas, retaining the diagnostic/source image. V1 and DNS unchanged.

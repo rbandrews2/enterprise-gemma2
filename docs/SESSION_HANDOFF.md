@@ -4,6 +4,9 @@ Ray authorized a separate restricted Google Cloud V2 staging deployment. Product
 
 ## Latest resume checkpoint
 
+September 29 live reliability PARTIAL: diagnostic source image bf5e75c242bf-sources deployed; concurrent pair returned model200/4.161s and503/0.442s. Client cancellation did not establish immediate recovery: next request after3s returned503; later explicit check succeeded200/4.154s. See ATLAS_RELIABILITY_20260929.md. Cleanup verified: app 00015-qfq Ready after Atlas disable; GPU deleted, fixtures disabled, proxy/guard stopped. Cloud cancellation and true cold-start acceptance remain OPEN. Next capture safe busy/provider reason and correlate cancellation before designing cross-instance-safe cancellation; do not claim disconnect stops GPU work.
+
+
 September 29 reliability local checkpoint: four private-adapter tests passed for overlap rejection, streamed-response disconnect cleanup, deadline cancellation and recovery after upstream HTTP failure. Safe diagnostics now include provider mode/status without bodies or credentials. Full suite 186 total: 170 passed/16 database skips. See ATLAS_RELIABILITY_20260929.md. No cloud deployment or paid calls in this pass; diagnostics not deployed. Next bounded cloud cold-start/concurrency/cancellation tests after usage/auth preflight; source citation acceptance remains passed.
 
 
