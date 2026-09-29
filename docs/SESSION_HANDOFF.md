@@ -4,6 +4,9 @@ Ray authorized a separate restricted Google Cloud V2 staging deployment. Product
 
 ## Latest resume checkpoint
 
+PAUSED after September 29 Atlas testing at Ray's request. Real loopback HTTP synthetic-provider test proves disconnect closes upstream socket, releases the request gate, and next request recovers; no real model call this pass. Full local suite 188 total: 172 passed, 16 database skips. Cloud Shell reconnected and read-only check reconfirmed app 00015-qfq, Atlas enabled=0, inference service absent. Narrow historical failure-log query returned no matches and does not explain prior 503. Cloud cancellation/cold-start remain OPEN; diagnostic changes are not deployed. Next: usage/auth preflight within approved $15 trial, deploy existing safe failure-code instrumentation, then bounded cloud cancellation/recovery test with correlated evidence and cleanup. No automatic continuation; resume when Ray returns.
+
+
 September 29 offline support increment: locally implemented loaded navigation destination fallback/download sheet, stale clock snapshot/estimated timer with offline write blocking, and downloadable unverified time notes (no attendance replay). Actor+organization clock scope. Two Node behavior tests and 12 Atlas tests passed; JS syntax passed. See OFFLINE_CAPABILITIES.md. Not deployed; real browser/offline reopening and attendance-draft sync remain open. Parallel read-only audit confirmed server-receipt timestamps make naive queued punches unsafe. Atlas cancellation instrumentation remains queued for bounded cloud verification.
 
 

@@ -59,3 +59,13 @@ Cleanup: synthetic users disabled/tokens revoked/organizations disabled; inferen
 ## Parallel-work follow-up: failure classification prepared locally
 
 ModelUnavailable now carries an allowlisted reason. Private adapter distinguishes busy/disabled/timeout/provider_error; the API preserves the text detail and adds a random correlation ID and safe reason code, with matching server logs. Disconnect observations are logged separately. The live runner retains only allowlisted codes and validated hexadecimal correlation IDs, not error bodies or credentials. Full suite: 187 total, 171 passed/16 database skips; focused API/private-adapter checks passed. This instrumentation is not cloud-deployed and does not fix or accept cloud cancellation. Next deploy it in a bounded trial to distinguish busy from provider failure before choosing an instance-safe cancellation design.
+
+## Pre-break socket validation
+
+Added `tests/test_vllm_socket_reliability.py`: a real loopback HTTP server holds a synthetic provider response open. Application disconnect closes the actual upstream socket, releases the adapter gate, leaves no partial usage, and a subsequent request succeeds. Exactly two provider requests are observed; no retry, GPU, external credentials, or real inference. Production HTTPS validation is unchanged. This is transport validation, not Cloud Run proxy cancellation acceptance.
+
+Full discovery suite: 188 total, 172 passed and 16 database skips in 44.574 seconds. An initial explicit-module invocation encountered the existing `test_knowledge` discovery-path import dependency; the standard full discovery invocation passed. No application repair was necessary for the socket test.
+
+Read-only cloud verification after reconnect: account revision `wzos-v2-accounts-00015-qfq`, Atlas enabled `0`, inference-service listing empty. A narrow September 29 `Atlas reply failed` textPayload query returned no rows; absence of matches is not evidence that cancellation worked or that no error occurred. No deployments, paid inference or cloud configuration changes this pass.
+
+Paused at user request. Next: refresh trial usage and credentials, deploy prepared failure-code/correlation instrumentation, perform the bounded live cancellation/recovery observation, correlate logs, and clean up. Cloud cancellation and true cold-start remain unaccepted.
