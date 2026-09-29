@@ -11,6 +11,23 @@ from services.workspace_preview.app import create_app
 from services.v2.knowledge.store import Store
 
 class IntelligenceTests(unittest.TestCase):
+    def test_failure_reason_and_correlation_are_safe_and_actionable(self):
+        class Fake:
+            async def reply(self, payload, context):
+                raise ModelUnavailable('Atlas is busy.', code='busy')
+        with tempfile.TemporaryDirectory() as directory, patch.dict(os.environ, {'WZOS_WORKSPACE_PREVIEW':'1','K_SERVICE':'','GAE_ENV':'','NETLIFY':''}):
+            with TestClient(create_app(Path(directory)/'db.sqlite', Store(Path(directory)/'sources', {}), Fake())) as client:
+                with self.assertLogs('services.workspace_preview.app', level='WARNING') as logs:
+                    response = client.post('/api/assistant/chat', headers={'X-Preview-Actor':'enterprise-general'},
+                                           json={'question':'Explain this unusual project detail'})
+                self.assertEqual(response.status_code, 503)
+                body = response.json()
+                self.assertEqual(body['code'], 'busy')
+                self.assertRegex(body['correlation_id'], r'^[0-9a-f]{32}$')
+                self.assertIn(body['correlation_id'], ' '.join(logs.output))
+                self.assertNotIn('unusual project detail', ' '.join(logs.output))
+                self.assertEqual(ModelUnavailable('safe', code='secret').code, 'unavailable')
+
     def test_saved_job_citations_preserve_revision_and_review_state(self):
         from test_knowledge import source, client_for
         class Fake:

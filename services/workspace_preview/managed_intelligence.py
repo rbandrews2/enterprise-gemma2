@@ -82,9 +82,9 @@ class ManagedGemmaIntelligence:
 
     async def reply(self, payload, context):
         if not self.enabled():
-            raise ModelUnavailable('Atlas conversation is not enabled in this workspace.')
+            raise ModelUnavailable('Atlas conversation is not enabled in this workspace.', code='disabled')
         if self.gate.locked():
-            raise ModelUnavailable('Atlas is answering another request. Please try again shortly.')
+            raise ModelUnavailable('Atlas is answering another request. Please try again shortly.', code='busy')
         async with self.gate:
             started = time.monotonic()
             self.last_usage = None
@@ -124,4 +124,5 @@ class ManagedGemmaIntelligence:
                 logger.warning('Atlas reply failed mode=%s error_type=%s upstream_status=%s',
                                self.mode, type(error).__name__,
                                error.response.status_code if isinstance(error, httpx.HTTPStatusError) else None)
-                raise ModelUnavailable('Atlas could not finish its reply. Your saved work is unchanged; please try again.') from error
+                raise ModelUnavailable('Atlas could not finish its reply. Your saved work is unchanged; please try again.',
+                                       code='timeout' if isinstance(error, (TimeoutError, httpx.TimeoutException)) else 'provider_error') from error

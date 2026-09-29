@@ -59,7 +59,10 @@ class ClientDisconnected(Exception):
 
 
 class ModelUnavailable(Exception):
-    pass
+    def __init__(self, message, code="unavailable"):
+        super().__init__(message)
+        self.code = code if code in {"unavailable", "busy", "disabled", "timeout", "provider_error"} else "unavailable"
+
 
 
 def module_context(page, role):
@@ -170,7 +173,7 @@ class LocalIntelligence:
         if not self.enabled():
             raise ModelUnavailable("Atlas conversation is not enabled in this workspace.")
         if self.gate.locked():
-            raise ModelUnavailable("Atlas is answering another request. Please try again shortly.")
+            raise ModelUnavailable("Atlas is answering another request. Please try again shortly.", code="busy")
         async with self.gate:
             started = time.monotonic()
             context = {**context, "related_module_help": related_module_context(

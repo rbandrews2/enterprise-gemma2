@@ -55,3 +55,7 @@ Evidence is preserved in Cloud Shell `/home/admin_/wzos-grounding-ZCyfzy/`: `rel
 Pre-run usage: 2,144.485 billable inference-instance seconds, about $1.90 compute at the recorded rate, excluding this run/builds/storage and billing lag. Recheck before further paid work; the approved trial ceiling remains $15.
 
 Cleanup: synthetic users disabled/tokens revoked/organizations disabled; inference service deletion confirmed; SQL proxy and cleanup guard stopped. Final account revision 00015-qfq is Ready after disabling Atlas, retaining the diagnostic/source image. V1 and DNS unchanged.
+
+## Parallel-work follow-up: failure classification prepared locally
+
+ModelUnavailable now carries an allowlisted reason. Private adapter distinguishes busy/disabled/timeout/provider_error; the API preserves the text detail and adds a random correlation ID and safe reason code, with matching server logs. Disconnect observations are logged separately. The live runner retains only allowlisted codes and validated hexadecimal correlation IDs, not error bodies or credentials. Full suite: 187 total, 171 passed/16 database skips; focused API/private-adapter checks passed. This instrumentation is not cloud-deployed and does not fix or accept cloud cancellation. Next deploy it in a bounded trial to distinguish busy from provider failure before choosing an instance-safe cancellation design.

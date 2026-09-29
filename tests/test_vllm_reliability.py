@@ -36,8 +36,9 @@ class PrivateReliabilityTests(unittest.IsolatedAsyncioTestCase):
         first = asyncio.create_task(engine.reply(self.payload, {}))
         try:
             await asyncio.wait_for(entered.wait(), 1)
-            with self.assertRaisesRegex(ModelUnavailable, 'another request'):
+            with self.assertRaisesRegex(ModelUnavailable, 'another request') as blocked:
                 await engine.reply(self.payload, {})
+            self.assertEqual(blocked.exception.code, "busy")
             self.assertEqual(len(calls), 1)
         finally:
             release.set()
@@ -105,6 +106,7 @@ class PrivateReliabilityTests(unittest.IsolatedAsyncioTestCase):
         self.assertIn('upstream_status=403', diagnostic)
         self.assertIn('mode=private_vllm', diagnostic)
         self.assertNotIn('private-token', diagnostic + str(error.exception))
+        self.assertEqual(error.exception.code, 'provider_error')
         self.assertNotIn('synthetic.identity.token', diagnostic)
         self.assertEqual(calls, 1)
         self.assertFalse(await engine.ready())

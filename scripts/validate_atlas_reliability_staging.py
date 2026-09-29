@@ -37,7 +37,9 @@ async def run(state, seed, output):
                     reply = await client.post('/api/assistant/chat',json=payload)
                     body = reply.json()
                     row = {'stage':label,'http_status':reply.status_code,'seconds':round(time.monotonic()-start,3),
-                           'model_called':body.get('model_called',False)}
+                           'model_called':body.get('model_called',False),
+                           'error_code':body.get('code') if body.get('code') in ('busy','disabled','timeout','provider_error','unavailable') else None,
+                           'correlation_id':body.get('correlation_id') if isinstance(body.get('correlation_id'),str) and len(body['correlation_id'])==32 and all(c in '0123456789abcdef' for c in body['correlation_id']) else None}
                     if reply.status_code == 200:
                         assert body['model_called'] and not body['approved_for_field_use'] and body['actions_performed']==[]
                     record(row)

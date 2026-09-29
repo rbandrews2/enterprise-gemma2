@@ -4,6 +4,9 @@ Ray authorized a separate restricted Google Cloud V2 staging deployment. Product
 
 ## Latest resume checkpoint
 
+September 29 user-authorized parallel pass: Atlas API now has safe failure codes/correlation IDs and matching logs, and live runner preserves those identifiers. Full local suite 187:171 passed/16 database skips. Instrumentation not deployed; cancellation still OPEN. Parallel read-only source audit saved SOURCE_COVERAGE_AUDIT_20260929.md: six preserved docs/2604 passages, unreviewed errata, missing OSHA/locality/forms/site traffic-speed evidence, no applicability approvals. No cloud changes or paid calls. Next bounded instrumented cancellation diagnosis; independently revalidate official publication links and errata per audit.
+
+
 September 29 live reliability PARTIAL: diagnostic source image bf5e75c242bf-sources deployed; concurrent pair returned model200/4.161s and503/0.442s. Client cancellation did not establish immediate recovery: next request after3s returned503; later explicit check succeeded200/4.154s. See ATLAS_RELIABILITY_20260929.md. Cleanup verified: app 00015-qfq Ready after Atlas disable; GPU deleted, fixtures disabled, proxy/guard stopped. Cloud cancellation and true cold-start acceptance remain OPEN. Next capture safe busy/provider reason and correlate cancellation before designing cross-instance-safe cancellation; do not claim disconnect stops GPU work.
 
 

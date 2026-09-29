@@ -1,6 +1,7 @@
 """Run only via scripts/start_workspace_preview.py; fixture identities are NOT auth."""
 import hashlib
 import json
+import logging
 import os
 import re
 import secrets
@@ -364,9 +365,15 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
             try:
                 answer = await reply_until_disconnected(request, intelligence, payload, context)
             except ClientDisconnected:
-                return JSONResponse({"detail": "Reply stopped"}, status_code=499)
+                correlation = uuid4().hex
+                logging.getLogger(__name__).warning("Atlas request ended correlation_id=%s code=client_disconnected", correlation)
+                return JSONResponse({"detail": "Reply stopped", "code": "client_disconnected",
+                                     "correlation_id": correlation}, status_code=499)
             except ModelUnavailable as error:
-                raise HTTPException(503, str(error)) from error
+                correlation = uuid4().hex
+                logging.getLogger(__name__).warning("Atlas request failed correlation_id=%s code=%s", correlation, error.code)
+                return JSONResponse({"detail": str(error), "code": error.code,
+                                     "correlation_id": correlation}, status_code=503)
         navigation = navigation_for(payload.question, selected["edition"], bool(payload.order_id), payload.page)
         if guide and guide.target and guide.target not in {item['id'] for item in navigation}:
             labels = {'training':'Open Video training','schedule':'Open Schedule management',
