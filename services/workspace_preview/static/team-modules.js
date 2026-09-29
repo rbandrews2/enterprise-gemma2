@@ -10,9 +10,14 @@
   $('team-title').textContent={training:'Training study planner',messages:'Test messaging',navigation:'Navigation'}[name];
   try{
    if(name==='navigation'){
-    root.append(node('p','Open a saved job destination in Google Maps. Confirm the location before starting directions. No offline maps or live hazard feed are connected.'));
-    const data=await api('/api/orders');if(epoch!==generation)return;
-    for(const order of data.items){const card=node('section','');card.className='report-section panel';card.append(node('h2',order.title),node('p',order.address));const a=node('a','Open destination in Google Maps');a.href='https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(order.address);a.target='_blank';a.rel='noopener noreferrer';card.append(a);root.append(card);}return;
+    root.append(node('p','Loaded destinations remain available in this open app when offline. Save a destination sheet before travel for access after closing the app. Map imagery, live traffic and route guidance require connectivity or separately downloaded maps in your navigation app.'));
+    let orders=window.wzosClock.getOrders(),cached=!navigator.onLine;
+    if(navigator.onLine){try{orders=(await api('/api/orders')).items;}catch(error){if(error.status)throw error;cached=true;}}
+    if(epoch!==generation)return;
+    if(cached)root.append(node('p','Offline / connection unavailable — showing previously loaded destinations. Confirm addresses and site access before travel.'));
+    if(!orders.length)root.append(node('p','No destinations loaded. Connect and open your jobs before going offline.'));
+    for(const order of orders){const card=node('section','');card.className='report-section panel';card.append(node('h2',order.title),node('p',order.address));const a=node('a','Open destination in Google Maps');a.href='https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(order.address);a.target='_blank';a.rel='noopener noreferrer';card.append(a);
+     const save=node('button','Save destination sheet');save.className='secondary';save.onclick=()=>{const content=['WZOS destination sheet',order.title,order.address,'Saved on device: '+new Date().toISOString(),'Address reference only. No route, map, traffic or safe-access verification.'].join('\n');const url=URL.createObjectURL(new Blob([content],{type:'text/plain;charset=utf-8'}));const link=node('a','');link.href=url;link.download='wzos-destination.txt';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};card.append(save);root.append(card);}return;
    }
    if(name==='training'){
     root.append(node('p','Recovered V1 course catalog. Course content and accreditation are awaiting review. These are personal study plans, not completion records or certificates.'));
@@ -32,5 +37,6 @@
  for(const name of ['training','messages','navigation'])$(name+'-nav').onclick=()=>window.showWzosView(name);
  document.addEventListener('wzos:view',event=>show(event.detail));
  document.addEventListener('wzos:session',()=>show(view));
+ for(const event of ['online','offline'])window.addEventListener(event,()=>{if(view==='navigation')show(view);});
  window.addEventListener('beforeunload',event=>{if(dirty||sending){event.preventDefault();event.returnValue='';}});
 })();

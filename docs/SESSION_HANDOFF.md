@@ -4,6 +4,9 @@ Ray authorized a separate restricted Google Cloud V2 staging deployment. Product
 
 ## Latest resume checkpoint
 
+September 29 offline support increment: locally implemented loaded navigation destination fallback/download sheet, stale clock snapshot/estimated timer with offline write blocking, and downloadable unverified time notes (no attendance replay). Actor+organization clock scope. Two Node behavior tests and 12 Atlas tests passed; JS syntax passed. See OFFLINE_CAPABILITIES.md. Not deployed; real browser/offline reopening and attendance-draft sync remain open. Parallel read-only audit confirmed server-receipt timestamps make naive queued punches unsafe. Atlas cancellation instrumentation remains queued for bounded cloud verification.
+
+
 September 29 user-authorized parallel pass: Atlas API now has safe failure codes/correlation IDs and matching logs, and live runner preserves those identifiers. Full local suite 187:171 passed/16 database skips. Instrumentation not deployed; cancellation still OPEN. Parallel read-only source audit saved SOURCE_COVERAGE_AUDIT_20260929.md: six preserved docs/2604 passages, unreviewed errata, missing OSHA/locality/forms/site traffic-speed evidence, no applicability approvals. No cloud changes or paid calls. Next bounded instrumented cancellation diagnosis; independently revalidate official publication links and errata per audit.
 
 
