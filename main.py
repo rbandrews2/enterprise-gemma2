@@ -140,7 +140,7 @@ class EmailPackageRequest(BaseModel):
     customer_email: Optional[str] = None
     project_name: str
     package_summary: str
-    sender_name: Optional[str] = "Superior Consultation"
+    sender_name: Optional[str] = "Molecular Project Development LLC"
 
 class CompletePackageV13Request(BaseModel):
     location: LocationInput
@@ -338,7 +338,7 @@ def build_package_pdf(package_text: str, package_id: str) -> str:
     y = height - 50
 
     c.setFont("Helvetica-Bold", 16)
-    c.drawString(50, y, "Superior Consultation - Draft Work Zone Compliance Package")
+    c.drawString(50, y, "Molecular Project Development LLC - Draft Work Zone Compliance Package")
 
     y -= 20
     c.setFont("Helvetica", 9)
@@ -630,7 +630,7 @@ def health():
 def chat(req: ChatRequest):
     prompt = f"""
 Instruction:
-You are Superior Consultation's AI assistant for road crews, compliance forms, work zones, and deskless workforce operations.
+You are Molecular Project Development LLC's AI assistant for road crews, compliance forms, work zones, and deskless workforce operations.
 
 Rules:
 - Be concise.
@@ -673,7 +673,7 @@ Work Zone Plan:
 def document(req: DocumentRequest):
     prompt = f"""
 Instruction:
-Create a {req.document_type} for Superior Consultation's road crew/compliance workflow.
+Create a {req.document_type} for Molecular Project Development LLC's road crew/compliance workflow.
 
 Rules:
 - Tone: {req.tone}
@@ -872,7 +872,7 @@ def package_pdf(req: CompliancePackageRequest):
 
     y = height - 50
     c.setFont("Helvetica-Bold", 16)
-    c.drawString(50, y, "Superior Consultation - Draft Work Zone Compliance Package")
+    c.drawString(50, y, "Molecular Project Development LLC - Draft Work Zone Compliance Package")
 
     y -= 35
     c.setFont("Helvetica", 10)
@@ -1314,7 +1314,7 @@ Manifest:
 Important: This package is a draft planning aid. Final field setup must be reviewed by qualified personnel before deployment.
 
 Thank you,
-Superior Consultation
+Molecular Project Development LLC
 """.strip()
 
     delivery_record = {
@@ -1400,7 +1400,7 @@ The completed package will include:
 Important: Final field setup must be reviewed by qualified personnel before deployment.
 
 Thank you,
-Superior Consultation
+Molecular Project Development LLC
 """.strip()
 
     return {

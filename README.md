@@ -1,6 +1,6 @@
 # Enterprise Gemma V2
 
-Development foundation for a service from **Molecular Project Development LLC**, formerly **Superior Consultation LLC**, to integrate into [Work Zone OS](https://workzoneos.org).
+Development foundation for a service from **Molecular Project Development LLC**, to integrate into [Work Zone OS](https://workzoneos.org).
 
 ## Recovery baseline
 
