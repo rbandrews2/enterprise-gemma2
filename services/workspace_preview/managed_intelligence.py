@@ -121,5 +121,7 @@ class ManagedGemmaIntelligence:
                 return answer
             except (httpx.HTTPError, TimeoutError, ValueError, KeyError, IndexError, TypeError, AttributeError, ModelUnavailable) as error:
                 self.last_success = None
-                logger.warning('Atlas managed reply failed error_type=%s', type(error).__name__)
+                logger.warning('Atlas reply failed mode=%s error_type=%s upstream_status=%s',
+                               self.mode, type(error).__name__,
+                               error.response.status_code if isinstance(error, httpx.HTTPStatusError) else None)
                 raise ModelUnavailable('Atlas could not finish its reply. Your saved work is unchanged; please try again.') from error

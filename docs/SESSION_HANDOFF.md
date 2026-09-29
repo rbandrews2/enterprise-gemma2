@@ -4,6 +4,9 @@ Ray authorized a separate restricted Google Cloud V2 staging deployment. Product
 
 ## Latest resume checkpoint
 
+September 29 reliability local checkpoint: four private-adapter tests passed for overlap rejection, streamed-response disconnect cleanup, deadline cancellation and recovery after upstream HTTP failure. Safe diagnostics now include provider mode/status without bodies or credentials. Full suite 186 total: 170 passed/16 database skips. See ATLAS_RELIABILITY_20260929.md. No cloud deployment or paid calls in this pass; diagnostics not deployed. Next bounded cloud cold-start/concurrency/cancellation tests after usage/auth preflight; source citation acceptance remains passed.
+
+
 September 29 cited saved-job test PASSED: private full-size model reply 5.288s, three revision/page-or-section candidate citations, missing authority/site/geometry/permit evidence identified, no invented placements or performed actions. Saved job/stale409/tenant403 and fresh account validation passed. See ATLAS_CITED_ACCEPTANCE_20260929.md for limits, IAM propagation retry and operator ADC workaround. Cleanup verified: app 00013-kmx Ready with Atlas disabled, GPU service deleted, four fixtures disabled and proxy/guard stopped. Next reliability/cold-start/concurrency/cancellation gate; broader citation relevance and placement approval remain open.
 
 
