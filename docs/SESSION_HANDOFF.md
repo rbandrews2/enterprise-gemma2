@@ -4,6 +4,9 @@ Ray authorized a separate restricted Google Cloud V2 staging deployment. Product
 
 ## Latest resume checkpoint
 
+September 29 resumed: staging citation runner now rejects expired/near-expiry operator and synthetic tokens before writes, refreshes/checks operator token before model request, and flushes sanitized stage/status evidence. Commit c2141ef. Local suite 182 total: 166 passed, 16 database skips. Browser Cloud login completed, but Cloud SDK reports no active account; normal CLI credential refresh is pending. No paid inference or cloud deployment started this pass. Next complete CLI authentication, verify private app HTTP access and cumulative trial usage, then run the pending cited saved-job test.
+
+
 Planning update: Ray requested the sequential remaining-task list for review when he returns in Plan mode. See REMAINING_TASKS.md (16 ordered tasks). No implementation resumed; the end-of-day cloud checkpoint below remains unchanged.
 
 
