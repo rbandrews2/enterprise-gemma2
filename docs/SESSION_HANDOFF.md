@@ -4,6 +4,9 @@ Ray authorized a separate restricted Google Cloud V2 staging deployment. Product
 
 ## Latest resume checkpoint
 
+September 29 cited saved-job test PASSED: private full-size model reply 5.288s, three revision/page-or-section candidate citations, missing authority/site/geometry/permit evidence identified, no invented placements or performed actions. Saved job/stale409/tenant403 and fresh account validation passed. See ATLAS_CITED_ACCEPTANCE_20260929.md for limits, IAM propagation retry and operator ADC workaround. Cleanup verified: app 00013-kmx Ready with Atlas disabled, GPU service deleted, four fixtures disabled and proxy/guard stopped. Next reliability/cold-start/concurrency/cancellation gate; broader citation relevance and placement approval remain open.
+
+
 September 29 resumed: staging citation runner now rejects expired/near-expiry operator and synthetic tokens before writes, refreshes/checks operator token before model request, and flushes sanitized stage/status evidence. Commit c2141ef. Local suite 182 total: 166 passed, 16 database skips. Browser Cloud login completed, but Cloud SDK reports no active account; normal CLI credential refresh is pending. No paid inference or cloud deployment started this pass. Next complete CLI authentication, verify private app HTTP access and cumulative trial usage, then run the pending cited saved-job test.
 
 
