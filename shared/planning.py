@@ -9,7 +9,7 @@ from shared.intake import IntakeAssessment
 
 class ReferenceCandidate(StrictModel):
     source_id: str
-    agency: Literal["VDOT", "FHWA", "OSHA", "VOSH"]
+    agency: Literal["VDOT", "FHWA", "OSHA", "VOSH", "NIOSH"]
     title: str
     edition: str | None
     revision: str = Field(pattern=r"^[a-f0-9]{64}$")
@@ -38,7 +38,7 @@ class ReferenceTopic(StrictModel):
 
 class SourceAvailability(StrictModel):
     source_id: str
-    agency: Literal["VDOT", "FHWA", "OSHA", "VOSH"]
+    agency: Literal["VDOT", "FHWA", "OSHA", "VOSH", "NIOSH"]
     status: Literal["searchable", "not_downloaded", "extraction_unavailable", "superseded", "index_stale", "index_unavailable"]
     last_attempt_status: str
     note: str

@@ -154,5 +154,22 @@
     "links_verified_on": "2026-09-29",
     "applicability_note": "Research and prevention guidance, not an enforceable OSHA standard. No automatic compliance approval.",
     "publication_status": "unknown"
+  },
+  {
+    "id": "niosh-internal-traffic-plans",
+    "agency": "NIOSH",
+    "title": "Using Internal Traffic Control Plans to Prevent Construction Worker Injuries and Fatalities in Work Zones",
+    "url": "https://www.cdc.gov/niosh/bulletin/2024/struck-by.html",
+    "allowed_redirects": [],
+    "publication_page": "https://www.cdc.gov/niosh/bulletin/2024/struck-by.html",
+    "edition": "April 10, 2024",
+    "jurisdiction": "US; research and guidance",
+    "kind": "html",
+    "effective_from": null,
+    "effective_to": null,
+    "applicability_note": "Research guidance, not a regulatory standard. Linked documents need independent currency review; cited publication 2001-128 was withdrawn August 2025.",
+    "publication_status": "unknown",
+    "links_verified_on": "2026-09-29",
+    "usage_note": "Official reference; redistribution and operational applicability require review."
   }
 ]

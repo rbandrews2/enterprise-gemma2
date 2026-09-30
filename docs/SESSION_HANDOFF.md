@@ -4,6 +4,9 @@ Ray authorized a separate restricted Google Cloud V2 staging deployment. Product
 
 ## Latest resume checkpoint
 
+Federal follow-up: repaired NIOSH planning schema mismatch and included prevention guidance in worker-safety discovery/model instructions. Real-catalog in-process HTTP planning check200 with unavailable NIOSH entries; synthetic retrieval regression added. Alternative 2024NIOSH bulletin also403. CDC marks2001-128 withdrawn August2025; excluded as current evidence. No new searchable federal originals or cloud changes. See knowledge/FEDERAL_COVERAGE.md.
+
+
 Federal coverage requested: added NIOSH agency/official CDC host and five OSHA/NIOSH catalog entries. FHWA already searchable. All five new local downloads returned403; access remains unresolved, no new searchable originals or cloud deployment. See knowledge/FEDERAL_COVERAGE.md and federal-access-20260929.json. Next resolve official retrieval and test grounded federal citations; do not claim catalog equals model access.
 
 

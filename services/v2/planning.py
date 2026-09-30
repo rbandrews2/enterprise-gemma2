@@ -8,7 +8,7 @@ from services.v2.knowledge.store import Store, IndexUnavailable
 def topics_for(request):
     topics = [
         ("traffic_control", "temporary traffic control", ("VDOT", "FHWA"), "Work-zone context for this job."),
-        ("worker_safety", "safety", ("OSHA", "VOSH"), "Worker-safety references to review alongside the JSA recommendation."),
+        ("worker_safety", "safety", ("OSHA", "VOSH", "NIOSH"), "Worker-safety requirements and separately identified prevention guidance."),
     ]
     if set(request.requested_outputs) & {"work_zone_setup", "annotated_image"}:
         topics += [("advance_warning", "advance warning", ("VDOT", "FHWA"), "The requested setup or image needs warning-sign review."),
@@ -87,6 +87,7 @@ def discover(request: IntakeRequest, store: Store) -> PlanningReferences:
                 item.note = "Downloaded text exists, but the search index is unavailable."
 
     gaps = [
+        "NIOSH material is research/prevention guidance, not an enforceable OSHA standard; resolve VOSH jurisdiction separately.",
         "Keyword matches are reference candidates, not a determination of governing requirements or sign/flagger placement.",
         "Road ownership, jurisdiction, locality rules, permit/contract conditions, and project dates still require verification.",
         "The project date is recorded but does not automatically establish the applicable edition; effective dates and exceptions require review.",

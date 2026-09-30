@@ -58,6 +58,25 @@ class PlanningTests(unittest.TestCase):
         self.assertTrue(all(t['status']=='library_unavailable' for t in response['topics']))
         self.assertTrue(response['assessment']['form_recommendations'])
 
+    def test_niosh_unavailable_then_searchable_guidance(self):
+        self.store.catalog['research-reference'] = self.store.catalog['worker-reference'].model_copy(
+            update={'id': 'research-reference', 'agency': 'NIOSH'})
+        self.store.rebuild()
+        missing = self.plan()
+        entry = next(x for x in missing['source_availability'] if x['agency'] == 'NIOSH')
+        self.assertEqual(entry['status'], 'not_downloaded')
+        with httpx.Client(transport=httpx.MockTransport(lambda req: httpx.Response(
+                200, content=BODY.replace(b'Temporary traffic control', b'Worker safety guidance'),
+                headers={'content-type': 'text/html'}))) as client:
+            self.store.ingest('research-reference', client)
+        self.store.rebuild()
+        result = self.plan()
+        worker = next(x for x in result['topics'] if x['id'] == 'worker_safety')
+        self.assertEqual(worker['candidates'][0]['agency'], 'NIOSH')
+        self.assertEqual(worker['candidates'][0]['applicability_status'], 'unresolved')
+        self.assertTrue(any('not an enforceable OSHA standard' in gap for gap in result['coverage_gaps']))
+        self.assertFalse(result['approved_for_field_use'])
+
     def test_stale_index_excluded_even_without_matching_words(self):
         self.ingest();self.store.rebuild()
         self.ingest(BODY.replace(b'Temporary traffic control',b'Entirely changed source text'))
