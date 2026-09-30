@@ -58,6 +58,15 @@ class PlanningTests(unittest.TestCase):
         self.assertTrue(all(t['status']=='library_unavailable' for t in response['topics']))
         self.assertTrue(response['assessment']['form_recommendations'])
 
+    def test_osha_plural_flaggers_are_discovered(self):
+        body = b'<html><main><h1>Signaling</h1><p>Flaggers and warning garments.</p></main></html>'
+        with httpx.Client(transport=httpx.MockTransport(lambda req: httpx.Response(
+                200, content=body, headers={'content-type': 'text/html'}))) as client:
+            self.store.ingest('worker-reference', client)
+        self.store.rebuild()
+        topic = next(t for t in self.plan()['topics'] if t['id'] == 'flaggers')
+        self.assertEqual([c['agency'] for c in topic['candidates']], ['OSHA'])
+
     def test_niosh_unavailable_then_searchable_guidance(self):
         self.store.catalog['research-reference'] = self.store.catalog['worker-reference'].model_copy(
             update={'id': 'research-reference', 'agency': 'NIOSH'})

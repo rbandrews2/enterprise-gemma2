@@ -171,5 +171,31 @@
     "publication_status": "unknown",
     "links_verified_on": "2026-09-29",
     "usage_note": "Official reference; redistribution and operational applicability require review."
+  },
+  {
+    "id": "osha-1926-200-gpo-2025",
+    "agency": "OSHA",
+    "title": "29 CFR 1926.200 Accident prevention signs and tags (GPO annual edition)",
+    "url": "https://www.govinfo.gov/content/pkg/CFR-2025-title29-vol8/pdf/CFR-2025-title29-vol8-sec1926-200.pdf",
+    "publication_page": "https://www.govinfo.gov/content/pkg/CFR-2025-title29-vol8/pdf/CFR-2025-title29-vol8-sec1926-200.pdf",
+    "edition": "July 1, 2025 annual CFR edition",
+    "jurisdiction": "US; Virginia VOSH adoption and project applicability require review",
+    "kind": "pdf",
+    "links_verified_on": "2026-09-29",
+    "applicability_note": "Dated annual edition, not verified current law. Check subsequent amendments, incorporated standards and VOSH requirements. PDF includes neighboring section text; cite exact section and physical page. No automatic applicability approval.",
+    "publication_status": "unknown"
+  },
+  {
+    "id": "osha-1926-201-gpo-2025",
+    "agency": "OSHA",
+    "title": "29 CFR 1926.201 Signaling (GPO annual edition)",
+    "url": "https://www.govinfo.gov/content/pkg/CFR-2025-title29-vol8/pdf/CFR-2025-title29-vol8-sec1926-201.pdf",
+    "publication_page": "https://www.govinfo.gov/content/pkg/CFR-2025-title29-vol8/pdf/CFR-2025-title29-vol8-sec1926-201.pdf",
+    "edition": "July 1, 2025 annual CFR edition",
+    "jurisdiction": "US; Virginia VOSH adoption and project applicability require review",
+    "kind": "pdf",
+    "links_verified_on": "2026-09-29",
+    "applicability_note": "Dated annual edition, not verified current law. Check subsequent amendments, incorporated standards and VOSH requirements. PDF includes neighboring section text; cite exact section and physical page. No automatic applicability approval.",
+    "publication_status": "unknown"
   }
 ]

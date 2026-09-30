@@ -15,7 +15,7 @@ CATALOG = ROOT / "knowledge" / "sources.json"
 DATA = ROOT / ".local-data" / "knowledge"
 OFFICIAL_HOSTS = {
     "www.vdot.virginia.gov", "mutcd.fhwa.dot.gov", "www.osha.gov",
-    "www.cdc.gov", "doli.virginia.gov", "www.doli.virginia.gov", "law.lis.virginia.gov",
+    "www.govinfo.gov", "www.cdc.gov", "doli.virginia.gov", "www.doli.virginia.gov", "law.lis.virginia.gov",
 }
 
 

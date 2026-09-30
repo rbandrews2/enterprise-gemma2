@@ -32,3 +32,11 @@ Bulletin: https://www.cdc.gov/niosh/bulletin/2024/struck-by.html
 Next access path: verify accessible official eCFR equivalents for OSHA; obtain publisher-permitted originals for NIOSH. Do not bypass403 or substitute web search snippets for preserved originals. Cloud source snapshot and live model verification remain pending.
 
 Validation: full local discovery suite189 total,173 passed/16 database skips (46.805 seconds). No paid model calls.
+
+## GPO annual-edition access restored
+
+The official GPO PDFs for 29 CFR1926.200 and1926.201 (July1,2025 annual edition) downloaded successfully and added six passages; local index total2618 includes historical revisions. Hashes and real-catalog planning evidence are in gpo-access-20260929.json. These are separate sources; original OSHA failures remain recorded. Publication status is unknown and extraction/applicability remain unreviewed. Annual edition does not establish current2026 requirements. PDFs include neighboring section text, so physical page and actual section must both be checked.
+
+In-process HTTP search with OSHA filter returned matches. Planning initially missed plural Flaggers; deterministic singular/plural topic lookup now returns two OSHA candidates with physical page, hash, edition and unreviewed status. Added a regression test. This validates reference delivery to planning, not a generated model answer or legal applicability.
+
+The eCFR direct downloader redirected to unblock.federalregister.gov; no challenge bypass was attempted. NIOSH remains inaccessible to the local downloader. No cloud snapshot deployment occurred; new originals are ignored local data and not GitHub-backed. Next review these excerpts/current amendments and incorporated editions, resolve NIOSH access, then package and verify the updated staging source library.

@@ -11,8 +11,8 @@ def topics_for(request):
         ("worker_safety", "safety", ("OSHA", "VOSH", "NIOSH"), "Worker-safety requirements and separately identified prevention guidance."),
     ]
     if set(request.requested_outputs) & {"work_zone_setup", "annotated_image"}:
-        topics += [("advance_warning", "advance warning", ("VDOT", "FHWA"), "The requested setup or image needs warning-sign review."),
-                   ("flaggers", "flagger", ("VDOT", "FHWA"), "Determine whether and how flagging applies before positioning icons.")]
+        topics += [("advance_warning", "advance warning", ("VDOT", "FHWA", "OSHA"), "The requested setup or image needs warning-sign review."),
+                   ("flaggers", "flagger", ("VDOT", "FHWA", "OSHA"), "Determine whether and how flagging applies before positioning icons.")]
     if request.work_type == "line_striping":
         topics.append(("striping", "marking", ("VDOT", "FHWA"), "Customer selected line striping."))
     if "traffic_overlay" in request.requested_outputs:
@@ -62,8 +62,12 @@ def discover(request: IntakeRequest, store: Store) -> PlanningReferences:
             for source_id, source in store.catalog.items():
                 if source.agency not in agencies or availability[source_id].status != "searchable":
                     continue
-                found = store.search(query, source_id=source_id, limit=1, latest_only=True)
-                for row in found["results"]:
+                queries = (query, "flaggers") if topic_id == "flaggers" else (query,)
+                rows = {}
+                for term in queries:
+                    for row in store.search(term, source_id=source_id, limit=1, latest_only=True)["results"]:
+                        rows[(row["revision"], row["id"])] = row
+                for row in rows.values():
                     if row["revision"] != revisions[source_id]:
                         availability[source_id].status = "index_stale"
                         availability[source_id].note = "Indexed revision differs from the latest download; rebuild before discovery."

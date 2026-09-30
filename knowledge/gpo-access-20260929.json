@@ -1,0 +1,32 @@
+{
+  "sources": {
+    "osha-1926-200-gpo-2025": {
+      "attempted_at": "2026-09-30T03:08:53.717462+00:00",
+      "status": "extracted",
+      "revision": "d8ed884269055dab877925052c6b5a1fe2227be36c1b5aa4caf958f8e15fe596"
+    },
+    "osha-1926-201-gpo-2025": {
+      "attempted_at": "2026-09-30T03:08:54.951256+00:00",
+      "status": "extracted",
+      "revision": "bc4e03b1dcdfdc2ddd913c1856d5b872c3d40b0daacaeb598429bf9d66fce054"
+    }
+  },
+  "planning_http": 200,
+  "osha_flagger_candidates": [
+    {
+      "source_id": "osha-1926-200-gpo-2025",
+      "revision": "d8ed884269055dab877925052c6b5a1fe2227be36c1b5aa4caf958f8e15fe596",
+      "page": 2,
+      "edition": "July 1, 2025 annual CFR edition",
+      "review_status": "unreviewed"
+    },
+    {
+      "source_id": "osha-1926-201-gpo-2025",
+      "revision": "bc4e03b1dcdfdc2ddd913c1856d5b872c3d40b0daacaeb598429bf9d66fce054",
+      "page": 1,
+      "edition": "July 1, 2025 annual CFR edition",
+      "review_status": "unreviewed"
+    }
+  ],
+  "live_model_tested": false
+}

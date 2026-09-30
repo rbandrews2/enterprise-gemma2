@@ -4,6 +4,9 @@ Ray authorized a separate restricted Google Cloud V2 staging deployment. Product
 
 ## Latest resume checkpoint
 
+Federal access partial success: official GPO2025 annual OSHA1926.200/.201 PDFs ingested, six passages, total2618. Added OSHA flagger discovery and singular/plural regression after real-catalog test exposed mismatch. Planning HTTP200 returns two OSHA revision/page candidates; dated/unreviewed, not current-law approval. Evidence knowledge/gpo-access-20260929.json. NIOSH still blocked; eCFR redirects to challenge (not bypassed). No GPU/cloud deployment. New source originals local ignored data only.
+
+
 Federal follow-up: repaired NIOSH planning schema mismatch and included prevention guidance in worker-safety discovery/model instructions. Real-catalog in-process HTTP planning check200 with unavailable NIOSH entries; synthetic retrieval regression added. Alternative 2024NIOSH bulletin also403. CDC marks2001-128 withdrawn August2025; excluded as current evidence. No new searchable federal originals or cloud changes. See knowledge/FEDERAL_COVERAGE.md.
 
 
