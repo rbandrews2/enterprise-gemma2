@@ -1,0 +1,120 @@
+{
+  "checked_on": "2026-09-29",
+  "timezone": "America/New_York",
+  "sources": [
+    {
+      "source_id": "vdot-vwapm-2026",
+      "attempt": {
+        "attempted_at": "2026-09-30T02:54:20.761783+00:00",
+        "status": "unchanged",
+        "revision": "f16aa1782e85c4b1237823eb8fbaafdf06128f3cc8d2c17c16fb696b92415274"
+      },
+      "revisions": [
+        {
+          "revision": "f16aa1782e85c4b1237823eb8fbaafdf06128f3cc8d2c17c16fb696b92415274",
+          "passages": 649,
+          "review_status": "extraction_checked"
+        }
+      ]
+    },
+    {
+      "source_id": "vdot-field-guide-2026",
+      "attempt": {
+        "attempted_at": "2026-09-30T02:54:22.363262+00:00",
+        "status": "unchanged",
+        "revision": "3c311ed030cbba7e91f684092c32b26cc7eb55d625f47eb1c1f3eaf94378c8b4"
+      },
+      "revisions": [
+        {
+          "revision": "3c311ed030cbba7e91f684092c32b26cc7eb55d625f47eb1c1f3eaf94378c8b4",
+          "passages": 91,
+          "review_status": "extraction_checked"
+        }
+      ]
+    },
+    {
+      "source_id": "vdot-known-errors",
+      "attempt": {
+        "attempted_at": "2026-09-30T02:54:22.893457+00:00",
+        "status": "unchanged",
+        "revision": "bec29b070d4cbe642761fd8a666331df6d48d220346a56d3c9ad2fc0e2a7f80b"
+      },
+      "revisions": [
+        {
+          "revision": "bec29b070d4cbe642761fd8a666331df6d48d220346a56d3c9ad2fc0e2a7f80b",
+          "passages": 4,
+          "review_status": "unreviewed"
+        }
+      ]
+    },
+    {
+      "source_id": "fhwa-mutcd-11-r1",
+      "attempt": {
+        "attempted_at": "2026-09-30T02:54:23.248988+00:00",
+        "status": "unchanged",
+        "revision": "f508594285e5fccc45714660cc6aba1f895ae88226449345582fbbc1ceb7ba07"
+      },
+      "revisions": [
+        {
+          "revision": "f508594285e5fccc45714660cc6aba1f895ae88226449345582fbbc1ceb7ba07",
+          "passages": 1852,
+          "review_status": "extraction_checked"
+        }
+      ]
+    },
+    {
+      "source_id": "osha-workzone-facts",
+      "attempt": {
+        "attempted_at": "2026-09-30T02:54:28.687843+00:00",
+        "status": "unavailable",
+        "error": "http_403"
+      },
+      "revisions": []
+    },
+    {
+      "source_id": "vosh-program",
+      "attempt": {
+        "attempted_at": "2026-09-30T02:54:29.195233+00:00",
+        "status": "extracted",
+        "revision": "175b586a12b25388f6a17b2da24d82692cd46ee5601247561e6c64a917e6df26"
+      },
+      "revisions": [
+        {
+          "revision": "175b586a12b25388f6a17b2da24d82692cd46ee5601247561e6c64a917e6df26",
+          "passages": 5,
+          "review_status": "unreviewed"
+        },
+        {
+          "revision": "8f5ed3e4daf8d25c5bd27bd4fae7083af72b52f3d58a12cd5ba990ac9b46f3ae",
+          "passages": 5,
+          "review_status": "extraction_checked"
+        }
+      ]
+    },
+    {
+      "source_id": "vosh-regulatory",
+      "attempt": {
+        "attempted_at": "2026-09-30T02:54:31.469708+00:00",
+        "status": "extracted",
+        "revision": "d34149d02498f36c0fe7ce8105dd4488de649ff92b7556dba3953382a59998f5"
+      },
+      "revisions": [
+        {
+          "revision": "d34149d02498f36c0fe7ce8105dd4488de649ff92b7556dba3953382a59998f5",
+          "passages": 3,
+          "review_status": "unreviewed"
+        },
+        {
+          "revision": "1c77a3805cd1fa99badb03e7b904f92169a6dd28aa4077d3b84a9c6a4ab12c13",
+          "passages": 3,
+          "review_status": "extraction_checked"
+        }
+      ]
+    }
+  ],
+  "restore_check": {
+    "indexed_passages": 2612,
+    "current_revision_mapping_matches": true,
+    "method": "Copied preserved originals, extraction files and metadata without SQLite; rebuilt and matched current revision mapping."
+  }
+}

@@ -8,8 +8,8 @@
     "edition": "11.0 January 2026",
     "jurisdiction": "VA: VDOT roadways",
     "kind": "pdf",
-    "links_verified_on": "2026-09-17",
-    "applicability_note": "Discovery reference only. Confirm authority, project dates, exceptions, and current amendments before use.",
+    "links_verified_on": "2026-09-29",
+    "applicability_note": "VDOT publication page states January 2026 v11.0 applies after January 18, 2026, with exceptions for earlier advertised contracts or issued land use permits and district approvals. Resolve road authority, contract/permit dates, district conditions and amendments for each project. No automatic applicability approval.",
     "publication_status": "current_at_verification"
   },
   {
@@ -21,8 +21,8 @@
     "edition": "January 2026",
     "jurisdiction": "VA: VDOT roadways",
     "kind": "pdf",
-    "links_verified_on": "2026-09-17",
-    "applicability_note": "Discovery reference only. Confirm authority, project dates, exceptions, and current amendments before use.",
+    "links_verified_on": "2026-09-29",
+    "applicability_note": "Informal companion to VWAPM, not official policy. Confirm governing manual, road authority, project dates, exceptions and current amendments before use.",
     "publication_status": "current_at_verification"
   },
   {
@@ -31,10 +31,10 @@
     "title": "VWAPM known errors",
     "url": "https://www.vdot.virginia.gov/media/vdotvirginiagov/doing-business/technical-guidance-and-support/technical-guidance-documents/traffic-operations/wapm-list-known-errors_acc.pdf",
     "publication_page": "https://www.vdot.virginia.gov/doing-business/technical-guidance-and-support/technical-guidance-documents/work-area-protection-manual-and-pocket-guide/",
-    "edition": null,
+    "edition": "2026 VWAPM edition corrections; individual issue date not verified",
     "jurisdiction": "VA: VDOT roadways",
     "kind": "pdf",
-    "links_verified_on": "2026-09-17",
+    "links_verified_on": "2026-09-29",
     "applicability_note": "Discovery reference only. Confirm authority, project dates, exceptions, and current amendments before use.",
     "publication_status": "unknown"
   },
@@ -47,7 +47,7 @@
     "edition": "11th Edition Revision 1 December 2025",
     "jurisdiction": "US; state adoption and project applicability require review",
     "kind": "pdf",
-    "links_verified_on": "2026-09-17",
+    "links_verified_on": "2026-09-29",
     "applicability_note": "Discovery reference only. Confirm authority, project dates, exceptions, and current amendments before use.",
     "publication_status": "current_at_verification"
   },
@@ -57,7 +57,7 @@
     "title": "Work Zone Traffic Safety Fact Sheet",
     "url": "https://www.osha.gov/sites/default/files/publications/WORK_ZONE_TRAFFIC_SAFETY.pdf",
     "publication_page": "https://www.osha.gov/publications/bytopic/highway-work-zones",
-    "edition": null,
+    "edition": "2005 (official publication listing; local PDF download unavailable)",
     "jurisdiction": "US; VOSH coverage must be resolved in Virginia",
     "kind": "pdf",
     "links_verified_on": "2026-09-17",
@@ -73,7 +73,7 @@
     "edition": null,
     "jurisdiction": "VA; jurisdiction exclusions require review",
     "kind": "html",
-    "links_verified_on": "2026-09-17",
+    "links_verified_on": "2026-09-29",
     "applicability_note": "Discovery reference only. Confirm authority, project dates, exceptions, and current amendments before use.",
     "publication_status": "unknown"
   },
@@ -86,7 +86,7 @@
     "edition": null,
     "jurisdiction": "VA",
     "kind": "html",
-    "links_verified_on": "2026-09-17",
+    "links_verified_on": "2026-09-29",
     "applicability_note": "Discovery reference only. Confirm authority, project dates, exceptions, and current amendments before use.",
     "publication_status": "unknown"
   }

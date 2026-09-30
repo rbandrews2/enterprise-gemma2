@@ -4,6 +4,9 @@ Ray authorized a separate restricted Google Cloud V2 staging deployment. Product
 
 ## Latest resume checkpoint
 
+September 29 resumed on another task: official source revalidation completed as a bounded task-3 increment. Four unchanged PDF hashes; two new unreviewed VOSH HTML revisions (same extracted text/sections); OSHA local download remains403. Local restore without SQLite rebuilt2612 passages and matched current revisions. See SOURCE_REVALIDATION_20260929.md and knowledge/revalidation-20260929.json. No GPU/cloud changes. Source task3 and Atlas cloud reliability remain open.
+
+
 PAUSED after September 29 Atlas testing at Ray's request. Real loopback HTTP synthetic-provider test proves disconnect closes upstream socket, releases the request gate, and next request recovers; no real model call this pass. Full local suite 188 total: 172 passed, 16 database skips. Cloud Shell reconnected and read-only check reconfirmed app 00015-qfq, Atlas enabled=0, inference service absent. Narrow historical failure-log query returned no matches and does not explain prior 503. Cloud cancellation/cold-start remain OPEN; diagnostic changes are not deployed. Next: usage/auth preflight within approved $15 trial, deploy existing safe failure-code instrumentation, then bounded cloud cancellation/recovery test with correlated evidence and cleanup. No automatic continuation; resume when Ray returns.
 
 
