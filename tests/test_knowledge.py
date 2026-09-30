@@ -235,7 +235,7 @@ class StoreTests(unittest.TestCase):
         self.assertEqual(len(response['results']), 1)
 
     def test_catalog_is_valid(self):
-        self.assertEqual({item.agency for item in load_catalog().values()}, {'VDOT','FHWA','OSHA','VOSH'})
+        self.assertEqual({item.agency for item in load_catalog().values()}, {'VDOT','FHWA','OSHA','VOSH','NIOSH'})
 
 
 if __name__ == '__main__':

@@ -1,0 +1,27 @@
+{
+  "osha-workzone-standards": {
+    "attempted_at": "2026-09-30T02:57:58.790129+00:00",
+    "status": "unavailable",
+    "error": "http_403"
+  },
+  "osha-1926-200": {
+    "attempted_at": "2026-09-30T02:57:59.310782+00:00",
+    "status": "unavailable",
+    "error": "http_403"
+  },
+  "osha-1926-201": {
+    "attempted_at": "2026-09-30T02:57:59.448118+00:00",
+    "status": "unavailable",
+    "error": "http_403"
+  },
+  "osha-1926-202": {
+    "attempted_at": "2026-09-30T02:57:59.597727+00:00",
+    "status": "unavailable",
+    "error": "http_403"
+  },
+  "niosh-highway-safety": {
+    "attempted_at": "2026-09-30T02:57:59.738165+00:00",
+    "status": "unavailable",
+    "error": "http_403"
+  }
+}

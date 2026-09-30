@@ -1,0 +1,20 @@
+# Federal reference coverage
+
+September 29, 2026 Eastern. Customer requirement: Atlas must cover federal worker safety alongside state/local traffic-control requirements.
+
+- **FHWA (USDOT):** MUTCD, including Part 6 temporary traffic control. Preserved and searchable locally and in the last source-enabled staging image. Project/state applicability remains unapproved.
+- **OSHA (USDOL):** workplace safety standards. Catalog now includes the highway-work-zone standards directory and 29 CFR 1926.200 (signs/tags), .201 (signaling/flaggers), .202 (barricades), alongside the fact sheet. Local downloads returned HTTP403; no searchable OSHA originals are present. Confirm incorporated MUTCD edition under 1926.6 rather than assuming OSHA incorporates the newest FHWA edition.
+- **NIOSH (CDC):** highway-worker injury-prevention research and guidance. Added agency/filter support and official CDC source to catalog. This guidance must not be presented as an enforceable OSHA standard. Local download returned HTTP403; no searchable NIOSH original is present.
+- **Virginia VOSH:** resolve state-plan jurisdiction, exclusions and adopted/additional standards before applying federal requirements to a Virginia job.
+
+Official discovery links:
+- https://mutcd.fhwa.dot.gov/kno_11th_Editionr1.htm
+- https://www.osha.gov/highway-workzones/standards
+- https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.201
+- https://www.cdc.gov/niosh/motor-vehicle/highway/
+
+## Access status and completion gate
+
+`federal-access-20260929.json` records actual failed attempts. Catalog inclusion does not mean Atlas can quote or retrieve those documents. New sources are unreviewed and not deployed. Source API reports unavailable; preserve this explicitly in answers. No access controls were bypassed.
+
+Next: obtain publisher-permitted accessible official originals (or verified official eCFR equivalents for regulations), ingest them with origin/hash/section metadata, check extraction and role labeling, test filtered retrieval and Atlas grounding, then package a new staging source snapshot. Also curate work-type-specific hazards such as excavation, equipment/backovers and electrical exposure; this initial set is not complete safety coverage.

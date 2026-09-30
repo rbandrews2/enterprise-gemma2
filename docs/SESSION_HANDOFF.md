@@ -4,6 +4,9 @@ Ray authorized a separate restricted Google Cloud V2 staging deployment. Product
 
 ## Latest resume checkpoint
 
+Federal coverage requested: added NIOSH agency/official CDC host and five OSHA/NIOSH catalog entries. FHWA already searchable. All five new local downloads returned403; access remains unresolved, no new searchable originals or cloud deployment. See knowledge/FEDERAL_COVERAGE.md and federal-access-20260929.json. Next resolve official retrieval and test grounded federal citations; do not claim catalog equals model access.
+
+
 September 29 resumed on another task: official source revalidation completed as a bounded task-3 increment. Four unchanged PDF hashes; two new unreviewed VOSH HTML revisions (same extracted text/sections); OSHA local download remains403. Local restore without SQLite rebuilt2612 passages and matched current revisions. See SOURCE_REVALIDATION_20260929.md and knowledge/revalidation-20260929.json. No GPU/cloud changes. Source task3 and Atlas cloud reliability remain open.
 
 

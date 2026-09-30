@@ -8,14 +8,14 @@ from urllib.parse import urlsplit
 from pydantic import Field, model_validator
 from shared.contracts import StrictModel
 
-Agency = Literal["VDOT", "FHWA", "OSHA", "VOSH"]
+Agency = Literal["VDOT", "FHWA", "OSHA", "VOSH", "NIOSH"]
 Review = Literal["unreviewed", "extraction_checked", "applicability_reviewed"]
 ROOT = Path(__file__).resolve().parents[3]
 CATALOG = ROOT / "knowledge" / "sources.json"
 DATA = ROOT / ".local-data" / "knowledge"
 OFFICIAL_HOSTS = {
     "www.vdot.virginia.gov", "mutcd.fhwa.dot.gov", "www.osha.gov",
-    "doli.virginia.gov", "www.doli.virginia.gov", "law.lis.virginia.gov",
+    "www.cdc.gov", "doli.virginia.gov", "www.doli.virginia.gov", "law.lis.virginia.gov",
 }
 
 

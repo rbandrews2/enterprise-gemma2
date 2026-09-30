@@ -89,5 +89,70 @@
     "links_verified_on": "2026-09-29",
     "applicability_note": "Discovery reference only. Confirm authority, project dates, exceptions, and current amendments before use.",
     "publication_status": "unknown"
+  },
+  {
+    "id": "osha-workzone-standards",
+    "agency": "OSHA",
+    "title": "Highway work zone standards directory",
+    "url": "https://www.osha.gov/highway-workzones/standards",
+    "publication_page": "https://www.osha.gov/highway-workzones/standards",
+    "edition": null,
+    "jurisdiction": "US; resolve Virginia VOSH jurisdiction and adopted standards",
+    "kind": "html",
+    "links_verified_on": "2026-09-29",
+    "applicability_note": "Federal reference; verify state-plan requirements and project applicability. No automatic compliance approval.",
+    "publication_status": "unknown"
+  },
+  {
+    "id": "osha-1926-200",
+    "agency": "OSHA",
+    "title": "29 CFR 1926.200 Accident prevention signs and tags",
+    "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.200",
+    "publication_page": "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.200",
+    "edition": null,
+    "jurisdiction": "US; resolve Virginia VOSH jurisdiction and adopted standards",
+    "kind": "html",
+    "links_verified_on": "2026-09-29",
+    "applicability_note": "Federal reference; verify state-plan requirements and project applicability. No automatic compliance approval.",
+    "publication_status": "unknown"
+  },
+  {
+    "id": "osha-1926-201",
+    "agency": "OSHA",
+    "title": "29 CFR 1926.201 Signaling",
+    "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.201",
+    "publication_page": "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.201",
+    "edition": null,
+    "jurisdiction": "US; resolve Virginia VOSH jurisdiction and adopted standards",
+    "kind": "html",
+    "links_verified_on": "2026-09-29",
+    "applicability_note": "Federal reference; verify state-plan requirements and project applicability. No automatic compliance approval.",
+    "publication_status": "unknown"
+  },
+  {
+    "id": "osha-1926-202",
+    "agency": "OSHA",
+    "title": "29 CFR 1926.202 Barricades",
+    "url": "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.202",
+    "publication_page": "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.202",
+    "edition": null,
+    "jurisdiction": "US; resolve Virginia VOSH jurisdiction and adopted standards",
+    "kind": "html",
+    "links_verified_on": "2026-09-29",
+    "applicability_note": "Federal reference; verify state-plan requirements and project applicability. No automatic compliance approval.",
+    "publication_status": "unknown"
+  },
+  {
+    "id": "niosh-highway-safety",
+    "agency": "NIOSH",
+    "title": "Highway Work Zone Safety",
+    "url": "https://www.cdc.gov/niosh/motor-vehicle/highway/",
+    "publication_page": "https://www.cdc.gov/niosh/motor-vehicle/highway/",
+    "edition": null,
+    "jurisdiction": "US; resolve Virginia VOSH jurisdiction and adopted standards",
+    "kind": "html",
+    "links_verified_on": "2026-09-29",
+    "applicability_note": "Research and prevention guidance, not an enforceable OSHA standard. No automatic compliance approval.",
+    "publication_status": "unknown"
   }
 ]
