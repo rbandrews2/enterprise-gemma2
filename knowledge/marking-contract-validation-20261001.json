@@ -1,0 +1,106 @@
+{
+  "checks": [
+    {
+      "source_id": "vdot-bk234-002020-00",
+      "revision": "260b710397272b1ec8c9d5a8f06d2d452b4df872c708223ec8a470e6fc16ff7b",
+      "section": "BK234-002020-00.docx / Paragraph 5",
+      "note_matches_catalog": true,
+      "review_status": "unreviewed"
+    },
+    {
+      "source_id": "vdot-bk235-002020-00",
+      "revision": "1bbba0ace0d7b6d60e7318e84a95589998bff862520adbf1d7a9eedd62c22ee0",
+      "section": "BK235-002020-00.docx / Paragraph 1",
+      "note_matches_catalog": true,
+      "review_status": "unreviewed"
+    },
+    {
+      "source_id": "vdot-bk246-002020-00",
+      "revision": "23dd77843b67e48b98ff7928bac193d05f4938bc2983b3b2a9559798108267a6",
+      "section": "BK246-002020-00.docx / Paragraph 28",
+      "note_matches_catalog": true,
+      "review_status": "unreviewed"
+    },
+    {
+      "source_id": "vdot-bk704-002020-00",
+      "revision": "7852cf3093f6ca451551d5d11e9ad3931359ca936b29a0bbb4394b9d51dedef3",
+      "section": "BK704-002020-00.docx / Paragraph 14",
+      "note_matches_catalog": true,
+      "review_status": "unreviewed"
+    },
+    {
+      "source_id": "vdot-cn704-000100-00",
+      "revision": "783a410e43a6611b7c0d92f534028be114ae21f5e865849c7ad1272f0741e0f6",
+      "section": "cn704-000100-00.docx / Paragraph 5",
+      "note_matches_catalog": true,
+      "review_status": "unreviewed"
+    },
+    {
+      "source_id": "vdot-cn704-000200-00",
+      "revision": "46f5696e3930a991d4ff66fc192613878ac7955174cae4f338d23fe8eb5690a8",
+      "section": "cn704-000200-00.docx / Paragraph 5",
+      "note_matches_catalog": true,
+      "review_status": "unreviewed"
+    },
+    {
+      "source_id": "vdot-sp704-000100-06",
+      "revision": "ac3e730288c5ab89866ea62961e2ce212bd996e7f60a3e1e7d444db8f1168905",
+      "section": "SP704-000100-06.docx / Paragraph 37",
+      "note_matches_catalog": true,
+      "review_status": "unreviewed"
+    },
+    {
+      "source_id": "vdot-sp704-000120-00",
+      "revision": "7f64f2558c3ff2309bfec290ae12fa07371a8410beeeac4654e7f4c3b7c7f7b3",
+      "section": "SP704-000120-00.docx / Table 30, row 2",
+      "note_matches_catalog": true,
+      "review_status": "unreviewed"
+    },
+    {
+      "source_id": "vdot-sp704-db0120-00",
+      "revision": "b6151eb05ec1deeef23a9b2ba9066d9cd8e8dbbacfb30650ea09f2f0b02f8beb",
+      "section": "SP704-DB0120-00.docx / Paragraph 11",
+      "note_matches_catalog": true,
+      "review_status": "unreviewed"
+    },
+    {
+      "source_id": "vdot-sq704-000110-00",
+      "revision": "59649b3424c6b26d87c6e0289f10b3cda32fb5a576a988451806a37c09845f03",
+      "section": "SQ704-000110-00.docx / Paragraph 5",
+      "note_matches_catalog": true,
+      "review_status": "unreviewed"
+    },
+    {
+      "source_id": "vdot-ss234-002020-01",
+      "revision": "5ac454fe0b73886549a78c5367b8f0d81469d98009b5f0c301502ef636ae1ab3",
+      "section": "SS234-002020-01.docx / Paragraph 23",
+      "note_matches_catalog": true,
+      "review_status": "unreviewed"
+    },
+    {
+      "source_id": "vdot-ss235-002020-01",
+      "revision": "2aa7f2af71ffe498b4676703909d8e32d34b4759182a39ae4910e6fa3838d1c1",
+      "section": "SS235-002020-01.docx / Paragraph 11",
+      "note_matches_catalog": true,
+      "review_status": "unreviewed"
+    },
+    {
+      "source_id": "vdot-ss246-002020-02",
+      "revision": "61647ad9eeed23ce8076a061e27430ace280f90296d0078d8d9a7fb0f6af570c",
+      "section": "SS246-002020-02.docx / Paragraph 65",
+      "note_matches_catalog": true,
+      "review_status": "unreviewed"
+    },
+    {
+      "source_id": "vdot-ss704-002020-02",
+      "revision": "eec0445800878bc5ba5c8de1984d67dc16352a4839a123829dbcfb14d3794608",
+      "section": "SS704-002020-02.docx / Paragraph 15",
+      "note_matches_catalog": true,
+      "review_status": "unreviewed"
+    }
+  ],
+  "snapshot": ".local-data\\source-deployment-20261001-scoped",
+  "verified_files": 139,
+  "cloud_deployed": false,
+  "real_model_tested": false
+}

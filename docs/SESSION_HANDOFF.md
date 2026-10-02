@@ -4,6 +4,9 @@ Ray authorized a separate restricted Google Cloud V2 staging deployment. Product
 
 ## Latest resume checkpoint
 
+October 1 contract-scope pass: text-inspected 14 preserved marking DOCX originals and added member-specific conditions/printed dates to catalog notes. Exact archive+member binding carries curated notes into retrieval and Atlas context without modifying original manifests or annotating different package revisions. Full suite 195:179 passed/16 DB skipped; 14 actual-library scope checks and 139-file snapshot verification passed. Fixed oversized Atlas policy prompt exposed by tests. Evidence knowledge/marking-contract-scope-20261001.json and marking-contract-validation-20261001.json. New snapshot .local-data/source-deployment-20261001-scoped is LOCAL ONLY. Chrome/Cloud Shell not connected this turn; no cloud/GPU/model calls. Visual table review, current-law/contract applicability and staging acceptance remain OPEN. Next connect Cloud Shell, verify cumulative trial spend/auth, transfer and verify scoped snapshot, deploy diagnostics/source update and run bounded marking citation plus cancellation/recovery tests with cleanup.
+
+
 October1 larger combined pass completed: pinned archive DOCX ingestion +14 VDOT marking documents (984passages,7316total), member/paragraph/table citations and applicability notes, unsafe-file tests, actual-catalog retrieval checks,139-file verified local source snapshot .local-data/source-deployment-20261001. Full suite195:179pass/16DBskip. New sources unreviewed; no cloud/model call. Evidence knowledge/marking-word-validation-20261001.json. Next visual table/conditional provision review and bounded staging snapshot/Atlas citation acceptance; NIOSH remains blocked. Prior release dates deferred.
 
 

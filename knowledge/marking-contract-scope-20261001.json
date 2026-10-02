@@ -1,0 +1,506 @@
+[
+  {
+    "source_id": "vdot-bk234-002020-00",
+    "revision": "260b710397272b1ec8c9d5a8f06d2d452b4df872c708223ec8a470e6fc16ff7b",
+    "archive_sha256": "9de0f4078975efb9b44614ff5ee8e1a0ba39fbecc083f85f51b7bf9389eee832",
+    "scope_note": "Section 234 covers glass beads for reflectorizing traffic markings; review alongside the applicable contract and Section 234 supplements, not as a standalone current specification. Text-only scope inspection; layout, tables and project applicability remain unreviewed. Printed dates are not verified effective dates.",
+    "opening_blocks": [
+      {
+        "section": "Paragraph 1",
+        "text": "SECTION 234 – GLASS BEADS FOR REFLECTORIZING TRAFFIC MARKINGS "
+      },
+      {
+        "section": "Paragraph 2",
+        "text": "234.01 – Description "
+      },
+      {
+        "section": "Paragraph 3",
+        "text": "This specification covers glass beads applied on the surface or incorporated into traffic-marking materials so as to produce a retroreflective surface."
+      },
+      {
+        "section": "Paragraph 4",
+        "text": "234.02 – Detail Requirements"
+      },
+      {
+        "section": "Paragraph 5",
+        "text": "Beads shall be manufactured from glass of a composition designed to be highly resistant to traffic wear and weather. Glass beads shall conform to AASHTO M247, Type 1-5, except that at least 80 percent of the beads shall be round when tested in accordance with ASTM D 1155, Procedure B."
+      },
+      {
+        "section": "Paragraph 6",
+        "text": "The Contractor shall provide a written certification that each batch of glass beads used in or on VDOT pavement markings conforms to AASHTO M247 including the total concentration limit of Lead and Arsenic."
+      }
+    ],
+    "visual_review": false,
+    "applicability_approved": false
+  },
+  {
+    "source_id": "vdot-bk235-002020-00",
+    "revision": "1bbba0ace0d7b6d60e7318e84a95589998bff862520adbf1d7a9eedd62c22ee0",
+    "archive_sha256": "9de0f4078975efb9b44614ff5ee8e1a0ba39fbecc083f85f51b7bf9389eee832",
+    "scope_note": "Section 235 covers retroreflectors; a separately preserved SS235 document states replacement of this section. Contract adoption and precedence remain unresolved. Text-only scope inspection; layout, tables and project applicability remain unreviewed. Printed dates are not verified effective dates.",
+    "opening_blocks": [
+      {
+        "section": "Paragraph 1",
+        "text": "SECTION 235 – RETROREFLECTORS "
+      },
+      {
+        "section": "Paragraph 2",
+        "text": "235.01 – Description "
+      },
+      {
+        "section": "Paragraph 3",
+        "text": "Retroreflectors shall consist of a housing/backing with a retroreflective surface on the front and back, if applicable."
+      },
+      {
+        "section": "Paragraph 4",
+        "text": "Retroreflectors for delineators and pavement markers, except temporary markers, shall be molded of methyl methacrylate plastic conforming to Federal Specification L-P-380, Type I, Class 3."
+      },
+      {
+        "section": "Paragraph 5",
+        "text": "Retroreflectors for temporary pavement markers shall have a surface consisting of reflective sheeting or a plastic prismatic element. The housing/backing for temporary pavement markers shall be constructed of methyl methacrylate plastic conforming to Federal Specification L-P-380, Type I, Class 3."
+      },
+      {
+        "section": "Paragraph 6",
+        "text": "Delineators and pavement markers shall be approved by reviewing performance data from one or both of the following test programs:"
+      },
+      {
+        "section": "Paragraph 7",
+        "text": "AASHTO’s National Transportation Product Evaluation Program (AASHTO/NTPEP). Test data values used for approval may be based upon the data generated per the applicable NTPEP Work Plan."
+      }
+    ],
+    "visual_review": false,
+    "applicability_approved": false
+  },
+  {
+    "source_id": "vdot-bk246-002020-00",
+    "revision": "23dd77843b67e48b98ff7928bac193d05f4938bc2983b3b2a9559798108267a6",
+    "archive_sha256": "9de0f4078975efb9b44614ff5ee8e1a0ba39fbecc083f85f51b7bf9389eee832",
+    "scope_note": "Section 246 covers pavement-marking materials; separately preserved SS246 amendments must be reconciled with the governing contract. Text-only scope inspection; layout, tables and project applicability remain unreviewed. Printed dates are not verified effective dates.",
+    "opening_blocks": [
+      {
+        "section": "Paragraph 1",
+        "text": "SECTION 246 – PAVEMENT MARKING"
+      },
+      {
+        "section": "Paragraph 2",
+        "text": "246.01 – Description"
+      },
+      {
+        "section": "Paragraph 3",
+        "text": "These specifications cover material for use in various retroreflective pavement-marking applications."
+      },
+      {
+        "section": "Paragraph 4",
+        "text": "246.02 – Detail Requirements"
+      },
+      {
+        "section": "Paragraph 5",
+        "text": "Materials that must be heated for application shall not exude fumes that are toxic or injurious to persons or property when heated to the application temperature."
+      },
+      {
+        "section": "Paragraph 6",
+        "text": "The marking material (including primers and adhesives) shall not be formulated with any compounds of the heavy metals listed in 40 CFR 261.24, Table 1, except that barium sulfate is allowed. Total heavy metal levels, with the exception of barium sulfate, shall not exceed 20 times the specified regulatory limits."
+      },
+      {
+        "section": "Paragraph 7",
+        "text": "The marking material (including primers and adhesives) shall meet the Virginia Department of Environmental Quality (VDEQ) regulations (9 VAC 5-45, Articles 5 and 6) for Volatile Organic Compounds (VOC)."
+      }
+    ],
+    "visual_review": false,
+    "applicability_approved": false
+  },
+  {
+    "source_id": "vdot-bk704-002020-00",
+    "revision": "7852cf3093f6ca451551d5d11e9ad3931359ca936b29a0bbb4394b9d51dedef3",
+    "archive_sha256": "9de0f4078975efb9b44614ff5ee8e1a0ba39fbecc083f85f51b7bf9389eee832",
+    "scope_note": "Section 704 addresses installation in accordance with the MUTCD, Contract and Engineer direction. Separate supplements and project-specific replacement provisions must be reconciled before use. Text-only scope inspection; layout, tables and project applicability remain unreviewed. Printed dates are not verified effective dates.",
+    "opening_blocks": [
+      {
+        "section": "Paragraph 1",
+        "text": "SECTION 704 – PAVEMENT MARKINGS AND MARKERS"
+      },
+      {
+        "section": "Paragraph 2",
+        "text": "704.01 – Description"
+      },
+      {
+        "section": "Paragraph 3",
+        "text": "This work shall consist of establishing the location of retroreflective pavement markings and installing pavement markings and pavement markers in accordance with the MUTCD, the Contract, and as directed by the Engineer."
+      },
+      {
+        "section": "Paragraph 4",
+        "text": "704.02 – Materials"
+      },
+      {
+        "section": "Paragraph 5",
+        "text": "Pavement Markings shall conform to Section 246."
+      },
+      {
+        "section": "Paragraph 6",
+        "text": "Glass Beads and retroreflective optics materials shall conform to Section 234."
+      },
+      {
+        "section": "Paragraph 7",
+        "text": "Pavement Markers shall conform to Section 235."
+      }
+    ],
+    "visual_review": false,
+    "applicability_approved": false
+  },
+  {
+    "source_id": "vdot-cn704-000100-00",
+    "revision": "783a410e43a6611b7c0d92f534028be114ae21f5e865849c7ad1272f0741e0f6",
+    "archive_sha256": "9de0f4078975efb9b44614ff5ee8e1a0ba39fbecc083f85f51b7bf9389eee832",
+    "scope_note": "Paragraph 3 restricts the guideline to asphalt surface-treatment projects. Paragraph 7 states July 28, 2014; reissued July 12, 2016. Do not generalize its sweeping/installation timing to other marking work. Text-only scope inspection; layout, tables and project applicability remain unreviewed. Printed dates are not verified effective dates.",
+    "opening_blocks": [
+      {
+        "section": "Paragraph 3",
+        "text": "GUIDELINES – Asphalt projects (surface treatment only).{2007-c704cm1}"
+      },
+      {
+        "section": "Paragraph 5",
+        "text": "cn704-000100-00SWEEPING PRIOR TO PAVEMENT MARKING — No earlier than 7 days after completion of surface treatment the Contractor shall sweep the roadway surface prior to installation of permanent pavement markings.  Permanent pavement markings shall be installed within 30 calendar days after completion of surface treatment placement.  The cost of sweeping the roadway prior to installing pavement marking shall be included in the price bid for pavement marking."
+      },
+      {
+        "section": "Paragraph 7",
+        "text": "7-28-14; Reissued 7-12-16 (SPCN)"
+      }
+    ],
+    "visual_review": false,
+    "applicability_approved": false
+  },
+  {
+    "source_id": "vdot-cn704-000200-00",
+    "revision": "46f5696e3930a991d4ff66fc192613878ac7955174cae4f338d23fe8eb5690a8",
+    "archive_sha256": "9de0f4078975efb9b44614ff5ee8e1a0ba39fbecc083f85f51b7bf9389eee832",
+    "scope_note": "Paragraph 3 identifies plant-mix projects with inlaid pavement markers. Paragraph 9 states August 11, 2021. Bridge-deck and joint/crack conditions require project-specific review. Text-only scope inspection; layout, tables and project applicability remain unreviewed. Printed dates are not verified effective dates.",
+    "opening_blocks": [
+      {
+        "section": "Paragraph 3",
+        "text": "GUIDELINES – Plant mix projects with Inlaid Pavement Markers"
+      },
+      {
+        "section": "Paragraph 5",
+        "text": "cn704-000200-00INLAID PAVEMENT MARKER LOCATION AND SPACING — The Contractor shall not install markers on existing bridge decks  Inlaid Pavement Markers shall be installed on new bridge decks where required by the Plans. Inlaid Pavement Markers shall be placed in relation to pavement joints and cracks as follows:"
+      },
+      {
+        "section": "Paragraph 6",
+        "text": "In existing Asphalt Concrete pavement, new or existing Hydraulic Cement Concrete pavement, and bridge decks, the edge of the groove shall be at least 2 inches from pavement joints and cracks, ensuring that the finished line of markers is straight in accordance with the tolerance for pavement markings specified in Section 704.03 of the Specifications. Offset from the longitudinal joint shall take precedence over straightness of the line of markers."
+      },
+      {
+        "section": "Paragraph 7",
+        "text": "In new Hydraulic Cement Concrete pavement or when installed in conjunction with new latex modified microsurfacing or slurry seal treatments, the edge of the groove shall be 2 inches minimum from the surface course pavement joint and 1 inch maximum off alignment from the corresponding pavement marking line. The finished line of markers shall be straight in accordance with the tolerance for pavement markings specified in Section 704.03 of the Specifications.  Straightness of the line of markers and alignment with the corresponding pavement marking line takes precedence over offset from the surface course joint."
+      },
+      {
+        "section": "Paragraph 9",
+        "text": "8-11-21"
+      }
+    ],
+    "visual_review": false,
+    "applicability_approved": false
+  },
+  {
+    "source_id": "vdot-sp704-000100-06",
+    "revision": "ac3e730288c5ab89866ea62961e2ce212bd996e7f60a3e1e7d444db8f1168905",
+    "archive_sha256": "9de0f4078975efb9b44614ff5ee8e1a0ba39fbecc083f85f51b7bf9389eee832",
+    "scope_note": "Paragraph 1 explicitly identifies the 2024 resurfacing program and asphalt schedule projects only; Paragraph 9 states June 12, 2023. Paragraph 11 replaces Section 704 for its scope. Inclusion in a September 2026 ZIP does not establish applicability to 2026 projects or general line striping. Text-only scope inspection; layout, tables and project applicability remain unreviewed. Printed dates are not verified effective dates.",
+    "opening_blocks": [
+      {
+        "section": "Paragraph 1",
+        "text": "GUIDELINES – For all 2024 resurfacing program surface treatment, slurry seal, latex emulsion treatment, and plant mix projects. Asphalt schedule projects only (includes surface treatment, slurry/latex, and plant mix).  If, for a particular project, a price(s) is justified to be different than what is stated in this SP, a SPCN must be written that specifically overrides the cost for that particular item."
+      },
+      {
+        "section": "Paragraph 3",
+        "text": "SP704-000100-06"
+      },
+      {
+        "section": "Paragraph 5",
+        "text": "VIRGINIA DEPARTMENT OF TRANSPORTATION"
+      },
+      {
+        "section": "Paragraph 6",
+        "text": "SPECIAL PROVISION FOR"
+      },
+      {
+        "section": "Paragraph 7",
+        "text": "SECTION 704—PAVEMENT MARKINGS AND MARKERS FOR RESURFACING PROGRAM "
+      },
+      {
+        "section": "Paragraph 9",
+        "text": "June 12, 2023"
+      },
+      {
+        "section": "Paragraph 11",
+        "text": "SECTION 704 – PAVEMENT MARKINGS AND MARKERS of the Specifications is replaced with the following:"
+      }
+    ],
+    "visual_review": false,
+    "applicability_approved": false
+  },
+  {
+    "source_id": "vdot-sp704-000120-00",
+    "revision": "7f64f2558c3ff2309bfec290ae12fa07371a8410beeeac4654e7f4c3b7c7f7b3",
+    "archive_sha256": "9de0f4078975efb9b44614ff5ee8e1a0ba39fbecc083f85f51b7bf9389eee832",
+    "scope_note": "Paragraph 1 identifies plant-mix projects and replacement of snow-plowable raised pavement markers. Paragraph 6 states August 26, 2019. Confirm contract inclusion before using its inlaid-marker requirements. Text-only scope inspection; layout, tables and project applicability remain unreviewed. Printed dates are not verified effective dates.",
+    "opening_blocks": [
+      {
+        "section": "Paragraph 1",
+        "text": "Guidelines: Plant Mix projects. “Snow-plowable raised pavement markers” are no longer allowed. Use wherever “snow-plowable raised pavement markers” would have been used."
+      },
+      {
+        "section": "Paragraph 2",
+        "text": "SP704-000120-00"
+      },
+      {
+        "section": "Paragraph 3",
+        "text": "VIRGINIA DEPARTMENT OF TRANSPORTATION"
+      },
+      {
+        "section": "Paragraph 4",
+        "text": "SPECIAL PROVISION FOR"
+      },
+      {
+        "section": "Paragraph 5",
+        "text": "INLAID PAVEMENT MARKERS"
+      },
+      {
+        "section": "Paragraph 6",
+        "text": "August 26, 2019"
+      },
+      {
+        "section": "Paragraph 7",
+        "text": "Description"
+      }
+    ],
+    "visual_review": false,
+    "applicability_approved": false
+  },
+  {
+    "source_id": "vdot-sp704-db0120-00",
+    "revision": "b6151eb05ec1deeef23a9b2ba9066d9cd8e8dbbacfb30650ea09f2f0b02f8beb",
+    "archive_sha256": "9de0f4078975efb9b44614ff5ee8e1a0ba39fbecc083f85f51b7bf9389eee832",
+    "scope_note": "Paragraph 5 states August 26, 2019. Paragraph 7 requires inlaid pavement markers in accordance with the Contract and manufacturer installation instructions. The DB filename alone does not establish contract applicability. Text-only scope inspection; layout, tables and project applicability remain unreviewed. Printed dates are not verified effective dates.",
+    "opening_blocks": [
+      {
+        "section": "Paragraph 1",
+        "text": "SP704-DB0120-00"
+      },
+      {
+        "section": "Paragraph 2",
+        "text": "VIRGINIA DEPARTMENT OF TRANSPORTATION"
+      },
+      {
+        "section": "Paragraph 3",
+        "text": "SPECIAL PROVISION FOR"
+      },
+      {
+        "section": "Paragraph 4",
+        "text": "INLAID PAVEMENT MARKERS"
+      },
+      {
+        "section": "Paragraph 5",
+        "text": "August 26, 2019"
+      },
+      {
+        "section": "Paragraph 6",
+        "text": "Description"
+      },
+      {
+        "section": "Paragraph 7",
+        "text": "This work shall consist of furnishing and installing inlaid pavement markers in accordance with the Contract and manufacturer’s installation instructions. Snow-plowable raised pavement markers conforming to Section 704.03(d)1 of the Specifications shall not be used in the Work."
+      }
+    ],
+    "visual_review": false,
+    "applicability_approved": false
+  },
+  {
+    "source_id": "vdot-sq704-000110-00",
+    "revision": "59649b3424c6b26d87c6e0289f10b3cda32fb5a576a988451806a37c09845f03",
+    "archive_sha256": "9de0f4078975efb9b44614ff5ee8e1a0ba39fbecc083f85f51b7bf9389eee832",
+    "scope_note": "Paragraph 1 identifies schedule-work contracts; Paragraphs 5-6 identify pavement marking/markers with a Data Logger System. Paragraph 8 states September 25, 2020. Do not recommend it as a universal marking requirement. Text-only scope inspection; layout, tables and project applicability remain unreviewed. Printed dates are not verified effective dates.",
+    "opening_blocks": [
+      {
+        "section": "Paragraph 1",
+        "text": "Guidelines: For use on all schedule work contracts."
+      },
+      {
+        "section": "Paragraph 2",
+        "text": "SQ704-000110-00"
+      },
+      {
+        "section": "Paragraph 3",
+        "text": "VIRGINIA DEPARTMENT OF TRANSPORTATION"
+      },
+      {
+        "section": "Paragraph 4",
+        "text": "SPECIAL PROVISION FOR"
+      },
+      {
+        "section": "Paragraph 5",
+        "text": "PAVEMENT MARKING AND MARKERS "
+      },
+      {
+        "section": "Paragraph 6",
+        "text": "(Data Logger System)"
+      },
+      {
+        "section": "Paragraph 8",
+        "text": "September 25, 2020"
+      }
+    ],
+    "visual_review": false,
+    "applicability_approved": false
+  },
+  {
+    "source_id": "vdot-ss234-002020-01",
+    "revision": "5ac454fe0b73886549a78c5367b8f0d81469d98009b5f0c301502ef636ae1ab3",
+    "archive_sha256": "9de0f4078975efb9b44614ff5ee8e1a0ba39fbecc083f85f51b7bf9389eee832",
+    "scope_note": "Paragraph 1 states May 6, 2022; Paragraph 7 replaces Section 234. This is a supplement to the 2020 specifications; verify contract adoption and precedence. Text-only scope inspection; layout, tables and project applicability remain unreviewed. Printed dates are not verified effective dates.",
+    "opening_blocks": [
+      {
+        "section": "Paragraph 1",
+        "text": "SS234-002020-01May 6, 2022"
+      },
+      {
+        "section": "Paragraph 3",
+        "text": "VIRGINIA DEPARTMENT OF TRANSPORTATION"
+      },
+      {
+        "section": "Paragraph 4",
+        "text": "2020 ROAD AND BRIDGE SUPPLEMENTAL SPECIFICATIONS"
+      },
+      {
+        "section": "Paragraph 5",
+        "text": "SECTION 234 – GLASS BEADS AND RETROREFLECTIVE OPTICS "
+      },
+      {
+        "section": "Paragraph 7",
+        "text": "SECTION 234 – GLASS BEADS FOR REFLECTORIZING TRAFFIC MARKINGS of the Specifications is replaced as follows:"
+      },
+      {
+        "section": "Paragraph 9",
+        "text": "SECTION 234 – GLASS BEADS AND RETROREFLECTIVE OPTICS"
+      },
+      {
+        "section": "Paragraph 11",
+        "text": "234.01 – Description"
+      }
+    ],
+    "visual_review": false,
+    "applicability_approved": false
+  },
+  {
+    "source_id": "vdot-ss235-002020-01",
+    "revision": "2aa7f2af71ffe498b4676703909d8e32d34b4759182a39ae4910e6fa3838d1c1",
+    "archive_sha256": "9de0f4078975efb9b44614ff5ee8e1a0ba39fbecc083f85f51b7bf9389eee832",
+    "scope_note": "Paragraph 1 states May 6, 2022; Paragraph 7 deletes and replaces Section 235. Do not combine base and replacement text as independently applicable requirements. Text-only scope inspection; layout, tables and project applicability remain unreviewed. Printed dates are not verified effective dates.",
+    "opening_blocks": [
+      {
+        "section": "Paragraph 1",
+        "text": "SS235-002020-01May 6, 2022"
+      },
+      {
+        "section": "Paragraph 3",
+        "text": "VIRGINIA DEPARTMENT OF TRANSPORTATION"
+      },
+      {
+        "section": "Paragraph 4",
+        "text": "2020 ROAD AND BRIDGE SUPPLEMENTAL SPECIFICATIONS"
+      },
+      {
+        "section": "Paragraph 5",
+        "text": "SECTION 235 – RETROREFLECTORS "
+      },
+      {
+        "section": "Paragraph 7",
+        "text": "SECTION 235 – RETROREFLECTORS of the Specifications is deleted and replaced as follows:"
+      },
+      {
+        "section": "Paragraph 9",
+        "text": "235.01 – Description "
+      },
+      {
+        "section": "Paragraph 11",
+        "text": "Retroreflectors are retroreflective surfaces that redirect the vehicle headlights back to the driver to delineate the road. The retroreflective surface may consist of a plastic prismatic reflector or retroreflective sheeting.  Retroreflectors are used with:"
+      }
+    ],
+    "visual_review": false,
+    "applicability_approved": false
+  },
+  {
+    "source_id": "vdot-ss246-002020-02",
+    "revision": "61647ad9eeed23ce8076a061e27430ace280f90296d0078d8d9a7fb0f6af570c",
+    "archive_sha256": "9de0f4078975efb9b44614ff5ee8e1a0ba39fbecc083f85f51b7bf9389eee832",
+    "scope_note": "Paragraph 1 states May 6, 2022; Paragraphs 7 and 11 amend Section 246, including replacement of specified paragraphs. Reconcile amendments with base text and the contract. Text-only scope inspection; layout, tables and project applicability remain unreviewed. Printed dates are not verified effective dates.",
+    "opening_blocks": [
+      {
+        "section": "Paragraph 1",
+        "text": "SS246-002020-02May 6, 2022"
+      },
+      {
+        "section": "Paragraph 3",
+        "text": "VIRGINIA DEPARTMENT OF TRANSPORTATION"
+      },
+      {
+        "section": "Paragraph 4",
+        "text": "2020 ROAD AND BRIDGE SUPPLEMENTAL SPECIFICATIONS"
+      },
+      {
+        "section": "Paragraph 5",
+        "text": "SECTION 246 – PAVEMENT MARKING "
+      },
+      {
+        "section": "Paragraph 7",
+        "text": "SECTION 246 – PAVEMENT MARKING of the Specifications is amended as follows:"
+      },
+      {
+        "section": "Paragraph 11",
+        "text": "Section 246.02 – Detail Requirements is amended to replace the fifth through seventh paragraphs with the following:"
+      },
+      {
+        "section": "Paragraph 13",
+        "text": "Pavement marking materials shall produce a retroreflective line, message, legend or symbol of specified thickness, width or design in accordance with the MUTCD and Contract requirements."
+      }
+    ],
+    "visual_review": false,
+    "applicability_approved": false
+  },
+  {
+    "source_id": "vdot-ss704-002020-02",
+    "revision": "eec0445800878bc5ba5c8de1984d67dc16352a4839a123829dbcfb14d3794608",
+    "archive_sha256": "9de0f4078975efb9b44614ff5ee8e1a0ba39fbecc083f85f51b7bf9389eee832",
+    "scope_note": "Paragraph 1 states May 6, 2022; Paragraphs 7 and 9 amend Section 704, including replacement of the first materials paragraph. Applicability depends on the contract and surface/material conditions. Text-only scope inspection; layout, tables and project applicability remain unreviewed. Printed dates are not verified effective dates.",
+    "opening_blocks": [
+      {
+        "section": "Paragraph 1",
+        "text": "SS704-002020-02May 6, 2022"
+      },
+      {
+        "section": "Paragraph 3",
+        "text": "VIRGINIA DEPARTMENT OF TRANSPORTATION"
+      },
+      {
+        "section": "Paragraph 4",
+        "text": "2020 ROAD AND BRIDGE SUPPLEMENTAL SPECIFICATIONS"
+      },
+      {
+        "section": "Paragraph 5",
+        "text": "SECTION 704 – PAVEMENT MARKINGS AND MARKERS"
+      },
+      {
+        "section": "Paragraph 7",
+        "text": "SECTION 704 – PAVEMENT MARKINGS AND MARKERS of the Specifications is amended as follows:"
+      },
+      {
+        "section": "Paragraph 9",
+        "text": "Section 704.02 – Materials is amended to replace the first paragraph with the following:"
+      },
+      {
+        "section": "Paragraph 11",
+        "text": "For Type B, Class VI pavement marking materials that are to be applied to latex emulsion or slurry seal surfaces, the selected Type B, Class VI manufacturer shall be a manufacturer that approves and warranties their product for application on that type of surface. "
+      }
+    ],
+    "visual_review": false,
+    "applicability_approved": false
+  }
+]

@@ -188,6 +188,13 @@ class Store:
                                 "retrieved_at", "extraction_checked", "applicability_reviewed", "warnings")}
                             metadata.update({key: manifest["source"].get(key) for key in (
                                 "title", "edition", "jurisdiction", "effective_from", "effective_to", "applicability_note")})
+                            # Operator annotations may evolve without rewriting an original
+                            # manifest. Bind them to the exact approved archive and member;
+                            # a replacement package must not annotate historical revisions.
+                            curated = self.catalog[source_id]
+                            if (source.archive_sha256 and source.archive_sha256 == curated.archive_sha256
+                                    and source.archive_member == curated.archive_member):
+                                metadata["applicability_note"] = curated.applicability_note
                             db.execute("INSERT INTO passages(source_id,agency,revision,page,section,url,text,review_status,publication_status,is_latest,metadata) VALUES(?,?,?,?,?,?,?,?,?,?,?)",
                                        (source_id, source.agency, revision, item["page"], (f"{source.archive_member} / {item['section']}" if source.archive_member else item["section"]), url,
                                         item["text"], manifest["review_status"], self.catalog[source_id].publication_status,

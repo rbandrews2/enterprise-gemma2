@@ -39,6 +39,7 @@ class IntelligenceTests(unittest.TestCase):
         fake = Fake()
         with tempfile.TemporaryDirectory() as directory, patch.dict(os.environ, {'WZOS_WORKSPACE_PREVIEW':'1','K_SERVICE':'','GAE_ENV':'','NETLIFY':''}):
             item = source()
+            item = item.model_copy(update={'applicability_note': 'Fixture contract scope only; not universally applicable.'})
             store = Store(Path(directory)/'sources', {item.id:item})
             with client_for() as transport:
                 revision = store.ingest(item.id, transport)['revision']
@@ -55,6 +56,8 @@ class IntelligenceTests(unittest.TestCase):
                 self.assertEqual(body['citations'][0]['review_status'], 'unreviewed')
                 self.assertEqual(fake.context['saved_job']['id'], 'enterprise-sample')
                 self.assertEqual(fake.context['candidate_references'][0]['revision'], revision)
+                self.assertEqual(fake.context['candidate_references'][0]['applicability_note'], item.applicability_note)
+                self.assertEqual(body['citations'][0]['applicability_note'], item.applicability_note)
                 self.assertLessEqual(len(fake.context['candidate_references'][0]['text']), 600)
 
     def test_missing_library_is_explicit_and_cold_status_does_not_call_model(self):

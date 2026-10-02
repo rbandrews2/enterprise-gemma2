@@ -65,6 +65,20 @@ class WordSourceTests(unittest.TestCase):
             self.assertEqual(row['section'], 'marking.docx / Paragraph 1')
             self.assertEqual(row['revision'], hashlib.sha256(original).hexdigest())
             self.assertFalse(row['applicability_reviewed'])
+            # A scope annotation reaches retrieval without altering evidence files.
+            manifest = next((store.data / 'revisions' / source.id).glob('*/manifest.json'))
+            preserved = manifest.read_bytes()
+            annotated = source.model_copy(update={'applicability_note': '2024 schedule contracts only; not a universal requirement.'})
+            store.catalog[source.id] = annotated
+            store.rebuild()
+            self.assertEqual(store.search('pavement')['results'][0]['applicability_note'], annotated.applicability_note)
+            self.assertEqual(manifest.read_bytes(), preserved)
+            # A different approved package cannot annotate an old revision.
+            store.catalog[source.id] = annotated.model_copy(update={'archive_sha256': '0' * 64})
+            store.rebuild()
+            self.assertEqual(store.search('pavement')['results'][0]['applicability_note'], source.applicability_note)
+            store.catalog[source.id] = annotated
+            store.rebuild()
             destination = Path(tmp) / 'snapshot'
             package(store, destination)
             self.assertFalse(verify(destination)['applicability_verified'])
