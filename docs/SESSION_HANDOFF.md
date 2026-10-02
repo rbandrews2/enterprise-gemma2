@@ -4,6 +4,9 @@ Ray authorized a separate restricted Google Cloud V2 staging deployment. Product
 
 ## Latest resume checkpoint
 
+October1 larger combined pass completed: pinned archive DOCX ingestion +14 VDOT marking documents (984passages,7316total), member/paragraph/table citations and applicability notes, unsafe-file tests, actual-catalog retrieval checks,139-file verified local source snapshot .local-data/source-deployment-20261001. Full suite195:179pass/16DBskip. New sources unreviewed; no cloud/model call. Evidence knowledge/marking-word-validation-20261001.json. Next visual table/conditional provision review and bounded staging snapshot/Atlas citation acceptance; NIOSH remains blocked. Prior release dates deferred.
+
+
 October1 follow-up: narrowed marking queries to pavement context, added unrelated-removal/sign-visibility regression, verified real-library citations. Preserved official latest specs ZIP23.8MB/521members,14 marking-related filename candidates; DOCX contents not indexed/reviewed. Evidence knowledge/marking-relevance-20261001.json and marking-amendments-inventory-20261001.json. Next bounded DOCX/archive ingestion with member provenance and marking amendment review. No cloud/model calls.
 
 

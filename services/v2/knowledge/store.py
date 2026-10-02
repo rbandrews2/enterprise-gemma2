@@ -8,6 +8,7 @@ import sqlite3
 import subprocess
 import sys
 import tempfile
+import zipfile
 from contextlib import closing
 from datetime import datetime, timezone
 from pathlib import Path
@@ -57,11 +58,19 @@ class Store:
                 else {"status": "not_downloaded"},
                 "review_status": revisions[0]["review_status"] if revisions else "unreviewed"}
 
-    def ingest(self, source_id, client=None):
+    def ingest(self, source_id, client=None, archive_path=None):
         source = self.catalog[source_id]
         attempt = {"attempted_at": now(), "status": "unavailable"}
         try:
-            if client is None:
+            if source.archive_member:
+                from .word import member_bytes
+                if archive_path is None:
+                    raise ValueError("Pinned archive requires operator ingest-archive command")
+                archive_path = Path(archive_path)
+                if archive_path.stat().st_size > 100 * 1024 * 1024:
+                    raise ValueError("archive_size_limit")
+                content, final_url = member_bytes(archive_path.read_bytes(), source), source.url
+            elif client is None:
                 with httpx.Client(trust_env=False, headers={"User-Agent": "WZOS-Reference-Ingestion/0.1"}) as own:
                     content, final_url = download(source, own)
             else:
@@ -95,12 +104,13 @@ class Store:
                     "extraction_checked": False, "applicability_reviewed": False,
                     "review_status": "unreviewed", "review_note": None,
                     "passage_count": len(result["passages"]), "warnings": result["warnings"],
+                    "archive_member": source.archive_member, "archive_sha256": source.archive_sha256,
                     "extracted_sha256": hashlib.sha256(extracted.read_bytes()).hexdigest(),
                 }
                 write_json(manifest_path, manifest)
                 attempt.update(status=extraction_state, revision=digest)
             write_json(self.data / "current" / f"{source_id}.json", {"revision": digest})
-        except (DownloadError, httpx.HTTPError, ValueError) as error:
+        except (DownloadError, httpx.HTTPError, ValueError, KeyError, OSError, zipfile.BadZipFile) as error:
             attempt["error"] = str(error) if isinstance(error, DownloadError) else type(error).__name__
         write_json(self.data / "attempts" / f"{source_id}.json", attempt)
         return attempt
@@ -179,7 +189,7 @@ class Store:
                             metadata.update({key: manifest["source"].get(key) for key in (
                                 "title", "edition", "jurisdiction", "effective_from", "effective_to", "applicability_note")})
                             db.execute("INSERT INTO passages(source_id,agency,revision,page,section,url,text,review_status,publication_status,is_latest,metadata) VALUES(?,?,?,?,?,?,?,?,?,?,?)",
-                                       (source_id, source.agency, revision, item["page"], item["section"], url,
+                                       (source_id, source.agency, revision, item["page"], (f"{source.archive_member} / {item['section']}" if source.archive_member else item["section"]), url,
                                         item["text"], manifest["review_status"], self.catalog[source_id].publication_status,
                                         int(index == 0), json.dumps(metadata)))
                 db.execute("INSERT INTO search(search) VALUES('rebuild')")

@@ -12,6 +12,7 @@ class ReferenceCandidate(StrictModel):
     agency: Literal["VDOT", "FHWA", "OSHA", "VOSH", "NIOSH"]
     title: str
     edition: str | None
+    applicability_note: str = "Project applicability requires review."
     revision: str = Field(pattern=r"^[a-f0-9]{64}$")
     text: str
     url: str

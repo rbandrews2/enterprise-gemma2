@@ -36,6 +36,12 @@ def extract(data: bytes, kind: str):
                     warnings.append(f"page_{number + 1}_little_or_no_text")
                     continue
                 passages.extend(chunks(text, page=number + 1))
+    elif kind == "docx":
+        from .word import word_blocks
+        engine = "bounded-ooxml"
+        blocks, warnings = word_blocks(data)
+        for section, text in blocks:
+            passages.extend(chunks(text, section=section))
     else:
         engine = "beautifulsoup"
         soup = BeautifulSoup(data, "html.parser")

@@ -36,7 +36,9 @@ class Source(StrictModel):
     publication_page: str
     edition: str | None = None
     jurisdiction: str
-    kind: Literal["pdf", "html"]
+    kind: Literal["pdf", "html", "docx"]
+    archive_member: str | None = None
+    archive_sha256: str | None = Field(default=None, pattern=r"^[a-f0-9]{64}$")
     effective_from: date | None = None
     effective_to: date | None = None
     applicability_note: str
@@ -46,6 +48,13 @@ class Source(StrictModel):
 
     @model_validator(mode="after")
     def validate_source(self):
+        if self.kind == "docx" and not self.archive_member:
+            raise ValueError("DOCX requires a pinned archive member")
+        if bool(self.archive_member) != bool(self.archive_sha256):
+            raise ValueError("Archive member and hash are both required")
+        if self.archive_member and (self.kind != "docx" or not self.archive_member.endswith(".docx")
+                                    or any(x in self.archive_member for x in ("/", "\\", ":", ".."))):
+            raise ValueError("Only approved top-level DOCX archive members are supported")
         for url in [self.url, self.publication_page, *self.allowed_redirects]:
             approved_url(url)
         if self.effective_from and self.effective_to and self.effective_to < self.effective_from:
