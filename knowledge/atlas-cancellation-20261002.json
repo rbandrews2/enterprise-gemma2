@@ -1,0 +1,75 @@
+{
+  "date": "2026-10-02",
+  "scope": "restricted staging, synthetic accounts, no customer delivery",
+  "implementation_commit": "aff4cd328d57",
+  "cloud_build": "a1691200-dcca-4382-a9cc-3be6a5e708d9",
+  "app_test_revision": "wzos-v2-accounts-00020-5z4",
+  "inference_test_revision": "wzos-atlas-inference-00001-rt6",
+  "evidence_origin": "/home/admin_/wzos-evidence/cancel-live-20261002.jsonl",
+  "results": [
+    {
+      "stage": "cancel_denied_admin",
+      "http_status": 404
+    },
+    {
+      "stage": "cancel_denied_other",
+      "http_status": 403
+    },
+    {
+      "stage": "cancel_before_start",
+      "http_status": 499
+    },
+    {
+      "stage": "explicit_cancel",
+      "request_id": "138db281-e03c-4456-a969-8d2676dd73eb",
+      "http_status": 499,
+      "seconds": 0.646,
+      "provider_stop_verified": false
+    },
+    {
+      "stage": "immediate_recovery",
+      "http_status": 200,
+      "seconds": 2.292,
+      "model_called": true,
+      "error_code": null
+    },
+    {
+      "stage": "complete",
+      "saved_orders_unchanged": true,
+      "provider_stop_verified": false,
+      "cloud_cross_instance_verified": false
+    }
+  ],
+  "postgresql_validation": {
+    "tests": 5,
+    "passed": 5,
+    "seconds": 24.155,
+    "two_app_instances": true,
+    "disposable_schema_removed": true
+  },
+  "limits": [
+    "Application cancellation and immediate recovery accepted for this bounded case only.",
+    "No proof of GPU generation stop or multiple live Cloud Run instance routing.",
+    "Deployment initialization is not a scale-from-zero acceptance test."
+  ],
+  "cleanup": {
+    "app_revision": "wzos-v2-accounts-00021-fkf",
+    "ready": true,
+    "atlas_enabled": false,
+    "inference_service_absent": true,
+    "synthetic_accounts_disabled": true,
+    "proxy_stopped": true,
+    "guard_stopped": true
+  },
+  "monitored_compute": {
+    "as_of": "2026-10-02T23:22:52.320439+00:00",
+    "cumulative_seconds": 3360.47520785946,
+    "estimated_usd": 2.978,
+    "more_pages": false,
+    "excludes": [
+      "builds",
+      "storage",
+      "billing lag"
+    ]
+  }
+}
