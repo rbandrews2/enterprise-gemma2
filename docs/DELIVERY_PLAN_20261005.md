@@ -1,3 +1,5 @@
+> October 1, 2026: Ray deferred this schedule. No replacement production date is set. The dated milestones below are historical; acceptance gates remain required.
+
 # September 30 test model / October 5 production readiness
 
 Requested by Ray September 25, 2026. Dates are delivery targets, not evidence of

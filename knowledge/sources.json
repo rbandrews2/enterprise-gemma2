@@ -197,5 +197,44 @@
     "links_verified_on": "2026-09-29",
     "applicability_note": "Dated annual edition, not verified current law. Check subsequent amendments, incorporated standards and VOSH requirements. PDF includes neighboring section text; cite exact section and physical page. No automatic applicability approval.",
     "publication_status": "unknown"
+  },
+  {
+    "id": "vdot-specs-2020",
+    "agency": "VDOT",
+    "title": "VDOT Road and Bridge Specifications",
+    "url": "https://www.vdot.virginia.gov/media/vdotvirginiagov/doing-business/technical-guidance-and-support/technical-guidance-documents/construction/VDOT_2020_RB_Specs_acc071522.pdf",
+    "publication_page": "https://www.vdot.virginia.gov/doing-business/technical-guidance-and-support/technical-guidance-documents/road-and-bridge-specifications/",
+    "edition": "2020 base book",
+    "jurisdiction": "VA; verify road authority and contract applicability",
+    "kind": "pdf",
+    "links_verified_on": "2026-10-01",
+    "applicability_note": "Reference only. Check project contract, special provisions, amendments, approved materials, and current corrections. Base specifications and supplement are not a complete current contract set.",
+    "publication_status": "unknown"
+  },
+  {
+    "id": "vdot-specs-supplement-2022",
+    "agency": "VDOT",
+    "title": "2022 Supplement to VDOT 2020 Road and Bridge Specifications",
+    "url": "https://www.vdot.virginia.gov/media/vdotvirginiagov/doing-business/technical-guidance-and-support/technical-guidance-documents/construction/migrated-acc/2022Supplement_to_the_2020SpecBook_acc071522.pdf",
+    "publication_page": "https://www.vdot.virginia.gov/doing-business/technical-guidance-and-support/technical-guidance-documents/road-and-bridge-specifications/",
+    "edition": "July 2022 supplement",
+    "jurisdiction": "VA; verify road authority and contract applicability",
+    "kind": "pdf",
+    "links_verified_on": "2026-10-01",
+    "applicability_note": "Reference only. Check project contract, special provisions, amendments, approved materials, and current corrections. Base specifications and supplement are not a complete current contract set.",
+    "publication_status": "unknown"
+  },
+  {
+    "id": "vdot-mutcd-11",
+    "agency": "VDOT",
+    "title": "Virginia MUTCD including Part 3 Markings",
+    "url": "https://www.vdot.virginia.gov/media/vdotvirginiagov/doing-business/technical-guidance-and-support/technical-guidance-documents/traffic-operations/VA_MUTCD_12-31-2025_508c_acc04062026_RM.pdf",
+    "publication_page": "https://www.vdot.virginia.gov/doing-business/technical-guidance-and-support/technical-guidance-documents/virginia-mutcd/",
+    "edition": "Version 11.0 January 2026",
+    "jurisdiction": "VA; verify road authority and contract applicability",
+    "kind": "pdf",
+    "links_verified_on": "2026-10-01",
+    "applicability_note": "Reference only. Check project contract, special provisions, amendments, approved materials, and current corrections. Base specifications and supplement are not a complete current contract set.",
+    "publication_status": "unknown"
   }
 ]

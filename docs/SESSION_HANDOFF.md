@@ -4,6 +4,9 @@ Ray authorized a separate restricted Google Cloud V2 staging deployment. Product
 
 ## Latest resume checkpoint
 
+October1 resumed: Ray deferred prior production/test target dates; replacement dates unset, larger daily progress requested. Pavement-marking foundation added three official VDOT documents, index6332; local planning returns cited marking/material/removal/visibility candidates. New sources unreviewed; current special provisions/contract applicability and relevance remain open. See knowledge/pavement-marking-20261001.json and SOURCE_REGISTER.md. No cloud deployment or model calls. Next narrow marking source sections/relevance, inspect drawings and amendments, then stage updated source snapshot; federal NIOSH gap and Atlas cloud reliability remain open.
+
+
 Federal access partial success: official GPO2025 annual OSHA1926.200/.201 PDFs ingested, six passages, total2618. Added OSHA flagger discovery and singular/plural regression after real-catalog test exposed mismatch. Planning HTTP200 returns two OSHA revision/page candidates; dated/unreviewed, not current-law approval. Evidence knowledge/gpo-access-20260929.json. NIOSH still blocked; eCFR redirects to challenge (not bypassed). No GPU/cloud deployment. New source originals local ignored data only.
 
 

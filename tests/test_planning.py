@@ -58,6 +58,19 @@ class PlanningTests(unittest.TestCase):
         self.assertTrue(all(t['status']=='library_unavailable' for t in response['topics']))
         self.assertTrue(response['assessment']['form_recommendations'])
 
+    def test_striping_topics_and_citations_remain_unapproved(self):
+        self.ingest(BODY.replace(b'Temporary traffic control',
+            b'Pavement markings marking materials removal retroreflectivity'))
+        self.store.rebuild()
+        response = self.plan()
+        topics = {t['id']: t for t in response['topics']}
+        for topic in ('striping', 'marking_materials', 'marking_removal', 'marking_visibility'):
+            self.assertTrue(topics[topic]['candidates'])
+            self.assertEqual(topics[topic]['candidates'][0]['review_status'], 'unreviewed')
+        self.assertFalse(response['approved_for_field_use'])
+        other = self.plan(work_type='underground_utility')
+        self.assertNotIn('marking_materials', {t['id'] for t in other['topics']})
+
     def test_osha_plural_flaggers_are_discovered(self):
         body = b'<html><main><h1>Signaling</h1><p>Flaggers and warning garments.</p></main></html>'
         with httpx.Client(transport=httpx.MockTransport(lambda req: httpx.Response(

@@ -33,3 +33,15 @@ Coverage per pilot jurisdiction must include applicable federal/state/local work
 Filter by project jurisdiction, authority, activity, and project date before retrieval. Keep binding requirements, guidance, company policy, and project-specific approval separate. Surface conflicts for qualified resolution; do not mechanically select the strictest sounding paragraph. Require source revalidation when a revision changes, preserve the evidence used by issued packages, and prevent retrieved text from granting tools or permissions.
 
 Traffic values and speed evidence need independent provenance and freshness checks. A posted speed must come from an applicable official record or verified field evidence; the language model must not infer it from road appearance. Historical traffic counts must retain their measurement dates and estimation methods.
+
+## October 1 pavement-marking foundation
+
+Preserved VDOT2020 Road and Bridge Specifications, July2022 supplement, and Virginia MUTCDv11.0. These add3714 passages; local index6332 includes historical revisions. Existing FHWA MUTCD supplies federal marking candidates. Actual-catalog planning endpoint returned200 with candidates for marking design, materials, removal and retroreflectivity; revision/page/edition evidence is in pavement-marking-20261001.json. New documents remain unreviewed; this is candidate discovery, not competent installation advice or approved layout. Broad removal keyword may retrieve unrelated removal provisions; relevance review remains necessary.
+
+Official publication pages:
+- https://www.vdot.virginia.gov/doing-business/technical-guidance-and-support/technical-guidance-documents/road-and-bridge-specifications/
+- https://www.vdot.virginia.gov/doing-business/technical-guidance-and-support/technical-guidance-documents/virginia-mutcd/
+
+Open marking gaps: September2026 special provisions/copied notes package; relevant sections234/235/246/704 and amendments; approved product lists; applicable standard drawings; material/manufacturer instructions and SDS; surface preparation/removal methods, environmental constraints, weather/cure/reopening conditions, inspection/acceptance and retroreflectivity; contract forms and training. Verify project-specific contracts before applying any numeric limits. No new source snapshot has been cloud-deployed, and no model response was evaluated this pass. Originals remain ignored local data.
+
+Road-work coverage expansion requested by Ray: pavement marking first, followed by paving/milling/patching, utilities/excavation, signs/signals/electrical, barriers/bridges/drainage, surveying/inspection/roadside maintenance, and mobile/emergency operations. These later collections are planned, not implemented.

@@ -1,0 +1,121 @@
+{
+  "checked_on": "2026-10-01",
+  "http_status": 200,
+  "model_called": false,
+  "sources": {
+    "vdot-specs-2020": {
+      "attempted_at": "2026-10-02T03:07:27.785485+00:00",
+      "status": "extracted",
+      "revision": "cdb28c0980cf92492b868f6fd9baffce42c2b44cc406ed4e6e6b5a30355593a7"
+    },
+    "vdot-specs-supplement-2022": {
+      "attempted_at": "2026-10-02T03:07:34.262071+00:00",
+      "status": "extracted",
+      "revision": "1ecf4cac67a9c881bc253f72d6fa71e22f7cc9177aac0cb59d04f3e6fd55a581"
+    },
+    "vdot-mutcd-11": {
+      "attempted_at": "2026-10-02T03:07:35.774993+00:00",
+      "status": "extracted",
+      "revision": "807a57e3229d0717de24a16f7ea4e55b703ba397d9169c6885a669df61688149"
+    }
+  },
+  "topics": [
+    {
+      "id": "striping",
+      "citations": [
+        {
+          "source_id": "vdot-vwapm-2026",
+          "revision": "f16aa1782e85c4b1237823eb8fbaafdf06128f3cc8d2c17c16fb696b92415274",
+          "page": 285,
+          "edition": "11.0 January 2026",
+          "review_status": "extraction_checked"
+        },
+        {
+          "source_id": "vdot-specs-2020",
+          "revision": "cdb28c0980cf92492b868f6fd9baffce42c2b44cc406ed4e6e6b5a30355593a7",
+          "page": 889,
+          "edition": "2020 base book",
+          "review_status": "unreviewed"
+        },
+        {
+          "source_id": "fhwa-mutcd-11-r1",
+          "revision": "f508594285e5fccc45714660cc6aba1f895ae88226449345582fbbc1ceb7ba07",
+          "page": 1143,
+          "edition": "11th Edition Revision 1 December 2025",
+          "review_status": "extraction_checked"
+        },
+        {
+          "source_id": "fhwa-mutcd-11-r1",
+          "revision": "f508594285e5fccc45714660cc6aba1f895ae88226449345582fbbc1ceb7ba07",
+          "page": 854,
+          "edition": "11th Edition Revision 1 December 2025",
+          "review_status": "extraction_checked"
+        }
+      ]
+    },
+    {
+      "id": "marking_materials",
+      "citations": [
+        {
+          "source_id": "vdot-specs-2020",
+          "revision": "cdb28c0980cf92492b868f6fd9baffce42c2b44cc406ed4e6e6b5a30355593a7",
+          "page": 889,
+          "edition": "2020 base book",
+          "review_status": "unreviewed"
+        },
+        {
+          "source_id": "vdot-mutcd-11",
+          "revision": "807a57e3229d0717de24a16f7ea4e55b703ba397d9169c6885a669df61688149",
+          "page": 617,
+          "edition": "Version 11.0 January 2026",
+          "review_status": "unreviewed"
+        }
+      ]
+    },
+    {
+      "id": "marking_removal",
+      "citations": [
+        {
+          "source_id": "vdot-specs-2020",
+          "revision": "cdb28c0980cf92492b868f6fd9baffce42c2b44cc406ed4e6e6b5a30355593a7",
+          "page": 972,
+          "edition": "2020 base book",
+          "review_status": "unreviewed"
+        },
+        {
+          "source_id": "vdot-mutcd-11",
+          "revision": "807a57e3229d0717de24a16f7ea4e55b703ba397d9169c6885a669df61688149",
+          "page": 734,
+          "edition": "Version 11.0 January 2026",
+          "review_status": "unreviewed"
+        }
+      ]
+    },
+    {
+      "id": "marking_visibility",
+      "citations": [
+        {
+          "source_id": "vdot-mutcd-11",
+          "revision": "807a57e3229d0717de24a16f7ea4e55b703ba397d9169c6885a669df61688149",
+          "page": 101,
+          "edition": "Version 11.0 January 2026",
+          "review_status": "unreviewed"
+        },
+        {
+          "source_id": "vdot-specs-2020",
+          "revision": "cdb28c0980cf92492b868f6fd9baffce42c2b44cc406ed4e6e6b5a30355593a7",
+          "page": 725,
+          "edition": "2020 base book",
+          "review_status": "unreviewed"
+        },
+        {
+          "source_id": "fhwa-mutcd-11-r1",
+          "revision": "f508594285e5fccc45714660cc6aba1f895ae88226449345582fbbc1ceb7ba07",
+          "page": 104,
+          "edition": "11th Edition Revision 1 December 2025",
+          "review_status": "extraction_checked"
+        }
+      ]
+    }
+  ]
+}

@@ -14,7 +14,12 @@ def topics_for(request):
         topics += [("advance_warning", "advance warning", ("VDOT", "FHWA", "OSHA"), "The requested setup or image needs warning-sign review."),
                    ("flaggers", "flagger", ("VDOT", "FHWA", "OSHA"), "Determine whether and how flagging applies before positioning icons.")]
     if request.work_type == "line_striping":
-        topics.append(("striping", "marking", ("VDOT", "FHWA"), "Customer selected line striping."))
+        topics += [
+            ("striping", "pavement markings", ("VDOT", "FHWA"), "Pavement marking / line striping design references."),
+            ("marking_materials", "marking materials", ("VDOT",), "Confirm the contract material system and approved products."),
+            ("marking_removal", "removal", ("VDOT",), "Review removal and surface preparation against the selected method."),
+            ("marking_visibility", "retroreflectivity", ("VDOT", "FHWA"), "Review visibility, inspection and acceptance requirements."),
+        ]
     if "traffic_overlay" in request.requested_outputs:
         topics.append(("traffic_volume", "traffic volume", ("VDOT", "FHWA"), "Customer requested a traffic overlay; reference text is not measured site traffic."))
     if request.work_type == "underground_utility":
@@ -62,7 +67,7 @@ def discover(request: IntakeRequest, store: Store) -> PlanningReferences:
             for source_id, source in store.catalog.items():
                 if source.agency not in agencies or availability[source_id].status != "searchable":
                     continue
-                queries = (query, "flaggers") if topic_id == "flaggers" else (query,)
+                queries = (query, "flaggers") if topic_id == "flaggers" else ((query, "pavement marking") if topic_id == "striping" else (query,))
                 rows = {}
                 for term in queries:
                     for row in store.search(term, source_id=source_id, limit=1, latest_only=True)["results"]:

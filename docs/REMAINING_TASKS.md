@@ -30,7 +30,7 @@ Restricted Google account/database/private-file and SQL restore acceptance alrea
 
 ## Milestones and additions
 
-Previously requested targets: working test model September 30 and production readiness October 5, 2026. These are targets, not a claim that the entire remaining scope fits. In Plan mode, estimate this list and agree the test/pilot scope before promising dates; do not silently drop modules or acceptance gates.
+October 1 decision: Ray deferred the earlier September 30 test-model and October 5 production-readiness dates. Replacement dates are unset. Increase daily progress through bounded implementation and validation passes. Previous dates are historical. These are targets, not a claim that the entire remaining scope fits. In Plan mode, estimate this list and agree the test/pilot scope before promising dates; do not silently drop modules or acceptance gates.
 
 New items from Ray can be added below and then inserted into the sequence according to dependencies. No new paid provisioning or customer communications are authorized by this planning document. Preserve the existing approved staging scope and budget.
 
