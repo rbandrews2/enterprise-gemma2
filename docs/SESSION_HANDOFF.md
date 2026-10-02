@@ -4,6 +4,9 @@ Ray authorized a separate restricted Google Cloud V2 staging deployment. Product
 
 ## Latest resume checkpoint
 
+October1 follow-up: narrowed marking queries to pavement context, added unrelated-removal/sign-visibility regression, verified real-library citations. Preserved official latest specs ZIP23.8MB/521members,14 marking-related filename candidates; DOCX contents not indexed/reviewed. Evidence knowledge/marking-relevance-20261001.json and marking-amendments-inventory-20261001.json. Next bounded DOCX/archive ingestion with member provenance and marking amendment review. No cloud/model calls.
+
+
 October1 resumed: Ray deferred prior production/test target dates; replacement dates unset, larger daily progress requested. Pavement-marking foundation added three official VDOT documents, index6332; local planning returns cited marking/material/removal/visibility candidates. New sources unreviewed; current special provisions/contract applicability and relevance remain open. See knowledge/pavement-marking-20261001.json and SOURCE_REGISTER.md. No cloud deployment or model calls. Next narrow marking source sections/relevance, inspect drawings and amendments, then stage updated source snapshot; federal NIOSH gap and Atlas cloud reliability remain open.
 
 

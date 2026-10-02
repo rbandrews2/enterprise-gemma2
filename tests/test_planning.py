@@ -71,6 +71,14 @@ class PlanningTests(unittest.TestCase):
         other = self.plan(work_type='underground_utility')
         self.assertNotIn('marking_materials', {t['id'] for t in other['topics']})
 
+    def test_marking_topics_do_not_match_unrelated_removal_or_sign_visibility(self):
+        self.ingest(BODY.replace(b'Temporary traffic control',
+            b'Bridge removal. Sign retroreflectivity. Sign marking materials.'))
+        self.store.rebuild()
+        topics = {t['id']: t for t in self.plan()['topics']}
+        for topic in ('marking_materials', 'marking_removal', 'marking_visibility'):
+            self.assertEqual(topics[topic]['candidates'], [])
+
     def test_osha_plural_flaggers_are_discovered(self):
         body = b'<html><main><h1>Signaling</h1><p>Flaggers and warning garments.</p></main></html>'
         with httpx.Client(transport=httpx.MockTransport(lambda req: httpx.Response(

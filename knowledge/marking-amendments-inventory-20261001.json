@@ -1,0 +1,67 @@
+{
+  "checked_on": "2026-10-01",
+  "url": "https://www.vdot.virginia.gov/media/vdotvirginiagov/doing-business/technical-guidance-and-support/technical-guidance-documents/construction/migrated-acc/Latest_Specs.zip",
+  "sha256": "9de0f4078975efb9b44614ff5ee8e1a0ba39fbecc083f85f51b7bf9389eee832",
+  "bytes": 23785246,
+  "member_count": 521,
+  "marking_related_filename_candidates": [
+    {
+      "name": "BK234-002020-00.docx",
+      "bytes": 28639
+    },
+    {
+      "name": "BK235-002020-00.docx",
+      "bytes": 32585
+    },
+    {
+      "name": "BK246-002020-00.docx",
+      "bytes": 67522
+    },
+    {
+      "name": "BK704-002020-00.docx",
+      "bytes": 49988
+    },
+    {
+      "name": "cn704-000100-00.docx",
+      "bytes": 33757
+    },
+    {
+      "name": "cn704-000200-00.docx",
+      "bytes": 39648
+    },
+    {
+      "name": "SP704-000100-06.docx",
+      "bytes": 67301
+    },
+    {
+      "name": "SP704-000120-00.docx",
+      "bytes": 105512
+    },
+    {
+      "name": "SP704-DB0120-00.docx",
+      "bytes": 112119
+    },
+    {
+      "name": "SQ704-000110-00.docx",
+      "bytes": 38608
+    },
+    {
+      "name": "SS234-002020-01.docx",
+      "bytes": 33319
+    },
+    {
+      "name": "SS235-002020-01.docx",
+      "bytes": 28842
+    },
+    {
+      "name": "SS246-002020-02.docx",
+      "bytes": 48191
+    },
+    {
+      "name": "SS704-002020-02.docx",
+      "bytes": 43804
+    }
+  ],
+  "contents_reviewed": false,
+  "indexed": false
+}

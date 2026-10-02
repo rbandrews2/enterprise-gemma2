@@ -16,9 +16,9 @@ def topics_for(request):
     if request.work_type == "line_striping":
         topics += [
             ("striping", "pavement markings", ("VDOT", "FHWA"), "Pavement marking / line striping design references."),
-            ("marking_materials", "marking materials", ("VDOT",), "Confirm the contract material system and approved products."),
-            ("marking_removal", "removal", ("VDOT",), "Review removal and surface preparation against the selected method."),
-            ("marking_visibility", "retroreflectivity", ("VDOT", "FHWA"), "Review visibility, inspection and acceptance requirements."),
+            ("marking_materials", "pavement marking materials", ("VDOT",), "Confirm the contract material system and approved products."),
+            ("marking_removal", "pavement markings removal", ("VDOT",), "Review removal and surface preparation against the selected method."),
+            ("marking_visibility", "pavement markings retroreflectivity", ("VDOT", "FHWA"), "Review visibility, inspection and acceptance requirements."),
         ]
     if "traffic_overlay" in request.requested_outputs:
         topics.append(("traffic_volume", "traffic volume", ("VDOT", "FHWA"), "Customer requested a traffic overlay; reference text is not measured site traffic."))
