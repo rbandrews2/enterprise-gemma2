@@ -22,7 +22,9 @@ from services.workspace_preview.atlas_adapter import prepare_order, select_refer
 from services.workspace_preview.storage import SQLiteStorage
 from services.workspace_preview import timeclock, modules, report_history, team_modules
 from services.workspace_preview.assistant_guidance import workspace_guidance
-from services.workspace_preview.intelligence import ChatInput, ClientDisconnected, LocalIntelligence, configured_intelligence, ModelUnavailable, navigation_for, reply_until_disconnected
+from services.workspace_preview.intelligence import ChatInput, ClientDisconnected, RequestCancelled, LocalIntelligence, configured_intelligence, ModelUnavailable, navigation_for
+from services.workspace_preview.atlas_requests import AtlasRequests
+from uuid import UUID
 
 ROOT = Path(__file__).resolve().parents[2]
 STATIC = Path(__file__).with_name("static")
@@ -125,6 +127,7 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
     intelligence = intelligence if intelligence is not None else configured_intelligence()
 
     connect = (storage or SQLiteStorage(db_path)).connect
+    atlas_requests = AtlasRequests(connect)
 
     with connect() as conn:
         conn.execute("""CREATE TABLE IF NOT EXISTS preview_checklists (
@@ -306,6 +309,16 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
         actor(request)
         return {"ready": await intelligence.ready(), "conversation_enabled": bool(getattr(intelligence, 'enabled', lambda: False)()), "mode": getattr(intelligence, "mode", "local"), "workspace_guides_ready": True, "actions_enabled": False}
 
+    @app.post("/api/assistant/requests/{request_id}/cancel")
+    def cancel_assistant(request_id: UUID, request: Request):
+        state = atlas_requests.change(str(request_id), actor(request), 'cancel')
+        return {"request_id": str(request_id), "state": state, "provider_stop_verified": False}
+
+    @app.get("/api/assistant/requests/{request_id}")
+    def assistant_request_status(request_id: UUID, request: Request):
+        state = atlas_requests.change(str(request_id), actor(request), 'read')
+        return {"request_id": str(request_id), "state": state, "provider_stop_verified": False}
+
     @app.post("/api/assistant/chat")
     async def assistant_chat(payload: ChatInput, request: Request):
         selected = actor(request)
@@ -359,7 +372,13 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
             answer = guide.answer
         else:
             try:
-                answer = await reply_until_disconnected(request, intelligence, payload, context)
+                answer = await atlas_requests.run(request, intelligence, payload, context, selected)
+            except RequestCancelled:
+                logging.getLogger(__name__).warning("Atlas application cancellation acknowledged request_id=%s", payload.request_id)
+                return JSONResponse({"detail": "Atlas application request cancelled. Provider stop is not verified.",
+                                     "code": "cancelled", "request_id": str(payload.request_id)}, status_code=499)
+            except TimeoutError:
+                return JSONResponse({"detail": "Atlas request timed out.", "code": "timeout"}, status_code=503)
             except ClientDisconnected:
                 correlation = uuid4().hex
                 logging.getLogger(__name__).warning("Atlas request ended correlation_id=%s code=client_disconnected", correlation)

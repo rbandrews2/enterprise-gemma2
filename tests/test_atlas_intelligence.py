@@ -201,7 +201,7 @@ class IntelligenceTests(unittest.TestCase):
                 self.assertEqual(fake.calls,[])
                 result=client.post(path,json=body,headers=headers).json()
                 from services.workspace_preview.intelligence import ClientDisconnected
-                with patch('services.workspace_preview.app.reply_until_disconnected', side_effect=ClientDisconnected):
+                with patch('services.workspace_preview.atlas_requests.reply_until_disconnected', side_effect=ClientDisconnected):
                     self.assertEqual(client.post(path,json=body,headers=headers).status_code,499)
                 self.assertEqual(result["actions_performed"],[])
                 self.assertFalse(result["approved_for_field_use"])

@@ -82,10 +82,10 @@ function atlasConnectionMessage(data){
    chatHistory=[...chatHistory,{role:'user',content:question},{role:'assistant',content:data.answer}].slice(-8);while(chatHistory.reduce((sum,turn)=>sum+turn.content.length,0)>8000)chatHistory.shift();
    if(data.citations.length){const note=document.createElement('p');note.textContent='Candidate references supplied to Atlas (applicability unreviewed):';byId("assistant-answer").append(note);for(const ref of data.citations){const link=document.createElement('a');link.textContent=`${ref.agency}: ${ref.title} - ${ref.page?'PDF page '+ref.page:ref.section||'section'} (${ref.review_status})`;link.href=ref.url;link.target='_blank';link.rel='noopener noreferrer';byId("assistant-answer").append(link,document.createElement('br'));}}
   }catch(error){if(epoch===chatEpoch)byId("assistant-answer").textContent=error.name==="AbortError"?"You stopped waiting. Atlas may still be finishing the request. Your saved work is unchanged.":error.message;}
-  finally{chatBusy=false;submit.disabled=false;chatController=null;byId("assistant-stop").hidden=true;byId("assistant-topic").disabled=false;}
+  finally{chatBusy=false;submit.disabled=false;chatController=null;byId("assistant-stop").hidden=true;byId("assistant-stop").disabled=false;byId("assistant-topic").disabled=false;}
  });
  function clearContext(){chatController?.abort();chatEpoch++;chatHistory=[];byId("assistant-question").value="";byId("assistant-topic").value="orders";answer("orders");}
- byId("assistant-stop").addEventListener("click",()=>chatController?.abort());
+ byId("assistant-stop").addEventListener("click",()=>{byId("assistant-stop").disabled=true;byId("assistant-answer").textContent="Cancelling this reply...";chatController?.abort();});
  document.addEventListener('wzos:job-context',clearContext);
  document.addEventListener('wzos:time-context',clearContext);
  document.addEventListener('wzos:view',clearContext);

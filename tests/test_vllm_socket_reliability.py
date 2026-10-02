@@ -11,6 +11,12 @@ from services.workspace_preview.vllm_intelligence import VLLMIntelligence
 
 class SocketReliabilityTests(unittest.IsolatedAsyncioTestCase):
     async def test_disconnect_closes_real_socket_and_next_request_recovers(self):
+        await self.exercise_socket(False)
+
+    async def test_explicit_cancel_closes_real_socket_without_client_disconnect(self):
+        await self.exercise_socket(True)
+
+    async def exercise_socket(self, explicit):
         entered, disconnected = asyncio.Event(), asyncio.Event()
         calls, handlers, errors = [], set(), []
 
@@ -49,7 +55,11 @@ class SocketReliabilityTests(unittest.IsolatedAsyncioTestCase):
         class Request:
             async def receive(self):
                 await entered.wait()
+                if explicit:
+                    await asyncio.Event().wait()
                 return {'type': 'http.disconnect'}
+        async def cancelled():
+            return entered.is_set()
         try:
             with patch.dict(os.environ, {'WZOS_ATLAS_VLLM_ENABLED': '1',
                                          'WZOS_ATLAS_VLLM_URL': 'https://atlas-example.run.app'}):
@@ -58,7 +68,7 @@ class SocketReliabilityTests(unittest.IsolatedAsyncioTestCase):
                 engine.endpoint = f'http://127.0.0.1:{port}/v1/chat/completions'
                 payload = ChatInput(question='Synthetic lifecycle check')
                 with self.assertRaises(ClientDisconnected):
-                    await asyncio.wait_for(reply_until_disconnected(Request(), engine, payload, {}), 5)
+                    await asyncio.wait_for(reply_until_disconnected(Request(), engine, payload, {}, cancelled if explicit else None), 5)
                 await asyncio.wait_for(disconnected.wait(), 3)
                 self.assertFalse(engine.gate.locked())
                 self.assertIsNone(engine.last_usage)

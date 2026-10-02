@@ -125,11 +125,37 @@ $("checklist-form").addEventListener("submit",async event=>{
 });
 
 let atlasPage="work_orders";
+async function cancellableAtlas(apiCall, body, signal, headers) {
+ const id=crypto.randomUUID(), network=new AbortController();let cancellation=null,requestFinished=false;
+ const cancel=()=>{if(cancellation)return;cancellation=(async()=>{
+  const timeout=AbortSignal.timeout(8000);
+  try{
+   let result=await apiCall(`/api/assistant/requests/${id}/cancel`,{method:'POST',headers,signal:timeout});
+   while(!requestFinished&&(result.state==='running'||result.state==='cancel_requested')){
+    await new Promise(resolve=>setTimeout(resolve,250));
+    result=await apiCall(`/api/assistant/requests/${id}`,{headers,signal:timeout});
+   }
+   return result.state==='cancelled'?'This reply was cancelled. Background model processing may still be finishing. Your saved work is unchanged.':'You stopped waiting. The request has already finished. Your saved work is unchanged.';
+  }catch(_){return 'Cancellation could not be confirmed. Atlas may still be finishing the request. Your saved work is unchanged.';}
+  finally{network.abort();}
+ })();};
+ if(signal?.aborted)throw new DOMException('Request not sent','AbortError');
+ signal?.addEventListener('abort',cancel,{once:true});
+ try{
+  const result=await apiCall('/api/assistant/chat',{method:'POST',headers,signal:network.signal,body:JSON.stringify({...body,request_id:id})});
+  requestFinished=true;
+  if(cancellation)throw Error(await cancellation);
+  return result;
+ }catch(error){if(cancellation)throw Error(await cancellation);throw error;}
+ finally{signal?.removeEventListener('abort',cancel);}
+}
 window.askAtlas=async(question,history,signal)=>{
  const jobPage=atlasPage==="work_orders";
  const jobBasis=atlasPage==="report"?window.wzosReportAtlasBasis?.():(jobPage&&selected?{order_id:selected.id,expected_version:selected.version}:null);
  if(jobPage&&(busy||dirty||checklistDirty))throw Error('Save or reload your changes before asking Atlas about the current job.');
- return api('/api/assistant/chat',{method:'POST',signal,body:JSON.stringify({question,history,page:atlasPage,...(jobBasis||{})})});
+ // Keep cancellation bound to the identity/organization that began this request.
+ const headers={"X-Preview-Actor":session?.id || $("identity").value,...await window.wzosAccount.headers()};
+ return cancellableAtlas(api,{question,history,page:atlasPage,...(jobBasis||{})},signal,headers);
 };
 
 window.atlasStatus=()=>api("/api/assistant/status");

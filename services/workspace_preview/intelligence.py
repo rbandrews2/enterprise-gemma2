@@ -5,11 +5,11 @@ import logging
 import time
 import os
 import re
-from contextlib import suppress
 
 import httpx
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 from typing import Literal
+from uuid import UUID, uuid4
 
 logger = logging.getLogger(__name__)
 MODEL = "gemma3:4b"
@@ -48,6 +48,7 @@ class ChatInput(BaseModel):
     history: list[Turn] = Field(default_factory=list, max_length=8)
     order_id: str | None = Field(default=None, max_length=100)
     expected_version: int | None = Field(default=None, ge=1, strict=True)
+    request_id: UUID = Field(default_factory=uuid4)
 
     @model_validator(mode="after")
     def bounded_history(self):
@@ -57,6 +58,10 @@ class ChatInput(BaseModel):
 
 
 class ClientDisconnected(Exception):
+    pass
+
+
+class RequestCancelled(ClientDisconnected):
     pass
 
 
@@ -120,7 +125,7 @@ def navigation_for(question, edition, has_order, page='work_orders'):
     return actions
 
 
-async def reply_until_disconnected(request, engine, payload, context):
+async def reply_until_disconnected(request, engine, payload, context, cancellation_check=None):
     async def disconnected():
         while True:
             message = await request.receive()
@@ -128,17 +133,26 @@ async def reply_until_disconnected(request, engine, payload, context):
                 return
     task = asyncio.create_task(engine.reply(payload, context))
     watcher = asyncio.create_task(disconnected())
+    async def explicit_cancel():
+        while True:
+            if await cancellation_check():
+                raise RequestCancelled()
+            await asyncio.sleep(0.5)
+    cancel_watcher = asyncio.create_task(explicit_cancel()) if cancellation_check else None
+    tasks = {task, watcher} | ({cancel_watcher} if cancel_watcher else set())
     try:
-        done, _ = await asyncio.wait({task, watcher}, return_when=asyncio.FIRST_COMPLETED)
+        done, _ = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
+        if cancel_watcher in done:
+            await cancel_watcher
         if task in done:
             return await task
         raise ClientDisconnected()
     finally:
-        for pending in (task, watcher):
+        for pending in tasks:
             if not pending.done():
                 pending.cancel()
-            with suppress(asyncio.CancelledError):
-                await pending
+        # Preserve the first outcome while ensuring all cleanup completes.
+        await asyncio.gather(*tasks, return_exceptions=True)
 
 
 class LocalIntelligence:
