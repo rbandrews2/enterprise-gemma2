@@ -1,0 +1,27 @@
+{
+  "synthetic": true,
+  "live_model_tested": false,
+  "candidates": [
+    {
+      "source_id": "vdot-bk704-002020-00",
+      "revision": "7852cf3093f6ca451551d5d11e9ad3931359ca936b29a0bbb4394b9d51dedef3",
+      "section": "BK704-002020-00.docx / Paragraph 14",
+      "page": null,
+      "applicability_note": "Section 704 addresses installation in accordance with the MUTCD, Contract and Engineer direction. Separate supplements and project-specific replacement provisions must be reconciled before use. Text-only scope inspection; layout, tables and project applicability remain unreviewed. Printed dates are not verified effective dates."
+    },
+    {
+      "source_id": "vdot-sp704-000100-06",
+      "revision": "ac3e730288c5ab89866ea62961e2ce212bd996e7f60a3e1e7d444db8f1168905",
+      "section": "SP704-000100-06.docx / Paragraph 37",
+      "page": null,
+      "applicability_note": "Paragraph 1 explicitly identifies the 2024 resurfacing program and asphalt schedule projects only; Paragraph 9 states June 12, 2023. Paragraph 11 replaces Section 704 for its scope. Inclusion in a September 2026 ZIP does not establish applicability to 2026 projects or general line striping. Text-only scope inspection; layout, tables and project applicability remain unreviewed. Printed dates are not verified effective dates."
+    },
+    {
+      "source_id": "osha-1926-200-gpo-2025",
+      "revision": "d8ed884269055dab877925052c6b5a1fe2227be36c1b5aa4caf958f8e15fe596",
+      "section": null,
+      "page": 1,
+      "applicability_note": "Dated annual edition, not verified current law. Check subsequent amendments, incorporated standards and VOSH requirements. PDF includes neighboring section text; cite exact section and physical page. No automatic applicability approval."
+    }
+  ]
+}

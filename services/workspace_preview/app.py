@@ -18,7 +18,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 from shared.intake import SiteContext
 from shared.job_geometry import JobGeometry
 from services.v2.knowledge.store import Store
-from services.workspace_preview.atlas_adapter import prepare_order
+from services.workspace_preview.atlas_adapter import prepare_order, select_references
 from services.workspace_preview.storage import SQLiteStorage
 from services.workspace_preview import timeclock, modules, report_history, team_modules
 from services.workspace_preview.assistant_guidance import workspace_guidance
@@ -343,16 +343,12 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
             geometry = order.get("job_geometry") or {}
             context["geometry_summary"] = {k: v for k, v in geometry.items() if k not in {"approaches", "work_limits"}}
             context["geometry_summary"].update(approach_count=len(geometry.get("approaches", [])), work_limit_points=len(geometry.get("work_limits", [])), verification_status="customer_reported")
-            if selected["edition"] == "enterprise" and re.search(r"sign|flagger|placement|safety|mutcd|vdot|osha|reference|source|requirement|work.zone", payload.question, re.I):
+            if selected["edition"] == "enterprise" and re.search(r"sign|flagger|placement|safety|mutcd|vdot|osha|reference|source|requirement|work.zone|striping|pavement|marking|material|retroreflect", payload.question, re.I):
                 packet = prepare_order(order, knowledge_store)
                 context["questions"] = packet["questions"]
                 context["evidence_review"] = packet["evidence_review"]
                 # Bounded candidates; official citation metadata stays outside generated text.
-                for topic in packet["references"]["topics"]:
-                    if topic["candidates"]:
-                        citations.append(topic["candidates"][0])
-                    if len(citations) == 3:
-                        break
+                citations = select_references(packet["references"]["topics"], payload.question, order["work_type"])
                 context["candidate_references"] = [{**ref, "text": ref["text"][:600]} for ref in citations]
                 reference_basis = {"library_status": packet["references"]["library_status"],
                                    "candidate_count": len(citations), "applicability_verified": False}

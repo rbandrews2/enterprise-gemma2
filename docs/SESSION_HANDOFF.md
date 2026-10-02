@@ -4,6 +4,9 @@ Ray authorized a separate restricted Google Cloud V2 staging deployment. Product
 
 ## Latest resume checkpoint
 
+October 2 live staging pass: cloud checkout/source snapshot a5f9fdb updated, archive hash verified, build 280d6e87-8b77-473f-bef4-1d09fadb4285 SUCCESS. Real marking reply 7.419s with stale/tenant checks; preparation includes marking docs but model first-three selection omitted them. Live concurrency one200/one503 busy; after-cancel503 busy with correlated logs; delayed recovery200/5.818s. Cancellation NOT accepted. Local citation-priority repair added and real-library checked; full200 tests:184pass/16DBskip; NOT yet deployed. Cleanup verified app00018-lgr Ready Atlas0, GPUdeleted, fixturesdisabled, proxy/guardstopped. Read ATLAS_STAGING_20261002.md. Next deploy/test marking selection and design instance-safe cancellation; true cold-start still open. V1/DNS unchanged.
+
+
 October 1 contract-scope pass: text-inspected 14 preserved marking DOCX originals and added member-specific conditions/printed dates to catalog notes. Exact archive+member binding carries curated notes into retrieval and Atlas context without modifying original manifests or annotating different package revisions. Full suite 195:179 passed/16 DB skipped; 14 actual-library scope checks and 139-file snapshot verification passed. Fixed oversized Atlas policy prompt exposed by tests. Evidence knowledge/marking-contract-scope-20261001.json and marking-contract-validation-20261001.json. New snapshot .local-data/source-deployment-20261001-scoped is LOCAL ONLY. Chrome/Cloud Shell not connected this turn; no cloud/GPU/model calls. Visual table review, current-law/contract applicability and staging acceptance remain OPEN. Next connect Cloud Shell, verify cumulative trial spend/auth, transfer and verify scoped snapshot, deploy diagnostics/source update and run bounded marking citation plus cancellation/recovery tests with cleanup.
 
 
