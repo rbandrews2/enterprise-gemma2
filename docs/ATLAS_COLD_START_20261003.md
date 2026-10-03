@@ -27,4 +27,18 @@ Official references:
 
 ## Local validation
 
-Six new metric/preflight tests and three existing credential-expiry tests passed. Live acceptance pending.
+Seven new metric/preflight tests and three existing credential-expiry tests passed. A mocked operator run confirms absent metrics prevent any inference POST. Live acceptance pending.
+
+## October 3 live checkpoint — verification required
+
+Preflight: Cloud Shell checkout synced to ff0aa5d; app was 00021-fkf and trial inference absent. Fresh cumulative monitored compute was 3,360.475 seconds (~$2.978), no additional metric pages. Historical instance metrics demonstrate explicit active/idle zero samples are available for this service. New synthetic account preparation passed IAM/sign-in/refresh/verified-email/admin/member/tenant/last-admin checks.
+
+Commands were submitted to start a 30-minute disable/delete guard and deploy the existing pinned inference configuration. Browser control then failed. Deployment result, guard process state and current resource state are NOT verified. The later app-enable/IAM command failed before terminal input; no inference test was sent. Do not record cold-start acceptance or assume cleanup completed.
+
+Immediate recovery actions in Cloud Shell:
+1. Inspect `/home/admin_/wzos-evidence/cold-model-deploy-20261003.log` and `cold-guard-20261003.log`, service state and guard PID.
+2. If the test cannot safely finish within the remaining guarded window, disable Atlas and delete only trial service `wzos-atlas-inference` in enterprise-gemma2/us-central1; verify completion.
+3. Disable/revoke the disposable fixture using `/home/admin_/wzos-grounding-ZCyfzy/operator-accounts.py disable --state /home/admin_/wzos-grounding-ZCyfzy/cold-fixtures-20261003.json` with that directory's venv Python while the SQL proxy is available.
+4. Verify the app is Ready with Atlas=0, inference listing empty and fixtures disabled before stopping the recorded proxy/guard PIDs. Refresh compute usage.
+
+Helpers/evidence are `/home/admin_/wzos-evidence/cold-{proxy,guard,accounts,model-deploy}-20261003.*`. No new app image was built, and no production/V1/DNS changes were attempted.

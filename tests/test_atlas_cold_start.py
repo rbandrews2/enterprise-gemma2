@@ -1,6 +1,7 @@
 from copy import deepcopy
 from datetime import datetime, timezone, timedelta
 import tempfile
+import json
 from pathlib import Path
 import unittest
 from unittest.mock import patch
@@ -59,3 +60,18 @@ class ColdStartTests(unittest.TestCase):
             with self.assertRaises(FileExistsError): run({}, output)
             self.assertEqual(output.read_text(), 'preserved')
         gc.assert_not_called()
+
+    @patch('scripts.validate_atlas_cold_start.require_token_lifetime')
+    @patch('scripts.validate_atlas_cold_start.gc')
+    @patch('scripts.validate_atlas_cold_start.requests.get')
+    @patch('scripts.validate_atlas_cold_start.requests.Session')
+    def test_missing_metrics_prevent_inference(self, session_factory, metrics, gc, lifetime):
+        gc.side_effect = lambda *a: json.dumps({'status': {'latestReadyRevisionName': self.revision,
+            'traffic': [{'percent': 100, 'revisionName': self.revision}]}}) if '--format=json' in a else 'synthetic'
+        session = session_factory.return_value.__enter__.return_value
+        session.get.return_value.json.return_value = {'auth_header': 'X-WZOS-Authorization'}
+        metrics.return_value.json.return_value = {}
+        with tempfile.TemporaryDirectory() as directory, self.assertRaises(ValueError):
+            run({'users': {'member': {'idToken': 'synthetic'}}, 'orgs': {'main': 'test-org'}},
+                Path(directory)/'evidence.jsonl')
+        session.post.assert_not_called()
