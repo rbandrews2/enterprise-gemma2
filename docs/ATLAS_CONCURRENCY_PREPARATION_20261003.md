@@ -28,6 +28,22 @@ staging changes were made in this increment; staging remains00027-2j9 Atlas0.
 
 ## Next checkpoint
 
+### Browser follow-up, October 3
+
+Actual in-app browser interaction with a disposable local database and a
+25-second synthetic engine verified the initial waiting message, disabled
+duplicate submission, the 15-second notice, and completed reply with controls
+restored. The response explicitly said no model was called. No screenshot
+artifact was captured; these observations came from the browser accessibility
+state. Stop clicks arrived after completion and do not establish cancellation.
+Increasing only the fixture delay to 180 seconds did not resolve browser-control
+timeouts. Chrome fallback also timed out during navigation.
+
+Stop acknowledgement, context changes during a pending reply, and retention
+beyond later timer thresholds remain OPEN. The temporary synthetic server was
+stopped. No cloud deployment or paid inference occurred. Prior automated test
+results above were not rerun for this documentation-only follow-up.
+
 1. Complete browser checks: initial wait, 15-second notice, Stop acknowledgement,
    completed reply retained after timer thresholds, and context change during wait.
 2. Use fresh disposable accounts and a synthetic saved-job seed with the existing
