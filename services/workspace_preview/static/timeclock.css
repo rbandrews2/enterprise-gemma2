@@ -1,0 +1,29 @@
+/* Time clock module: connection state, record basis, offline drafts, review queue and correction editor.
+   Reuses the workspace gloss-black surfaces; amber/gold only as accents. */
+.clock-connection{display:inline-flex;align-items:center;gap:.5rem;margin:.75rem 0 0;padding:.4rem .8rem;border-radius:999px;border:1px solid #3a3d3d;background:linear-gradient(#1b1d1e,#0b0c0d);font-size:.8rem;color:#e9ecea}
+.clock-connection::before{content:"";width:.6rem;height:.6rem;border-radius:50%;background:#8a8f8d;flex-shrink:0}
+.clock-connection[data-state=online]::before{background:#5fbf86;box-shadow:0 0 6px #5fbf8688}
+.clock-connection[data-state=offline]::before{background:#ffb547;box-shadow:0 0 8px #ffb54788}
+.clock-connection[data-state=offline]{border-color:#8c5b32;color:#ffe3b8}
+.clock-connection[data-state=reconnecting]::before,.clock-connection[data-state=checking]::before{background:#f4c542;animation:clock-pulse 1.2s ease-in-out infinite alternate}
+.clock-connection[data-state=error]::before{background:#e5674f}
+.clock-connection[data-state=error]{border-color:#7d3a2e;color:#ffd6cc}
+@keyframes clock-pulse{from{opacity:.35}to{opacity:1}}
+.clock-basis{display:inline-block;margin-left:.6rem;padding:.1rem .5rem;border-radius:4px;font-size:.7rem;font-weight:650;letter-spacing:.02em;border:1px solid #3d4342;color:#cfd6d3;vertical-align:middle}
+.clock-basis[data-basis=admin_corrected],.clock-basis[data-basis=admin_entered]{border-color:#8c5b32;color:#ffc982;background:#2a1a0c}
+.clock-entry>button{margin-top:.5rem}
+.clock-audit{margin-top:.4rem;font-size:.85rem}.clock-audit summary{cursor:pointer;color:#edcf79}
+.clock-audit h4{margin:.8rem 0 .3rem;font-size:.8rem;color:#d6bc9c}.clock-audit ul{margin:0;padding-left:1.1rem}.clock-audit small{display:block;color:var(--muted)}
+#clock-view .clock-drafts,#clock-view .clock-queue,#clock-view .clock-editor{margin-top:1.25rem}
+.clock-drafts label,.clock-editor label,.clock-queue label{display:block;margin-top:.6rem}
+.clock-drafts select,.clock-drafts input,.clock-drafts textarea,.clock-editor select,.clock-editor input,.clock-editor textarea,.clock-queue input{width:100%;box-sizing:border-box}
+.clock-draft-list{margin:.75rem 0;padding-left:1.2rem;overflow-wrap:anywhere}.clock-draft-list li{margin:.35rem 0}.clock-draft-list small{display:block;color:#ffc982}
+.clock-queue-list{list-style:none;margin:0;padding:0}.clock-queue-item{padding:1rem 0;border-bottom:1px solid #343938;overflow-wrap:anywhere}
+.clock-warning,.clock-hint{border-left:3px solid #f7a449;padding:.4rem .7rem;background:#21170d;color:#ffe3b8;border-radius:0 6px 6px 0}
+.clock-error{color:#ffb4a4;min-height:1em}
+.clock-editor fieldset{border:1px solid #3b4140;border-radius:8px;margin:1rem 0;padding:.8rem;min-width:0}.clock-editor legend{padding:0 .4rem;color:#edcf79}
+.clock-interval-row{display:grid;grid-template-columns:minmax(8rem,1fr) minmax(12rem,1.4fr) minmax(12rem,1.4fr) auto;gap:.6rem;align-items:end;margin-bottom:.6rem}
+.clock-interval-row label{margin:0}
+.clock-interval-row:not(:has(select)){grid-template-columns:minmax(12rem,1fr) minmax(12rem,1fr) auto}
+@media(max-width:650px){.clock-interval-row,.clock-interval-row:not(:has(select)){grid-template-columns:1fr}.clock-basis{margin:.3rem 0 0;display:table}#clock-view .panel{padding:1rem}.clock-actions button{flex:1 1 100%}}
+@media(prefers-reduced-motion:reduce){.clock-connection::before{animation:none!important}}
