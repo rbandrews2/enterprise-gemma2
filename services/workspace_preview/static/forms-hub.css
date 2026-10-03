@@ -1,0 +1,49 @@
+/* Forms Hub module: gloss-black surfaces from workspace.css; amber/gold accents only. */
+#forms-view [hidden]{display:none!important}
+#forms-view .panel{padding:1.5rem;min-width:0}
+#forms-view label{display:block;margin-top:.6rem}
+#forms-view input:not([type=checkbox]),#forms-view select,#forms-view textarea{width:100%;box-sizing:border-box}
+.forms-search{max-width:32rem;margin-bottom:1rem}
+.forms-layout{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1.25rem;align-items:start}
+.forms-card-list{display:grid;gap:.9rem;margin-top:1rem}
+.forms-card{border:1px solid #3b3e3e;border-radius:8px;padding:1rem;background:linear-gradient(145deg,#1d1f20,#0b0c0d);overflow-wrap:anywhere}
+.forms-card h3{margin:0 0 .4rem;font-size:1rem}.forms-card p{margin:.5rem 0}
+.forms-badge{display:inline-block;padding:.12rem .5rem;border-radius:4px;font-size:.72rem;font-weight:650;border:1px solid #4a5250;color:#d7dedb;background:#151818}
+.forms-badge[data-category=official_agency_form]{border-color:#b0702d;color:#ffce8a;background:#2a1a0c}
+.forms-badge[data-category=company_form]{border-color:#6c7a73;color:#dfe8e3}
+.forms-actions{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:.75rem}
+.forms-add{border:1px dashed #6d4a26;border-radius:8px;padding:.6rem .9rem;margin-top:.75rem}
+.forms-add summary{cursor:pointer;color:#f9dc84;font-weight:650}
+.forms-inline{border-top:1px solid #343938;margin-top:.8rem;padding-top:.4rem}
+.forms-notice-box{border-left:3px solid #f7a449;padding:.5rem .75rem;background:#21170d;color:#ffe3b8;border-radius:0 6px 6px 0;font-size:.85rem}
+.forms-error{color:#ffb4a4;min-height:1em}
+.forms-editor{margin-top:1.25rem}.forms-editor h2:focus{outline:2px solid #f4c542;outline-offset:4px}
+.forms-editor fieldset{border:1px solid #3b4140;border-radius:8px;margin:1rem 0;padding:.9rem;min-width:0}
+.forms-editor legend{padding:0 .4rem;color:#edcf79;font-weight:650}
+.forms-choices{display:grid;grid-template-columns:repeat(auto-fill,minmax(12rem,1fr));gap:.3rem .9rem}
+#forms-view .forms-choice{display:flex;align-items:center;gap:.5rem;margin:.2rem 0}
+.forms-choice input{width:1.1rem;height:1.1rem;flex-shrink:0;accent-color:#f4a547}
+/* auto-fit cannot share a template with intrinsic tracks; the Remove button is an ordinary grid cell. */
+.forms-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(9rem,1fr));gap:.5rem;align-items:end;padding:.6rem 0;border-bottom:1px solid #2e3232}
+#forms-view .forms-row label{margin-top:0;font-size:.8rem}
+.forms-print{display:none}
+@media(max-width:900px){.forms-layout{grid-template-columns:1fr}}
+@media(max-width:650px){#forms-view .panel{padding:1rem}.forms-actions button{flex:1 1 100%}.forms-row{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){#forms-view *{transition:none!important;animation:none!important;scroll-behavior:auto!important}}
+/* Printed form; keep in step with DOC_CSS in forms-hub.js, which styles downloaded copies. */
+@media print{
+ body.forms-printing>*:not(#forms-print){display:none!important}
+ html:has(body.forms-printing),body.forms-printing{background:#fff!important;color:#000!important}
+ body.forms-printing::before,body.forms-printing::after{display:none!important;content:none!important}
+ body.forms-printing #forms-print{display:block;color:#000;font:11pt/1.45 "Segoe UI",Arial,sans-serif}
+ .wzos-form-doc .brand,.wzos-form-doc .footer{font-size:9pt;color:#444}
+ .wzos-form-doc h1{font-size:17pt;margin:4px 0}.wzos-form-doc h2{font-size:12pt;border-bottom:1px solid #888;margin:18px 0 6px}
+ .wzos-form-doc .notice{border:1.5px solid #000;padding:6px 8px;font-weight:600}
+ .wzos-form-doc .field-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px 18px}.wzos-form-doc .field.wide{grid-column:1/-1}
+ .wzos-form-doc .label{display:block;font-weight:600;font-size:9.5pt}
+ .wzos-form-doc .value{display:block;min-height:1.4em;border-bottom:1px solid #666}
+ .wzos-form-doc .box{min-height:4.5em;border:1px solid #666;padding:4px;white-space:pre-wrap}
+ .wzos-form-doc .choices{display:flex;flex-wrap:wrap;gap:2px 14px}
+ .wzos-form-doc table{width:100%;border-collapse:collapse;margin:10px 0;font-size:9.5pt}.wzos-form-doc caption{text-align:left;font-weight:600;padding-bottom:3px}
+ .wzos-form-doc th,.wzos-form-doc td{border:1px solid #666;padding:4px 6px;height:1.4em;text-align:left}
+}

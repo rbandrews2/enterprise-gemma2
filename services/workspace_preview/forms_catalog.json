@@ -1,0 +1,463 @@
+{
+ "catalog_note": "Built-in WZOS printable forms for the Forms Hub. Users may type into a form on screen, then print or download it; nothing is saved on the server. Revisions are append-only: add a new revision instead of editing a published one. Agency forms (for example VDOT Form C-85) are not bundled; organization admins upload their own copies to the team library.",
+ "templates": [
+  {
+   "id": "jsa",
+   "revision": 1,
+   "title": "Job Safety Analysis (JSA) worksheet",
+   "category": "wzos_printable",
+   "summary": "Daily hazards, controls, PPE and emergency plan for the crew. Adapted from the recovered V1 JSA.",
+   "provenance": "Recovered V1 Core src/pages/forms/JSA.tsx option sets; California heat-stress thresholds removed.",
+   "print_notice": "WZOS internal worksheet. Not an agency form, permit, approval or certification.",
+   "sections": [
+    {
+     "title": "Job information",
+     "fields": [
+      {
+       "key": "work_date",
+       "label": "Work date",
+       "type": "date"
+      },
+      {
+       "key": "start_time",
+       "label": "Start time",
+       "type": "time"
+      },
+      {
+       "key": "competent_person",
+       "label": "Supervisor / competent person",
+       "type": "text",
+       "max_length": 200
+      },
+      {
+       "key": "work_description",
+       "label": "Type of work being performed",
+       "type": "textarea",
+       "max_length": 2000
+      },
+      {
+       "key": "tasks",
+       "label": "Job / tasks for the day",
+       "type": "textarea",
+       "max_length": 4000
+      }
+     ]
+    },
+    {
+     "title": "Site conditions",
+     "fields": [
+      {
+       "key": "weather",
+       "label": "Weather conditions",
+       "type": "multiselect",
+       "options": [
+        "Clear sky",
+        "Partly cloudy",
+        "Overcast",
+        "Light rain",
+        "Heavy rain",
+        "Thunder / lightning",
+        "Snow",
+        "Fog",
+        "Smog"
+       ]
+      },
+      {
+       "key": "roadway",
+       "label": "Type of roadway",
+       "type": "multiselect",
+       "options": [
+        "Two-way road",
+        "One-way road",
+        "Multilane highway",
+        "Limited access highway",
+        "Four-way intersection",
+        "Three-way intersection",
+        "Gravel road",
+        "Dirt road",
+        "Paved unpainted road",
+        "Private road"
+       ]
+      },
+      {
+       "key": "speed_limit",
+       "label": "Posted speed limit (mph)",
+       "type": "number",
+       "min": 0,
+       "max": 85
+      },
+      {
+       "key": "traffic_volume",
+       "label": "Traffic volume (observed)",
+       "type": "select",
+       "options": [
+        "Light",
+        "Medium",
+        "Heavy"
+       ]
+      },
+      {
+       "key": "work_mode",
+       "label": "Stationary or mobile",
+       "type": "select",
+       "options": [
+        "Stationary",
+        "Mobile",
+        "Slow roll",
+        "Shop work"
+       ]
+      },
+      {
+       "key": "setup",
+       "label": "Work zone setup",
+       "type": "multiselect",
+       "options": [
+        "Lane closure",
+        "Shoulder closure",
+        "Flagging",
+        "Flagging with TMA",
+        "Flagging with rumble strips",
+        "Sidewalk redirection"
+       ]
+      },
+      {
+       "key": "shoulder",
+       "label": "Shoulder conditions",
+       "type": "multiselect",
+       "options": [
+        "Adequate shoulder",
+        "Narrow shoulder",
+        "No shoulder",
+        "Sharp drop-off",
+        "Debris on shoulder",
+        "Guardrail",
+        "Rumble strips"
+       ]
+      }
+     ]
+    },
+    {
+     "title": "Hazards and controls",
+     "fields": [
+      {
+       "key": "physical_hazards",
+       "label": "Physical hazards",
+       "type": "multiselect",
+       "options": [
+        "Moving equipment",
+        "Backing equipment",
+        "Lifting over 50 lbs",
+        "Falls from elevation (truck bed)",
+        "Electrical",
+        "Fire hazards / hot work",
+        "Obstructions",
+        "Nighttime work / visibility",
+        "High noise",
+        "Load securement"
+       ]
+      },
+      {
+       "key": "health_hazards",
+       "label": "Health hazards",
+       "type": "multiselect",
+       "options": [
+        "Heat stress",
+        "Cold stress",
+        "Silica / dust",
+        "Chemical exposure",
+        "Respiratory"
+       ]
+      },
+      {
+       "key": "environmental_hazards",
+       "label": "Environmental hazards",
+       "type": "multiselect",
+       "options": [
+        "Biological (animal, avian, insect)",
+        "Elevation / site terrain"
+       ]
+      },
+      {
+       "key": "other_hazards",
+       "label": "Other hazards",
+       "type": "textarea",
+       "max_length": 2000
+      },
+      {
+       "key": "controls",
+       "label": "Hazard control measures (number each hazard and its control)",
+       "type": "textarea",
+       "max_length": 4000
+      }
+     ]
+    },
+    {
+     "title": "PPE and equipment",
+     "fields": [
+      {
+       "key": "ppe",
+       "label": "PPE required",
+       "type": "multiselect",
+       "options": [
+        "Hard hat",
+        "High-visibility vest",
+        "High-visibility pants",
+        "Safety glasses",
+        "Safety goggles",
+        "Face shield",
+        "Gloves",
+        "Safety-toe boots",
+        "Ear plugs",
+        "Ear muffs",
+        "Respiratory protection",
+        "Fall protection",
+        "Hard hat light",
+        "Leg guards (gators)"
+       ]
+      },
+      {
+       "key": "equipment_checked",
+       "label": "Inspections performed (reported)",
+       "type": "multiselect",
+       "options": [
+        "Signs (legible, reflective)",
+        "Sign stands",
+        "Cones / barrels",
+        "Arrow board(s)",
+        "Message board(s)",
+        "TMA(s)",
+        "Truck(s)",
+        "Radios (charged)",
+        "Tools (grounded / guarded)"
+       ]
+      }
+     ]
+    },
+    {
+     "title": "Emergency plan and acknowledgement",
+     "fields": [
+      {
+       "key": "medical_facility",
+       "label": "Nearest medical facility",
+       "type": "text",
+       "max_length": 300
+      },
+      {
+       "key": "medical_phone",
+       "label": "Medical facility phone",
+       "type": "text",
+       "max_length": 40
+      },
+      {
+       "key": "emergency_procedures",
+       "label": "Emergency procedures",
+       "type": "textarea",
+       "max_length": 2000
+      },
+      {
+       "key": "crew_acknowledgement",
+       "label": "Crew acknowledgement (names)",
+       "type": "textarea",
+       "max_length": 2000
+      },
+      {
+       "key": "comments",
+       "label": "Additional comments",
+       "type": "textarea",
+       "max_length": 2000
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "incident",
+   "revision": 1,
+   "title": "Incident report",
+   "category": "wzos_printable",
+   "summary": "Record what happened, who was involved, immediate actions and follow-up.",
+   "provenance": "Recovered V1 Core src/pages/forms/Incident.tsx (title, location, description) extended with structured follow-up fields.",
+   "print_notice": "WZOS internal record. Not an OSHA/VOSH log, insurance claim or agency notification.",
+   "sections": [
+    {
+     "title": "What happened",
+     "fields": [
+      {
+       "key": "occurred_date",
+       "label": "Date of incident",
+       "type": "date"
+      },
+      {
+       "key": "occurred_time",
+       "label": "Approximate time",
+       "type": "time"
+      },
+      {
+       "key": "incident_type",
+       "label": "Incident type",
+       "type": "select",
+       "options": [
+        "Near miss",
+        "Injury",
+        "Property damage",
+        "Vehicle",
+        "Traffic / public",
+        "Other"
+       ]
+      },
+      {
+       "key": "description",
+       "label": "Description",
+       "type": "textarea",
+       "max_length": 4000
+      },
+      {
+       "key": "people_involved",
+       "label": "People involved / witnesses",
+       "type": "textarea",
+       "max_length": 2000
+      }
+     ]
+    },
+    {
+     "title": "Response",
+     "fields": [
+      {
+       "key": "immediate_actions",
+       "label": "Immediate actions taken",
+       "type": "textarea",
+       "max_length": 2000
+      },
+      {
+       "key": "follow_up",
+       "label": "Follow-up needed",
+       "type": "textarea",
+       "max_length": 2000
+      },
+      {
+       "key": "reported_by",
+       "label": "Reported by",
+       "type": "text",
+       "max_length": 200
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "dvir",
+   "revision": 1,
+   "title": "Vehicle inspection (DVIR worksheet)",
+   "category": "wzos_printable",
+   "summary": "Pre- or post-trip vehicle checks with defect notes. Recording a defect does not clear or ground the vehicle.",
+   "provenance": "Recovered V1 Core src/components/dvir/DVIRpage.tsx and src/pages/forms/DVIR.tsx fields.",
+   "print_notice": "WZOS internal worksheet. Does not certify the vehicle, authorize operation or satisfy any federal or state DVIR rule.",
+   "sections": [
+    {
+     "title": "Vehicle",
+     "fields": [
+      {
+       "key": "vehicle_id",
+       "label": "Vehicle ID",
+       "type": "text",
+       "max_length": 120
+      },
+      {
+       "key": "odometer",
+       "label": "Odometer",
+       "type": "number",
+       "min": 0,
+       "max": 10000000
+      },
+      {
+       "key": "trip_type",
+       "label": "Inspection type",
+       "type": "select",
+       "options": [
+        "Pre-trip",
+        "Post-trip"
+       ]
+      }
+     ]
+    },
+    {
+     "title": "Checks (reported)",
+     "fields": [
+      {
+       "key": "tires",
+       "label": "Tires",
+       "type": "select",
+       "default": "Not checked",
+       "options": [
+        "Not checked",
+        "Pass",
+        "Fail"
+       ]
+      },
+      {
+       "key": "fluids",
+       "label": "Fluids",
+       "type": "select",
+       "default": "Not checked",
+       "options": [
+        "Not checked",
+        "Pass",
+        "Fail"
+       ]
+      },
+      {
+       "key": "brakes",
+       "label": "Brakes",
+       "type": "select",
+       "default": "Not checked",
+       "options": [
+        "Not checked",
+        "Pass",
+        "Fail"
+       ]
+      },
+      {
+       "key": "ebrake",
+       "label": "Emergency brake",
+       "type": "select",
+       "default": "Not checked",
+       "options": [
+        "Not checked",
+        "Pass",
+        "Fail"
+       ]
+      },
+      {
+       "key": "mirrors",
+       "label": "Mirrors",
+       "type": "select",
+       "default": "Not checked",
+       "options": [
+        "Not checked",
+        "Pass",
+        "Fail"
+       ]
+      },
+      {
+       "key": "windows",
+       "label": "Windows",
+       "type": "select",
+       "default": "Not checked",
+       "options": [
+        "Not checked",
+        "Pass",
+        "Fail"
+       ]
+      },
+      {
+       "key": "defects",
+       "label": "Defects",
+       "type": "textarea",
+       "max_length": 4000
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

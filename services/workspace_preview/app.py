@@ -20,7 +20,7 @@ from shared.job_geometry import JobGeometry
 from services.v2.knowledge.store import Store
 from services.workspace_preview.atlas_adapter import prepare_order, select_references
 from services.workspace_preview.storage import SQLiteStorage
-from services.workspace_preview import timeclock, modules, report_history, team_modules
+from services.workspace_preview import timeclock, modules, report_history, team_modules, forms_hub
 from services.workspace_preview.assistant_guidance import workspace_guidance
 from services.workspace_preview.intelligence import ChatInput, ClientDisconnected, RequestCancelled, LocalIntelligence, configured_intelligence, ModelUnavailable, navigation_for
 from services.workspace_preview.atlas_requests import AtlasRequests
@@ -529,6 +529,7 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
     roster = accounts.roster if accounts else lambda selected: ACTORS
     team_modules.register(app, connect, actor, roster, synthetic=not account_workspace)
     modules.register(app, connect, actor, permitted_row, roster, synthetic=not account_workspace)
+    forms_hub.register(app, connect, actor, roster, file_storage_enabled=file_store is not None)
     if accounts:
         accounts.register(app)
         app.state.accounts = accounts
