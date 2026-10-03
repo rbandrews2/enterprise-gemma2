@@ -9,6 +9,7 @@ import logging
 import os
 import re
 import time
+from uuid import uuid4
 
 import httpx
 
@@ -87,6 +88,9 @@ class ManagedGemmaIntelligence:
             raise ModelUnavailable('Atlas is answering another request. Please try again shortly.', code='busy')
         async with self.gate:
             started = time.monotonic()
+            attempt_id = uuid4().hex
+            phase = 'prepare'
+            upstream_status = None
             self.last_usage = None
             try:
                 context = {**context, 'related_module_help': related_module_context(
@@ -97,7 +101,10 @@ class ManagedGemmaIntelligence:
                 if sum(len(message['content']) for message in messages) > 16000:
                     raise ValueError('Context too large')
                 async with asyncio.timeout(self.deadline):
+                    phase = 'authentication'
                     headers = await self.request_headers()
+                    phase = 'response_headers'
+                    logger.info('Atlas attempt started attempt_id=%s mode=%s', attempt_id, self.mode)
                     async with httpx.AsyncClient(transport=self.transport, trust_env=False,
                                                 follow_redirects=False, timeout=self.deadline-5) as client:
                         async with client.stream('POST', self.endpoint, headers=headers, json={
@@ -105,7 +112,12 @@ class ManagedGemmaIntelligence:
                             'max_tokens': 1024, 'temperature': 0.2,
                             'chat_template_kwargs': {'enable_thinking': False},
                         }) as response:
+                            upstream_status = response.status_code
+                            phase = 'response_body'
+                            logger.info('Atlas response headers attempt_id=%s status=%s elapsed=%.2fs',
+                                        attempt_id, upstream_status, time.monotonic() - started)
                             data = await bounded_json(response, 65536)
+                phase = 'validation'
                 choice = data['choices'][0]
                 answer = choice['message']['content'].strip()
                 if choice.get('finish_reason') != 'stop' or choice['message'].get('tool_calls') or not answer or len(answer) > 4000:
@@ -116,13 +128,18 @@ class ManagedGemmaIntelligence:
                     raise ValueError('Missing usage accounting')
                 self.last_success = time.monotonic()
                 self.last_usage = dict(zip(('prompt_tokens', 'completion_tokens'), counts))
-                logger.info('Atlas managed reply elapsed=%.2fs input_tokens=%d output_tokens=%d',
-                            self.last_success - started, *counts)
+                logger.info('Atlas reply completed attempt_id=%s elapsed=%.2fs input_tokens=%d output_tokens=%d',
+                            attempt_id, self.last_success - started, *counts)
                 return answer
+            except asyncio.CancelledError:
+                self.last_success = None
+                logger.info('Atlas attempt cancelled attempt_id=%s phase=%s elapsed=%.2fs upstream_status=%s',
+                            attempt_id, phase, time.monotonic() - started, upstream_status)
+                raise
             except (httpx.HTTPError, TimeoutError, ValueError, KeyError, IndexError, TypeError, AttributeError, ModelUnavailable) as error:
                 self.last_success = None
-                logger.warning('Atlas reply failed mode=%s error_type=%s upstream_status=%s',
-                               self.mode, type(error).__name__,
-                               error.response.status_code if isinstance(error, httpx.HTTPStatusError) else None)
+                logger.warning('Atlas reply failed attempt_id=%s mode=%s phase=%s elapsed=%.2fs error_type=%s upstream_status=%s',
+                               attempt_id, self.mode, phase, time.monotonic() - started,
+                               type(error).__name__, upstream_status)
                 raise ModelUnavailable('Atlas could not finish its reply. Your saved work is unchanged; please try again.',
                                        code='timeout' if isinstance(error, (TimeoutError, httpx.TimeoutException)) else 'provider_error') from error
