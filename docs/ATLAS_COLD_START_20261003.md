@@ -50,3 +50,21 @@ A later reconnection confirmed inference revision `00001-7wz` Ready=True and gua
 A bounded Cloud Shell observer was launched as PID1515 from `/home/admin_/wzos-evidence/cold-session-20261003.py`, logging to `cold-session-20261003.log`. It observes once per minute for at most12 minutes (also constrained by guard time remaining), invokes the single-request validator only after explicit zeros, and attempts app disable, inference deletion and fixture revocation in its finally path. The separate guard remains independent. Browser control stalled again before the observer result could be read. Check these logs and verify final state; do not start another trial while this one is unresolved.
 
 Local credential/CLI fallback is unavailable. The GitHub collaboration contract is `docs/COLLABORATION_CONTRACT.md`; Claude's module worktree has not been modified.
+
+## Recovered results and verified cleanup
+
+Browser restart restored access. The cloud-side observer completed and all three cleanup commands returned0. The one inference attempt failed; no retry was sent.
+
+- Explicit active=0/idle=0 samples:21:09:00 and21:10:00 UTC. Observation21:10:25.653964.
+- Request42f68f8a-a157-410d-9e5c-6db63e252f4d started21:10:25.654263 UTC.
+- HTTP503 after286.397s at21:15:12.050903; response not validated.
+- App logs: ReadTimeout, code=timeout, correlation c52d9f5396af4d0c9117731d7eb72046.
+- Inference request log at21:10:27.003603 UTC records POST HTTP500 with reported latency0s, trace0d68c00ffffc2005d3fb3f674b7e6c67. No diagnostic payload was present. Correlation to the measured application request is not established; preserve this evidence without assigning a root cause.
+- Model autoscaling startup log21:10:20.887283 precedes the measured request by about4.77s. Thus zero metrics were retrospective; this run does NOT prove that this request triggered startup.
+- Model startup completed and TCP probe succeeded21:13:38.187305, before the application timeout. Startup delay alone does not explain the entire failure; request routing/processing needs further diagnosis.
+
+Direct cleanup verification: app00024-xqr Ready=True with Atlas=0; trial inference listing empty; cold fixture state disabled=True. Independent guard had completed after the observer cleanup, creating another disabled app revision; its exit1 is consistent with attempting deletion of the already-absent service, not evidence of a remaining GPU. Guard and observer processes were absent; SQL proxy PID1201 was identified and stopped. No V1/DNS/production changes.
+
+Post-cleanup monitored cumulative inference time:3,981.013 seconds, approximately$3.528 compute at the recorded rate, no additional metric pages (21:31:22 UTC). Approximately$0.55 above preflight; excludes storage/builds and billing lag. Recheck before another trial.
+
+**Outcome: cold-start acceptance FAILED/open.** Next inspect the existing request/startup logs and request-queue behavior, improve timestamp correlation, and prepare a focused repair before another paid trial. Do not simply increase timeouts or describe this as production-ready. The earlier October2 cancellation acceptance remains separate.
