@@ -141,8 +141,6 @@ def register(app, connect, actor, permitted_row, actors, synthetic=True):
                                   (selected["organization_id"], kind, str(record_id))).fetchone()
             if existing and not row:
                 raise HTTPException(404, "Record not found")
-            if row and kind == "forms" and "template_id" in json.loads(row["payload"]):
-                raise HTTPException(409, "Edit this form in Forms Hub")
             if row and kind == "forms" and json.loads(row["payload"]).get("form_type", "incident") != payload.form_type:
                 raise HTTPException(409, "Create a new draft to use a different form template")
             if payload.order_id:

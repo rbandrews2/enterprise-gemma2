@@ -1,5 +1,6 @@
 """Private, bounded file persistence shared by all workspace modules."""
 import hashlib
+import json
 import re
 from pathlib import Path
 from typing import Literal
@@ -75,25 +76,32 @@ def register(app, connect, actor, permitted_order, store):
     with connect() as db:
         db.execute('CREATE TABLE IF NOT EXISTS workspace_files (id TEXT PRIMARY KEY,organization_id TEXT NOT NULL,owner_id TEXT NOT NULL,entity_kind TEXT NOT NULL,entity_id TEXT NOT NULL,filename TEXT NOT NULL,content_type TEXT NOT NULL,size_bytes INTEGER NOT NULL,sha256 TEXT NOT NULL,object_key TEXT NOT NULL)')
 
-    def parent(db, user, kind, record_id):
+    def parent(db, user, kind, record_id, write=False):
         if kind == 'order':
             permitted_order(db,record_id,user)
         elif kind == 'form':
             row=db.execute("SELECT owner_id FROM module_records WHERE organization_id=? AND kind='forms' AND id=?",(user['organization_id'],record_id)).fetchone()
             if not row or (user['role']!='admin' and row['owner_id']!=user['id']):
                 raise HTTPException(404,'Form not found')
+        elif kind == 'form_library':
+            # Forms Hub team library: every organization member downloads; only admins upload.
+            row=db.execute("SELECT payload FROM module_records WHERE organization_id=? AND kind='form_library' AND id=?",(user['organization_id'],record_id)).fetchone()
+            if not row or json.loads(row['payload']).get('removed'):
+                raise HTTPException(404,'Form not found')
+            if write and user['role']!='admin':
+                raise HTTPException(403,'Only an organization admin can upload team forms')
 
     def metadata(row):
         return {k:row[k] for k in ('id','entity_kind','entity_id','filename','content_type','size_bytes','sha256')}
 
     @app.put('/api/files/{file_id}')
-    async def upload(file_id: UUID, request: Request, entity_kind: Literal['order','form'], entity_id: str=Query(min_length=1,max_length=128), filename: str=Query(min_length=1,max_length=200)):
+    async def upload(file_id: UUID, request: Request, entity_kind: Literal['order','form','form_library'], entity_id: str=Query(min_length=1,max_length=128), filename: str=Query(min_length=1,max_length=200)):
         user=actor(request)
         if not re.fullmatch(r'[\w .()-]+',filename) or filename.startswith('.'):
             raise HTTPException(422,'Use a simple filename without path separators')
         content_type=request.headers.get('content-type','').split(';')[0]
         if content_type not in TYPES: raise HTTPException(415,'Only PDF, PNG and JPEG files are supported')
-        with connect() as db: parent(db,user,entity_kind,entity_id)
+        with connect() as db: parent(db,user,entity_kind,entity_id,write=True)
         data=bytearray()
         async for chunk in request.stream():
             if len(data)+len(chunk)>MAX_BYTES: raise HTTPException(413,'File exceeds 10 MiB')
@@ -106,7 +114,7 @@ def register(app, connect, actor, permitted_order, store):
         values=(str(file_id),user['organization_id'],user['id'],entity_kind,entity_id,filename,content_type,len(data),sha,key)
         with connect() as db:
             db.execute('BEGIN IMMEDIATE')
-            parent(db,user,entity_kind,entity_id)
+            parent(db,user,entity_kind,entity_id,write=True)
             prior=db.execute('SELECT * FROM workspace_files WHERE id=?',(str(file_id),)).fetchone()
             if prior:
                 if tuple(prior[k] for k in ('id','organization_id','owner_id','entity_kind','entity_id','filename','content_type','size_bytes','sha256','object_key'))!=values:
@@ -118,7 +126,7 @@ def register(app, connect, actor, permitted_order, store):
             return metadata(db.execute('SELECT * FROM workspace_files WHERE id=?',(str(file_id),)).fetchone())
 
     @app.get('/api/files')
-    def listing(request: Request, entity_kind: Literal['order','form'], entity_id: str, offset: int=Query(0,ge=0)):
+    def listing(request: Request, entity_kind: Literal['order','form','form_library'], entity_id: str, offset: int=Query(0,ge=0)):
         user=actor(request)
         with connect() as db:
             parent(db,user,entity_kind,entity_id)

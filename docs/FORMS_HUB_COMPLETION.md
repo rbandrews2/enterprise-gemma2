@@ -1,212 +1,122 @@
 # Forms Hub completion — Claude module handoff
 
-The branch is `claude/forms-hub`. It was cut from `origin/enterprise-v2` at `3247a18`, which contains AGENTS.md and the revised collaboration contract. The work lives in a separate worktree. The Time Clock worktree and PR #1 are unchanged, and Codex's checkout is untouched.
+Branch `claude/forms-hub` was cut from `origin/enterprise-v2` at `3247a18`; the PR is #2. It lives in a separate worktree. The Time Clock worktree and PR #1 are unchanged, and Codex's checkout is untouched.
 
-## Plan (written before implementation)
+## Product direction (Ray, October 3, 2026)
 
-### What exists today
-- **Backend** (`services/workspace_preview/modules.py`): Forms and Schedule share one generic module. Forms are stored in `module_records` (`kind='forms'`), and full payload snapshots go to the append-only `module_revisions` table. The existing protections are reused unchanged:
-  - Writes are version-checked with `expected_version`.
-  - Retrying an identical save returns the stored record.
-  - Members see and edit only their own forms; admins see and edit every form in their organization.
-  - Work-order links are checked with `permitted_row`.
-  - The template is fixed once a record is created.
-  - There are three hard-coded templates: incident, DVIR and JSA.
-- **UI** (`static/modules.js` and the `#modules-view` markup): one view serves both Forms and Schedule. It has no search, no explicit template revision, no review status and no missing-field display, and the only export is the Work Zone Report's live view.
-- **Consumers that must keep working:**
-  - The Work Zone Report reads `module_records`/`kind='forms'` filtered by `$.order_id` (`app.py`) and compares snapshots (`report_history.py`). Both are Codex-owned.
-  - Attachments authorize `entity_kind='form'` against `module_records` (`files.py`).
-  - Existing tests, the demo builder and the account-storage tests use `/api/modules/forms`.
-- **Recovered V1 sources** (`.local-recovery/core-build-baseline/src/pages/forms/`):
-  - Recoverable forms: C85, JSA, DVIR, incident, whistleblower, time-off and company PDFs.
-  - The V1 JSA has extensive checklists covering job information, weather, roadway type, shoulder conditions, traffic, physical, health and environmental hazards, PPE, inspections, emergency and medical clinic, and typed acknowledgement.
-  - The V1 C85 is a recreated grid layout of VDOT's "Pavement Marking – Contractor's Daily Log and Quality Control Report" that V1 called a "legal form". The only output was browser print or JSON.
+The first commit on this branch (`a45cdab`) built saved form records with an internal review workflow. Ray then clarified the product, and this revision replaces that design:
 
-### Key evidence for official forms
-In the cataloged but **unreviewed** VDOT source `vdot-bk704-002020-00`, the specification describes Form C-85 as a contractor's daily log. It says that "the C-85 form shall not be modified; all log entries shall be made in ink", and that the signed log goes to the Engineer. `knowledge/SOURCE_REGISTER.md` says a label like "C85" does not identify the current official template.
+- Forms are for the customer's use. Customers and their employees **download or print** the forms they need and do whatever they want with them.
+- **No review is required, and no forms currently need signatures.**
+- Forms are downloaded, not uploaded. The one exception is that **an organization admin uploads specific forms for their team** to access.
+- The **C-85 is just another form** a customer can access. Following Ray's answers, it is not bundled: an admin uploads the official copy.
+- Built-in WZOS forms can optionally be **filled in on screen before printing or downloading. Nothing is saved.**
+- Admin uploads are visible to **everyone in that organization**.
 
-**Therefore WZOS will not present a recreation as the official C-85.** It provides an internal *preparation worksheet* that references the official form, with source provenance and the review state `unreviewed`. The printout says to transfer the entries to the official form. No form is marked as legally required.
+## Reusable components found
+- The existing private file store (`files.py`): `LocalFiles` for local use and `GoogleFiles` for private GCS with uniform access and public-access prevention. It provides PDF/PNG/JPEG type and signature checks, a 10 MiB limit, SHA-256 integrity checks on download, idempotent file IDs and attachment-only downloads.
+- `module_records`/`module_revisions` provide version-checked metadata with revision history.
+- The existing admin and member roles and the organization-scoped actor.
+- Recovered V1 forms (`.local-recovery/core-build-baseline/src/pages/forms/`): the JSA option sets, the incident fields, and the DVIR fields already adapted in V2. V1's "Company Forms" page was an upload-and-download library on public Supabase URLs. The concept is reused here; the public-URL storage is not.
 
-### Approach
-1. **A separate module.** Forms Hub gets its own backend (`services/workspace_preview/forms_hub.py`, `/api/forms/...`), its own view (`#forms-view`) and its own script and styles (`static/forms-hub.js`, `forms-hub.css`). Schedule stays on `modules.py`/`modules.js`.
-2. **Same storage, no new tables.** Records stay in `module_records`/`module_revisions` with `kind='forms'`, so the report, attachments and history keep working without changes. **There is no startup DDL.**
-3. **A versioned template catalog** (`forms_catalog.json`, module data):
-   - Each template has an `id`, an integer `revision`, a `category` (`internal_worksheet` or `official_form_reference`), field definitions (required flags, options, length limits, repeatable rows) and conditional rules.
-   - Older revisions stay in the catalog.
-   - A record pins `template_id`, `template_revision` and a SHA-256 `template_checksum` of the definition. New drafts use the latest revision, and a saved record always renders and validates against its pinned revision.
-4. **Templates in this increment:**
-   - JSA worksheet, expanded from the V1 option sets
-   - Incident report
-   - Vehicle inspection (DVIR), keeping the rule that a failed item requires a defect note
-   - VDOT Form C-85 preparation worksheet (official form reference)
-   - Existing legacy incident, DVIR and JSA records remain readable, shown as "legacy template", and the Work Zone Report keeps reading them.
-5. **Server validation:**
-   - Unknown fields are rejected.
-   - Values must match their declared types, options and lengths.
-   - Drafts may be incomplete. The server computes `missing_required`, including conditional rules, on every read and refuses to submit a form for review while anything is missing.
-6. **Review status** using the existing admin and member roles; no new permission model:
-   - `draft`: the owner, or an admin, edits.
-   - `ready_for_review`: the owner submits; editing is locked.
-   - `reviewed` (internal review only; not approval or certification) or `returned` with a note: an admin decides.
-   - `cancelled`.
-   - A returned form can be edited again. Each transition is a version-checked revision that records the actor, so the audit trail is the existing revision history.
-7. **Browse and search:** search by title or template, filter by category, status and work order, and page through results. The template catalog is browsable before anything is created.
-8. **Print and export:**
-   - A print view styled for paper. Each printout is labelled with its category, template revision and status, plus a disclaimer.
-   - JSON export (`GET /api/forms/{id}/export`) with template provenance, record version and revision history.
-   - No PDF engine is added; PDF generation is Codex-owned.
-9. **Compatibility:** the legacy `/api/modules/forms` writer will refuse to overwrite records created by Forms Hub, so their template fields can't be dropped.
+## Implemented behavior
+- **A separate Forms Hub module:** `#forms-view`, `forms-hub.js`, `forms-hub.css` and `forms_hub.py`. Schedule management keeps `modules.js`/`#modules-view`.
+- **Team forms** (admin uploads):
+  - An admin adds a form with a name, a type (*Official agency form* or *Company form*), an optional description and a PDF/PNG/JPEG file. The admin can also edit details, replace the file, or remove the form.
+  - Everyone in the organization sees forms that have a file and can download them. An entry without a file yet is visible only to admins.
+  - WZOS states that it does not edit or verify uploaded forms or decide whether they apply (`verified_by_wzos: false`).
+  - Removing a form hides it and blocks downloads of its files. The stored objects are kept, because no delete API exists yet.
+- **WZOS printable forms:** JSA worksheet, Incident report and Vehicle inspection.
+  - **Print blank:** a clean paper layout with empty lines, boxes, ☐ choices and blank table rows.
+  - **Download blank:** a self-contained HTML file that opens in any browser to print or save as a PDF.
+  - **Fill in:** type on screen, then *Print or save as PDF* or *Download filled form*.
+  - Entries never leave the browser, and leaving with unsaved entries asks for confirmation.
+  - Printouts are built only from text nodes, so typed markup is escaped; this was verified in the browser.
+- **One search** filters both lists by name, description, type and filename.
+- **Permissions and isolation:**
+  - Members cannot create, edit, upload, replace or remove team forms (403).
+  - Other organizations cannot list, download, upload to or remove them (404).
+  - Records are keyed per organization, so the same ID in another tenant is a separate entry that cannot attach this organization's file.
+- **Concurrency:** metadata changes are version-checked (409 when stale), identical retries return the stored result, and the add flow reuses its IDs when retried, so a retry creates no duplicates.
+- **Design:** gloss-black panels with amber and gold badges, visible keyboard focus, and labelled buttons ("Download VDOT Form C-85", "Fill in Incident report"). The editor heading takes focus when opened, and focus returns to the opener when closed. The layout is one column on phones, and reduced motion disables transitions.
+- The C-85 preparation worksheet, saved form records, review statuses, history, the JSON export and the missing-required logic from `a45cdab` were **removed**.
 
-### Shared-file changes (narrow, listed for review)
-- `app.py`: one registration line for `forms_hub.register(...)`.
-- `static/index.html`: a `#forms-view` section, one script tag and one stylesheet link.
-- `static/workspace.js`: the view switch shows `#forms-view` for `forms` instead of `#modules-view`.
-- `static/modules.js` (module-owned; shared with Schedule): stop handling the `forms` view.
-- `modules.py`: a guard that refuses legacy writes to template records.
-- `tests/atlas_navigation.test.cjs`: the expected element for `forms` becomes `#forms-view`.
-- *Proposed* module-help text for Forms in `intelligence.py` and `assistant.js`, for Codex to review.
-
-### Acceptance checks
-- Browse and search templates and records, and see the category clearly on the list, the editor and the printout.
-- Create, save, reopen and edit a form linked to a work order. Persistence must survive an application restart.
-- Invalid input: unknown fields, wrong options, oversized values, a mismatched template revision or checksum, a template switch, and an inaccessible work order.
-- Stale-version 409 responses and idempotent retries.
-- Members are limited to their own forms. Admins see their organization only, and other organizations get 404. Only admins can review, and members can't transition other people's forms.
-- Template traceability: a record created at revision 1 still loads and validates against revision 1 after revision 2 exists.
-- Missing-required display, and submission blocked while anything is missing.
-- The print view and JSON export.
-- The Work Zone Report and attachment compatibility.
-- Browser checks: the full flow, mobile width, keyboard operation and reduced motion.
-- The full Python and Node suites.
-
-### Provisional behavior and questions recorded up front
-- Admins may review their own forms; this is allowed and recorded.
-- Signatures are not captured. The JSA keeps a typed acknowledgement, labelled "not an electronic signature".
-- Whistleblower, time-off and the company PDF library are out of scope. The whistleblower form needs a confidentiality design, and the PDF library needs an admin document-library decision.
-
-## Results (October 3, 2026)
-
-Commits, PR and the final file list are recorded in the PR description. This document is written before the commit.
-
-### Implemented behavior
-- **Browse and search.** Four templates are searchable on the client, with category badges on the card, the saved-form list, the editor and the printout. Saved forms can be searched by title (case-insensitive, with `%` and `_` treated literally) and filtered by status, type (internal, official reference or legacy) and work order. Results are paginated at 25 per page, with a 50-item limit on the API.
-- **Templates:**
-  - JSA worksheet: 5 sections and 26 fields from the V1 option sets. California-specific heat thresholds were removed.
-  - Incident report.
-  - Vehicle inspection (DVIR): a failed check requires a defect note, and "Not checked" blocks submission.
-  - VDOT Form C-85 preparation worksheet, an `official_form_reference`:
-    - It includes repeatable material, work and QC rows. It doesn't claim to store the official template (`official_template_stored: false`), and applicability is `not_determined`.
-    - It cites source `vdot-bk704-002020-00` Paragraph 42 with its content hash and `unreviewed` status.
-    - The catalog loader refuses any official reference that claims to store the official template.
-- **Create, save, reopen and edit** with an optional link to a permitted work order. Each save is version-checked: a stale save gets a 409 and a "Refresh form" control that asks before discarding unsaved entries. An identical retry returns the stored revision. Saves persist across an application restart.
-- **Template revision traceability.** Each record pins the template ID, revision and SHA-256 checksum. New forms must use the latest revision; existing forms keep, load and validate against their pinned revision even after a newer one is published. A changed checksum is refused with 409, and a record can't switch templates.
-- **Validation** is driven by the template: unknown fields, wrong types, options outside the list, duplicate selections, oversized text, malformed dates and times, out-of-range numbers, excess or unknown row columns, and anything beyond the 64 KiB content limit are all rejected. Fully blank rows are dropped.
-- **Missing required items** are computed on the server for every read, with labelled jump-to-field links in the editor. Submitting is disabled in the UI while items are missing and refused by the server with 422.
-- **Review status:**
-  - `draft` → `ready_for_review` (owner or admin)
-  - `ready_for_review` → `returned` (admin, with a required note) or `reviewed` (admin; internal only, never "approved")
-  - `reviewed` or `cancelled` → `draft` (admin reopen)
-  - `cancelled` (owner or admin, from `draft` or `returned`)
-  - Editing is locked during review and after a decision. Editing a returned form returns it to draft.
-  - Each transition is a version-checked revision recording the actor and note.
-- **Revision history** shows the author, status, review note, changed field keys, title changes and the template revision.
-- **Print** uses a dedicated print-only view on white with the app chrome hidden. It shows the category, template revision and checksum, status, revision, owner, work order and any missing items, plus the official-reference notice. The C-85 printout is headed "PREPARATION WORKSHEET ONLY … do not submit this printout as the C-85."
-- **JSON export** is labelled `official_submission: false` and includes template provenance and revision history.
-- **Attachments** reuse the existing `files.js`/`files.py` support for form records. They appear only when file storage is enabled; local preview has none.
-- **Work Zone Report compatibility.** New forms appear in the report's linked forms with their title, revision and status. `details` carries a template summary because the report displays that field.
-- **Legacy records** created before Forms Hub templates still appear in the report and in Forms Hub, read-only and labelled "Legacy draft". The legacy `/api/modules/forms` writer now refuses to overwrite template-based records (409).
-- **Permissions** are unchanged. Members see and edit only their own forms. Admins see and edit forms in their organization, and only admins return, review or reopen. Other organizations' records return 404. Records are keyed per organization, so the same ID used in another tenant is a separate record.
-
-### Bugs found and fixed during browser verification
-1. After a successful save or status change, the global saving flag never cleared, which silently blocked later saves and navigation.
-2. Typing an admin review note marked the form as changed, which blocked Return and Mark reviewed with "Save your changes first."
-3. "Refresh form" after a conflict discarded unsaved entries without asking; it now asks first.
-4. The row grid used invalid CSS (`auto-fit` combined with an intrinsic track), so it collapsed to one column.
-5. The print background kept dark page edges.
-
-### Tests and actual results
-- **Python, full suite:** 235 tests, 209 passed, 26 skipped. The skips are the 16 existing PostgreSQL cases plus the 10 new `PostgreSQLFormsHubTests`, all because `WZOS_TEST_DATABASE_URL` isn't set; Codex runs them in Cloud Shell. The baseline at `3247a18` was 215 tests, 199 passed and 16 skipped.
-- **New `tests/test_forms_hub.py`:** 10 SQLite tests pass, and the same 10 run as a PostgreSQL subclass. They cover:
-  - catalog categories, official-reference safety and checksums
-  - create, save, reopen, edit, identical retry, stale 409, history and restart persistence
-  - 16 invalid-input cases
-  - the complete review workflow, locking and idempotent transitions
-  - member, admin and cross-organization isolation
-  - template revision traceability with an injected revision-2 catalog
-  - DVIR conditional rules and blank-row handling
-  - search, filters and pagination (including literal `%` and `_`)
-  - export, Work Zone Report compatibility and the legacy guard
+## Tests and actual results
+- **Python, full suite:** 231 tests, 207 passed, 24 skipped. The skips are the 16 existing PostgreSQL cases plus 8 new `PostgreSQLFormsHubTests`, all because `WZOS_TEST_DATABASE_URL` isn't set. The base `3247a18` had 215 tests, 199 passed and 16 skipped.
+- **New `tests/test_forms_hub.py`** (8 SQLite tests, also run as the PostgreSQL subclass) covers:
+  - the printable catalog, with nothing stored and no write endpoint
+  - an admin publishing a form and a member downloading it byte-for-byte, surviving a restart
+  - member write attempts refused (403), and file-less entries hidden from members
+  - cross-organization isolation for listing, download, file listing, upload, removal and file attachment
+  - validation, stale versions, identical retries, attaching another entry's file refused, file type and signature checks, path-like filenames, and idempotent uploads
+  - replace, rename and remove: removal hides the form and blocks downloads, and retrying a removal is idempotent
+  - behavior when file storage isn't configured
   - concurrent edits (exactly one 200 and one 409)
-- **Node:** 12 of 12 passed, including the updated Atlas navigation test that expects `#forms-view`. `node --check` passes on all static JS.
-- **PostgreSQL: NOT RUN.** There is no local PostgreSQL or Docker. Run `WZOS_TEST_DATABASE_URL=… python -m unittest tests.test_forms_hub -v` against a disposable schema. PostgreSQL-specific code paths: `lower(json_extract(...)) LIKE ? ESCAPE '\'`, `json_extract(...) IS NULL` for legacy filtering, and `BEGIN IMMEDIATE` mapped to the advisory lock.
-- **Real browser:** Microsoft Edge (headless, via Playwright) on an isolated loopback preview with a fresh scratch SQLite database and synthetic identities. The final clean run passed:
-  - The template list with category badges, and template search for "C-85".
-  - **Keyboard:** Tab reaches "Start JSA", Enter opens the editor, and focus moves to the editor heading.
-  - A partial save, the missing-items list, Submit disabled while items are missing, and a missing-item link focusing its field.
-  - A complete save.
-  - A stale save from a second tab gets 409 and "Refresh form". Dismissing the discard prompt keeps the entries; accepting loads revision 3.
-  - Submitting locks the inputs.
-  - The C-85 official reference box, repeatable rows, the print view (app hidden, white page) and JSON export with `official_submission: false`.
-  - Saved-form search and the type filter.
-  - Admin: the owner name in the list, Return without a note refused, then returned with a note. The member sees the note, edits, and the form goes back to draft. History lists the revisions.
-  - Another organization's admin sees 0 forms.
+- **Node:** 12 of 12 passed (including `atlas_navigation.test.cjs`, which expects `#forms-view`). `node --check` passes on all static JS.
+- **PostgreSQL: NOT RUN.** There is no local PostgreSQL or Docker. Codex should run `python -m unittest tests.test_forms_hub -v` with `WZOS_TEST_DATABASE_URL` against a disposable schema.
+- **Real browser:** Microsoft Edge (headless, via Playwright) on an isolated loopback preview with a fresh database, `LocalFiles` storage, synthetic identities and a synthetic placeholder PDF (not a VDOT file). Results:
+  - An admin adds "VDOT Form C-85 (synthetic test copy)" as an official agency form and sees the card and badge. The admin renames it and replaces the file.
+  - The member sees Download only, with no add panel. The download matches the replacement bytes exactly.
+  - Searching "vehicle" and "c-85" filters both lists.
+  - JSA print blank: the app is hidden, ☐ choices appear, and print is invoked. DVIR download blank produces a standalone HTML file.
+  - **Keyboard:** Enter on "Fill in Incident report" opens the editor and focuses its heading.
+  - A filled Incident form, including a work order and a selected option (☑), downloads and prints with the entries. `<script>` text is escaped. Nothing was sent to the server while the form was filled, printed or downloaded; the one write the listener logged was the later admin removal.
+  - The leave guard keeps the editor when dismissed and closes it when accepted. Focus returns to the "Fill in" button.
+  - Another organization's admin sees no team forms.
+  - After the admin removes the form, the member sees none.
   - At 390 px with reduced motion: no horizontal overflow.
-  - Console: the existing favicon 404 plus the intentional 409 and 422 from the stale-save and missing-note checks.
-- **Screenshots** (compressed WebP, synthetic data, `docs/screenshots/forms-hub/`): JSA editor, C-85 official reference, print view, admin returned review and mobile C-85. The full-resolution captures are kept outside Git in the session scratchpad.
+  - Console: only the existing favicon 404.
+- **Screenshots** (compressed WebP, synthetic data, `docs/screenshots/forms-hub/`, about 280 KB in total): admin team forms, member view, blank JSA print, Incident fill-in and mobile admin. The full-resolution captures stay outside Git in the session scratchpad.
 
 ## API and schema changes
-- **Startup DDL: none.** Forms Hub reuses `module_records` and `module_revisions`, which `modules.register` already creates. Records are written with `kind='forms'`. The new payload keys `template_id`, `template_revision`, `template_checksum`, `template_category`, `fields`, `review` and the new status values are additive and stored in the existing JSON `payload` column. No migration SQL is needed. Older consumers ignore the keys, and the report shows title, revision, status and the `details` summary.
+- **Startup DDL: none.** Team-form metadata uses the existing `module_records`/`module_revisions` with `kind='form_library'`. Files use the existing `workspace_files` table and object store with `entity_kind='form_library'`. No migration SQL is needed.
 - **New authenticated endpoints:**
-  - `GET /api/forms/templates`
-  - `GET /api/forms/templates/{id}/{revision}`
-  - `GET /api/forms`, with optional `q`, `status`, `category`, `order_id`, `offset` and `limit`
-  - `GET` and `PUT /api/forms/{id}`
-  - `POST /api/forms/{id}/status`
-  - `GET /api/forms/{id}/history`
-  - `GET /api/forms/{id}/export`
+  - `GET /api/forms/templates` and `GET /api/forms/templates/{id}/{revision}`
+  - `GET /api/forms/library`
+  - `PUT /api/forms/library/{id}` (admin)
+  - `POST /api/forms/library/{id}/remove` (admin)
   - Static `/forms-hub.js` and `/forms-hub.css`
-- **Changed behavior:** `PUT /api/modules/forms/{id}` returns 409 for template-based records. Legacy incident, DVIR and JSA saves through that endpoint are unchanged; the demo builder and existing tests still use it.
+- **Shared file contract (`files.py`, narrow):** `entity_kind` adds `form_library`. `parent()` gains a `write` flag that only the upload path sets. For `form_library`, read access is any member of the organization while the entry isn't removed, and writes are admin-only. Behavior for `order` and `form` is unchanged; the flag is ignored for them.
 
-## Changed files
+## Changed files (relative to `3247a18`)
 - New: `services/workspace_preview/forms_hub.py`, `forms_catalog.json`, `static/forms-hub.js`, `static/forms-hub.css`, `tests/test_forms_hub.py`, `docs/FORMS_HUB_COMPLETION.md`, `docs/screenshots/forms-hub/*.webp`
 - **Shared (narrow):**
   - `app.py`: import and one registration line.
-  - `static/index.html`: the `#forms-view` section, a body-level `#forms-print` container, one stylesheet link and one script tag.
+  - `files.py`: the `form_library` kind, the write flag and the `json` import.
+  - `static/index.html`: the `#forms-view` section, the body-level `#forms-print` container, one stylesheet link and one script tag.
   - `static/workspace.js`: the view switch, and the `wzosFormsCanLeave` guard in `showWzosView`.
-  - `static/modules.js`: now serves Schedule only.
-  - `modules.py`: the legacy-overwrite guard.
+  - `static/modules.js`: Schedule only.
   - `tests/atlas_navigation.test.cjs`: expects `#forms-view`.
-- **Proposed module-help text (for Codex review):** the `forms` entry in `intelligence.py` (module help) and the `forms` quick-guide text in `static/assistant.js`. These are text-only. They describe template categories, missing-item checks, internal review, print/export and the vehicle "never clears" limit, and claim no applicability determination.
+  - `modules.py` is unchanged from the base.
+- **Proposed module-help text (for Codex review, text only):** the `forms` entry in `intelligence.py` and the `forms` quick guide in `static/assistant.js`. These describe the download/print library, admin team forms, on-screen fill-in without saving, and the vehicle "never clears" limit.
 
-## Remaining gaps (not done in this increment)
+## Remaining gaps
 - PostgreSQL execution of the new tests (Codex gate).
-- **Not built:** signatures and certification, any agency submission, PDF generation (Codex-owned, through the report and PDF tooling), email delivery, required or recommended form selection (Atlas-owned), duplicate-evidence suppression, vehicle-defect follow-up workflow (repair or clearance tracking), and migrating legacy drafts to templates.
-- **Templates not ported:** whistleblower (needs confidentiality and access design), time-off request (overlaps scheduling and HR), and the company PDF library (needs an admin document-library decision; V1 used public Supabase URLs, which must not be reused).
-- **Template governance:** templates are edited in a code-reviewed JSON file. There is no admin template editor or per-organization custom forms.
-- **Demo data:** `scripts/build_unified_demo.py` still creates legacy drafts. They appear in Forms Hub as read-only "Legacy draft" records.
-- **Template maintenance:** the dead Forms-specific markup and code paths in `modules.js` and `#modules-view` (the DVIR and JSA fieldsets) are hidden but not yet removed. That cleanup belongs with the Schedule increment.
-- The JSA option lists are carried over from V1 and haven't been reviewed by a safety professional.
+- **No object deletion:** removing a team form hides it, but the stored file is retained. A file-store delete or retention policy is shared storage work.
+- **No malware scanning** of uploads; this is an existing launch gate for all files.
+- **Legacy form drafts:** drafts made by the old Forms UI (`/api/modules/forms`, used by the demo builder and existing tests) still exist and still appear in the Work Zone Report's "Linked form drafts", but Forms Hub no longer shows them. The report's linked-forms section is Codex-owned and may need rethinking now that forms aren't saved.
+- Hidden Forms markup and code in `#modules-view`/`modules.js` (the DVIR and JSA fieldsets) is unreachable but not yet removed. That cleanup belongs with the Schedule increment.
+- Downloaded blanks are HTML (printable or savable as PDF from any browser), not PDF files. Server-side PDF generation is Codex-owned.
+- The JSA option lists come from V1 and haven't been reviewed by a safety professional.
+- Not ported: whistleblower reporting (needs a confidentiality design) and time-off requests (an HR and scheduling workflow, not a download).
 
 ## Open product decisions (provisional behavior in effect)
-1. **Self-review:** admins can mark their own forms reviewed; this is recorded but not prevented. Should a second person be required?
-2. **Admin edits:** admins can edit members' forms while they're in draft or returned (existing Forms permission); the owner is kept and the editor is recorded. Keep this?
-3. **Review vocabulary:** "Reviewed (internal)" is deliberately not "Approved". Does Ray want an approval step, and who may approve?
-4. **Signatures:** none are captured. The JSA keeps typed crew acknowledgement only. Which forms need signatures, and what kind (typed, drawn, identity-verified)?
-5. **C-85:** WZOS provides a preparation worksheet only. If Ray wants WZOS to keep an electronic C-85, someone needs to confirm the current official template and the contract-specific rules first. The source text mentions an electronic format, but the source is unreviewed.
-6. **Legacy drafts:** they're read-only in Forms Hub. Should they be migrated to templates or archived?
-7. **Template updates:** existing forms stay on their pinned revision, and there is no "upgrade to latest template" action. Should one be added?
-8. **Retention and deletion:** there is no delete, only cancel. Retention policy for forms, revisions and attachments is undefined.
+1. **Should the built-in WZOS printables stay?** They are shown by default. Ray may prefer team forms only, or a per-organization option to hide them.
+2. **Team form types:** "Official agency form" and "Company form". Are more categories needed, such as Safety or Vehicle?
+3. **Admin-only entries without a file** (for example after an interrupted upload) are visible only to admins, who can upload a file or remove the entry. Is that acceptable?
+4. **Removal is a soft hide.** Should admins be able to delete files permanently, and should older versions of replaced files be kept?
+5. **Upload types:** PDF, PNG and JPEG up to 10 MB, from the shared file policy. Are other formats needed, such as Word or Excel?
 
 ## Integration instructions (for Codex)
-1. Review the PR into `enterprise-v2`. Shared-file edits are listed above. The Atlas help text is proposed for your review of placement and accuracy.
-2. Run the full Python and Node suites on the integrated candidate, then run `tests/test_forms_hub.py` (including `PostgreSQLFormsHubTests`) against a disposable Cloud Shell PostgreSQL schema.
-3. No startup DDL or migration is involved. Records reuse `module_records` and `module_revisions`.
-4. On staging with synthetic accounts, verify:
-   - the `/api/forms` routes with admin and member accounts across two organizations
-   - the Work Zone Report linked-forms view showing a Forms Hub record
-   - an attachment upload on a saved form (requires private file storage)
-5. `SESSION_HANDOFF.md` and `REMAINING_TASKS.md` are untouched. The product decisions above are for the "Additions to review" queue.
+1. Review PR #2. `files.py` is the only shared backend contract touched, and the change is narrow and listed above. The Atlas help text is proposed for your review.
+2. `enterprise-v2` has moved past `3247a18` (`85cf1ca` through `85edf21`). A merge check reported no conflicts; rerun the full Python and Node suites on the integrated candidate.
+3. Run `tests/test_forms_hub.py`, including `PostgreSQLFormsHubTests`, against a disposable Cloud Shell PostgreSQL schema.
+4. On staging with synthetic accounts and private GCS:
+   - an admin uploads a synthetic PDF and a member downloads it
+   - another organization is refused
+   - removing the form blocks the download
+5. No startup DDL or migration is involved. I haven't touched `SESSION_HANDOFF.md` or `REMAINING_TASKS.md`; the open decisions above are for the "Additions to review" queue.
 
 ## Rollback
-- **Code:** revert the merge. The old `modules.js` view handles Forms again, and the old `/api/modules/forms` writer returns. Records created by Forms Hub stay in `module_records`. The legacy UI would show them with partial fields (title, status, details), and the restored legacy writer could then overwrite their template data. If rolling back after real use, export or freeze those records first.
-- **Data:** nothing to drop, because no tables were added.
+- **Code:** revert the merge. Forms then returns to the old `modules.js` draft UI. Team-form metadata (`module_records` rows with `kind='form_library'`) and the `workspace_files` rows and objects remain but are no longer reachable. With `form_library` gone from the `files.py` kinds, those files can't be downloaded through the API.
+- **Data:** nothing to drop; no tables were added. If rolling back after real uploads, decide whether to keep or purge the stored objects.
