@@ -1,0 +1,168 @@
+{
+ "catalog_note": "Form templates for the WZOS Forms Hub. Revisions are append-only: add a new revision instead of editing a published one. Internal worksheets are WZOS working documents. Official form references point to an agency form that WZOS does not store or reproduce; applicability is never determined here.",
+ "templates": [
+  {
+   "id": "jsa",
+   "revision": 1,
+   "title": "Job Safety Analysis (JSA) worksheet",
+   "category": "internal_worksheet",
+   "summary": "Daily hazards, controls, PPE and emergency plan for the crew. Adapted from the recovered V1 JSA.",
+   "provenance": "Recovered V1 Core src/pages/forms/JSA.tsx option sets; California heat-stress thresholds removed.",
+   "print_notice": "WZOS internal worksheet. Not an agency form, permit, approval or certification.",
+   "sections": [
+    {"title": "Job information", "fields": [
+     {"key": "work_date", "label": "Work date", "type": "date", "required": true},
+     {"key": "start_time", "label": "Start time", "type": "time"},
+     {"key": "competent_person", "label": "Supervisor / competent person", "type": "text", "max_length": 200, "required": true},
+     {"key": "work_description", "label": "Type of work being performed", "type": "textarea", "max_length": 2000, "required": true},
+     {"key": "tasks", "label": "Job / tasks for the day", "type": "textarea", "max_length": 4000, "required": true}
+    ]},
+    {"title": "Site conditions", "fields": [
+     {"key": "weather", "label": "Weather conditions", "type": "multiselect", "options": ["Clear sky", "Partly cloudy", "Overcast", "Light rain", "Heavy rain", "Thunder / lightning", "Snow", "Fog", "Smog"]},
+     {"key": "roadway", "label": "Type of roadway", "type": "multiselect", "options": ["Two-way road", "One-way road", "Multilane highway", "Limited access highway", "Four-way intersection", "Three-way intersection", "Gravel road", "Dirt road", "Paved unpainted road", "Private road"]},
+     {"key": "speed_limit", "label": "Posted speed limit (mph)", "type": "number", "min": 0, "max": 85},
+     {"key": "traffic_volume", "label": "Traffic volume (observed)", "type": "select", "options": ["Light", "Medium", "Heavy"]},
+     {"key": "work_mode", "label": "Stationary or mobile", "type": "select", "options": ["Stationary", "Mobile", "Slow roll", "Shop work"]},
+     {"key": "setup", "label": "Work zone setup", "type": "multiselect", "options": ["Lane closure", "Shoulder closure", "Flagging", "Flagging with TMA", "Flagging with rumble strips", "Sidewalk redirection"]},
+     {"key": "shoulder", "label": "Shoulder conditions", "type": "multiselect", "options": ["Adequate shoulder", "Narrow shoulder", "No shoulder", "Sharp drop-off", "Debris on shoulder", "Guardrail", "Rumble strips"]}
+    ]},
+    {"title": "Hazards and controls", "fields": [
+     {"key": "physical_hazards", "label": "Physical hazards", "type": "multiselect", "options": ["Moving equipment", "Backing equipment", "Lifting over 50 lbs", "Falls from elevation (truck bed)", "Electrical", "Fire hazards / hot work", "Obstructions", "Nighttime work / visibility", "High noise", "Load securement"]},
+     {"key": "health_hazards", "label": "Health hazards", "type": "multiselect", "options": ["Heat stress", "Cold stress", "Silica / dust", "Chemical exposure", "Respiratory"]},
+     {"key": "environmental_hazards", "label": "Environmental hazards", "type": "multiselect", "options": ["Biological (animal, avian, insect)", "Elevation / site terrain"]},
+     {"key": "other_hazards", "label": "Other hazards", "type": "textarea", "max_length": 2000},
+     {"key": "controls", "label": "Hazard control measures (number each hazard and its control)", "type": "textarea", "max_length": 4000, "required": true}
+    ]},
+    {"title": "PPE and equipment", "fields": [
+     {"key": "ppe", "label": "PPE required", "type": "multiselect", "required": true, "options": ["Hard hat", "High-visibility vest", "High-visibility pants", "Safety glasses", "Safety goggles", "Face shield", "Gloves", "Safety-toe boots", "Ear plugs", "Ear muffs", "Respiratory protection", "Fall protection", "Hard hat light", "Leg guards (gators)"]},
+     {"key": "equipment_checked", "label": "Inspections performed (reported)", "type": "multiselect", "options": ["Signs (legible, reflective)", "Sign stands", "Cones / barrels", "Arrow board(s)", "Message board(s)", "TMA(s)", "Truck(s)", "Radios (charged)", "Tools (grounded / guarded)"]}
+    ]},
+    {"title": "Emergency plan and acknowledgement", "fields": [
+     {"key": "medical_facility", "label": "Nearest medical facility", "type": "text", "max_length": 300},
+     {"key": "medical_phone", "label": "Medical facility phone", "type": "text", "max_length": 40},
+     {"key": "emergency_procedures", "label": "Emergency procedures", "type": "textarea", "max_length": 2000, "required": true},
+     {"key": "crew_acknowledgement", "label": "Crew acknowledgement (typed names; not an electronic signature)", "type": "textarea", "max_length": 2000},
+     {"key": "comments", "label": "Additional comments", "type": "textarea", "max_length": 2000}
+    ]}
+   ]
+  },
+  {
+   "id": "incident",
+   "revision": 1,
+   "title": "Incident report",
+   "category": "internal_worksheet",
+   "summary": "Record what happened, who was involved, immediate actions and follow-up. Attach photos after saving.",
+   "provenance": "Recovered V1 Core src/pages/forms/Incident.tsx (title, location, description) extended with structured follow-up fields.",
+   "print_notice": "WZOS internal record. Not an OSHA/VOSH log, insurance claim or agency notification.",
+   "sections": [
+    {"title": "What happened", "fields": [
+     {"key": "occurred_date", "label": "Date of incident", "type": "date", "required": true},
+     {"key": "occurred_time", "label": "Approximate time", "type": "time"},
+     {"key": "incident_type", "label": "Incident type", "type": "select", "required": true, "options": ["Near miss", "Injury", "Property damage", "Vehicle", "Traffic / public", "Other"]},
+     {"key": "description", "label": "Description", "type": "textarea", "max_length": 4000, "required": true},
+     {"key": "people_involved", "label": "People involved / witnesses", "type": "textarea", "max_length": 2000}
+    ]},
+    {"title": "Response", "fields": [
+     {"key": "immediate_actions", "label": "Immediate actions taken", "type": "textarea", "max_length": 2000, "required": true},
+     {"key": "follow_up", "label": "Follow-up needed", "type": "textarea", "max_length": 2000},
+     {"key": "reported_by", "label": "Reported by", "type": "text", "max_length": 200, "required": true}
+    ]}
+   ]
+  },
+  {
+   "id": "dvir",
+   "revision": 1,
+   "title": "Vehicle inspection (DVIR worksheet)",
+   "category": "internal_worksheet",
+   "summary": "Pre- or post-trip vehicle checks with defect notes. Recording a defect does not clear or ground the vehicle.",
+   "provenance": "Recovered V1 Core src/components/dvir/DVIRpage.tsx and src/pages/forms/DVIR.tsx fields.",
+   "print_notice": "WZOS internal worksheet. Does not certify the vehicle, authorize operation or satisfy any federal or state DVIR rule.",
+   "rules": [
+    {"type": "required_if_any", "fields": ["tires", "fluids", "brakes", "ebrake", "mirrors", "windows"], "equals": "Fail", "require": "defects", "message": "Describe each failed item in Defects"},
+    {"type": "not_value", "fields": ["tires", "fluids", "brakes", "ebrake", "mirrors", "windows"], "value": "Not checked", "message": "Check every item before submitting for review"}
+   ],
+   "sections": [
+    {"title": "Vehicle", "fields": [
+     {"key": "vehicle_id", "label": "Vehicle ID", "type": "text", "max_length": 120, "required": true},
+     {"key": "odometer", "label": "Odometer", "type": "number", "min": 0, "max": 10000000},
+     {"key": "trip_type", "label": "Inspection type", "type": "select", "required": true, "options": ["Pre-trip", "Post-trip"]}
+    ]},
+    {"title": "Checks (reported)", "fields": [
+     {"key": "tires", "label": "Tires", "type": "select", "default": "Not checked", "options": ["Not checked", "Pass", "Fail"]},
+     {"key": "fluids", "label": "Fluids", "type": "select", "default": "Not checked", "options": ["Not checked", "Pass", "Fail"]},
+     {"key": "brakes", "label": "Brakes", "type": "select", "default": "Not checked", "options": ["Not checked", "Pass", "Fail"]},
+     {"key": "ebrake", "label": "Emergency brake", "type": "select", "default": "Not checked", "options": ["Not checked", "Pass", "Fail"]},
+     {"key": "mirrors", "label": "Mirrors", "type": "select", "default": "Not checked", "options": ["Not checked", "Pass", "Fail"]},
+     {"key": "windows", "label": "Windows", "type": "select", "default": "Not checked", "options": ["Not checked", "Pass", "Fail"]},
+     {"key": "defects", "label": "Defects", "type": "textarea", "max_length": 4000}
+    ]}
+   ]
+  },
+  {
+   "id": "c85_prep",
+   "revision": 1,
+   "title": "VDOT Form C-85 preparation worksheet",
+   "category": "official_form_reference",
+   "summary": "Organize daily pavement-marking log entries before transferring them to the official VDOT Form C-85. This worksheet is not the C-85.",
+   "provenance": "Field groups adapted from the recovered V1 C85 template (src/pages/forms/C85Template.tsx). The official form layout is not reproduced.",
+   "print_notice": "PREPARATION WORKSHEET ONLY. Transfer entries to the official VDOT Form C-85; do not submit this printout as the C-85. WZOS has not determined whether the C-85 applies to this project.",
+   "official_reference": {
+    "authority": "Virginia Department of Transportation (VDOT)",
+    "form_identifier": "Form C-85",
+    "official_title": "Pavement Marking, Contractor's Daily Log and Quality Control Report",
+    "official_template_stored": false,
+    "applicability": "not_determined",
+    "source": {
+     "catalog_id": "vdot-bk704-002020-00",
+     "title": "VDOT marking-related specification archive member BK704-002020-00.docx",
+     "content_sha256": "7852cf3093f6ca451551d5d11e9ad3931359ca936b29a0bbb4394b9d51dedef3",
+     "section": "Paragraph 42",
+     "excerpt": "The Contractor shall maintain a daily log, Form C-85, for both temporary and permanent pavement markings and markers. The C-85 form shall not be modified; all log entries shall be made in ink; and shall be legible.",
+     "review_status": "unreviewed"
+    }
+   },
+   "sections": [
+    {"title": "Log header", "fields": [
+     {"key": "contractor", "label": "Contractor", "type": "text", "max_length": 200, "required": true},
+     {"key": "log_date", "label": "Date", "type": "date", "required": true},
+     {"key": "job_number", "label": "Project / job number", "type": "text", "max_length": 100, "required": true},
+     {"key": "start_time", "label": "Start time", "type": "time"},
+     {"key": "finish_time", "label": "Finish time", "type": "time"},
+     {"key": "weather", "label": "Weather", "type": "text", "max_length": 200},
+     {"key": "air_temp_start", "label": "Air temperature at start (°F)", "type": "number", "min": -40, "max": 140},
+     {"key": "air_temp_finish", "label": "Air temperature at finish (°F)", "type": "number", "min": -40, "max": 140},
+     {"key": "surface_temp_start", "label": "Surface temperature at start (°F)", "type": "number", "min": -40, "max": 200}
+    ]},
+    {"title": "Materials", "fields": [
+     {"key": "materials", "label": "Materials used", "type": "rows", "max_rows": 5, "columns": [
+      {"key": "material_type", "label": "Material type", "max_length": 120},
+      {"key": "quantity", "label": "Quantity", "max_length": 40},
+      {"key": "units", "label": "Units", "max_length": 40},
+      {"key": "certification", "label": "Certification / lot", "max_length": 120},
+      {"key": "expiration", "label": "Expiration date", "max_length": 40}
+     ]}
+    ]},
+    {"title": "Work performed", "fields": [
+     {"key": "work", "label": "Work items", "type": "rows", "max_rows": 10, "required": true, "columns": [
+      {"key": "work_type", "label": "Type of work", "max_length": 120},
+      {"key": "contract_item", "label": "Contract item", "max_length": 60},
+      {"key": "quantity", "label": "Quantity", "max_length": 40},
+      {"key": "units", "label": "Units", "max_length": 40},
+      {"key": "location", "label": "Location", "max_length": 200},
+      {"key": "width", "label": "Width", "max_length": 40},
+      {"key": "color", "label": "Color", "max_length": 40}
+     ]}
+    ]},
+    {"title": "Quality control tests", "fields": [
+     {"key": "qc", "label": "QC test entries", "type": "rows", "max_rows": 6, "columns": [
+      {"key": "material_type", "label": "Material type", "max_length": 120},
+      {"key": "measurement", "label": "Measurement", "max_length": 120},
+      {"key": "location", "label": "Location", "max_length": 200},
+      {"key": "time", "label": "Time", "max_length": 40},
+      {"key": "inspector", "label": "Tested by", "max_length": 120}
+     ]}
+    ]}
+   ]
+  }
+ ]
+}

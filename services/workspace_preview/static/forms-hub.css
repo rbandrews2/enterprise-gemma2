@@ -1,0 +1,60 @@
+/* Forms Hub module: gloss-black surfaces from workspace.css; amber/gold accents only. */
+#forms-view [hidden]{display:none!important}
+#forms-view .panel{padding:1.5rem;min-width:0}
+.forms-layout{display:grid;grid-template-columns:minmax(16rem,1fr) minmax(20rem,1.6fr);gap:1.25rem;align-items:start}
+#forms-view label{display:block;margin-top:.6rem}
+#forms-view input:not([type=checkbox]),#forms-view select,#forms-view textarea{width:100%;box-sizing:border-box}
+.forms-template-list{display:grid;gap:.9rem;margin-top:1rem}
+.forms-template{border:1px solid #3b3e3e;border-radius:8px;padding:1rem;background:linear-gradient(145deg,#1d1f20,#0b0c0d)}
+.forms-template h3{margin:0 0 .4rem;font-size:1rem}.forms-template p{margin:.5rem 0}
+.forms-badge{display:inline-block;padding:.12rem .5rem;border-radius:4px;font-size:.72rem;font-weight:650;border:1px solid #4a5250;color:#d7dedb;background:#151818}
+.forms-badge[data-category=official_form_reference]{border-color:#b0702d;color:#ffce8a;background:#2a1a0c}
+.forms-badge[data-category=legacy]{border-style:dashed;color:#b9c0bd}
+.forms-status{display:inline-block;padding:.1rem .5rem;border-radius:999px;font-size:.72rem;font-weight:650;border:1px solid #4a5250;color:#e6ebe8}
+.forms-status[data-status=ready_for_review]{border-color:#f4c542;color:#f9dc84}
+.forms-status[data-status=returned]{border-color:#e08a4f;color:#ffc6a0}
+.forms-status[data-status=reviewed]{border-color:#5fbf86;color:#a9e7c0}
+.forms-status[data-status=cancelled]{color:#9aa3a0;text-decoration:line-through}
+.forms-official-note,.forms-notice-box,.forms-review-note{border-left:3px solid #f7a449;padding:.5rem .75rem;background:#21170d;color:#ffe3b8;border-radius:0 6px 6px 0;font-size:.85rem}
+.forms-filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(10rem,1fr));gap:.6rem}
+.forms-list{display:grid;gap:.5rem;margin-top:1rem}
+.forms-record{display:grid;gap:.3rem;text-align:left;width:100%;padding:.8rem 1rem;border-radius:8px;border:1px solid #383b3b;background:linear-gradient(145deg,#1b1d1e,#08090a);color:inherit;white-space:normal}
+.forms-record:hover{border-color:#8c5b32}
+.forms-record-line{display:flex;justify-content:space-between;gap:.6rem;align-items:center;overflow-wrap:anywhere}
+.forms-record-meta{font-size:.8rem;color:var(--muted)}.forms-missing-count{font-size:.8rem;color:#ffc982}
+.forms-record .forms-badge{justify-self:start}
+.forms-pager{display:flex;gap:.6rem;margin-top:1rem}
+.forms-editor{margin-top:1.25rem}.forms-editor h2:focus{outline:2px solid #f4c542;outline-offset:4px}
+.forms-meta{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;margin-bottom:.75rem}
+.forms-official{border:1px solid #8c5b32;border-radius:8px;padding:.8rem 1rem;margin:1rem 0;background:#170f07}
+.forms-official h3{margin:0 0 .4rem;color:#ffce8a;font-size:.95rem}.forms-official blockquote{margin:.5rem 0 0;padding-left:.8rem;border-left:2px solid #6d4a26;color:#d9c7ae;font-size:.85rem}
+.forms-editor fieldset{border:1px solid #3b4140;border-radius:8px;margin:1rem 0;padding:.9rem;min-width:0}
+.forms-editor legend{padding:0 .4rem;color:#edcf79;font-weight:650}
+.forms-required{color:#ffc982;font-weight:400;font-size:.85em}
+.forms-choices{display:grid;grid-template-columns:repeat(auto-fill,minmax(12rem,1fr));gap:.3rem .9rem}
+#forms-view .forms-choice{display:flex;align-items:center;gap:.5rem;margin:.2rem 0}
+.forms-choice input{width:1.1rem;height:1.1rem;flex-shrink:0;accent-color:#f4a547}
+/* auto-fit cannot share a template with intrinsic tracks; the Remove button is an ordinary grid cell. */
+.forms-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(9rem,1fr));gap:.5rem;align-items:end;padding:.6rem 0;border-bottom:1px solid #2e3232}.forms-row>button{align-self:end}
+#forms-view .forms-row label{margin-top:0;font-size:.8rem}
+.forms-missing{margin:1rem 0}.forms-missing:empty{display:none}
+.forms-missing h3{margin:0 0 .4rem;font-size:.95rem;color:#ffc982}.forms-missing ul{margin:0;padding-left:1.1rem}
+.forms-link{background:none;border:0;padding:.15rem 0;color:#f9dc84;text-decoration:underline;text-align:left;font:inherit;cursor:pointer}
+.forms-error{color:#ffb4a4;min-height:1em}
+.forms-actions{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:.75rem}
+.forms-history{margin-top:1rem}.forms-history summary{cursor:pointer;color:#edcf79}.forms-history p{font-size:.85rem;overflow-wrap:anywhere}
+.forms-print{display:none}
+@media(max-width:900px){.forms-layout{grid-template-columns:1fr}}
+@media(max-width:650px){#forms-view .panel{padding:1rem}.forms-actions button,.forms-pager button{flex:1 1 100%}.forms-row{grid-template-columns:1fr}.forms-record-line{flex-wrap:wrap}}
+@media(prefers-reduced-motion:reduce){#forms-view *{transition:none!important;animation:none!important;scroll-behavior:auto!important}}
+@media print{
+ body.forms-printing>*:not(#forms-print){display:none!important}
+ html:has(body.forms-printing),body.forms-printing{background:#fff!important;color:#000!important}
+ body.forms-printing::before,body.forms-printing::after{display:none!important;content:none!important}
+ body.forms-printing #forms-print{display:block;color:#000;font:11pt/1.4 "Segoe UI",Arial,sans-serif;padding:0}
+ #forms-print h1{font-size:16pt;margin:.2rem 0}#forms-print h2{font-size:12pt;margin:1rem 0 .3rem;border-bottom:1px solid #999}#forms-print h3{font-size:11pt;margin:.6rem 0 .2rem}
+ #forms-print dl{display:grid;grid-template-columns:9rem 1fr;gap:.15rem .6rem;margin:.6rem 0}#forms-print dt{font-weight:700}#forms-print dd{margin:0}
+ #forms-print table{border-collapse:collapse;width:100%;font-size:9pt}#forms-print th,#forms-print td{border:1px solid #777;padding:3px 5px;text-align:left}
+ .forms-print-notice{border:1.5px solid #000;padding:.4rem .6rem;font-weight:700}
+ .forms-print-brand,.forms-print-footer{font-size:9pt;color:#333}
+}
