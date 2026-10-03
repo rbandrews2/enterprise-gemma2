@@ -36,4 +36,10 @@ New items from Ray can be added below and then inserted into the sequence accord
 
 ### Additions to review
 
-- None yet.
+- Time Clock product decisions from Claude's `docs/TIME_CLOCK_COMPLETION.md` on `claude/time-clock` (not yet integrated or approved):
+  1. Admin self-correction: currently allowed with an audit trail; decide whether any second-person review is required.
+  2. Offline draft persistence: currently open-tab only; decide whether drafts survive reload/crash and define sign-out/shared-device clearing.
+  3. Validation windows: currently 14-day submission age, 48-hour shift cap, and a +/-15-minute duplicate hint; confirm or revise.
+  4. Active-shift corrections: currently close the shift; decide whether adjusting a still-running shift is supported.
+  5. Retention and access: define audit/submission/export retention and member audit exports.
+  6. Payroll scope: current exports say payroll is not calculated; confirm the intended integration scope without treating payroll exclusion as decided.
