@@ -543,5 +543,5 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
     def account_script():
         return FileResponse(STATIC / "account.js", media_type="text/javascript")
     report_history.register(app, connect, actor, report, knowledge_store)
-    timeclock.register(app, connect, actor, permitted_row)
+    timeclock.register(app, connect, actor, permitted_row, roster)
     return app
