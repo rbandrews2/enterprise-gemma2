@@ -8,10 +8,22 @@ import json
 from pathlib import Path
 import time
 import httpx
-from validate_managed_accounts import gc, ORIGIN, SERVICE
-from validate_atlas_grounding_staging import require_token_lifetime
+from uuid import uuid4
+try:
+    from .validate_managed_accounts import gc, ORIGIN, SERVICE
+    from .validate_atlas_grounding_staging import require_token_lifetime
+except ImportError:
+    from validate_managed_accounts import gc, ORIGIN, SERVICE
+    from validate_atlas_grounding_staging import require_token_lifetime
 
-async def run(state, seed, output):
+def valid_concurrent_outcome(rows):
+    return (len(rows) == 2 and any(r['http_status'] == 200 for r in rows)
+            and all((r['http_status'] == 200 and r['model_called'] is True)
+                    or (r['http_status'] == 503 and r['error_code'] == 'busy'
+                        and r['model_called'] is False) for r in rows))
+
+
+async def run(state, seed, output, concurrency_only=False):
     if state.get('disabled') or not seed.get('synthetic'):
         raise ValueError('Active synthetic fixture and synthetic saved-job evidence required')
     iam = gc('auth', 'print-identity-token')
@@ -34,7 +46,7 @@ async def run(state, seed, output):
             async def request(label):
                 start = time.monotonic()
                 try:
-                    reply = await client.post('/api/assistant/chat',json=payload)
+                    reply = await client.post('/api/assistant/chat',json={**payload,'request_id':str(uuid4())})
                     body = reply.json()
                     row = {'stage':label,'http_status':reply.status_code,'seconds':round(time.monotonic()-start,3),
                            'model_called':body.get('model_called',False),
@@ -43,7 +55,7 @@ async def run(state, seed, output):
                     if reply.status_code == 200:
                         assert body['model_called'] and not body['approved_for_field_use'] and body['actions_performed']==[]
                     record(row)
-                    return reply.status_code
+                    return row
                 except asyncio.CancelledError:
                     record({'stage':label,'client_cancelled':True,'provider_cancellation_verified':False})
                     raise
@@ -51,8 +63,11 @@ async def run(state, seed, output):
                     record({'stage':label,'error_type':type(error).__name__})
                     raise
             statuses = await asyncio.gather(request('concurrent_a'),request('concurrent_b'))
-            if 200 not in statuses or any(s not in (200,503) for s in statuses):
+            if not valid_concurrent_outcome(statuses):
                 raise RuntimeError('Unexpected concurrent outcome; inspect sanitized evidence and cloud logs')
+            if concurrency_only:
+                record({'stage':'complete','scope':'two_requests_only','sustained_capacity_verified':False})
+                return
             pending = asyncio.create_task(request('client_disconnect'))
             await asyncio.sleep(0.25)
             if pending.done():
@@ -63,13 +78,14 @@ async def run(state, seed, output):
                 try: await pending
                 except asyncio.CancelledError: pass
             await asyncio.sleep(3)
-            if await request('after_disconnect') != 200:
+            if (await request('after_disconnect'))['http_status'] != 200:
                 raise RuntimeError('Post-disconnect recovery not accepted; no automatic retries')
             record({'stage':'complete','cold_start_verified':False,'provider_cancellation_verified':False})
 
 if __name__ == '__main__':
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument('--state',type=Path,required=True);p.add_argument('--seed',type=Path,required=True)
-    p.add_argument('--output',type=Path,required=True);a=p.parse_args()
+    p.add_argument('--output',type=Path,required=True)
+    p.add_argument('--concurrency-only',action='store_true');a=p.parse_args()
     seed=json.loads(a.seed.read_text().splitlines()[-1])
-    asyncio.run(run(json.loads(a.state.read_text()),seed,a.output))
+    asyncio.run(run(json.loads(a.state.read_text()),seed,a.output,a.concurrency_only))
