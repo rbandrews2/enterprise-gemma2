@@ -4,6 +4,9 @@ Ray authorized a separate restricted Google Cloud V2 staging deployment. Product
 
 ## Latest resume checkpoint
 
+October 3 latest recovery status: one reconnection verified inference00001-7wz Ready and guard1349 active; app enable/IAM completed. Zero observer initially saw active1/idle0. Bounded observer+single-request+finally-cleanup launched as Cloud Shell PID1515, log /home/admin_/wzos-evidence/cold-session-20261003.log. Browser control failed repeatedly again; final test/cleanup NOT verified. Read that log and cold-live/disable/delete/fixture-cleanup logs FIRST on reconnect; verify app Atlas0/Ready, trial inference absent and fixtures disabled, then stop helpers. Do not start another GPU trial until resolved. 12 focused local tests pass; no runtime app code changed. Claude Time Clock worktree untouched; collaboration contract saved.
+
+
 October 3 IN-PROGRESS cloud verification required: cold-start tooling ff0aa5d pushed/synced; 10 focused tests pass. Claude Time Clock worktree confirmed separate. Synthetic cold-fixtures-20261003 prepared successfully. Guard/deploy commands submitted, then Chrome control failed; deployment and cleanup NOT verified, no inference request sent. Before any further paid work inspect cold-model-deploy/guard logs, verify or clean up trial inference and disable/revoke cold fixtures. See ATLAS_COLD_START_20261003.md for exact recovery paths. Prior accepted cancellation remains valid; cold-start remains OPEN.
 
 

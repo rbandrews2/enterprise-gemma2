@@ -27,7 +27,7 @@ Official references:
 
 ## Local validation
 
-Seven new metric/preflight tests and three existing credential-expiry tests passed. A mocked operator run confirms absent metrics prevent any inference POST. Live acceptance pending.
+Nine new metric/preflight tests and three existing credential-expiry tests passed. A mocked operator run confirms absent metrics prevent any inference POST. Live acceptance pending.
 
 ## October 3 live checkpoint — verification required
 
@@ -42,3 +42,11 @@ Immediate recovery actions in Cloud Shell:
 4. Verify the app is Ready with Atlas=0, inference listing empty and fixtures disabled before stopping the recorded proxy/guard PIDs. Refresh compute usage.
 
 Helpers/evidence are `/home/admin_/wzos-evidence/cold-{proxy,guard,accounts,model-deploy}-20261003.*`. No new app image was built, and no production/V1/DNS changes were attempted.
+
+### Reconnection update
+
+A later reconnection confirmed inference revision `00001-7wz` Ready=True and guard PID1349 running at elapsed07:43. Private app-invoker binding and Atlas enable completed. An initial observation showed active=1/idle=0, correctly refusing cold-start acceptance.
+
+A bounded Cloud Shell observer was launched as PID1515 from `/home/admin_/wzos-evidence/cold-session-20261003.py`, logging to `cold-session-20261003.log`. It observes once per minute for at most12 minutes (also constrained by guard time remaining), invokes the single-request validator only after explicit zeros, and attempts app disable, inference deletion and fixture revocation in its finally path. The separate guard remains independent. Browser control stalled again before the observer result could be read. Check these logs and verify final state; do not start another trial while this one is unresolved.
+
+Local credential/CLI fallback is unavailable. The GitHub collaboration contract is `docs/COLLABORATION_CONTRACT.md`; Claude's module worktree has not been modified.

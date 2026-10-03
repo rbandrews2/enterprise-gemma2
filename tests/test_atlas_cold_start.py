@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 import unittest
 from unittest.mock import patch
+import requests
 
 from scripts.validate_atlas_cold_start import zero_observation, run, PROJECT, MODEL_SERVICE, METRIC
 
@@ -75,3 +76,45 @@ class ColdStartTests(unittest.TestCase):
             run({'users': {'member': {'idToken': 'synthetic'}}, 'orgs': {'main': 'test-org'}},
                 Path(directory)/'evidence.jsonl')
         session.post.assert_not_called()
+
+    @patch('scripts.validate_atlas_cold_start.zero_observation', return_value={'active': 0, 'idle': 0})
+    @patch('scripts.validate_atlas_cold_start.require_token_lifetime')
+    @patch('scripts.validate_atlas_cold_start.gc')
+    @patch('scripts.validate_atlas_cold_start.requests.get')
+    @patch('scripts.validate_atlas_cold_start.requests.Session')
+    def test_single_success_remains_provisional(self, session_factory, metrics, gc, lifetime, zero):
+        gc.side_effect = lambda *a: json.dumps({'status': {'latestReadyRevisionName': self.revision,
+            'traffic': [{'percent': 100, 'revisionName': self.revision}]}}) if '--format=json' in a else 'synthetic'
+        session = session_factory.return_value.__enter__.return_value
+        session.get.return_value.json.return_value = {'auth_header': 'X-WZOS-Authorization'}
+        session.post.return_value.status_code = 200
+        session.post.return_value.json.return_value = {'model_called': True, 'actions_performed': [], 'approved_for_field_use': False}
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory)/'evidence.jsonl'
+            run({'users': {'member': {'idToken': 'synthetic'}}, 'orgs': {'main': 'test-org'}}, output)
+            result = json.loads(output.read_text().splitlines()[-1])
+        session.post.assert_called_once()
+        self.assertTrue(result['response_validated'])
+        self.assertFalse(result['cold_start_accepted'])
+        self.assertTrue(result['startup_log_correlation_required'])
+
+    @patch('scripts.validate_atlas_cold_start.zero_observation', return_value={'active': 0, 'idle': 0})
+    @patch('scripts.validate_atlas_cold_start.require_token_lifetime')
+    @patch('scripts.validate_atlas_cold_start.gc')
+    @patch('scripts.validate_atlas_cold_start.requests.get')
+    @patch('scripts.validate_atlas_cold_start.requests.Session')
+    def test_transport_failure_cancels_without_retry_or_secret_logging(self, session_factory, metrics, gc, lifetime, zero):
+        from unittest.mock import Mock
+        gc.side_effect = lambda *a: json.dumps({'status': {'latestReadyRevisionName': self.revision,
+            'traffic': [{'percent': 100, 'revisionName': self.revision}]}}) if '--format=json' in a else 'synthetic'
+        session = session_factory.return_value.__enter__.return_value
+        session.get.return_value.json.return_value = {'auth_header': 'X-WZOS-Authorization'}
+        session.post.side_effect = [requests.Timeout('secret-provider-details'), Mock(status_code=200)]
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory)/'evidence.jsonl'
+            with self.assertRaises(RuntimeError):
+                run({'users': {'member': {'idToken': 'synthetic'}}, 'orgs': {'main': 'test-org'}}, output)
+            self.assertNotIn('secret-provider-details', output.read_text())
+        self.assertEqual(session.post.call_count, 2)
+        self.assertTrue(session.post.call_args_list[0].args[0].endswith('/chat'))
+        self.assertTrue(session.post.call_args_list[1].args[0].endswith('/cancel'))
