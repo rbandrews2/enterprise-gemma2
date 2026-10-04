@@ -4,6 +4,8 @@ Ray authorized a separate restricted Google Cloud V2 staging deployment. Product
 
 ## Latest resume checkpoint
 
+October 3 PR2 RETIREMENT REVIEW at01d4b42: same-module reuse repair passes, but retirement is checked only for form_library uploads. Confirmed work-order upload can reuse retired UUID (200/download200), then stale Forms cleanup erases it (download404). NOT MERGED. Full Python264:229pass/35PostgreSQLskip; Node13pass. See FORMS_HUB_REVIEW_RETIREMENT_20261003.md. Required fix: apply retirement across all upload kinds sharing the object-key namespace and add order/form overlap regressions. No cloud/runtime changes; PostgreSQL/GCS integration gates remain open.
+
 October 3 PR2 REPAIR REVIEW at51ed59e: original sequential partial-delete and member-unpublished-access cases repaired. Full Python260:227pass/33PostgreSQLskip; Node13pass. A deterministic overlapping-cleaner plus reused upload-ID reproduction still erases a successfully republished file. NOT MERGED. See FORMS_HUB_REVIEW_REPAIRS_20261003.md. Next Claude repair of cleanup ownership/generation or ID reuse, then PostgreSQL/GCS/UI gates. Review only; no cloud/runtime changes.
 
 October 3 CLAUDE FORMS HUB REVIEW: PR2 at74d9466 reviewed in isolated archive; NOT MERGED. Confirmed partial object deletion leaves a published form broken while returning 'nothing was deleted'; members can list/download unpublished uploads through file API. Branch Python239:211pass/28PostgreSQLskip; Node12pass. See FORMS_HUB_REVIEW_20261003.md for reproductions and repair handoff. Claude worktrees unchanged; no cloud/deployment changes. Next review Claude's repairs, then integrated/PostgreSQL/GCS/UI gates. Atlas invocation preflight remains the next separate Codex task. Time Clock PR1 remains separate.
