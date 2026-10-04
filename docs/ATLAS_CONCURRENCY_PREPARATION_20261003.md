@@ -28,6 +28,37 @@ staging changes were made in this increment; staging remains00027-2j9 Atlas0.
 
 ## Next checkpoint
 
+### Desktop-browser follow-up, October 3
+
+Chrome desktop control recovered the previously blocked interactions using the
+same disposable local database and 180-second synthetic engine. Actual browser
+observations and displayed screenshots verified:
+
+- Stop during a pending request shows the cancellation acknowledgement, hides
+  Stop, and enables Ask Atlas again. The acknowledgement does not promise that
+  background GPU processing has stopped.
+- A second request can start after cancellation. Its delayed notice appeared.
+- Closing the assistant and choosing New work order during that request resets
+  the question and conversation to work-order guidance; reopening shows enabled
+  controls, no pending reply and no Stop button. A subsequent observation retained
+  that cleared state.
+
+Focused regression rerun: three Node reply/wait tests and two Python concurrency
+acceptance tests passed. The Python runner uses mocked HTTP; it is not a live
+two-request inference result. Late callback suppression is covered by the Node
+test. Completed-reply retention was then observed with a two-second synthetic
+engine at 27, 102, 161 and 187 seconds after submission. The final foreground
+Chrome screenshot confirmed the reply remained intact beyond the 150-second
+timer. Screenshots were displayed in the session, not saved in Git.
+Seven additional Python cancellation/transport tests and six Node cancellation/
+navigation tests passed: total focused validation 9 Python and 9 Node tests.
+No application code changed, no cloud deployment or paid inference ran.
+
+Remaining: budget/authentication preflight
+and guarded live two-request acceptance. The earlier Stop/context browser blocker
+is resolved for these synthetic cases; this is not production/GPU acceptance.
+The temporary synthetic preview was stopped after validation.
+
 ### Browser follow-up, October 3
 
 Actual in-app browser interaction with a disposable local database and a
