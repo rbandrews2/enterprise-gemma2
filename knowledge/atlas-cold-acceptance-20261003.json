@@ -1,0 +1,20 @@
+{
+  "case": "single_synthetic_cold_start",
+  "operator_correlated_acceptance": true,
+  "production_accepted": false,
+  "model_revision": "wzos-atlas-inference-00001-9rs",
+  "request_id": "99b45d12-d0ac-4b2a-b105-8586a04ac755",
+  "zero_sample_times": ["2026-10-03T22:41:00Z", "2026-10-03T22:42:00Z"],
+  "request_start": "2026-10-03T22:42:52.562921Z",
+  "instance_start": "2026-10-03T22:42:53.659205Z",
+  "model_ready": "2026-10-03T22:46:10.679933Z",
+  "request_end": "2026-10-03T22:46:13.304034Z",
+  "http_status": 200,
+  "elapsed_seconds": 200.741,
+  "inference_trace": "24814a00da4773af1702a528a90fcb26",
+  "response_validated": true,
+  "cleanup": {"app_revision": "00027-2j9", "ready": true, "atlas_enabled": false, "inference_absent": true, "fixtures_disabled": true},
+  "monitored_cumulative_compute_estimate_usd": 4.138,
+  "cost_excludes": ["builds", "storage", "billing_delay"],
+  "prior_timeout_root_cause_resolved": false
+}

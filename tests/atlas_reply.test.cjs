@@ -22,3 +22,21 @@ test('status distinguishes enabled cold inference from explicitly disabled infer
  assert.match(context.atlasConnectionMessage({ready:false,conversation_enabled:false}),/switched off/);
  assert.match(context.atlasConnectionMessage({ready:true,conversation_enabled:true}),/is ready/);
 });
+
+test('waiting notices stop after completion or cancellation and never claim measured progress',()=>{
+ for(const abort of [false,true]){
+  const pending=new Map(),messages=[];let serial=0;
+  const clock={setTimeout(fn,delay){pending.set(++serial,{fn,delay});return serial;},clearTimeout(id){pending.delete(id);}};
+  const controller=new AbortController();
+  const stop=context.startAtlasWait(message=>messages.push(message),controller.signal,clock);
+  assert.equal(messages.length,1);
+  const callbacks=[...pending.values()];
+  callbacks[0].fn();assert.match(messages.at(-1),/may take a few minutes/);
+  if(abort)controller.abort();else stop();
+  assert.equal(pending.size,0);
+  const count=messages.length;callbacks.forEach(x=>x.fn());assert.equal(messages.length,count);
+  assert.equal(messages.some(x=>/\d+%|Gemma/.test(x)),false);
+ }
+ const controller=new AbortController();controller.abort();
+ context.startAtlasWait(()=>assert.fail('No notice after abort'),controller.signal,{});
+});

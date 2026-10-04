@@ -21,6 +21,16 @@ function atlasConnectionMessage(data){
  return 'AI conversation is switched off. Verified app guidance and the quick guides remain available.';
 }
 // Adapted interaction pattern from recovered Core GlobalAssistant / AssistantBubble.
+function startAtlasWait(render,signal,clock=globalThis){
+ let stopped=false;const timers=[];
+ const stop=()=>{stopped=true;timers.forEach(id=>clock.clearTimeout(id));signal.removeEventListener('abort',stop);};
+ if(signal.aborted)return stop;
+ render('Atlas is preparing your reply. You can stop this request at any time.');
+ for(const [delay,message] of [[15000,'Still waiting for Atlas. The first reply after a pause may take a few minutes while the service starts.'],[60000,'Atlas has not returned a reply yet. You can keep waiting or select Stop; your saved work is unchanged.'],[150000,'This reply is taking longer. You can select Stop at any time. No new request has been sent.']]){
+  timers.push(clock.setTimeout(()=>{if(!stopped&&!signal.aborted)render(message);},delay));
+ }
+ signal.addEventListener('abort',stop,{once:true});return stop;
+}
 // Quick guides plus server-mediated local inference; no autonomous actions.
 (() => {
  const byId=id=>document.getElementById(id);
@@ -66,7 +76,8 @@ function atlasConnectionMessage(data){
   event.preventDefault();if(chatBusy)return;
   const question=byId("assistant-question").value.trim();if(!question)return;
   const epoch=chatEpoch;chatBusy=true;chatController=new AbortController();byId("assistant-stop").hidden=false;byId("assistant-topic").disabled=true;byId("assistant-navigation").replaceChildren();const submit=byId("assistant-question-form").querySelector('button');submit.disabled=true;
-  byId("assistant-go").hidden=true;byId("assistant-answer").textContent="Atlas is thinking...";
+  byId("assistant-go").hidden=true;
+  const stopWaiting=startAtlasWait(message=>{if(epoch===chatEpoch)byId("assistant-answer").textContent=message;},chatController.signal);
   try{
    const data=await window.askAtlas(question,chatHistory,chatController.signal);
    if(epoch!==chatEpoch)return;
@@ -82,7 +93,7 @@ function atlasConnectionMessage(data){
    chatHistory=[...chatHistory,{role:'user',content:question},{role:'assistant',content:data.answer}].slice(-8);while(chatHistory.reduce((sum,turn)=>sum+turn.content.length,0)>8000)chatHistory.shift();
    if(data.citations.length){const note=document.createElement('p');note.textContent='Candidate references supplied to Atlas (applicability unreviewed):';byId("assistant-answer").append(note);for(const ref of data.citations){const link=document.createElement('a');link.textContent=`${ref.agency}: ${ref.title} - ${ref.page?'PDF page '+ref.page:ref.section||'section'} (${ref.review_status})`;link.href=ref.url;link.target='_blank';link.rel='noopener noreferrer';byId("assistant-answer").append(link,document.createElement('br'));}}
   }catch(error){if(epoch===chatEpoch)byId("assistant-answer").textContent=error.name==="AbortError"?"You stopped waiting. Atlas may still be finishing the request. Your saved work is unchanged.":error.message;}
-  finally{chatBusy=false;submit.disabled=false;chatController=null;byId("assistant-stop").hidden=true;byId("assistant-stop").disabled=false;byId("assistant-topic").disabled=false;}
+  finally{stopWaiting();chatBusy=false;submit.disabled=false;chatController=null;byId("assistant-stop").hidden=true;byId("assistant-stop").disabled=false;byId("assistant-topic").disabled=false;}
  });
  function clearContext(){chatController?.abort();chatEpoch++;chatHistory=[];byId("assistant-question").value="";byId("assistant-topic").value="orders";answer("orders");}
  byId("assistant-stop").addEventListener("click",()=>{byId("assistant-stop").disabled=true;byId("assistant-answer").textContent="Cancelling this reply...";chatController?.abort();});
