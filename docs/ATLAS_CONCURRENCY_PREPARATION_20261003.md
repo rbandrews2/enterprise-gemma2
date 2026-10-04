@@ -2,6 +2,18 @@
 
 ## Local changes
 
+- October 3 follow-up: each outcome records its generated request ID and UTC
+  start time, including transport/contract failures. The concurrent pair is
+  awaited fully even when one request fails, preserving the other bounded
+  outcome without retrying. Successful responses require explicit model use,
+  false field approval, and no actions. Three focused tests passed, including
+  timeout, non-object JSON and malformed-success cases; peer completion and
+  omission of private exception text are verified with mocked HTTP.
+- Cloud preflight remains pending: Cloud Shell is visible, but desktop input
+  reports address-bar focus after terminal clicks. No commands were entered
+  into uncertain focus. User asked to focus the terminal. No new authentication,
+  cloud state, budget, deployment or live inference verification this pass.
+
 - Waiting notices at request start, 15s, 60s and 150s explain possible startup
   delay without claiming measured progress or active generation. Completion,
   cancellation and context changes stop the notices. No additional network calls.

@@ -4,6 +4,7 @@ Client cancellation is an observation, not proof that GPU generation stopped.
 """
 import argparse
 import asyncio
+from datetime import datetime, timezone
 import json
 from pathlib import Path
 import time
@@ -45,24 +46,36 @@ async def run(state, seed, output, concurrency_only=False):
                        'page':'report','question':seed['question']}
             async def request(label):
                 start = time.monotonic()
+                identity = {'stage':label,'request_id':str(uuid4()),
+                            'started_at':datetime.now(timezone.utc).isoformat()}
                 try:
-                    reply = await client.post('/api/assistant/chat',json={**payload,'request_id':str(uuid4())})
+                    reply = await client.post('/api/assistant/chat',json={**payload,'request_id':identity['request_id']})
                     body = reply.json()
-                    row = {'stage':label,'http_status':reply.status_code,'seconds':round(time.monotonic()-start,3),
+                    if not isinstance(body,dict):
+                        raise ValueError('Expected response object')
+                    row = {**identity,'http_status':reply.status_code,'seconds':round(time.monotonic()-start,3),
                            'model_called':body.get('model_called',False),
                            'error_code':body.get('code') if body.get('code') in ('busy','disabled','timeout','provider_error','unavailable') else None,
                            'correlation_id':body.get('correlation_id') if isinstance(body.get('correlation_id'),str) and len(body['correlation_id'])==32 and all(c in '0123456789abcdef' for c in body['correlation_id']) else None}
                     if reply.status_code == 200:
-                        assert body['model_called'] and not body['approved_for_field_use'] and body['actions_performed']==[]
+                        if (body.get('model_called') is not True
+                                or body.get('approved_for_field_use') is not False
+                                or body.get('actions_performed') != []):
+                            raise ValueError('Invalid successful response contract')
                     record(row)
                     return row
                 except asyncio.CancelledError:
-                    record({'stage':label,'client_cancelled':True,'provider_cancellation_verified':False})
+                    record({**identity,'client_cancelled':True,'provider_cancellation_verified':False})
                     raise
                 except (httpx.HTTPError,ValueError) as error:
-                    record({'stage':label,'error_type':type(error).__name__})
+                    record({**identity,'seconds':round(time.monotonic()-start,3),'error_type':type(error).__name__})
                     raise
-            statuses = await asyncio.gather(request('concurrent_a'),request('concurrent_b'))
+            # Preserve both bounded outcomes even if one transport/contract fails.
+            # gather's default early exception can otherwise cancel the peer when
+            # the runner closes, obscuring the evidence for the concurrent pair.
+            statuses = await asyncio.gather(request('concurrent_a'),request('concurrent_b'),return_exceptions=True)
+            if any(isinstance(row,BaseException) for row in statuses):
+                raise RuntimeError('Concurrent request failed; inspect sanitized evidence')
             if not valid_concurrent_outcome(statuses):
                 raise RuntimeError('Unexpected concurrent outcome; inspect sanitized evidence and cloud logs')
             if concurrency_only:
