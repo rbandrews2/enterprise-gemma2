@@ -1,7 +1,8 @@
 """Private, bounded file persistence shared by all workspace modules."""
 import hashlib
-import json
+import io
 import re
+import zipfile
 from pathlib import Path
 from typing import Literal
 from uuid import UUID
@@ -10,6 +11,26 @@ from fastapi.responses import Response
 
 MAX_BYTES = 10 * 1024 * 1024
 TYPES = {'application/pdf': b'%PDF-', 'image/png': b'\x89PNG\r\n\x1a\n', 'image/jpeg': b'\xff\xd8\xff'}
+# Word and Excel (Office Open XML, macro-free) are accepted only for Forms Hub team forms.
+OFFICE = {'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'word/document.xml',
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'xl/workbook.xml'}
+KIND_TYPES = {'order': set(TYPES), 'form': set(TYPES), 'form_library': set(TYPES) | set(OFFICE)}
+KIND_TYPE_ERRORS = {'form_library': 'Use a PDF, PNG, JPEG, Word (.docx) or Excel (.xlsx) file'}
+
+
+def office_document_ok(data, content_type):
+    """Accept only a well-formed .docx/.xlsx package without macros. Reads the ZIP directory, not the contents."""
+    try:
+        with zipfile.ZipFile(io.BytesIO(data)) as package:
+            names = package.namelist()
+            if len(names) > 5000 or OFFICE[content_type] not in names or '[Content_Types].xml' not in names:
+                return False
+            if any(n.lower().endswith('vbaproject.bin') for n in names):
+                return False
+            info = package.getinfo('[Content_Types].xml')
+            return info.file_size <= 1024 * 1024 and b'macroEnabled' not in package.read(info)
+    except (zipfile.BadZipFile, KeyError, ValueError, RuntimeError, NotImplementedError, EOFError):
+        return False
 
 
 class LocalFiles:
@@ -39,6 +60,9 @@ class LocalFiles:
         if path.stat().st_size > MAX_BYTES:
             raise ValueError('Stored file exceeds limit')
         return path.read_bytes()
+
+    def delete(self, key):
+        self.path(key).unlink(missing_ok=True)
 
 
 class GoogleFiles:
@@ -71,6 +95,26 @@ class GoogleFiles:
             raise ValueError('Stored file exceeds limit')
         return blob.download_as_bytes(if_generation_match=blob.generation, timeout=30)
 
+    def delete(self, key):
+        from google.api_core.exceptions import NotFound
+        try:
+            self.bucket.blob(key).delete(timeout=20)
+        except NotFound:
+            pass
+
+
+def delete_entity_files(db, store, organization_id, entity_kind, entity_id, keep=None):
+    """Permanently delete an entity's stored files (except `keep`) inside the caller's transaction.
+    Objects go first, so a storage failure raises before any row is deleted and a retry finishes the job."""
+    rows = db.execute('SELECT id,object_key FROM workspace_files WHERE organization_id=? AND entity_kind=? AND entity_id=?',
+                      (organization_id, entity_kind, entity_id)).fetchall()
+    doomed = [r for r in rows if r['id'] != keep]
+    for row in doomed:
+        store.delete(row['object_key'])
+    for row in doomed:
+        db.execute('DELETE FROM workspace_files WHERE id=? AND organization_id=?', (row['id'], organization_id))
+    return len(doomed)
+
 
 def register(app, connect, actor, permitted_order, store):
     with connect() as db:
@@ -85,8 +129,8 @@ def register(app, connect, actor, permitted_order, store):
                 raise HTTPException(404,'Form not found')
         elif kind == 'form_library':
             # Forms Hub team library: every organization member downloads; only admins upload.
-            row=db.execute("SELECT payload FROM module_records WHERE organization_id=? AND kind='form_library' AND id=?",(user['organization_id'],record_id)).fetchone()
-            if not row or json.loads(row['payload']).get('removed'):
+            row=db.execute("SELECT 1 FROM module_records WHERE organization_id=? AND kind='form_library' AND id=?",(user['organization_id'],record_id)).fetchone()
+            if not row:
                 raise HTTPException(404,'Form not found')
             if write and user['role']!='admin':
                 raise HTTPException(403,'Only an organization admin can upload team forms')
@@ -100,14 +144,16 @@ def register(app, connect, actor, permitted_order, store):
         if not re.fullmatch(r'[\w .()-]+',filename) or filename.startswith('.'):
             raise HTTPException(422,'Use a simple filename without path separators')
         content_type=request.headers.get('content-type','').split(';')[0]
-        if content_type not in TYPES: raise HTTPException(415,'Only PDF, PNG and JPEG files are supported')
+        if content_type not in KIND_TYPES[entity_kind]: raise HTTPException(415,KIND_TYPE_ERRORS.get(entity_kind,'Only PDF, PNG and JPEG files are supported'))
         with connect() as db: parent(db,user,entity_kind,entity_id,write=True)
         data=bytearray()
         async for chunk in request.stream():
             if len(data)+len(chunk)>MAX_BYTES: raise HTTPException(413,'File exceeds 10 MiB')
             data.extend(chunk)
         data=bytes(data)
-        if not data.startswith(TYPES[content_type]): raise HTTPException(415,'File signature does not match its type')
+        if content_type in OFFICE:
+            if not office_document_ok(data,content_type): raise HTTPException(415,'Not a valid Word (.docx) or Excel (.xlsx) file without macros')
+        elif not data.startswith(TYPES[content_type]): raise HTTPException(415,'File signature does not match its type')
         sha=hashlib.sha256(data).hexdigest()
         # Hash organization ID to prevent path injection through any identity source.
         key=hashlib.sha256(user['organization_id'].encode()).hexdigest()+'/'+str(file_id)

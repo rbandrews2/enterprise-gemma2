@@ -1,5 +1,5 @@
 "use strict";
-// Forms Hub: download/print library. Team forms are admin uploads; WZOS printables can be filled in on screen.
+// Forms Hub: download/print library. Team forms are admin uploads (files or Google links); WZOS printables can be filled in on screen.
 // Entries in WZOS printables are never sent to the server. The server enforces team-form access.
 (() => {
  const $=id=>document.getElementById(id), api=(...args)=>window.wzosClock.api(...args);
@@ -15,11 +15,12 @@
  const reduced=()=>window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
  // The server accepts simple filenames only; keep the user's name recognizable.
  const safeName=name=>(name.replace(/[^\w .()-]+/g,'-').replace(/^[.\s-]+/,'').slice(0,200))||'form.pdf';
- let templates=[], library=null, epoch=0, dirty=false, pending=null, busy=false;
+ let templates=[], library=null, epoch=0, dirty=false, pending=null, busy=false, transfer=null;
  const fullTemplates=new Map();
 
- window.wzosFormsCanLeave=()=>!busy&&(!dirty||confirm('Your entries are not saved. Leave without printing or downloading this form?'));
- window.addEventListener('beforeunload',event=>{if(dirty){event.preventDefault();event.returnValue='';}});
+ const canDiscard=()=>!dirty||confirm('Your entries are not saved. Leave without printing or downloading this form?');
+ window.wzosFormsCanLeave=()=>busy?confirm('A team form is still uploading. Leave and cancel the upload?')&&(transfer?.abort(),true):canDiscard();
+ window.addEventListener('beforeunload',event=>{if(dirty||busy){event.preventDefault();event.returnValue='';}});
  $('forms-nav').onclick=()=>window.showWzosView('forms');
 
  async function template(summary){
@@ -29,54 +30,142 @@
  }
  const matches=(...parts)=>parts.join(' ').toLowerCase().includes($('forms-search').value.trim().toLowerCase());
 
- // ---------- Team forms (admin uploads) ----------
+ // ---------- Team forms (admin uploads and Google links) ----------
+ const FILE_TYPES={pdf:'application/pdf',png:'image/png',jpg:'image/jpeg',jpeg:'image/jpeg',
+  docx:'application/vnd.openxmlformats-officedocument.wordprocessingml.document',xlsx:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'};
+ const KIND_NAMES={'application/pdf':'PDF','image/png':'PNG image','image/jpeg':'JPEG image',[FILE_TYPES.docx]:'Word document',[FILE_TYPES.xlsx]:'Excel workbook'};
+ const ACCEPT='.pdf,.png,.jpg,.jpeg,.docx,.xlsx',MAX_BYTES=10*1024*1024;
+ const GROUPS=[['official_agency_form','Official agency forms'],['company_form','Company forms']];
+ const GOOGLE=/^https:\/\/(docs\.google\.com\/(document|spreadsheets|forms)\/d\/|drive\.google\.com\/file\/d\/)/i;
+ const typeOf=file=>FILE_TYPES[(file.name.split('.').pop()||'').toLowerCase()];
+ // Check a file before anything is sent, so a bad file never creates an entry.
+ function checkFile(file){
+  if(!file)return 'Choose the file to upload.';
+  const ext=(file.name.split('.').pop()||'').toLowerCase();
+  if(ext==='doc'||ext==='xls'||ext==='docm'||ext==='xlsm')return `${file.name} is an older or macro-enabled Office format. Save it as a Word (.docx) or Excel (.xlsx) file first, then upload that copy.`;
+  if(!typeOf(file))return `${file.name} isn't a supported type. Use PDF, PNG, JPEG, Word (.docx) or Excel (.xlsx).`;
+  if(!file.size)return `${file.name} is empty.`;
+  if(file.size>MAX_BYTES)return `${file.name} is ${size(file.size)}. The limit is 10 MB.`;
+  return '';
+ }
+ const checkLink=value=>!value?'Paste the Google link.':GOOGLE.test(value)?'':'Use a link to a Google Doc, Sheet, Form or Drive file (it starts with https://docs.google.com/ or https://drive.google.com/).';
+ // Network drops, timeouts and temporary server errors can be retried with the same identifiers.
+ const retryable=error=>[0,408,429,502,503,504].includes(error.status||0);
+ const sentence=text=>/[.!?]$/.test(text)?text:text+'.';
  async function download(file,control){
   control.disabled=true;
   try{
    const response=await fetch('/api/files/'+file.id,{headers:await headers()});
-   if(!response.ok)throw Error('Download unavailable. The form may have been removed or your access changed.');
+   if(!response.ok)throw Error('Download unavailable. The form may have been deleted or your access changed.');
    const url=URL.createObjectURL(await response.blob()),a=node('a');a.href=url;a.download=file.filename;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
    notice(`Downloaded ${file.filename}.`);
   }catch(error){notice(error.message);}finally{control.disabled=false;}
  }
- async function upload(itemId,fileId,file){
-  const response=await fetch(`/api/files/${fileId}?entity_kind=form_library&entity_id=${itemId}&filename=${encodeURIComponent(safeName(file.name))}`,
-   {method:'PUT',headers:{...await headers(),'Content-Type':file.type||'application/octet-stream'},body:file});
-  const data=await response.json();
-  if(!response.ok){const error=Error(typeof data.detail==='string'?data.detail:'Upload failed');error.status=response.status;throw error;}
-  return data;
+ // XMLHttpRequest instead of fetch so the admin sees upload progress and can cancel.
+ async function upload(itemId,fileId,file,progress){
+  const auth=await headers();
+  return new Promise((resolve,reject)=>{
+   const xhr=new XMLHttpRequest();transfer=xhr;
+   const fail=(message,status=0)=>{transfer=null;const error=Error(message);error.status=status;error.upload=true;reject(error);};
+   xhr.open('PUT',`/api/files/${fileId}?entity_kind=form_library&entity_id=${itemId}&filename=${encodeURIComponent(safeName(file.name))}`);
+   for(const [k,v] of Object.entries(auth))xhr.setRequestHeader(k,v);
+   xhr.setRequestHeader('Content-Type',typeOf(file));xhr.timeout=180000;
+   xhr.upload.onprogress=event=>{if(event.lengthComputable)progress?.(event.loaded/event.total);};
+   xhr.onload=()=>{let data={};try{data=JSON.parse(xhr.responseText);}catch{}
+    if(xhr.status>=200&&xhr.status<300){transfer=null;resolve(data);}else fail(typeof data.detail==='string'?data.detail:'The upload was refused.',xhr.status);};
+   xhr.onerror=()=>fail('The connection dropped during the upload.');
+   xhr.ontimeout=()=>fail('The upload timed out.');
+   xhr.onabort=()=>fail('Upload canceled.');
+   xhr.send(file);
+  });
+ }
+ async function uploadWithRetry(itemId,fileId,file,progress,status){
+  try{return await upload(itemId,fileId,file,progress);}
+  catch(error){
+   if(!retryable(error)||error.message==='Upload canceled.')throw error;
+   status('Connection problem. Retrying the upload…');await new Promise(r=>setTimeout(r,1500));
+   return upload(itemId,fileId,file,progress);  // same file ID: the server never stores it twice
+  }
  }
  const saveItem=(id,body)=>api(`/api/forms/library/${id}`,{method:'PUT',body:JSON.stringify(body)});
+ async function deleteItem(id,version){
+  try{await api(`/api/forms/library/${id}/delete`,{method:'POST',body:JSON.stringify({expected_version:version})});}
+  catch(error){if(error.status!==404)throw error;}  // 404: already deleted
+ }
+ function progressBar(){
+  const wrap=node('div',null,'forms-progress');wrap.hidden=true;
+  const bar=node('progress');bar.max=1;bar.value=0;const text=node('span',null,'fine');text.setAttribute('role','status');text.setAttribute('aria-live','polite');
+  wrap.append(bar,text);
+  return {element:wrap,
+   set:(fraction,label)=>{wrap.hidden=false;bar.value=fraction;bar.setAttribute('aria-label',label);text.textContent=fraction>=1?'Upload received. Finishing…':`${label} ${Math.round(fraction*100)}%`;},
+   status:value=>{wrap.hidden=false;text.textContent=value;},
+   hide:()=>{wrap.hidden=true;text.textContent='';bar.value=0;}};
+ }
+ function sourceLine(item){
+  if(item.file)return `${KIND_NAMES[item.file.content_type]||'File'} · ${item.file.filename} · ${size(item.file.size_bytes)} · added by ${item.added_by}`;
+  if(item.link)return `${item.link.service} link · added by ${item.added_by}. Google's sharing settings decide who can open it.`;
+  return 'The upload didn\'t finish, so this entry has no file. Only admins can see it. Upload the file again or delete the entry.';
+ }
+ function card(item){
+  const article=node('article',null,'forms-card');article.append(node('h4',item.title));
+  const b=node('span',item.category_label,'forms-badge');b.dataset.category=item.category;article.append(b);
+  if(!item.complete){const warn=node('span','Upload incomplete','forms-badge');warn.dataset.category='incomplete';article.append(' ',warn);}
+  if(item.description)article.append(node('p',item.description));
+  article.append(node('p',sourceLine(item),'fine'));
+  const actions=node('div',null,'forms-actions');
+  if(item.file){const d=button('Download','primary');d.setAttribute('aria-label',`Download ${item.title}`);d.onclick=()=>download(item.file,d);actions.append(d);}
+  if(item.link){
+   const open=node('a',`Open in ${item.link.service}`,'button primary');open.href=item.link.url;open.target='_blank';open.rel='noopener noreferrer';open.setAttribute('aria-label',`Open ${item.title} in ${item.link.service} (new tab)`);actions.append(open);
+   for(const d of item.link.downloads){const a=node('a',`Download ${d.label}`,'button secondary');a.href=d.url;a.target='_blank';a.rel='noopener noreferrer';a.setAttribute('aria-label',`Download ${item.title} as ${d.label} from Google (new tab)`);actions.append(a);}
+  }
+  if(library.can_manage)actions.append(...manageControls(item,article));
+  article.append(actions);return article;
+ }
  function renderLibrary(){
   const host=$('forms-library');host.replaceChildren();
   if(!library)return;
-  for(const item of library.items.filter(i=>matches(i.title,i.description,i.category_label,i.file?.filename||''))){
-   const card=node('article',null,'forms-card');card.append(node('h3',item.title));
-   const b=node('span',item.category_label,'forms-badge');b.dataset.category=item.category;card.append(b);
-   if(item.description)card.append(node('p',item.description));
-   card.append(node('p',item.file?`${item.file.filename} · ${size(item.file.size_bytes)} · added by ${item.added_by}`:'No file uploaded yet. Only admins can see this entry.','fine'));
-   const actions=node('div',null,'forms-actions');
-   if(item.file){const d=button('Download','primary');d.setAttribute('aria-label',`Download ${item.title}`);d.onclick=()=>download(item.file,d);actions.append(d);}
-   if(library.can_manage)actions.append(...manageControls(item,card));
-   card.append(actions);host.append(card);
+  const shown=library.items.filter(i=>matches(i.title,i.description,i.category_label,i.file?.filename||'',i.link?.service||''));
+  const unfinished=shown.filter(i=>!i.complete);
+  if(unfinished.length){
+   const group=node('section',null,'forms-group forms-unfinished');
+   group.append(node('h3',unfinished.length===1?'1 form didn\'t finish uploading':`${unfinished.length} forms didn't finish uploading`),node('p','Only admins see these entries. Upload the file again, or delete the entry.','fine'),...unfinished.map(card));
+   host.append(group);
   }
-  if(!host.children.length)host.append(node('p',library.items.length?'No team forms match that search.':library.can_manage?'No team forms yet. Add the forms your crews need, such as an official agency form.':'Your admin has not added any team forms yet.'));
+  for(const [category,heading] of GROUPS){
+   const items=shown.filter(i=>i.complete&&i.category===category);if(!items.length)continue;
+   const group=node('section',null,'forms-group');group.append(node('h3',`${heading} (${items.length})`),...items.map(card));host.append(group);
+  }
+  if(!host.children.length)host.append(node('p',library.items.length?'No team forms match that search.':library.can_manage?'No team forms yet. Add the forms your crews need, such as official agency forms or company forms.':'Your admin hasn\'t added any team forms yet.'));
  }
- function manageControls(item,card){
+ function manageControls(item,article){
   const controls=[];
-  if(library.uploads_enabled){
-   const picker=node('input');picker.type='file';picker.accept='.pdf,.png,.jpg,.jpeg,application/pdf,image/png,image/jpeg';picker.hidden=true;picker.setAttribute('aria-label',`Choose a replacement file for ${item.title}`);
-   const replace=button(item.file?'Replace file':'Upload file');replace.setAttribute('aria-label',`${item.file?'Replace file for':'Upload file for'} ${item.title}`);replace.onclick=()=>picker.click();
-   picker.onchange=async()=>{const file=picker.files[0];if(!file)return;replace.disabled=true;
-    try{const stored=await upload(item.id,crypto.randomUUID(),file);await saveItem(item.id,{expected_version:item.version,title:item.title,category:item.category,description:item.description,file_id:stored.id});notice(`${item.title} now uses ${stored.filename}.`);await loadLibrary();}
-    catch(error){notice(error.message+(error.status?'':' Try again.'));}finally{replace.disabled=false;picker.value='';}};
+  if(library.uploads_enabled&&!item.link){
+   const picker=node('input');picker.type='file';picker.accept=ACCEPT;picker.hidden=true;
+   const replace=button(item.file?'Replace file':'Upload file',item.complete?'secondary':'primary');replace.setAttribute('aria-label',`${item.file?'Replace file for':'Upload file for'} ${item.title}`);replace.onclick=()=>picker.click();
+   const bar=progressBar();article.append(bar.element);
+   picker.onchange=async()=>{
+    const file=picker.files[0];picker.value='';if(!file)return;
+    const problem=checkFile(file);if(problem){notice(problem);return;}
+    replace.disabled=true;busy=true;
+    try{
+     const stored=await uploadWithRetry(item.id,crypto.randomUUID(),file,f=>bar.set(f,`Uploading ${file.name}`),bar.status);
+     bar.status('Saving…');
+     await saveItem(item.id,{expected_version:item.version,title:item.title,category:item.category,description:item.description,file_id:stored.id,link:null});
+     bar.hide();await loadLibrary();notice(`${item.title} now uses ${stored.filename}.${item.file?' The previous file was deleted.':''}`);
+    }catch(error){bar.hide();notice(`${file.name} wasn't uploaded: ${sentence(error.message)}${retryable(error)?' Nothing changed; choose the file again to retry.':''}`);}
+    finally{replace.disabled=false;busy=false;}
+   };
    controls.push(replace,picker);
   }
-  const edit=button('Edit details');edit.setAttribute('aria-label',`Edit details for ${item.title}`);edit.onclick=()=>editDetails(item,card,edit);
-  const remove=button('Remove');remove.setAttribute('aria-label',`Remove ${item.title} from team forms`);
-  remove.onclick=async()=>{if(!confirm(`Remove “${item.title}” from team forms? Your team will no longer be able to download it.`))return;remove.disabled=true;
-   try{await api(`/api/forms/library/${item.id}/remove`,{method:'POST',body:JSON.stringify({expected_version:item.version})});notice(`${item.title} was removed from team forms.`);await loadLibrary();}
-   catch(error){notice(error.message);remove.disabled=false;}};
+  const edit=button('Edit details');edit.setAttribute('aria-label',`Edit details for ${item.title}`);edit.onclick=()=>editDetails(item,article,edit);
+  const remove=button('Delete','secondary forms-danger');remove.setAttribute('aria-label',`Delete ${item.title} permanently`);
+  remove.onclick=async()=>{
+   const what=item.file?' Its file will be erased from WZOS.':'';
+   if(!confirm(`Permanently delete “${item.title}”?${what} Your team will no longer see it. This can't be undone.`))return;
+   remove.disabled=true;
+   try{await deleteItem(item.id,item.version);await loadLibrary();notice(`${item.title} was permanently deleted.`);}
+   catch(error){notice(error.message);remove.disabled=false;}
+  };
   controls.push(edit,remove);return controls;
  }
  function detailFields(values={}){
@@ -85,46 +174,107 @@
   const description=node('textarea');description.rows=2;description.maxLength=500;description.value=values.description||'';description.placeholder='For example: VDOT pavement marking daily log. Check the agency for the current edition.';
   return {title,category,description,elements:[labelled('Form name',title),labelled('Type',category),labelled('Description (optional)',description)]};
  }
- function editDetails(item,card,opener){
+ const linkInput=value=>{const input=node('input');input.type='url';input.maxLength=500;input.placeholder='https://docs.google.com/…';input.value=value||'';input.autocomplete='off';return input;};
+ function editDetails(item,article,opener){
   const form=node('form',null,'forms-inline');const fields=detailFields(item);const save=button('Save details','primary');save.type='submit';const cancel=button('Cancel');
+  // A Google-link entry (or an unfinished one) can have its link set here; files are replaced with Replace file.
+  const link=!item.file?linkInput(item.link?.url):null;
   const error=node('p',null,'forms-error');error.setAttribute('role','alert');const actions=node('div',null,'forms-actions');actions.append(save,cancel);
-  form.append(...fields.elements,error,actions);card.append(form);opener.disabled=true;fields.title.focus();
+  form.append(...fields.elements,...(link?[labelled('Google link',link)]:[]),error,actions);article.append(form);opener.disabled=true;fields.title.focus();
   cancel.onclick=()=>{form.remove();opener.disabled=false;opener.focus();};
-  form.onsubmit=async event=>{event.preventDefault();if(!fields.title.value.trim()){error.textContent='Enter a form name.';fields.title.focus();return;}save.disabled=true;
-   try{await saveItem(item.id,{expected_version:item.version,title:fields.title.value,category:fields.category.value,description:fields.description.value,file_id:item.file?.id||null});notice('Team form details saved.');await loadLibrary();}
+  form.onsubmit=async event=>{event.preventDefault();error.textContent='';
+   if(!fields.title.value.trim()){error.textContent='Enter a form name.';fields.title.focus();return;}
+   const url=link?.value.trim()||null;
+   if(link&&(item.link||url)){const problem=checkLink(url);if(problem){error.textContent=problem;link.focus();return;}}
+   save.disabled=true;
+   try{await saveItem(item.id,{expected_version:item.version,title:fields.title.value,category:fields.category.value,description:fields.description.value,file_id:item.file?.id||null,link:url});await loadLibrary();notice('Team form details saved.');}
    catch(error2){error.textContent=error2.message;save.disabled=false;}};
  }
  function renderAdmin(){
   const host=$('forms-library-admin');host.replaceChildren();
   if(!library?.can_manage)return;
   const details=node('details',null,'forms-add');details.append(node('summary','Add a team form'));host.append(details);
-  if(!library.uploads_enabled){details.append(node('p','File storage is not configured in this environment, so forms cannot be uploaded here.','fine'));return;}
-  const form=node('form');const fields=detailFields();const file=node('input');file.type='file';file.accept='.pdf,.png,.jpg,.jpeg,application/pdf,image/png,image/jpeg';file.required=true;
-  const error=node('p',null,'forms-error');error.setAttribute('role','alert');const add=button('Add to team forms','primary');add.type='submit';
-  form.append(...fields.elements,labelled('File (PDF, PNG or JPEG, up to 10 MB)',file),node('p','For an official agency form, upload the current copy from the agency. WZOS does not check editions or decide whether a form applies.','fine'),error,add);
+  const form=node('form');const fields=detailFields();
+  const source=node('fieldset',null,'forms-source');source.append(node('legend','How do you want to add it?'));
+  const radio=(value,label,checked)=>{const r=node('input');r.type='radio';r.name='forms-source';r.value=value;r.checked=r.defaultChecked=checked;const l=node('label',null,'forms-choice');l.append(r,node('span',label));source.append(l);return r;};
+  const viaFile=radio('file','Upload a file (PDF, PNG, JPEG, Word or Excel, up to 10 MB)',library.uploads_enabled);
+  const viaLink=radio('link','Link a Google Doc, Sheet, Form or Drive file',!library.uploads_enabled);
+  if(!library.uploads_enabled){viaFile.disabled=true;source.append(node('p','File storage isn\'t configured in this environment, so only Google links can be added here.','fine'));}
+  const file=node('input');file.type='file';file.accept=ACCEPT;const fileLabel=labelled('File',file);
+  const link=linkInput();const linkLabel=labelled('Google link',link);
+  const linkHelp=node('p','Share the Google file with your team in Google first. WZOS links to it but can\'t change who can open it.','fine');
+  const fileHelp=node('p','For an official agency form, upload the current copy from the agency. WZOS doesn\'t check editions or decide whether a form applies. Save older .doc or .xls files as .docx or .xlsx first.','fine');
+  const bar=progressBar();
+  const error=node('p',null,'forms-error');error.setAttribute('role','alert');
+  const add=button('Add to team forms','primary');add.type='submit';
+  const cancel=button('Cancel upload');cancel.hidden=true;cancel.onclick=()=>transfer?.abort();
+  const discard=button('Discard');discard.hidden=true;
+  const actions=node('div',null,'forms-actions');actions.append(add,cancel,discard);
+  form.append(...fields.elements,source,fileLabel,fileHelp,linkLabel,linkHelp,bar.element,error,actions);
   details.append(form);
-  // Retrying after a failure reuses the same identifiers, so nothing is duplicated.
-  const reset=()=>{pending=null;};file.onchange=reset;for(const f of [fields.title,fields.category,fields.description])f.addEventListener('input',reset);
-  form.onsubmit=async event=>{
-   event.preventDefault();error.textContent='';const chosen=file.files[0];
-   if(!fields.title.value.trim()){error.textContent='Enter a form name.';fields.title.focus();return;}
-   if(!chosen){error.textContent='Choose the file to upload.';file.focus();return;}
-   if(chosen.size>10*1024*1024){error.textContent='The file is larger than 10 MB.';return;}
-   pending=pending||{itemId:crypto.randomUUID(),fileId:crypto.randomUUID()};
-   const meta={title:fields.title.value,category:fields.category.value,description:fields.description.value};
-   add.disabled=true;busy=true;
+  const sync=()=>{const isFile=viaFile.checked;fileLabel.hidden=fileHelp.hidden=!isFile;linkLabel.hidden=linkHelp.hidden=isFile;};
+  viaFile.onchange=viaLink.onchange=sync;sync();
+  if(pending){details.open=true;restore();}
+  // Show early what's wrong with a chosen file.
+  file.onchange=()=>{error.textContent=checkFile(file.files[0]);};
+  function restore(){
+   // Re-rendering (for example after Refresh) keeps an unfinished add so it can be retried.
+   Object.assign(fields.title,{value:pending.meta.title});fields.category.value=pending.meta.category;fields.description.value=pending.meta.description;
+   if(pending.link){viaLink.checked=true;link.value=pending.link;}sync();
+   error.textContent=pending.message||'';
+   add.textContent=pending.file?'Retry upload':'Retry';discard.hidden=false;
+  }
+  function settle(){pending=null;form.reset();sync();bar.hide();add.textContent='Add to team forms';discard.hidden=true;}
+  discard.onclick=async()=>{
+   discard.disabled=true;
+   try{if(pending?.version)await deleteItem(pending.itemId,pending.version);settle();error.textContent='';await loadLibrary();notice('The unfinished form was discarded.');}
+   catch(failure){error.textContent=`Couldn't discard it yet: ${failure.message}`;}
+   finally{discard.disabled=false;}
+  };
+  form.onsubmit=async event=>{const generation=epoch;
+   event.preventDefault();error.textContent='';
+   const meta={title:fields.title.value.trim(),category:fields.category.value,description:fields.description.value.trim()};
+   if(!meta.title){error.textContent='Enter a form name.';fields.title.focus();return;}
+   const chosen=viaFile.checked?file.files[0]||pending?.file:null,url=viaLink.checked?link.value.trim():null;
+   const problem=viaFile.checked?checkFile(chosen):checkLink(url);
+   if(problem){error.textContent=problem;(viaFile.checked?file:link).focus();return;}
+   // A retry reuses the entry and file identifiers, so nothing is duplicated.
+   if(!pending)pending={itemId:crypto.randomUUID(),version:0};
+   if(chosen&&pending.file!==chosen){pending.file=chosen;pending.fileId=crypto.randomUUID();}
+   Object.assign(pending,{meta,link:url,file:chosen});
+   add.disabled=discard.disabled=true;cancel.hidden=!chosen;busy=true;
    try{
-    await saveItem(pending.itemId,{expected_version:0,...meta,file_id:null});
-    const stored=await upload(pending.itemId,pending.fileId,chosen);
-    await saveItem(pending.itemId,{expected_version:1,...meta,file_id:stored.id});
-    pending=null;form.reset();notice(`${meta.title} was added to team forms. Everyone in your organization can download it.`);await loadLibrary();
-   }catch(failure){error.textContent=failure.status?failure.message:'Upload not confirmed. Check the connection and select Add again; it will not create a duplicate.';}
-   finally{add.disabled=false;busy=false;}
+    if(!pending.version){
+     bar.status('Creating the entry…');
+     try{pending.version=(await saveItem(pending.itemId,{expected_version:0,...meta,file_id:null,link:url})).version;pending.saved=!chosen;}
+     catch(failure){if(failure.status!==409)throw failure;pending.version=(await api('/api/forms/library')).items.find(i=>i.id===pending.itemId)?.version||0;if(!pending.version)throw failure;}
+    }
+    if(chosen){
+     const stored=await uploadWithRetry(pending.itemId,pending.fileId,chosen,f=>bar.set(f,`Uploading ${chosen.name}`),bar.status);
+     bar.status('Saving…');
+     await saveItem(pending.itemId,{expected_version:pending.version,...meta,file_id:stored.id,link:null});
+    }else if(!pending.saved){
+     await saveItem(pending.itemId,{expected_version:pending.version,...meta,file_id:null,link:url});
+    }
+    settle();await loadLibrary();notice(`${meta.title} was added to team forms. Everyone in your organization can ${chosen?'download':'open'} it.`);
+   }catch(failure){if(generation!==epoch)return;  // identity changed mid-upload
+    bar.hide();
+    if(failure.upload&&!retryable(failure)&&pending.version){
+     // The server refused the file itself: remove the empty entry so nothing is left behind.
+     try{await deleteItem(pending.itemId,pending.version);settle();error.textContent=`${chosen.name} wasn't added: ${sentence(failure.message)} Nothing was saved. Choose a different file and try again.`;await loadLibrary();return;}
+     catch{/* fall through: keep the retry/discard controls */}
+    }
+    const reason=sentence(failure.message||'The connection dropped.');
+    pending.message=`${chosen?`The upload of ${chosen.name} didn't finish. `:''}${reason} ${failure.status&&!retryable(failure)?'':`Your details${chosen?' and file':''} are kept here. `}Select ${chosen?'Retry upload':'Retry'}, or Discard.`;
+    error.textContent=pending.message;
+    add.textContent=chosen?'Retry upload':'Retry';discard.hidden=false;
+    if(pending.version)loadLibrary();
+   }finally{add.disabled=discard.disabled=false;cancel.hidden=true;busy=false;}
   };
  }
  async function loadLibrary(){
   const generation=epoch;
-  try{const data=await api('/api/forms/library');if(generation!==epoch)return;library=data;renderAdmin();renderLibrary();}
+  try{const data=await api('/api/forms/library');if(generation!==epoch)return;library=data;if(!busy)renderAdmin();renderLibrary();}
   catch(error){if(generation===epoch)notice(error.message);}
  }
 
@@ -135,7 +285,7 @@
    const card=node('article',null,'forms-card');card.append(node('h3',t.title));
    const b=node('span','WZOS printable form','forms-badge');b.dataset.category='wzos_printable';card.append(b,node('p',t.summary));
    const actions=node('div',null,'forms-actions');
-   const fill=button('Fill in','primary');fill.setAttribute('aria-label',`Fill in ${t.title}`);fill.onclick=()=>{if(window.wzosFormsCanLeave())openForm(t,fill);};
+   const fill=button('Fill in','primary');fill.setAttribute('aria-label',`Fill in ${t.title}`);fill.onclick=()=>{if(canDiscard())openForm(t,fill);};
    const print=button('Print blank');print.setAttribute('aria-label',`Print blank ${t.title}`);print.onclick=async()=>printDocument(await template(t),null);
    const save=button('Download blank');save.setAttribute('aria-label',`Download blank ${t.title}`);save.onclick=async()=>downloadDocument(await template(t),null);
    actions.append(fill,print,save);card.append(actions);host.append(card);
@@ -180,7 +330,7 @@
   const print=button('Print or save as PDF','primary');print.onclick=()=>printDocument(t,values());
   const save=button('Download filled form');save.onclick=()=>{downloadDocument(t,values());dirty=false;};
   const clear=button('Clear entries');clear.onclick=()=>{if(!confirm('Clear everything you entered on this form?'))return;for(const c of inputs.values())c.clear();order.value='';location.value='';dirty=false;heading.focus();};
-  const close=button('Close');close.onclick=()=>{if(!window.wzosFormsCanLeave())return;dirty=false;editor.hidden=true;editor.replaceChildren();if(opener?.isConnected)opener.focus();};
+  const close=button('Close');close.onclick=()=>{if(!canDiscard())return;dirty=false;editor.hidden=true;editor.replaceChildren();if(opener?.isConnected)opener.focus();};
   actions.append(print,save,clear,close);form.append(actions);editor.append(form);
   form.addEventListener('input',()=>{dirty=true;});form.onsubmit=event=>event.preventDefault();
   editor.scrollIntoView?.({behavior:reduced()?'auto':'smooth',block:'start'});heading.focus({preventScroll:true});
@@ -225,5 +375,5 @@
  $('forms-search').oninput=()=>{renderBuiltins();renderLibrary();};
  $('forms-refresh').onclick=()=>show();
  document.addEventListener('wzos:view',event=>{if(event.detail==='forms')show();});
- document.addEventListener('wzos:session',()=>{epoch++;dirty=false;pending=null;library=null;$('forms-editor').hidden=true;$('forms-editor').replaceChildren();$('forms-library').replaceChildren();$('forms-library-admin').replaceChildren();if(!$('forms-view').hidden)show();});
+ document.addEventListener('wzos:session',()=>{epoch++;transfer?.abort();dirty=false;pending=null;library=null;$('forms-editor').hidden=true;$('forms-editor').replaceChildren();$('forms-library').replaceChildren();$('forms-library-admin').replaceChildren();if(!$('forms-view').hidden)show();});
 })();

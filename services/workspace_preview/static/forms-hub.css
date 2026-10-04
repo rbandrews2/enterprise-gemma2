@@ -2,12 +2,20 @@
 #forms-view [hidden]{display:none!important}
 #forms-view .panel{padding:1.5rem;min-width:0}
 #forms-view label{display:block;margin-top:.6rem}
-#forms-view input:not([type=checkbox]),#forms-view select,#forms-view textarea{width:100%;box-sizing:border-box}
+#forms-view input:not([type=checkbox]):not([type=radio]),#forms-view select,#forms-view textarea{width:100%;box-sizing:border-box}
 .forms-search{max-width:32rem;margin-bottom:1rem}
 .forms-layout{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1.25rem;align-items:start}
 .forms-card-list{display:grid;gap:.9rem;margin-top:1rem}
 .forms-card{border:1px solid #3b3e3e;border-radius:8px;padding:1rem;background:linear-gradient(145deg,#1d1f20,#0b0c0d);overflow-wrap:anywhere}
-.forms-card h3{margin:0 0 .4rem;font-size:1rem}.forms-card p{margin:.5rem 0}
+.forms-card h3,.forms-card h4{margin:0 0 .4rem;font-size:1rem}.forms-card p{margin:.5rem 0}
+.forms-group{display:grid;gap:.9rem}.forms-group>h3{margin:.4rem 0 0;font-size:.95rem;color:#f2d27c;letter-spacing:.01em}.forms-group>p{margin:0}
+.forms-unfinished{border:1px solid #8a4a2a;border-radius:8px;padding:.8rem;background:#1c120c}
+.forms-badge[data-category=incomplete]{border-color:#c25b3a;color:#ffc2ad;background:#2b120b}
+.forms-actions a.primary,.forms-actions a.secondary{display:inline-block;text-decoration:none;text-align:center}
+.forms-danger{border-color:#9a4a3a!important;color:#ffc9bd!important}
+.forms-source{border:1px solid #3b4140;border-radius:8px;margin:.8rem 0 .2rem;padding:.4rem .8rem .7rem;min-width:0}
+.forms-source legend{padding:0 .4rem;color:#edcf79;font-weight:650}
+.forms-progress{display:flex;align-items:center;gap:.6rem;margin-top:.6rem}.forms-progress progress{flex:1;accent-color:#f4a547;height:.6rem}
 .forms-badge{display:inline-block;padding:.12rem .5rem;border-radius:4px;font-size:.72rem;font-weight:650;border:1px solid #4a5250;color:#d7dedb;background:#151818}
 .forms-badge[data-category=official_agency_form]{border-color:#b0702d;color:#ffce8a;background:#2a1a0c}
 .forms-badge[data-category=company_form]{border-color:#6c7a73;color:#dfe8e3}
@@ -22,7 +30,7 @@
 .forms-editor legend{padding:0 .4rem;color:#edcf79;font-weight:650}
 .forms-choices{display:grid;grid-template-columns:repeat(auto-fill,minmax(12rem,1fr));gap:.3rem .9rem}
 #forms-view .forms-choice{display:flex;align-items:center;gap:.5rem;margin:.2rem 0}
-.forms-choice input{width:1.1rem;height:1.1rem;flex-shrink:0;accent-color:#f4a547}
+.forms-choice input,.forms-source input{width:1.1rem;height:1.1rem;flex-shrink:0;accent-color:#f4a547}
 /* auto-fit cannot share a template with intrinsic tracks; the Remove button is an ordinary grid cell. */
 .forms-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(9rem,1fr));gap:.5rem;align-items:end;padding:.6rem 0;border-bottom:1px solid #2e3232}
 #forms-view .forms-row label{margin-top:0;font-size:.8rem}

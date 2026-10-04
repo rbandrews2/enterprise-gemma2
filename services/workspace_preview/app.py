@@ -529,7 +529,7 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
     roster = accounts.roster if accounts else lambda selected: ACTORS
     team_modules.register(app, connect, actor, roster, synthetic=not account_workspace)
     modules.register(app, connect, actor, permitted_row, roster, synthetic=not account_workspace)
-    forms_hub.register(app, connect, actor, roster, file_storage_enabled=file_store is not None)
+    forms_hub.register(app, connect, actor, roster, file_store=file_store)
     if accounts:
         accounts.register(app)
         app.state.accounts = accounts
