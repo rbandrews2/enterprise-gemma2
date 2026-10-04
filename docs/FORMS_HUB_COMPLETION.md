@@ -2,6 +2,24 @@
 
 Branch `claude/forms-hub` was cut from `origin/enterprise-v2` at `3247a18`; the PR is #2. It lives in a separate worktree. The Time Clock worktree and PR #1 are unchanged, and Codex's checkout is untouched.
 
+## Response to Codex review `FORMS_HUB_REVIEW_20261003.md` (of `74d9466`)
+Both findings were correct and are repaired in the commit after the merge `81369d2`. That merge brought in `origin/enterprise-v2` at `0dc3450` cleanly; Codex's Atlas changes are kept, and so is the proposed Forms help text.
+
+1. **Partial storage deletion corrupted an available form (high).** My earlier claim that a storage failure meant "nothing was deleted" was wrong: SQL rollback cannot undo an object deletion. The new design:
+   - **Commit first.** Deletion and replacement first commit a durable state change, with no storage calls:
+     - **Delete:** the form gets `deleting: true`, which hides it from everyone. Every file of the form is added to a cleanup queue.
+     - **Replace or switch to a link:** the new source is published, and the previous file and any unattached uploads are queued.
+   - **Queued files are unreachable** for admins and members (404) from that same commit.
+   - **Then cleanup.** After the commit, each queued object is erased; only after that succeeds are its file row and queue entry removed. A deleted form's record and revision history are removed once none of its files remain queued.
+   - **Every step is idempotent.** A failure leaves queue entries, and the form is never published while pointing at a missing object.
+   - **Recovery runs later.** It happens when the delete request is repeated, through the admin-only `POST /api/forms/library/cleanup`, or automatically when an admin opens Forms Hub (`cleanup_pending` > 0).
+   - **Honest responses.** Delete returns `{"deleted": true, "cleanup_pending": bool}`, and the UI says when erasure is still finishing. Atomic rollback across SQL and object storage is no longer claimed.
+   - **No new DDL.** The queue is stored in the existing `module_records` table as `kind='form_library_cleanup'` (`id` = file ID; payload `{entity_id, object_key}`). The generic `/api/modules/{kind}` API accepts only `forms` and `schedule`, so these rows aren't exposed.
+2. **Unfinished uploads were reachable by members (medium).** The shared file API now asks Forms Hub's `file_access()` for every `form_library` list, download and upload:
+   - **Members** may list or download only the **current file of a published team form**. Unfinished entries, unattached uploads and abandoned replacements return 404, and link-only forms expose no files.
+   - **Admins** may use any file of a live form except files queued for erasure.
+   - **Other organizations** get 404 as before.
+
 ## Product direction (Ray, October 3, 2026)
 
 The first commit on this branch (`a45cdab`) built saved form records with an internal review workflow. Ray then clarified the product, and the later commits replace that design:
@@ -55,8 +73,11 @@ Ray's answers to the five open questions (the third revision):
   - **Unfinished entries** (for example, the tab was closed mid-upload) appear only to admins, with *Upload file* and *Delete*.
 - **Permanent deletion:**
   - *Delete* asks for confirmation ("Permanently delete …? Its file will be erased from WZOS … This can't be undone."). It then erases the stored objects, the `workspace_files` rows, the metadata record and its revision history.
-  - Objects are deleted first, inside the same transaction. If storage fails, the request returns 503 and **nothing is deleted**; a retry finishes the job. A retry after success returns 404, which the client treats as already deleted.
-  - **Replacing a file, or switching a form from a file to a link, also erases** the previous file and any unattached uploads for that form. Earlier versions are not kept.
+  - **Two phases (see the review response above).**
+    - Phase 1 commits the hidden "deleting" state and the cleanup queue. If that transaction fails, nothing changes and the form stays published.
+    - Phase 2 erases the objects and then the metadata. If it is interrupted, the form stays deleted and unreachable, the response says `cleanup_pending: true`, and the UI reports that its stored file couldn't be erased yet. Repeating the delete, the admin cleanup endpoint, or the next admin visit finishes it.
+    - A retry after completion returns 404, which the client treats as already deleted.
+  - **Replacing a file, or switching a form from a file to a link, erases** the previous file and any unattached uploads for that form, through the same queue. The new file is published in the same commit that makes the old one unreachable. If erasing fails, the replacement still succeeds and the old object is erased on a later cleanup. Earlier versions are not kept.
 - **WZOS printable forms** (unchanged in this revision): JSA worksheet, Incident report and Vehicle inspection.
   - *Print blank*, *Download blank* (standalone HTML), or *Fill in* and then print or download.
   - Entries never leave the browser, and printouts are built from text nodes only.
@@ -72,25 +93,31 @@ Ray's answers to the five open questions (the third revision):
   - One column on phones, and reduced motion is supported.
 
 ## Tests and actual results
-- **Python, full suite:** 239 tests. The last full run passed: OK, 28 skipped. The skips are the 16 existing PostgreSQL cases plus 12 `PostgreSQLFormsHubTests`, because `WZOS_TEST_DATABASE_URL` isn't set.
-  - **An earlier full run reported one error that I didn't capture.** It didn't recur on the rerun, and the Forms Hub tests then passed 10 out of 10 repeated runs, so I couldn't identify the test.
-  - The machine was heavily loaded during this work (about 84% CPU from other processes).
-- **`tests/test_forms_hub.py`** has 12 SQLite tests, also run as the PostgreSQL subclass:
+- **Python, full suite** (after merging `0dc3450` and applying the review repairs): 260 tests, **OK, 33 skipped**. The skips are the 16 existing PostgreSQL cases plus 17 `PostgreSQLFormsHubTests`, because `WZOS_TEST_DATABASE_URL` isn't set.
+  - An earlier run of the previous revision reported one uncaptured error that didn't recur.
+- **`tests/test_forms_hub.py`** has 17 SQLite tests, also run as the PostgreSQL subclass. The review regressions:
+  - **Second-object failure:** the first object is really erased and the second fails. The response is 200 with `cleanup_pending: true`, and the form is hidden from admins and members. Both files return 404 (not a broken 503), and upload or edit returns 404. After a **restart**, `cleanup` finishes: no objects or rows remain, and the delete retry returns 404.
+  - **Database failure after an object was erased** (`forget_file` fails): the object is gone and its row stays queued, the form stays hidden, and repeating the delete finishes it.
+  - **Failure before commit** (`queue_files` fails) on delete and on replace: 500, nothing hidden, queued or erased, and the published file still downloads.
+  - **Replacement when the old object can't be erased:** the new file is published and downloadable, and the old file is 404 for everyone and missing from the admin file list. Cleanup later erases it.
+  - **Members only reach the published file:** for an unfinished entry, members get 404 on both list and download while admins can list and download it. For an abandoned replacement upload, members see only the current file in the list and get 404 on the abandoned one, while admins can reach both. Other organizations get 404 everywhere.
+  - **Link-only forms** expose no files to members.
+
+  The earlier scenarios are still covered:
   - **Printables:** the catalog, with nothing stored.
   - **Publish and download:** an admin publishes and a member downloads byte-for-byte, including after a restart.
   - **Admin-only management:** unfinished entries are visible only to admins (`complete: false`).
   - **Isolation:** across organizations, including another tenant deleting its own same-ID entry.
   - **Validation, versions and retries:** includes an interrupted add whose attach is retried after it already succeeded.
   - **Replace and delete:** replacing erases the previous file and unattached uploads. Delete is permanent: objects, file rows, the record and revisions are all gone; a retry returns 404; and the ID can start over.
-  - **Storage failure during delete:** returns 503 with nothing deleted, and a retry succeeds.
   - **Word and Excel:** accepted and downloaded with the right content type. Refused: macros (`vbaProject.bin` or a macro-enabled content type), a workbook labelled as Word, a truncated ZIP, legacy `.doc`, and a macro-enabled MIME type.
   - **Office types stay limited to team forms.**
   - **Google links:** Docs, Sheets, Forms and Drive, with the expected export downloads and the fragment stripped. Refused: http, a look-alike host, a host embedded in the path, credentials, a port, `javascript:`, Slides, a too-short ID, and a backslash trick. A form can't have both a file and a link, switching from a file to a link erases the file, and members can't add links.
   - **Without file storage:** links still work, and delete works.
   - **Concurrent edits:** exactly one 200 and one 409.
-- **Node:** 12 of 12 passed. `node --check` passes on all static JS.
+- **Node:** 13 of 13 passed (including Codex's newer test). `node --check` passes on all static JS.
 - **PostgreSQL: NOT RUN.** There is no local PostgreSQL or Docker. Codex should run `python -m unittest tests.test_forms_hub -v` with `WZOS_TEST_DATABASE_URL` against a disposable schema.
-- **Real browser:** Microsoft Edge (headless, via Node Playwright 1.62) on an isolated loopback preview with a fresh database, `LocalFiles`, synthetic identities and synthetic files (placeholder PDFs and minimal `.docx`/`.xlsx` packages, not agency files). The final run passed every check:
+- **Real browser:** Microsoft Edge (headless, via Node Playwright 1.62) on an isolated loopback preview with a fresh database, `LocalFiles`, synthetic identities and synthetic files (placeholder PDFs and minimal `.docx`/`.xlsx` packages, not agency files). I reran the run below after the review repairs, with the same results. The storage and database failure paths are covered by the Python tests, not the browser run. Every check passed:
   - **Uploads:** PDF (official agency form), Word and Excel (company forms) uploaded. The headings read *Official agency forms (1)* and *Company forms (2)*, and three stored objects existed.
   - **Google Docs link:** shows *Open in Google Docs*, *Download PDF* and *Download Word*, all with `https`, `target=_blank` and `rel=noopener noreferrer`.
   - **Refused in the browser:** `.doc` and an 11 MB PDF, with **zero requests sent**.
@@ -117,21 +144,25 @@ Ray's answers to the five open questions (the third revision):
   - `06-mobile-admin`
 
 ## API and schema changes
-- **Startup DDL: none, and no migration.** Team-form metadata uses the existing `module_records`/`module_revisions` with `kind='form_library'`. Files use the existing `workspace_files` table and object store with `entity_kind='form_library'`.
+- **Startup DDL: none, and no migration.**
+  - Team-form metadata uses the existing `module_records`/`module_revisions` with `kind='form_library'`. A deleted form keeps `deleting: true` in its payload until cleanup finishes.
+  - The cleanup queue uses existing `module_records` rows with `kind='form_library_cleanup'`.
+  - Files use the existing `workspace_files` table and object store with `entity_kind='form_library'`.
 - **Authenticated endpoints:**
   - `GET /api/forms/templates` and `GET /api/forms/templates/{id}/{revision}`
-  - `GET /api/forms/library`: items carry `file`, `link` (with `url`, `service` and `downloads`) and `complete`.
-  - `PUT /api/forms/library/{id}` (admin): body `{expected_version, title, category, description, file_id | link}`.
-  - `POST /api/forms/library/{id}/delete` (admin, permanent): body `{expected_version}`. It **replaces** the earlier soft `/remove`, which was never deployed.
+  - `GET /api/forms/library`: items carry `file`, `link` (with `url`, `service` and `downloads`) and `complete`. Admins also get `cleanup_pending`, a count.
+  - `PUT /api/forms/library/{id}` (admin): body `{expected_version, title, category, description, file_id | link}`. The response adds `cleanup_pending` (bool) for that form.
+  - `POST /api/forms/library/{id}/delete` (admin, permanent): body `{expected_version}`, response `{deleted, cleanup_pending}`. Repeating it while cleanup is pending finishes the cleanup, without a version check. It **replaces** the earlier soft `/remove`, which was never deployed.
+  - `POST /api/forms/library/cleanup` (admin, idempotent): response `{cleanup_pending}`.
   - Static `/forms-hub.js` and `/forms-hub.css`
 - **Shared file contract (`files.py`), additive:**
   - `OFFICE` and `KIND_TYPES`: Office types are allowed only for `form_library`; `order`/`form` are unchanged.
   - `office_document_ok()` validates `.docx`/`.xlsx` packages.
   - `LocalFiles.delete()` and `GoogleFiles.delete()`, both idempotent (a missing object is fine).
-  - `delete_entity_files(db, store, org, kind, entity_id, keep=None)`
-  - `parent(..., write=False)`: members can read `form_library` files, and only admins can write them.
+  - `parent(..., write=False, file_id=None)`: for `form_library`, delegates to `forms_hub.file_access()`. Download passes the file ID, and listing filters rows through the same rule. The `order`/`form` rules are unchanged.
+  - **Removed:** the `delete_entity_files()` helper from `74d9466` (the unsafe in-transaction deletion).
 - **`app.py`:** passes `file_store` to `forms_hub.register` instead of a boolean.
-- **GCS permission to confirm (Codex):** permanent delete needs `storage.objects.delete` on the private bucket for the runtime service account. If the staging service account has only create and view rights, delete returns 503 and nothing is deleted.
+- **GCS permission to confirm (Codex):** erasing needs `storage.objects.delete` on the private bucket for the runtime service account. Without it, deleted forms are still hidden and replaced files are unreachable, but the objects stay in the bucket and `cleanup_pending` stays above zero until the permission is granted.
 
 ## Changed files (relative to `3247a18`)
 - **New:**
@@ -169,7 +200,7 @@ None are outstanding from Ray's latest answers. To confirm, if needed:
 
 ## Integration instructions (for Codex)
 1. Review PR #2. The shared backend changes are the additive `files.py` contract above and the one `app.py` line. The Atlas help text is proposed for your review.
-2. `enterprise-v2` has moved past `3247a18`. Rerun the full Python and Node suites on the integrated candidate.
+2. The branch now contains `origin/enterprise-v2` at `0dc3450` (merge `81369d2`). Rerun the full Python and Node suites on the integrated candidate.
 3. Run `tests/test_forms_hub.py`, including `PostgreSQLFormsHubTests`, against a disposable Cloud Shell PostgreSQL schema.
 4. Confirm the staging runtime service account can delete objects in the private bucket (`storage.objects.delete`).
 5. On staging with synthetic accounts and private GCS:
@@ -177,8 +208,10 @@ None are outstanding from Ray's latest answers. To confirm, if needed:
    - another organization is refused
    - an admin replaces a file, and the old object is gone from the bucket
    - an admin deletes a form, and its object is gone from the bucket
+   - a member can't list or download an unattached upload
+   - optionally, with delete permission temporarily withheld, a delete reports `cleanup_pending` and finishes after the permission returns
 6. No startup DDL or migration is involved. I haven't touched `SESSION_HANDOFF.md` or `REMAINING_TASKS.md`.
 
 ## Rollback
-- **Code:** revert the merge. Forms then returns to the old `modules.js` draft UI. `form_library` metadata and files remain in storage but are no longer reachable through the API.
+- **Code:** revert the merge. Forms then returns to the old `modules.js` draft UI. `form_library` metadata and files remain in storage but are no longer reachable through the API. Any `form_library_cleanup` queue rows remain as inert `module_records` rows. After a rollback, list their `object_key` values to erase those objects manually, or keep them.
 - **Data:** nothing to drop; no tables were added. Deletions and replacements made while this was live are permanent by design and **can't be undone by a rollback**.

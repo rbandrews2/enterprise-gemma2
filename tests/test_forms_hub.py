@@ -46,9 +46,10 @@ class FormsHubTests(unittest.TestCase):
         self.db = Path(self.temp.name) / 'db.sqlite'
         self.client = self.make_client()
 
-    def make_client(self, files=True):
+    def make_client(self, files=True, raise_errors=True):
         store = LocalFiles(Path(self.temp.name) / 'files') if files else None
-        client = TestClient(create_app(self.db, Store(Path(self.temp.name) / 'sources', {}), storage=self.storage, file_store=store))
+        client = TestClient(create_app(self.db, Store(Path(self.temp.name) / 'sources', {}), storage=self.storage, file_store=store),
+                            raise_server_exceptions=raise_errors)
         client.__enter__()
         return client
 
@@ -181,7 +182,7 @@ class FormsHubTests(unittest.TestCase):
         # A details-only edit keeps the current file.
         self.assertEqual(self.item(item_id, version=3, title='Renamed', file_id=replacement['id']).json()['file']['id'], replacement['id'])
         self.assertEqual(self.delete(item_id, 3).status_code, 409)
-        self.assertEqual(self.delete(item_id, 4).json(), {'deleted': True})
+        self.assertEqual(self.delete(item_id, 4).json(), {'deleted': True, 'cleanup_pending': False})
         self.assertEqual(self.delete(item_id, 4).status_code, 404)  # retry: already gone
         self.assertEqual((self.library(MEMBER)['items'], self.library(ADMIN)['items']), ([], []))
         self.assertEqual(self.client.get(f"/api/files/{replacement['id']}", headers=MEMBER).status_code, 404)
@@ -193,14 +194,117 @@ class FormsHubTests(unittest.TestCase):
             self.assertEqual(db.execute("SELECT COUNT(*) FROM workspace_files WHERE entity_id=?", (item_id,)).fetchone()[0], 0)
         self.assertEqual(self.item(item_id).json()['version'], 1)  # the identifier can start over as a new entry
 
-    def test_delete_rolls_back_when_storage_fails(self):
+    # ---- Review finding 1: deletion and replacement must never leave a published form pointing at a missing object.
+
+    def file_rows(self, item_id):
+        with self.raw() as db:
+            return db.execute("SELECT COUNT(*) FROM workspace_files WHERE entity_id=?", (item_id,)).fetchone()[0]
+
+    def unreachable(self, *file_ids):
+        for file_id in file_ids:
+            for headers in (ADMIN, MEMBER):
+                self.assertEqual(self.client.get(f'/api/files/{file_id}', headers=headers).status_code, 404)
+
+    def cleanup(self, client=None):
+        return (client or self.client).post('/api/forms/library/cleanup', headers=ADMIN).json()['cleanup_pending']
+
+    def test_second_object_failure_keeps_form_deleted_and_recovers_after_restart(self):
         item_id, item = self.published()
-        with patch.object(LocalFiles, 'delete', side_effect=OSError('storage down')):
+        extra = self.upload(item_id, filename='unattached.pdf').json()
+        real, calls = LocalFiles.delete, []
+        def flaky(store, key):  # the first object is really erased, the second fails
+            calls.append(key)
+            if len(calls) == 2:
+                raise OSError('storage down')
+            real(store, key)
+        with patch.object(LocalFiles, 'delete', autospec=True, side_effect=flaky):
             response = self.delete(item_id, 2)
-        self.assertEqual(response.status_code, 503)
-        self.assertEqual(self.client.get(f"/api/files/{item['file']['id']}", headers=MEMBER).content, PDF)  # nothing was deleted
-        self.assertEqual(self.delete(item_id, 2).json(), {'deleted': True})
-        self.assertEqual(self.stored_objects(), [])
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {'deleted': True, 'cleanup_pending': True})  # never claims nothing was deleted
+        self.assertEqual(len(self.stored_objects()), 1)
+        self.assertEqual((self.library(MEMBER)['items'], self.library(ADMIN)['items']), ([], []))  # no longer published
+        self.unreachable(item['file']['id'], extra['id'])  # 404, not a broken 503 download
+        self.assertEqual(self.upload(item_id).status_code, 404)
+        self.assertEqual(self.item(item_id, version=3).status_code, 404)
+        self.assertGreater(self.library(ADMIN)['cleanup_pending'], 0)
+        restarted = self.make_client()  # recovery state is durable across a restart
+        try:
+            self.assertEqual(self.cleanup(restarted), 0)
+        finally:
+            restarted.__exit__(None, None, None)
+        self.assertEqual((self.stored_objects(), self.file_rows(item_id)), ([], 0))
+        self.assertEqual(self.delete(item_id, 2).status_code, 404)
+        self.assertEqual(self.library(ADMIN)['cleanup_pending'], 0)
+
+    def test_metadata_failure_after_object_erased_is_retried(self):
+        item_id, item = self.published()
+        with patch.object(forms_hub, 'forget_file', side_effect=OSError('database unavailable')):
+            response = self.delete(item_id, 2)
+        self.assertEqual(response.json(), {'deleted': True, 'cleanup_pending': True})
+        self.assertEqual((self.stored_objects(), self.file_rows(item_id)), ([], 1))  # object gone, row still queued
+        self.assertEqual(self.library(MEMBER)['items'], [])
+        self.unreachable(item['file']['id'])
+        self.assertEqual(self.delete(item_id, 2).json(), {'deleted': True, 'cleanup_pending': False})  # repeating finishes it
+        self.assertEqual(self.file_rows(item_id), 0)
+
+    def test_failure_before_commit_changes_nothing(self):
+        item_id, item = self.published()
+        self.client.__exit__(None, None, None)
+        self.client = self.make_client(raise_errors=False)
+        with patch.object(forms_hub, 'queue_files', side_effect=RuntimeError('database unavailable')):
+            self.assertEqual(self.delete(item_id, 2).status_code, 500)
+            replacement = self.upload(item_id, data=PDF + b'new').json()
+            self.assertEqual(self.item(item_id, version=2, file_id=replacement['id']).status_code, 500)
+        # Nothing was hidden, queued or erased: the published form still downloads.
+        self.assertEqual(self.library(MEMBER)['items'][0]['file']['id'], item['file']['id'])
+        self.assertEqual(self.client.get(f"/api/files/{item['file']['id']}", headers=MEMBER).content, PDF)
+        self.assertEqual(len(self.stored_objects()), 2)
+        self.assertEqual(self.library(ADMIN)['cleanup_pending'], 0)
+
+    def test_replacement_stays_published_when_old_file_cannot_be_erased(self):
+        item_id, item = self.published()
+        replacement = self.upload(item_id, data=PDF + b'2026 edition', filename='new.pdf').json()
+        with patch.object(LocalFiles, 'delete', side_effect=OSError('storage down')):
+            updated = self.item(item_id, version=2, file_id=replacement['id'])
+        self.assertEqual(updated.status_code, 200)
+        self.assertEqual((updated.json()['file']['id'], updated.json()['cleanup_pending']), (replacement['id'], True))
+        self.assertEqual(self.client.get(f"/api/files/{replacement['id']}", headers=MEMBER).content, PDF + b'2026 edition')
+        self.unreachable(item['file']['id'])  # the old file is queued, so nobody can reach it
+        listed = self.client.get(f'/api/files?entity_kind=form_library&entity_id={item_id}', headers=ADMIN).json()['items']
+        self.assertEqual([f['id'] for f in listed], [replacement['id']])
+        self.assertEqual(len(self.stored_objects()), 2)
+        self.assertEqual(self.cleanup(), 0)
+        self.assertEqual(self.stored_objects(), [replacement['id']])
+        self.assertEqual(self.client.get(f"/api/files/{replacement['id']}", headers=MEMBER).status_code, 200)
+
+    # ---- Review finding 2: members reach only the published file.
+
+    def test_members_only_reach_the_published_file(self):
+        unfinished = str(uuid4())
+        self.item(unfinished, title='Unfinished')
+        hidden = self.upload(unfinished).json()  # uploaded, never attached
+        files = f'/api/files?entity_kind=form_library&entity_id={unfinished}'
+        self.assertEqual(self.client.get(files, headers=MEMBER).status_code, 404)
+        self.assertEqual(self.client.get(f"/api/files/{hidden['id']}", headers=MEMBER).status_code, 404)
+        self.assertEqual([f['id'] for f in self.client.get(files, headers=ADMIN).json()['items']], [hidden['id']])  # admins finish it
+        self.assertEqual(self.client.get(f"/api/files/{hidden['id']}", headers=ADMIN).status_code, 200)
+        item_id, item = self.published()
+        abandoned = self.upload(item_id, data=PDF + b'draft replacement', filename='draft.pdf').json()  # never attached
+        files = f'/api/files?entity_kind=form_library&entity_id={item_id}'
+        self.assertEqual([f['id'] for f in self.client.get(files, headers=MEMBER).json()['items']], [item['file']['id']])
+        self.assertEqual(self.client.get(f"/api/files/{abandoned['id']}", headers=MEMBER).status_code, 404)
+        self.assertEqual(self.client.get(f"/api/files/{item['file']['id']}", headers=MEMBER).content, PDF)
+        self.assertEqual(self.client.get(f"/api/files/{abandoned['id']}", headers=ADMIN).status_code, 200)
+        self.assertEqual(len(self.client.get(files, headers=ADMIN).json()['items']), 2)
+        for headers in (OTHER_ADMIN, OTHER_MEMBER):
+            for file_id in (item['file']['id'], abandoned['id'], hidden['id']):
+                self.assertEqual(self.client.get(f'/api/files/{file_id}', headers=headers).status_code, 404)
+            self.assertEqual(self.client.get(files, headers=headers).status_code, 404)
+
+    def test_link_only_forms_expose_no_files(self):
+        item_id = str(uuid4())
+        self.item(item_id, link=DOC_LINK)
+        self.assertEqual(self.client.get(f'/api/files?entity_kind=form_library&entity_id={item_id}', headers=MEMBER).status_code, 404)
 
     def test_word_and_excel_uploads(self):
         docx, xlsx = office('word/document.xml'), office('xl/workbook.xml')
@@ -271,7 +375,7 @@ class FormsHubTests(unittest.TestCase):
         # Google links still work without file storage, and delete still succeeds.
         linked = self.item(str(uuid4()), link=DOC_LINK).json()
         self.assertEqual([i['title'] for i in self.library(MEMBER)['items']], ['VDOT Form C-85'])
-        self.assertEqual(self.delete(linked['id'], 1).json(), {'deleted': True})
+        self.assertEqual(self.delete(linked['id'], 1).json(), {'deleted': True, 'cleanup_pending': False})
 
     def test_concurrent_edits_apply_once(self):
         item_id = str(uuid4())

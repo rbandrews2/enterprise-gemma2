@@ -8,6 +8,7 @@ from typing import Literal
 from uuid import UUID
 from fastapi import HTTPException, Query, Request
 from fastapi.responses import Response
+from services.workspace_preview.forms_hub import file_access as form_library_access
 
 MAX_BYTES = 10 * 1024 * 1024
 TYPES = {'application/pdf': b'%PDF-', 'image/png': b'\x89PNG\r\n\x1a\n', 'image/jpeg': b'\xff\xd8\xff'}
@@ -103,24 +104,11 @@ class GoogleFiles:
             pass
 
 
-def delete_entity_files(db, store, organization_id, entity_kind, entity_id, keep=None):
-    """Permanently delete an entity's stored files (except `keep`) inside the caller's transaction.
-    Objects go first, so a storage failure raises before any row is deleted and a retry finishes the job."""
-    rows = db.execute('SELECT id,object_key FROM workspace_files WHERE organization_id=? AND entity_kind=? AND entity_id=?',
-                      (organization_id, entity_kind, entity_id)).fetchall()
-    doomed = [r for r in rows if r['id'] != keep]
-    for row in doomed:
-        store.delete(row['object_key'])
-    for row in doomed:
-        db.execute('DELETE FROM workspace_files WHERE id=? AND organization_id=?', (row['id'], organization_id))
-    return len(doomed)
-
-
 def register(app, connect, actor, permitted_order, store):
     with connect() as db:
         db.execute('CREATE TABLE IF NOT EXISTS workspace_files (id TEXT PRIMARY KEY,organization_id TEXT NOT NULL,owner_id TEXT NOT NULL,entity_kind TEXT NOT NULL,entity_id TEXT NOT NULL,filename TEXT NOT NULL,content_type TEXT NOT NULL,size_bytes INTEGER NOT NULL,sha256 TEXT NOT NULL,object_key TEXT NOT NULL)')
 
-    def parent(db, user, kind, record_id, write=False):
+    def parent(db, user, kind, record_id, write=False, file_id=None):
         if kind == 'order':
             permitted_order(db,record_id,user)
         elif kind == 'form':
@@ -128,12 +116,15 @@ def register(app, connect, actor, permitted_order, store):
             if not row or (user['role']!='admin' and row['owner_id']!=user['id']):
                 raise HTTPException(404,'Form not found')
         elif kind == 'form_library':
-            # Forms Hub team library: every organization member downloads; only admins upload.
-            row=db.execute("SELECT 1 FROM module_records WHERE organization_id=? AND kind='form_library' AND id=?",(user['organization_id'],record_id)).fetchone()
-            if not row:
-                raise HTTPException(404,'Form not found')
-            if write and user['role']!='admin':
-                raise HTTPException(403,'Only an organization admin can upload team forms')
+            # Forms Hub owns the rule: members get only the published file; admins upload and see unfinished files.
+            form_library_access(db,user,record_id,file_id,write)
+
+    def visible(db, user, kind, record_id, file_id):
+        try:
+            parent(db,user,kind,record_id,file_id=file_id)
+            return True
+        except HTTPException:
+            return False
 
     def metadata(row):
         return {k:row[k] for k in ('id','entity_kind','entity_id','filename','content_type','size_bytes','sha256')}
@@ -177,6 +168,8 @@ def register(app, connect, actor, permitted_order, store):
         with connect() as db:
             parent(db,user,entity_kind,entity_id)
             rows=db.execute('SELECT * FROM workspace_files WHERE organization_id=? AND entity_kind=? AND entity_id=? ORDER BY id LIMIT 50 OFFSET ?',(user['organization_id'],entity_kind,entity_id,offset)).fetchall()
+            if entity_kind=='form_library':
+                rows=[r for r in rows if visible(db,user,entity_kind,entity_id,r['id'])]
         return {'items':[metadata(r) for r in rows]}
 
     @app.get('/api/files/{file_id}')
@@ -185,7 +178,7 @@ def register(app, connect, actor, permitted_order, store):
         with connect() as db:
             row=db.execute('SELECT * FROM workspace_files WHERE id=? AND organization_id=?',(str(file_id),user['organization_id'])).fetchone()
             if not row: raise HTTPException(404,'File not found')
-            parent(db,user,row['entity_kind'],row['entity_id'])
+            parent(db,user,row['entity_kind'],row['entity_id'],file_id=row['id'])
         try:
             data=store.get(row['object_key'])
             if hashlib.sha256(data).hexdigest()!=row['sha256']: raise ValueError('Integrity mismatch')

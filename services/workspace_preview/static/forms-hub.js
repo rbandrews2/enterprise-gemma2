@@ -15,7 +15,7 @@
  const reduced=()=>window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
  // The server accepts simple filenames only; keep the user's name recognizable.
  const safeName=name=>(name.replace(/[^\w .()-]+/g,'-').replace(/^[.\s-]+/,'').slice(0,200))||'form.pdf';
- let templates=[], library=null, epoch=0, dirty=false, pending=null, busy=false, transfer=null;
+ let templates=[], library=null, epoch=0, dirty=false, pending=null, busy=false, transfer=null, cleaning=false;
  const fullTemplates=new Map();
 
  const canDiscard=()=>!dirty||confirm('Your entries are not saved. Leave without printing or downloading this form?');
@@ -89,8 +89,9 @@
  }
  const saveItem=(id,body)=>api(`/api/forms/library/${id}`,{method:'PUT',body:JSON.stringify(body)});
  async function deleteItem(id,version){
-  try{await api(`/api/forms/library/${id}/delete`,{method:'POST',body:JSON.stringify({expected_version:version})});}
-  catch(error){if(error.status!==404)throw error;}  // 404: already deleted
+  // The form is hidden as soon as this succeeds; cleanup_pending means stored files are still being erased.
+  try{return await api(`/api/forms/library/${id}/delete`,{method:'POST',body:JSON.stringify({expected_version:version})});}
+  catch(error){if(error.status!==404)throw error;return {deleted:true,cleanup_pending:false};}  // 404: already deleted
  }
  function progressBar(){
   const wrap=node('div',null,'forms-progress');wrap.hidden=true;
@@ -150,8 +151,9 @@
     try{
      const stored=await uploadWithRetry(item.id,crypto.randomUUID(),file,f=>bar.set(f,`Uploading ${file.name}`),bar.status);
      bar.status('Saving…');
-     await saveItem(item.id,{expected_version:item.version,title:item.title,category:item.category,description:item.description,file_id:stored.id,link:null});
-     bar.hide();await loadLibrary();notice(`${item.title} now uses ${stored.filename}.${item.file?' The previous file was deleted.':''}`);
+     const saved=await saveItem(item.id,{expected_version:item.version,title:item.title,category:item.category,description:item.description,file_id:stored.id,link:null});
+     bar.hide();await loadLibrary();
+     notice(`${item.title} now uses ${stored.filename}.${!item.file?'':saved.cleanup_pending?' The previous file is no longer available and will be erased shortly.':' The previous file was erased.'}`);
     }catch(error){bar.hide();notice(`${file.name} wasn't uploaded: ${sentence(error.message)}${retryable(error)?' Nothing changed; choose the file again to retry.':''}`);}
     finally{replace.disabled=false;busy=false;}
    };
@@ -163,7 +165,8 @@
    const what=item.file?' Its file will be erased from WZOS.':'';
    if(!confirm(`Permanently delete “${item.title}”?${what} Your team will no longer see it. This can't be undone.`))return;
    remove.disabled=true;
-   try{await deleteItem(item.id,item.version);await loadLibrary();notice(`${item.title} was permanently deleted.`);}
+   try{const result=await deleteItem(item.id,item.version);await loadLibrary();
+    notice(result.cleanup_pending?`${item.title} was deleted and your team can no longer open it. Its stored file couldn't be erased yet; WZOS will keep retrying.`:`${item.title} was permanently deleted.`);}
    catch(error){notice(error.message);remove.disabled=false;}
   };
   controls.push(edit,remove);return controls;
@@ -274,7 +277,9 @@
  }
  async function loadLibrary(){
   const generation=epoch;
-  try{const data=await api('/api/forms/library');if(generation!==epoch)return;library=data;if(!busy)renderAdmin();renderLibrary();}
+  try{const data=await api('/api/forms/library');if(generation!==epoch)return;library=data;if(!busy)renderAdmin();renderLibrary();
+   // Finish erasing files left by an interrupted delete or replacement (idempotent; harmless if it fails again).
+   if(data.can_manage&&data.cleanup_pending&&!cleaning){cleaning=true;api('/api/forms/library/cleanup',{method:'POST'}).catch(()=>{}).finally(()=>{cleaning=false;});}}
   catch(error){if(generation===epoch)notice(error.message);}
  }
 
