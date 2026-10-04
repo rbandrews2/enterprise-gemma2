@@ -1,0 +1,13 @@
+{
+  "accepted": false,
+  "scope": "two synthetic concurrent requests; no inference retries",
+  "runner_commit": "8661653",
+  "requests": [
+    {"stage":"concurrent_a","request_id":"76212654-1a15-45b6-9c1f-c1f9704827ba","started_at":"2026-10-04T00:53:23.199664+00:00","http_status":503,"seconds":2.741,"model_called":false,"error_code":"provider_error","correlation_id":"5450242ff65d4883b8a2c5e2d52d1add"},
+    {"stage":"concurrent_b","request_id":"56af42c0-1dcc-499b-9066-da989e236aad","started_at":"2026-10-04T00:53:23.200485+00:00","http_status":503,"seconds":2.66,"model_called":false,"error_code":"busy","correlation_id":"fd6d54e261e54fba8a1722b7317b4099"}
+  ],
+  "transport": {"attempt_id":"96bb7e30ab7c4e96843974d529b3e294","phase":"response_body","seconds":0.46,"error_type":"HTTPStatusError","upstream_status":403},
+  "inference_log": {"timestamp":"2026-10-04T00:53:25.843511Z","http_status":403,"reason":"IAM principal lacks run.routes.invoke permission"},
+  "cleanup": {"verified":true,"app_revision":"wzos-v2-accounts-00029-d6k","atlas_enabled":false,"inference_absent":true,"fixtures_disabled":true,"controller_and_guard_absent":true},
+  "usage": {"preflight_billable_seconds":4670.10753249346,"post_cleanup_billable_seconds":4970.11058476146,"additional_metric_pages":false,"approximate_cumulative_compute_usd":4.40,"approximate_increment_compute_usd":0.27,"excludes":"builds, storage, billing lag; monitoring estimate is not an invoice"}
+}
