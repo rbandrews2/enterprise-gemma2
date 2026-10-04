@@ -277,6 +277,44 @@ class FormsHubTests(unittest.TestCase):
         self.assertEqual(self.stored_objects(), [replacement['id']])
         self.assertEqual(self.client.get(f"/api/files/{replacement['id']}", headers=MEMBER).status_code, 200)
 
+    def test_overlapping_cleanups_cannot_erase_a_reused_file_id(self):
+        # Codex repair review (51ed59e): a stale cleanup erased a file re-uploaded under the same ID.
+        item_id, item = self.published()
+        file_a = item['file']['id']
+        replacement = self.upload(item_id, data=PDF + b'B', filename='b.pdf').json()
+        with patch.object(LocalFiles, 'delete', side_effect=OSError('storage down')):
+            self.assertEqual(self.item(item_id, version=2, file_id=replacement['id']).json()['cleanup_pending'], True)  # A queued, B published
+        real, other, seen = LocalFiles.delete, self.make_client(), {}
+        def interleave(store, key):
+            if not seen:  # cleanup 1 is paused just before erasing A; everything below happens meanwhile
+                seen['paused'] = True
+                self.assertEqual(self.cleanup(other), 0)  # cleanup 2 erases and forgets A
+                retry = self.upload(item_id, file_id=file_a)  # an upload retry with A's original ID
+                seen['retry'] = retry.status_code
+                seen['republish'] = self.item(item_id, version=3, file_id=file_a).status_code
+            real(store, key)
+        try:
+            with patch.object(LocalFiles, 'delete', autospec=True, side_effect=interleave):
+                self.assertEqual(self.cleanup(), 0)  # cleanup 1 resumes with its stale queue entry
+        finally:
+            other.__exit__(None, None, None)
+        self.assertEqual((seen['retry'], seen['republish']), (409, 422))  # the retired ID is refused, not recreated
+        current = self.library(MEMBER)['items']
+        self.assertEqual([(i['version'], i['file']['id'], i['complete']) for i in current], [(3, replacement['id'], True)])
+        self.assertEqual(self.client.get(f"/api/files/{replacement['id']}", headers=MEMBER).content, PDF + b'B')
+        self.assertEqual(self.stored_objects(), [replacement['id']])
+        # A fresh ID for the same content works normally.
+        fresh = self.upload(item_id).json()
+        self.assertEqual(self.item(item_id, version=3, file_id=fresh['id']).status_code, 200)
+        self.assertEqual(self.client.get(f"/api/files/{fresh['id']}", headers=MEMBER).content, PDF)
+
+    def test_retired_ids_are_per_organization_and_survive_deletion(self):
+        item_id, item = self.published()
+        self.assertEqual(self.delete(item_id, 2).json(), {'deleted': True, 'cleanup_pending': False})
+        recreated = str(uuid4())
+        self.item(recreated)
+        self.assertEqual(self.upload(recreated, file_id=item['file']['id']).status_code, 409)  # retired in this organization
+
     # ---- Review finding 2: members reach only the published file.
 
     def test_members_only_reach_the_published_file(self):

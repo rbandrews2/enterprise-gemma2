@@ -8,7 +8,7 @@ from typing import Literal
 from uuid import UUID
 from fastapi import HTTPException, Query, Request
 from fastapi.responses import Response
-from services.workspace_preview.forms_hub import file_access as form_library_access
+from services.workspace_preview.forms_hub import file_access as form_library_access, file_id_retired as form_library_retired
 
 MAX_BYTES = 10 * 1024 * 1024
 TYPES = {'application/pdf': b'%PDF-', 'image/png': b'\x89PNG\r\n\x1a\n', 'image/jpeg': b'\xff\xd8\xff'}
@@ -152,6 +152,10 @@ def register(app, connect, actor, permitted_order, store):
         with connect() as db:
             db.execute('BEGIN IMMEDIATE')
             parent(db,user,entity_kind,entity_id,write=True)
+            # A team-form file ID queued for erasure is retired for good: refusing it here, in the same locked
+            # transaction as the insert, keeps a stale cleanup from erasing a re-upload under the same key.
+            if entity_kind=='form_library' and form_library_retired(db,user['organization_id'],file_id):
+                raise HTTPException(409,'This file was deleted. Upload it again as a new file.')
             prior=db.execute('SELECT * FROM workspace_files WHERE id=?',(str(file_id),)).fetchone()
             if prior:
                 if tuple(prior[k] for k in ('id','organization_id','owner_id','entity_kind','entity_id','filename','content_type','size_bytes','sha256','object_key'))!=values:

@@ -2,6 +2,34 @@
 
 Branch `claude/forms-hub` was cut from `origin/enterprise-v2` at `3247a18`; the PR is #2. It lives in a separate worktree. The Time Clock worktree and PR #1 are unchanged, and Codex's checkout is untouched.
 
+## Response to Codex repair review `FORMS_HUB_REVIEW_REPAIRS_20261003.md` (of `51ed59e`)
+The remaining high-priority finding was correct. **Overlapping cleanups could erase a reused file ID.** In the old sequence:
+1. Cleanup 1 read the queue.
+2. Cleanup 2 erased file A and forgot its metadata.
+3. An upload retry recreated A under the same UUID, and so under the same object key, and the form was republished with it.
+4. Cleanup 1 then erased the new object and removed its metadata.
+
+**Repair: team-form file IDs are retired permanently once they are queued for erasure.**
+- **Upload refuses retired IDs.** The upload, in the same `BEGIN IMMEDIATE` transaction that would insert the row, refuses with 409 ("This file was deleted. Upload it again as a new file.") any `form_library` file ID that is queued (`form_library_cleanup`) or erased (`form_library_retired`).
+- **Erasing leaves a permanent marker.** When an object is erased, `forget_file()` replaces its queue entry with a `kind='form_library_retired'` row in the same transaction. That marker is never removed.
+- **A stale cleanup is harmless.** Object keys are `sha256(organization_id)/file_id`, so a cleanup working from an old snapshot can only delete an object key, and metadata, that can no longer be recreated in that organization. Its metadata step is idempotent.
+- **Why there is no lease or generation check.** Because no reuse is possible, no claim or lease is needed, and no generation-conditional deletion either. This holds as long as every writer of `form_library` files goes through `/api/files` (the only writer today).
+- **Tombstones, and no DDL:**
+  - One small `module_records` row per erased team-form file, kept permanently: `id` = file ID, `kind='form_library_retired'`, payload `{entity_id}`. A rollback leaves them inert.
+  - The generic modules API accepts only `forms` and `schedule`, so these rows are internal.
+  - No new tables or columns.
+- **Client effect.** The browser always uses a fresh ID for a new file. The add flow reuses an ID only while that entry is still pending, and a discarded or rejected entry resets it. In practice the 409 is reached only by a stale retry.
+- **Regression:** `test_overlapping_cleanups_cannot_erase_a_reused_file_id`, which also runs as the PostgreSQL subclass, follows Codex's sequence:
+  1. Publish A, then replace it with B during a storage outage, so A is queued.
+  2. Pause cleanup 1 just before it erases A.
+  3. Run cleanup 2 from a second app instance to completion.
+  4. Retry the upload of A with its original UUID: **409**. Republishing A: **422**.
+  5. Resume cleanup 1.
+
+  The result: the form stays at version 3, published with B and downloadable by members; only B's object remains; and a fresh ID works normally.
+  - **Verified to fail without the fix:** with the retired check disabled, the same test reproduces Codex's result, with the retry and republish both returning `(200, 200)`.
+  - `test_retired_ids_are_per_organization_and_survive_deletion` checks that a fully deleted form's file ID can't be reused on a new form.
+
 ## Response to Codex review `FORMS_HUB_REVIEW_20261003.md` (of `74d9466`)
 Both findings were correct and are repaired in the commit after the merge `81369d2`. That merge brought in `origin/enterprise-v2` at `0dc3450` cleanly; Codex's Atlas changes are kept, and so is the proposed Forms help text.
 
@@ -93,9 +121,9 @@ Ray's answers to the five open questions (the third revision):
   - One column on phones, and reduced motion is supported.
 
 ## Tests and actual results
-- **Python, full suite** (after merging `0dc3450` and applying the review repairs): 260 tests, **OK, 33 skipped**. The skips are the 16 existing PostgreSQL cases plus 17 `PostgreSQLFormsHubTests`, because `WZOS_TEST_DATABASE_URL` isn't set.
+- **Python, full suite** (after merging `enterprise-v2` through `5ae81ad` and applying both rounds of repairs): 264 tests, **OK, 35 skipped**. The skips are the 16 existing PostgreSQL cases plus 19 `PostgreSQLFormsHubTests`, because `WZOS_TEST_DATABASE_URL` isn't set.
   - An earlier run of the previous revision reported one uncaptured error that didn't recur.
-- **`tests/test_forms_hub.py`** has 17 SQLite tests, also run as the PostgreSQL subclass. The review regressions:
+- **`tests/test_forms_hub.py`** has 19 SQLite tests, also run as the PostgreSQL subclass. They include the two overlap regressions above. The first-review regressions:
   - **Second-object failure:** the first object is really erased and the second fails. The response is 200 with `cleanup_pending: true`, and the form is hidden from admins and members. Both files return 404 (not a broken 503), and upload or edit returns 404. After a **restart**, `cleanup` finishes: no objects or rows remain, and the delete retry returns 404.
   - **Database failure after an object was erased** (`forget_file` fails): the object is gone and its row stays queued, the form stays hidden, and repeating the delete finishes it.
   - **Failure before commit** (`queue_files` fails) on delete and on replace: 500, nothing hidden, queued or erased, and the published file still downloads.
@@ -146,7 +174,7 @@ Ray's answers to the five open questions (the third revision):
 ## API and schema changes
 - **Startup DDL: none, and no migration.**
   - Team-form metadata uses the existing `module_records`/`module_revisions` with `kind='form_library'`. A deleted form keeps `deleting: true` in its payload until cleanup finishes.
-  - The cleanup queue uses existing `module_records` rows with `kind='form_library_cleanup'`.
+  - The cleanup queue uses existing `module_records` rows with `kind='form_library_cleanup'`. Erased file IDs keep a permanent `kind='form_library_retired'` row so they can't be reused.
   - Files use the existing `workspace_files` table and object store with `entity_kind='form_library'`.
 - **Authenticated endpoints:**
   - `GET /api/forms/templates` and `GET /api/forms/templates/{id}/{revision}`
@@ -213,5 +241,5 @@ None are outstanding from Ray's latest answers. To confirm, if needed:
 6. No startup DDL or migration is involved. I haven't touched `SESSION_HANDOFF.md` or `REMAINING_TASKS.md`.
 
 ## Rollback
-- **Code:** revert the merge. Forms then returns to the old `modules.js` draft UI. `form_library` metadata and files remain in storage but are no longer reachable through the API. Any `form_library_cleanup` queue rows remain as inert `module_records` rows. After a rollback, list their `object_key` values to erase those objects manually, or keep them.
+- **Code:** revert the merge. Forms then returns to the old `modules.js` draft UI. `form_library` metadata and files remain in storage but are no longer reachable through the API. Any `form_library_cleanup` queue rows and `form_library_retired` markers remain as inert `module_records` rows. After a rollback, list their `object_key` values to erase those objects manually, or keep them.
 - **Data:** nothing to drop; no tables were added. Deletions and replacements made while this was live are permanent by design and **can't be undone by a rollback**.

@@ -104,6 +104,8 @@ class Deletion(BaseModel):
 # point leaves a queue entry to retry, never a published form pointing at a missing object.
 # The generic /api/modules API accepts only "forms" and "schedule", so this kind is internal.
 CLEANUP_KIND = "form_library_cleanup"
+# After erasure, a queue entry becomes a permanent retired marker (id = file id) so the ID is never reused.
+RETIRED_KIND = "form_library_retired"
 
 
 def library_record(db, organization_id, item_id):
@@ -145,10 +147,25 @@ def queue_files(db, organization_id, item_id, keep=None):
                         json.dumps({"entity_id": str(item_id), "object_key": row["object_key"]}, sort_keys=True), stamp))
 
 
+def file_id_retired(db, organization_id, file_id):
+    """True once a team-form file ID has been queued for erasure. Such IDs are never accepted again in this
+    organization (object keys are per organization), so a stale cleanup, one that read the queue before
+    another run finished, can only delete an object key and metadata that nothing can recreate."""
+    return db.execute("SELECT 1 FROM module_records WHERE organization_id=? AND kind IN (?,?) AND id=?",
+                      (organization_id, CLEANUP_KIND, RETIRED_KIND, str(file_id))).fetchone() is not None
+
+
 def forget_file(db, organization_id, file_id):
-    """Drop the metadata of a file whose stored object has been erased."""
+    """Drop the metadata of a file whose stored object has been erased, leaving a permanent retired marker.
+    Idempotent: repeating it, for example from a stale cleanup, changes nothing."""
+    queued = db.execute("SELECT payload FROM module_records WHERE organization_id=? AND kind=? AND id=?",
+                        (organization_id, CLEANUP_KIND, file_id)).fetchone()
     db.execute("DELETE FROM workspace_files WHERE id=? AND organization_id=?", (file_id, organization_id))
     db.execute("DELETE FROM module_records WHERE organization_id=? AND kind=? AND id=?", (organization_id, CLEANUP_KIND, file_id))
+    entity = json.loads(queued["payload"])["entity_id"] if queued else None
+    db.execute("INSERT INTO module_records VALUES (?,?,?,?,?,?,?) ON CONFLICT DO NOTHING",
+               (file_id, RETIRED_KIND, organization_id, "system", 1, json.dumps({"entity_id": entity}),
+                datetime.now(timezone.utc).isoformat()))
 
 
 def register(app, connect, actor, actors, file_store=None, catalog_path=None):
