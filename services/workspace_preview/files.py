@@ -152,9 +152,9 @@ def register(app, connect, actor, permitted_order, store):
         with connect() as db:
             db.execute('BEGIN IMMEDIATE')
             parent(db,user,entity_kind,entity_id,write=True)
-            # A team-form file ID queued for erasure is retired for good: refusing it here, in the same locked
-            # transaction as the insert, keeps a stale cleanup from erasing a re-upload under the same key.
-            if entity_kind=='form_library' and form_library_retired(db,user['organization_id'],file_id):
+            # All entity kinds share organization/UUID object keys. Enforce retirement across
+            # every upload in the locked transaction, so stale cleanup cannot erase reused keys.
+            if form_library_retired(db,user['organization_id'],file_id):
                 raise HTTPException(409,'This file was deleted. Upload it again as a new file.')
             prior=db.execute('SELECT * FROM workspace_files WHERE id=?',(str(file_id),)).fetchone()
             if prior:

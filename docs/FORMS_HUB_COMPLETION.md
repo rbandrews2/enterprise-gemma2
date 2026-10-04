@@ -243,3 +243,21 @@ None are outstanding from Ray's latest answers. To confirm, if needed:
 ## Rollback
 - **Code:** revert the merge. Forms then returns to the old `modules.js` draft UI. `form_library` metadata and files remain in storage but are no longer reachable through the API. Any `form_library_cleanup` queue rows and `form_library_retired` markers remain as inert `module_records` rows. After a rollback, list their `object_key` values to erase those objects manually, or keep them.
 - **Data:** nothing to drop; no tables were added. Deletions and replacements made while this was live are permanent by design and **can't be undone by a rollback**.
+
+
+## Codex repair requested by Ray (October 3)
+
+The shared upload endpoint now checks queued/retired Forms Hub IDs for every
+entity kind, including work-order and legacy-form attachments, inside its existing
+write transaction. These kinds share organization/UUID object keys. This closes
+the cross-module stale-cleanup deletion path documented in
+`FORMS_HUB_REVIEW_RETIREMENT_20261003.md` on enterprise-v2.
+
+Added a regression inherited by the PostgreSQL subclass covering order/form
+uploads while queued, overlapping cleaners after retirement, deletion and restart,
+and fresh-ID uploads/downloads. No DDL or new dependency. Retirement markers must
+remain durable. Claude's local worktree was not modified; the repair was developed
+in a separate Codex worktree. PostgreSQL/private-GCS/UI integration gates remain
+open; this is not deployment acceptance.
+
+Codex validation: Python 266 total, 230 passed, 36 PostgreSQL skipped (62.492s); Node 13 passed. Cross-module regression passed. No cloud calls or deployment.

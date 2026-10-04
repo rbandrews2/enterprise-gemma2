@@ -315,6 +315,51 @@ class FormsHubTests(unittest.TestCase):
         self.item(recreated)
         self.assertEqual(self.upload(recreated, file_id=item['file']['id']).status_code, 409)  # retired in this organization
 
+    def test_cross_module_retirement_blocks_stale_cleanup_after_restart(self):
+        for kind in ('order', 'form'):
+            with self.subTest(kind=kind):
+                if kind == 'order':
+                    response = self.client.post('/api/orders', headers=ADMIN, json={
+                        'request_id': str(uuid4()), 'title': 'Synthetic job',
+                        'work_type': 'underground_utility', 'address': 'Example road, Norfolk, VA',
+                        'locality': 'Norfolk', 'notes': 'Synthetic'})
+                    self.assertEqual(response.status_code, 201)
+                    parent_id = response.json()['id']
+                else:
+                    parent_id = str(uuid4())
+                    response = self.client.put('/api/modules/forms/' + parent_id, headers=ADMIN,
+                        json={'request_id': str(uuid4()), 'title': 'Synthetic draft'})
+                    self.assertEqual(response.status_code, 200)
+                def upload_to_parent(client, file_id):
+                    return client.put(f'/api/files/{file_id}?entity_kind={kind}&entity_id={parent_id}&filename=site.pdf',
+                        headers={**ADMIN, 'Content-Type': 'application/pdf'}, content=PDF)
+                item_id, item = self.published()
+                old = item['file']['id']
+                replacement = self.upload(item_id, data=PDF + b'new').json()
+                with patch.object(LocalFiles, 'delete', side_effect=OSError('storage down')):
+                    self.item(item_id, version=2, file_id=replacement['id'])
+                self.assertEqual(upload_to_parent(self.client, old).status_code, 409)
+                real, seen = LocalFiles.delete, []
+                def interleave(store, key):
+                    if not seen:
+                        seen.append(True)
+                        seen.append(self.cleanup())
+                        seen.append(upload_to_parent(self.client, old).status_code)
+                    real(store, key)
+                with patch.object(LocalFiles, 'delete', autospec=True, side_effect=interleave):
+                    self.assertEqual(self.cleanup(), 0)
+                self.assertEqual(seen, [True, 0, 409])
+                self.assertEqual(self.client.get('/api/files/' + replacement['id'], headers=MEMBER).content, PDF + b'new')
+                self.assertEqual(self.delete(item_id, 3).status_code, 200)
+                restarted = self.make_client()
+                try:
+                    self.assertEqual(upload_to_parent(restarted, old).status_code, 409)
+                    fresh = str(uuid4())
+                    self.assertEqual(upload_to_parent(restarted, fresh).status_code, 200)
+                    self.assertEqual(restarted.get('/api/files/' + fresh, headers=ADMIN).content, PDF)
+                finally:
+                    restarted.__exit__(None, None, None)
+
     # ---- Review finding 2: members reach only the published file.
 
     def test_members_only_reach_the_published_file(self):
