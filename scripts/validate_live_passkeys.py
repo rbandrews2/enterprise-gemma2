@@ -56,10 +56,19 @@ def main():
         api('/api/account/passkeys/login/verify',{'credential':credential},expected=401)
         client.headers['X-WZOS-Authorization']='Bearer '+exchanged['idToken']
         api('/api/account/passkeys/'+enc(cid),method='DELETE')
-        removed=True;passed=True
+        removed=True
+        print('PASS: restricted runtime token signing and Google custom-token exchange')
+        response=api('/api/account/session')
+        cookie_header=response.headers.get('Set-Cookie','')
+        assert all(flag in cookie_header for flag in ('Secure','HttpOnly','SameSite=strict')),'Cookie security flags missing'
+        del client.headers['X-WZOS-Authorization']
+        api('/api/account',method='GET')
+        api('/api/account/logout')
+        api('/api/account',method='GET',expected=401)
+        passed=True
         print('PASS: real Google sign-in, restricted runtime passkey verification/signing, Google custom-token exchange, replay denial and credential removal')
     except Exception as exc:
-        print('AUTH PROBE FAILED: '+type(exc).__name__+' (credentials suppressed)')
+        print('AUTH PROBE FAILED: '+str(exc) if isinstance(exc,AssertionError) else 'AUTH PROBE FAILED: '+type(exc).__name__+' (credentials suppressed)')
     finally:
         if uid:
             auth.update_user(uid,disabled=True,app=provider);auth.revoke_refresh_tokens(uid,app=provider)
@@ -67,3 +76,4 @@ def main():
         client.close();firebase_admin.delete_app(provider)
     return 0 if passed else 1
 if __name__=='__main__':raise SystemExit(main())
+
