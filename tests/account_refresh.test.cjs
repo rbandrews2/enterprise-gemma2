@@ -67,3 +67,31 @@ for(const mode of ['opt-in','opt-out','restore']) test('persistent sign-in '+mod
  assert.equal(exchanges,mode==='opt-in'?1:0);assert.equal(signins,mode==='restore'?0:1);
  await bar.children.find(c=>c.textContent==='Sign out').onclick();assert.equal(cookie,false);assert.equal(reloads,1);
 });
+for(const cancelled of [false,true]) test('passkey sign-in '+(cancelled?'cancellation retains password fallback':'uses Google exchange and organization checks'),async()=>{
+ const body=new Element('body'),bar=new Element('bar');let exchanged=0,verified=0;
+ const ok=data=>({ok:true,json:async()=>data});
+ const fetch=async(url,options)=>{
+  if(url==='/api/account/passkeys/login/options')return ok({challenge:'YWJj',rpId:'localhost',userVerification:'required'});
+  if(url==='/api/account/passkeys/login/verify'){
+   verified++;const credential=JSON.parse(options.body).credential;
+   assert.equal(credential.response.signature,'AQID');assert.equal(credential.rawId,'AQID');return ok({custom_token:'verified-custom'});
+  }
+  if(url.includes('signInWithCustomToken')){exchanged++;assert.equal(JSON.parse(options.body).token,'verified-custom');return ok({idToken:'google-id',refreshToken:'refresh',expiresIn:3600});}
+  if(url==='/api/account'){assert.equal(options.headers.Authorization,'Bearer google-id');return ok({organizations:[{id:'org-1',name:'Synthetic',role:'member',edition:'core'}]});}
+  if(url==='/api/session')return ok({organization:'Synthetic',can_manage_team:false});
+  throw Error('Unexpected request '+url);
+ };
+ const buffer=Uint8Array.from([1,2,3]).buffer;
+ const sandbox={window:{isSecureContext:true,PublicKeyCredential:function(){}},navigator:{credentials:{get:async({publicKey})=>{
+  assert.deepEqual(Array.from(publicKey.challenge),[97,98,99]);assert.equal(publicKey.userVerification,'required');
+  if(cancelled){const e=Error();e.name='NotAllowedError';throw e;}
+  return {id:'AQID',rawId:buffer,type:'public-key',response:{clientDataJSON:buffer,authenticatorData:buffer,signature:buffer,userHandle:buffer},getClientExtensionResults:()=>({})};
+ }}},atob,btoa,Uint8Array,document:{body,createElement:t=>new Element(t),querySelector:()=>bar},fetch,Date,URLSearchParams,location:{hostname:'localhost',reload(){}}};
+ vm.runInNewContext(fs.readFileSync('services/workspace_preview/static/account.js','utf8'),sandbox);
+ const started=sandbox.window.wzosAccount.start({auth_api_key:'fake',passkeys:true});
+ const panel=body.children[0],form=panel.children.find(c=>c.tag==='form');
+ const button=form.children.find(c=>c.textContent==='Sign in with a passkey');assert.equal(button.hidden,false);
+ await button.onclick();await settle();
+ if(cancelled){assert.equal(verified,0);assert.equal(exchanged,0);assert.match(panel.children.at(-1).textContent,/cancelled or timed out/);assert.equal(form.children.find(c=>c.textContent==='Sign in').disabled,false);}
+ else{const choices=panel.children.find(c=>c.className==='account-choices');await choices.children[0].onclick();await started;assert.equal(exchanged,1);assert.equal(verified,1);assert.equal((await sandbox.window.wzosAccount.headers())['X-WZOS-Organization'],'org-1');}
+});

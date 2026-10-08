@@ -4,6 +4,28 @@ window.wzosAccount = (() => {
  let token=null, refresh=null, expires=0, organization=null, key=null, refreshing=null;
  let authHeader='Authorization';
  let authBase='https://identitytoolkit.googleapis.com', tokenBase='https://securetoken.googleapis.com';
+ const from64=s=>Uint8Array.from(atob(s.replace(/-/g,'+').replace(/_/g,'/')),c=>c.charCodeAt(0));
+ const to64=b=>btoa(String.fromCharCode(...new Uint8Array(b))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+ function optionsFromJSON(options){
+  const result={...options,challenge:from64(options.challenge)};
+  if(options.user)result.user={...options.user,id:from64(options.user.id)};
+  for(const field of ['allowCredentials','excludeCredentials'])if(options[field])result[field]=options[field].map(c=>({...c,id:from64(c.id)}));
+  return result;
+ }
+ function credentialJSON(credential){
+  const r=credential.response, response={clientDataJSON:to64(r.clientDataJSON)};
+  for(const field of ['attestationObject','authenticatorData','signature','userHandle'])if(r[field])response[field]=to64(r[field]);
+  if(r.getTransports)response.transports=r.getTransports();
+  return {id:credential.id,rawId:to64(credential.rawId),type:credential.type,response,clientExtensionResults:credential.getClientExtensionResults()};
+ }
+ async function passkeyCeremony(kind){
+  try{
+   const options=await api(`/api/account/passkeys/${kind}/options`,{});
+   const credential=await navigator.credentials[kind==='register'?'create':'get']({publicKey:optionsFromJSON(options)});
+   if(!credential)throw Error('Passkey request cancelled. You can use your password.');
+   return await api(`/api/account/passkeys/${kind}/verify`,{credential:credentialJSON(credential)});
+  }catch(e){if(e.name==='NotAllowedError'||e.name==='AbortError')throw Error('Passkey request cancelled or timed out. You can use your password.');throw e;}
+ }
  const element=(tag,text)=>{const n=document.createElement(tag);if(text)n.textContent=text;return n;};
  async function provider(action,body){
   const r=await fetch(`${authBase}/v1/accounts:${action}?key=${encodeURIComponent(key)}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
@@ -31,6 +53,7 @@ window.wzosAccount = (() => {
    if(!['127.0.0.1','localhost'].includes(location.hostname)||config.auth_emulator!=='http://127.0.0.1:9099')throw Error('Local authentication configuration refused.');
    authBase=config.auth_emulator+'/identitytoolkit.googleapis.com';tokenBase=config.auth_emulator+'/securetoken.googleapis.com';
   }
+  const passkeysAvailable=Boolean(config.passkeys&&window.isSecureContext&&window.PublicKeyCredential&&navigator.credentials);
   const panel=element('dialog');panel.className='account-dialog';
   const title=element('h2','Welcome to WZOS');const note=element('p',key?'Sign in to your organization.':'Account sign-in is awaiting Google authentication configuration.');
   const email=element('input');email.type='email';email.autocomplete='username';email.required=true;
@@ -43,8 +66,9 @@ window.wzosAccount = (() => {
   const signup=element('button','Create account');signup.type='button';signup.disabled=!key;
   const reset=element('button','Reset password');reset.type='button';reset.disabled=!key;
   const verify=element('button','Resend verification email');verify.type='button';verify.disabled=!key;
+  const passkey=element('button','Sign in with a passkey');passkey.type='button';passkey.hidden=!passkeysAvailable;
   const message=element('p');message.setAttribute('role','status');
-  form.append(emailLabel,passwordLabel,rememberLabel,privacy,signin,signup,reset,verify);panel.append(title,note,form,message);document.body.append(panel);panel.addEventListener('cancel',e=>e.preventDefault());panel.showModal();
+  form.append(emailLabel,passwordLabel,rememberLabel,privacy,signin,passkey,signup,reset,verify);panel.append(title,note,form,message);document.body.append(panel);panel.addEventListener('cancel',e=>e.preventDefault());panel.showModal();
   const session=await new Promise(resolve=>{
    let working=false;
    async function run(task){if(working)return;working=true;for(const b of panel.querySelectorAll('button'))b.disabled=true;try{await task();}catch(e){message.textContent=e.message;}finally{working=false;for(const b of panel.querySelectorAll('button'))b.disabled=!key;}}
@@ -69,6 +93,14 @@ window.wzosAccount = (() => {
     await choose();
    }
    if(config.persistent_sessions)run(async()=>{try{await choose();}catch(e){token=null;refresh=null;expires=0;form.hidden=false;message.textContent="Sign in to continue.";}});
+   passkey.onclick=()=>run(async()=>{
+    if(config.persistent_sessions)await api('/api/account/logout',{});
+    const proof=await passkeyCeremony('login');
+    const data=await provider('signInWithCustomToken',{token:proof.custom_token,returnSecureToken:true});
+    token=data.idToken;refresh=data.refreshToken;expires=Date.now()+Number(data.expiresIn)*1000;
+    if(remember.checked&&config.persistent_sessions){await api('/api/account/session',{});token=null;refresh=null;expires=0;}
+    await choose();
+   });
    form.onsubmit=e=>{e.preventDefault();run(()=>login(false));};signup.onclick=()=>run(()=>login(true));
    reset.onclick=()=>run(async()=>{if(!email.reportValidity())return;await provider('sendOobCode',{requestType:'PASSWORD_RESET',email:email.value.trim()});message.textContent='If the account is eligible, a reset email will arrive.';});
    verify.onclick=()=>run(async()=>{
@@ -88,6 +120,21 @@ window.wzosAccount = (() => {
    }catch(e){status.textContent=e.message;}
   };controls.append(manage);}
   controls.querySelector('strong').textContent='WZOS ACCOUNT';controls.querySelector('span').textContent=session.organization;
+  if(passkeysAvailable){
+   const manageKeys=element('button','Passkeys');manageKeys.onclick=async()=>{
+    const dialog=element('dialog');dialog.className='account-dialog';
+    const status=element('p');status.setAttribute('role','status');
+    const close=element('button','Close');close.onclick=()=>{dialog.close();dialog.remove();};
+    const add=element('button','Add a passkey');
+    dialog.append(element('h2','Your passkeys'),element('p','Use your device fingerprint, face, screen lock or security key. Sign in again first if requested. Your password remains available.'),status,add,close);
+    document.body.append(dialog);dialog.showModal();
+    add.onclick=async()=>{add.disabled=true;try{await passkeyCeremony('register');status.textContent='Passkey added. Close and reopen this panel to view it.';}catch(e){status.textContent=e.message;}finally{add.disabled=false;}};
+    try{const data=await api('/api/account/passkeys');for(const item of data.items){
+     const row=element('section');row.append(element('p',item.label));const remove=element('button','Remove passkey');
+     remove.onclick=async()=>{remove.disabled=true;try{await api('/api/account/passkeys/'+encodeURIComponent(item.id),null,'DELETE');token=null;refresh=null;expires=0;location.reload();}catch(e){status.textContent=e.message;remove.disabled=false;}};row.append(remove);dialog.append(row);
+    }}catch(e){status.textContent=e.message;}
+   };controls.append(manageKeys);
+  }
   const logout=element('button','Sign out');logout.onclick=async()=>{logout.disabled=true;try{if(config.persistent_sessions)await api('/api/account/logout',{});token=null;refresh=null;expires=0;location.reload();}catch(e){logout.textContent='Sign out failed — retry';logout.disabled=false;}};controls.append(logout);
   if(config.persistent_sessions){const all=element('button','Forget remembered devices');all.onclick=async()=>{all.disabled=true;try{await api('/api/account/logout-all',{});token=null;refresh=null;expires=0;location.reload();}catch(e){all.textContent='Could not forget devices — retry';all.disabled=false;}};controls.append(all);}
   document.querySelector('.app-footer span:last-child').textContent='Private organization workspace';

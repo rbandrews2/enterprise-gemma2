@@ -33,6 +33,14 @@ class FirebaseVerifier:
         from firebase_admin import auth
         return auth.create_session_cookie(token, expires_in=lifetime, app=self.app)
 
+    def passkey_token(self, uid):
+        from firebase_admin import auth
+        user = auth.get_user(uid, app=self.app)
+        if user.disabled or not user.email_verified:
+            raise ValueError("Account unavailable")
+        token = auth.create_custom_token(uid, app=self.app)
+        return token.decode("utf-8") if isinstance(token, bytes) else token
+
     def verify_session(self, cookie):
         from firebase_admin import auth
         return auth.verify_session_cookie(cookie, app=self.app, check_revoked=True)
@@ -138,6 +146,8 @@ class Accounts:
     def register(self, app):
         from .browser_sessions import register
         register(app, self)
+        from .passkeys import register as register_passkeys
+        self.passkeys_enabled = register_passkeys(app, self)
         @app.get('/api/account/members')
         def members(request: Request):
             selected=self.actor(request)

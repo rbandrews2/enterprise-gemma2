@@ -3,3 +3,4 @@ psycopg[binary]==3.3.6
 psycopg_pool==3.3.3
 firebase-admin==7.6.0
 google-cloud-storage==3.14.1
+webauthn==3.0.1
