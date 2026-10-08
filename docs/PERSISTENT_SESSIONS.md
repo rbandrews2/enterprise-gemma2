@@ -15,3 +15,7 @@ Reference: https://firebase.google.com/docs/auth/admin/manage-cookies
 ## October 8 validation follow-up
 
 Candidate780f473: full local309tests,256passed/53PostgreSQLskipped; account JavaScript5passed. Added provider-failure preservation, session replacement and required-header tests. PostgreSQL run at4f73180 is awaiting Docker image extraction in Cloud Shell; not accepted. Inspect ~/wzos-session-gate.log before retrying. Real provider cookie and mobile lifecycle acceptance remain open. Metadata-only credential audit now handles lowercase gcloud states; both expected secrets have enabled version1, but runtime access is unverified.
+
+PostgreSQL acceptance October8: candidate40c9439 passed all309tests with zero skips in60.034s using scripts/test_postgres_native.sh on installed PostgreSQL16 in Cloud Shell. Docker download was stopped after stalling; initial native SQL_ASCII setup was corrected to UTF8. Full Node19passed. Provider/browser/device acceptance remains separate.
+
+Real-provider acceptance October8: scripts/validate_provider_sessions.py passed against enterprise-gemma2 using the existing authorized Cloud Shell preview origin and Secret Manager web key (not printed). Verified real ID token,14-day cookie issuance, verification and rejection after revocation; synthetic user disabled on exit. No organization membership, shared database writes, email or deployment. Empty temporary-cluster directory listing verified cleanup. Integrated browser cookie transport, reopen/logout and real phone lifecycle remain open.
