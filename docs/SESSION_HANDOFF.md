@@ -4,6 +4,8 @@ Ray authorized a separate restricted Google Cloud V2 staging deployment. Product
 
 ## Latest resume checkpoint
 
+October 8 TIME CLOCK POSTGRESQL TEST PREPARATION: isolated codex/timeclock-db branch from PR1 6410fbf now injects storage and runs all11 correction scenarios through a disposable PostgreSQL subclass. Removed direct SQLite fixture connections/rowid. Focused28:17passed/11PostgreSQLskipped; syntax/diff checks passed. No runtime/schema changes, merge, or deployment. New PostgreSQL cases remain unexecuted. Ray is still running the earlier Forms Cloud Shell gate; do not interrupt or duplicate it. Claude worktrees unchanged.
+
 October 8 TIME CLOCK DATABASE REVIEW: while Ray runs the Forms Cloud Shell gate, reviewed isolated PR1 at6410fbf. Found missing PostgreSQL coverage for correction/offline scenarios; tests hardcode SQLite and export fixture uses rowid. Local17pass does not establish PostgreSQL acceptance. See TIME_CLOCK_DATABASE_REVIEW_20261008.md for scoped integration repair. Cloud Shell run result still awaited; no duplicate job or deployment started.
 
 October 8 LOCAL REGRESSION GATE: isolated Forms candidate f52996d full Python suite269:233passed/36PostgreSQLskipped (245.272s); Node13passed. Isolated Time Clock6410fbf focused17passed in the preceding follow-up. These do not satisfy PostgreSQL/private-GCS/UI or real Atlas acceptance. Chrome Cloud Shell tab control timed out again after Ray confirmed reconnection; no cloud command, paid action, or deployment was launched. Next restore browser control or run the documented disposable Cloud Shell PostgreSQL command, then private GCS/UI checks before Forms merge. Claude checkouts unchanged; Time Clock startup DDL remains pending PostgreSQL validation.
