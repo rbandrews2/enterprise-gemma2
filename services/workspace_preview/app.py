@@ -530,6 +530,8 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
     team_modules.register(app, connect, actor, roster, synthetic=not account_workspace)
     modules.register(app, connect, actor, permitted_row, roster, synthetic=not account_workspace)
     forms_hub.register(app, connect, actor, roster, file_store=file_store)
+    from . import form_submissions
+    form_submissions.register(app, connect, actor)
     if accounts:
         accounts.register(app)
         app.state.accounts = accounts
@@ -539,6 +541,10 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
     @app.get("/files.js")
     def files_script():
         return FileResponse(STATIC / "files.js", media_type="text/javascript")
+
+    @app.get("/review-workflows.js")
+    def review_workflows_script():
+        return FileResponse(STATIC / "review-workflows.js", media_type="text/javascript")
 
     @app.get("/account.js")
     def account_script():
