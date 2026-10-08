@@ -28,3 +28,24 @@ Inspect for an existing role before creation; do not overwrite conflicting defin
 ## Task 3: not started
 
 User requested strict sequence. Organization setup/invitations/recovery/employee profiles and entitlements follow task2 acceptance.
+
+## Approved signing change and live authentication follow-up
+
+Ray approved the exact self-scoped signBlob grant. Applied and read back: wzosPasskeySigner contains only iam.serviceAccounts.signBlob; binding is runtime principal on its own service-account resource. No project-wide Token Creator grant.
+
+Billing overview observed October8: October1-8 cost13.55USD before savings,12.05USD after savings, subject to reporting lag; this is not an exact October8-17 spend ledger. Build26seconds SUCCESS. Existing image digest used as base to preserve source binaries; current tested services/shared/knowledge plus pinned requirements copied over. Cloud Run restricted account service revision00030-c6h deployed from app candidatebcf3bc9. Only image/passkey origin/RP configuration changed; service policy still has no public binding. No GPU, V1 or DNS changes.
+
+Live operator probe0e84c96: real Google sign-in, synthetic WebAuthn ceremony, runtime token signing and Google custom-token exchange PASSED. The first probe had a KeyError from expecting localId in Google's response; fixed by verifying the returned ID token's signed uid. Its identity was disabled/revoked but an inert public-key row may remain. Second probe removed its credential and disabled/revoked its identity.
+
+Remembered-session endpoint FAILED503. Runtime inspected grants omit firebaseauth.users.createSession, which Google's official mapping requires for CreateSessionCookie: https://docs.cloud.google.com/identity-platform/docs/access-control . This is a identified missing prerequisite and likely cause; the generic503 alone does not prove the provider cause. Effective policy troubleshooting was unavailable because the Policy Troubleshooter API is disabled; it was not enabled.
+
+### Next narrow permission proposal — not yet applied
+
+Create wzosSessionIssuer with only firebaseauth.users.createSession and bind it on project enterprise-gemma2 to the staging runtime. This lets the backend issue remembered-session cookies for authenticated users. It does not grant user creation, deletion or modification. Requires action-time approval for expanded authentication access.
+
+```bash
+gcloud iam roles create wzosSessionIssuer --project=enterprise-gemma2 --title='WZOS remembered-session issuer' --permissions=firebaseauth.users.createSession --stage=GA
+gcloud projects add-iam-policy-binding enterprise-gemma2 --member=serviceAccount:wzos-v2-accounts@enterprise-gemma2.iam.gserviceaccount.com --role=projects/enterprise-gemma2/roles/wzosSessionIssuer
+```
+
+Inspect for an existing role first. Rollback removes this exact project binding. Rerun scripts/validate_live_passkeys.py after approval; do not deploy again just for an IAM change. Android device available from Ray; real browser/device test remains pending server session acceptance. iPhone remains untested. Task3 stays queued under the requested sequence.
