@@ -333,7 +333,7 @@
   const actions=node('div',null,'forms-actions');
   const values=()=>({fields:Object.fromEntries([...inputs].map(([k,c])=>[k,c.read()])),order:order.value,location:location.value.trim()});
   const print=button('Print or save as PDF','primary');print.onclick=()=>printDocument(t,values());
-  const save=button('Download filled form');save.onclick=()=>{downloadDocument(t,values());dirty=false;};
+  const save=button('Download filled form');save.onclick=()=>downloadDocument(t,values());
   const clear=button('Clear entries');clear.onclick=()=>{if(!confirm('Clear everything you entered on this form?'))return;for(const c of inputs.values())c.clear();order.value='';location.value='';dirty=false;heading.focus();};
   const close=button('Close');close.onclick=()=>{if(!canDiscard())return;dirty=false;editor.hidden=true;editor.replaceChildren();if(opener?.isConnected)opener.focus();};
   actions.append(print,save,clear,close);form.append(actions);editor.append(form);
@@ -369,7 +369,7 @@
   const title=node('title',`${t.title}${data?'':' (blank)'}`);
   const html=`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">${title.outerHTML}<style>${DOC_CSS}</style></head><body>${buildDocument(t,data).outerHTML}</body></html>`;
   const url=URL.createObjectURL(new Blob([html],{type:'text/html'})),a=node('a');a.href=url;a.download=`wzos-${t.id}-${data?'filled':'blank'}-${today()}.html`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
-  notice(`Downloaded ${t.title}${data?' with your entries':' (blank)'}. Open the file in any browser to print it or save it as a PDF.`);
+  notice(`Download requested for ${t.title}${data?' with your entries':' (blank)'}. Check your browser downloads before leaving. Open the file in any browser to print it or save it as a PDF.`);
  }
 
  async function show(){
