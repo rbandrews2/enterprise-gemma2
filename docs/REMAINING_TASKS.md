@@ -9,6 +9,10 @@ Product: WZOS powered by Atlas AI Assistant.
 
 This is the current sequential remaining-work list. Ray can add items or revise priorities in Plan mode. Work resumes on explicit user requests; this document does not authorize production cutover. Use SESSION_HANDOFF.md for verified state and the dated evidence documents for completed tests. Older roadmap/checklist status paragraphs are historical, not instructions to repeat completed work.
 
+## October 8 review-workflow increment
+
+Internal saved-form submissions and self-reported training acknowledgements now have immutable snapshots and organization-scoped admin review in the local integration candidate. They do not include external sending, attachments or qualification issuance. New startup DDL requires PostgreSQL acceptance before deployment. See INTERNAL_FORM_SUBMISSIONS.md, TRAINING_ACKNOWLEDGEMENTS.md and the concise ordered list in REMAINING_RELEASE_WORK.md.
+
 ## Starting point
 
 Restricted Google account/database/private-file and SQL restore acceptance already passed. Full-size private Atlas replies and authenticated module guidance passed bounded earlier tests. The preserved source library is now in the staging image. Last verified staging revision 00029-d6k is Ready with Atlas disabled; trial GPU removed and synthetic accounts disabled. The September 29 saved-job/candidate-citation reply passed in 5.288 seconds; see ATLAS_CITED_ACCEPTANCE_20260929.md. Source freshness and job applicability are not approved. Existing code and useful V1 assets will be reused before replacements are built; Supabase is not the replacement runtime.

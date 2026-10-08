@@ -532,6 +532,8 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
     forms_hub.register(app, connect, actor, roster, file_store=file_store)
     from . import form_submissions
     form_submissions.register(app, connect, actor)
+    from . import training_records
+    training_records.register(app, connect, actor)
     if accounts:
         accounts.register(app)
         app.state.accounts = accounts
