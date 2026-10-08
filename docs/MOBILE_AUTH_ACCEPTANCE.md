@@ -8,7 +8,7 @@ Ray's requirement: members primarily use smartphones; admins primarily use deskt
 
 ## Authentication status
 
-Persistent sessions now implemented locally in the integration candidate; not deployed or real-provider accepted. See PERSISTENT_SESSIONS.md. Passkeys remain unimplemented.
+Persistent sessions now implemented locally in the integration candidate; not deployed or real-provider accepted. See PERSISTENT_SESSIONS.md. Passkeys are implemented in the integration candidate, disabled by default pending PostgreSQL, Google custom-token signing and device acceptance; see PASSKEYS.md.
 
 ## Required authentication acceptance
 - Explicit unchecked-by-default choice: Stay signed in on this device; alternate Sign in each time. Explain expiry and shared-device use.
@@ -24,3 +24,5 @@ Phone widths320/360/390/430, tablets768/1024, desktop1440; portrait/landscape, k
 Official references:
 https://firebase.google.com/docs/auth/admin/manage-cookies
 https://developers.google.com/identity/passkeys
+
+October8 desktop browser: synthetic same-origin provider verified opt-in cookie restoration after reload/new tab, logout across tabs, and opt-out login after reload. Not a full browser-process restart or real-phone/Google integrated acceptance.

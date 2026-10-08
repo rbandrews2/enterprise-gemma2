@@ -23,7 +23,7 @@ See [operational integration matrix](OPERATIONAL_INTEGRATION_20261008.md). The c
 
 ## Mobile access requirement
 
-Phone-first members, desktop-first admins, both fully responsive. Persistence opt-in is implemented in the integration candidate. October8 combined PostgreSQL309tests/zero skips and real Google cookie issuance/revocation passed. Integrated browser transport/reopen/logout and real-phone lifecycle acceptance remain pending. Passkey/biometric login remains unimplemented. See MOBILE_AUTH_ACCEPTANCE.md.
+Phone-first members, desktop-first admins, both fully responsive. Persistence opt-in is implemented in the integration candidate. October8 combined PostgreSQL309tests/zero skips and real Google cookie issuance/revocation passed. Desktop synthetic-provider browser transport/reload/new-tab/logout and opt-out checks passed. Real Google integrated HTTPS, browser restart and real-phone lifecycle remain pending. Passkeys are implemented in the candidate and disabled by default pending new PostgreSQL/schema, token-signing IAM and real-device gates; see PASSKEYS.md. See MOBILE_AUTH_ACCEPTANCE.md.
 
 ## Sequential checklist
 
