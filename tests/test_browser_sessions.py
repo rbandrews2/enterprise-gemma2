@@ -61,6 +61,24 @@ class BrowserSessionTests(unittest.TestCase):
         with self.storage.connect() as db:db.execute('UPDATE browser_sessions SET expires_at=? WHERE hash=?',('2000-01-01',digest(value)))
         self.assertEqual(self.client.get('/api/account',headers=self.h).status_code,401)
         self.assertEqual(self.client.get('/api/account',headers={**self.h,'Cookie':COOKIE+'=forged'}).status_code,401)
+    def test_failed_issuance_preserves_existing_session(self):
+        self.login();original=self.client.cookies.get(COOKIE)
+        with patch.object(self.provider,'create_session',side_effect=RuntimeError('private provider detail')):
+            response=self.client.post('/api/account/session',headers={**self.h,'Authorization':'Bearer valid'})
+        self.assertEqual(response.status_code,503)
+        self.assertNotIn('private provider detail',response.text)
+        self.assertNotIn('set-cookie',response.headers)
+        self.assertEqual(self.client.cookies.get(COOKIE),original)
+        self.assertEqual(self.client.get('/api/account',headers=self.h).status_code,200)
+
+    def test_replacement_invalidates_old_cookie_and_logout_needs_csrf_header(self):
+        self.login();original=self.client.cookies.get(COOKIE)
+        self.login()
+        self.assertNotEqual(self.client.cookies.get(COOKIE),original)
+        self.assertEqual(self.client.get('/api/account',headers={**self.h,'Cookie':COOKIE+'='+original}).status_code,401)
+        self.assertEqual(self.client.post('/api/account/logout').status_code,403)
+        self.assertEqual(self.client.get('/api/account',headers=self.h).status_code,200)
+
     def test_all_devices_and_membership_rechecked(self):
         self.login();first=self.client.cookies.get(COOKIE)
         # A second independent browser keeps its own registry entry.
