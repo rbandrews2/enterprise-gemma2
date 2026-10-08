@@ -2,10 +2,8 @@ import csv
 import io
 import json
 import os
-import sqlite3
 import tempfile
 import unittest
-from contextlib import closing
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from unittest.mock import patch
@@ -15,6 +13,7 @@ from fastapi.testclient import TestClient
 
 from services.v2.knowledge.store import Store
 from services.workspace_preview.app import create_app
+from services.workspace_preview.storage import SQLiteStorage
 
 MEMBER, ADMIN = {'X-Preview-Actor': 'core-general'}, {'X-Preview-Actor': 'core-admin'}
 OTHER_ADMIN, OTHER_MEMBER = {'X-Preview-Actor': 'enterprise-admin'}, {'X-Preview-Actor': 'enterprise-general'}
@@ -33,12 +32,16 @@ class TimeClockCorrectionTests(unittest.TestCase):
         self.env = patch.dict(os.environ, {'WZOS_WORKSPACE_PREVIEW': '1', 'K_SERVICE': '', 'GAE_ENV': '', 'NETLIFY': ''})
         self.env.start()
         self.db = Path(self.temp.name) / 'db.sqlite'
+        self.storage = self.make_storage()
         self.client = self.make_client()
         self.now = patch('services.workspace_preview.timeclock.utc_now', return_value=NOW)
         self.now.start()
 
+    def make_storage(self):
+        return SQLiteStorage(self.db)
+
     def make_client(self):
-        client = TestClient(create_app(self.db, Store(Path(self.temp.name) / 'sources', {})))
+        client = TestClient(create_app(self.db, Store(Path(self.temp.name) / 'sources', {}), storage=self.storage))
         client.__enter__()
         return client
 
@@ -266,16 +269,18 @@ class TimeClockCorrectionTests(unittest.TestCase):
         self.assertEqual(self.client.get('/api/time/export?start_date=2026-09-23&end_date=2026-09-22', headers=MEMBER).status_code, 422)
 
     def test_export_limit_and_formula_safety(self):
-        with closing(sqlite3.connect(self.db)) as conn, conn:
-            for n in range(1001):
+        with self.storage.connect() as conn:
+            fixture_ids = [str(uuid4()) for _ in range(1001)]
+            for n, fixture_id in enumerate(fixture_ids):
                 payload = {'clock_in': f'2026-01-01T00:00:{n % 60:02d}+00:00', 'clock_out': None, 'task': 'other', 'order_id': None,
                            'order_title': '=HYPERLINK("x")', 'note': '', 'breaks': [], 'segments': []}
-                conn.execute('INSERT INTO preview_shifts VALUES (?,?,?,?,?,?)', (str(uuid4()), 'core-demo', 'core-general', 1, 0, json.dumps(payload)))
+                conn.execute('INSERT INTO preview_shifts VALUES (?,?,?,?,?,?)', (fixture_id, 'core-demo', 'core-general', 1, 0, json.dumps(payload)))
         self.assertEqual(self.client.get('/api/time/export', headers=MEMBER).status_code, 422)
         safe = self.client.get('/api/time/export?employee_id=core-general&team=true&start_date=2026-01-01&end_date=2026-01-01', headers=ADMIN)
         self.assertEqual(safe.status_code, 422)
-        with closing(sqlite3.connect(self.db)) as conn, conn:
-            conn.execute("DELETE FROM preview_shifts WHERE rowid IN (SELECT rowid FROM preview_shifts LIMIT 1000)")
+        with self.storage.connect() as conn:
+            for fixture_id in fixture_ids[:1000]:
+                conn.execute("DELETE FROM preview_shifts WHERE id=?", (fixture_id,))
         text = self.client.get('/api/time/export', headers=MEMBER).text
         self.assertIn("'=HYPERLINK", text)
 
@@ -289,6 +294,28 @@ class TimeClockCorrectionTests(unittest.TestCase):
             self.assertEqual(len(second.get('/api/time/offline-submissions?team=true', headers=ADMIN).json()['items']), 1)
         finally:
             second.__exit__(None, None, None)
+
+
+@unittest.skipUnless(os.getenv('WZOS_TEST_DATABASE_URL'), 'Dedicated PostgreSQL test database not configured')
+class PostgreSQLTimeClockCorrectionTests(TimeClockCorrectionTests):
+    """Run every correction scenario against an isolated PostgreSQL schema."""
+    def make_storage(self):
+        from psycopg.conninfo import make_conninfo
+        from services.workspace_preview.postgres import PostgreSQLStorage
+        dsn = os.environ['WZOS_TEST_DATABASE_URL']
+        schema = 'test_' + uuid4().hex
+        bootstrap = PostgreSQLStorage(dsn)
+        self.addCleanup(bootstrap.close)
+        with bootstrap.connect() as db:
+            db.execute('CREATE SCHEMA ' + schema)
+        def drop():
+            with bootstrap.connect() as db:
+                db.execute('DROP SCHEMA ' + schema + ' CASCADE')
+        self.addCleanup(drop)
+        storage = PostgreSQLStorage(make_conninfo(dsn, options='-c search_path=' + schema))
+        self.addCleanup(storage.close)
+        storage.initialize()
+        return storage
 
 
 if __name__ == '__main__':
