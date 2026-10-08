@@ -1,14 +1,37 @@
 """Private, bounded file persistence shared by all workspace modules."""
 import hashlib
+import io
 import re
+import zipfile
 from pathlib import Path
 from typing import Literal
 from uuid import UUID
 from fastapi import HTTPException, Query, Request
 from fastapi.responses import Response
+from services.workspace_preview.forms_hub import file_access as form_library_access, file_id_retired as form_library_retired
 
 MAX_BYTES = 10 * 1024 * 1024
 TYPES = {'application/pdf': b'%PDF-', 'image/png': b'\x89PNG\r\n\x1a\n', 'image/jpeg': b'\xff\xd8\xff'}
+# Word and Excel (Office Open XML, macro-free) are accepted only for Forms Hub team forms.
+OFFICE = {'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'word/document.xml',
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'xl/workbook.xml'}
+KIND_TYPES = {'order': set(TYPES), 'form': set(TYPES), 'form_library': set(TYPES) | set(OFFICE)}
+KIND_TYPE_ERRORS = {'form_library': 'Use a PDF, PNG, JPEG, Word (.docx) or Excel (.xlsx) file'}
+
+
+def office_document_ok(data, content_type):
+    """Accept only a well-formed .docx/.xlsx package without macros. Reads the ZIP directory, not the contents."""
+    try:
+        with zipfile.ZipFile(io.BytesIO(data)) as package:
+            names = package.namelist()
+            if len(names) > 5000 or OFFICE[content_type] not in names or '[Content_Types].xml' not in names:
+                return False
+            if any(n.lower().endswith('vbaproject.bin') for n in names):
+                return False
+            info = package.getinfo('[Content_Types].xml')
+            return info.file_size <= 1024 * 1024 and b'macroEnabled' not in package.read(info)
+    except (zipfile.BadZipFile, KeyError, ValueError, RuntimeError, NotImplementedError, EOFError):
+        return False
 
 
 class LocalFiles:
@@ -38,6 +61,9 @@ class LocalFiles:
         if path.stat().st_size > MAX_BYTES:
             raise ValueError('Stored file exceeds limit')
         return path.read_bytes()
+
+    def delete(self, key):
+        self.path(key).unlink(missing_ok=True)
 
 
 class GoogleFiles:
@@ -70,43 +96,66 @@ class GoogleFiles:
             raise ValueError('Stored file exceeds limit')
         return blob.download_as_bytes(if_generation_match=blob.generation, timeout=30)
 
+    def delete(self, key):
+        from google.api_core.exceptions import NotFound
+        try:
+            self.bucket.blob(key).delete(timeout=20)
+        except NotFound:
+            pass
+
 
 def register(app, connect, actor, permitted_order, store):
     with connect() as db:
         db.execute('CREATE TABLE IF NOT EXISTS workspace_files (id TEXT PRIMARY KEY,organization_id TEXT NOT NULL,owner_id TEXT NOT NULL,entity_kind TEXT NOT NULL,entity_id TEXT NOT NULL,filename TEXT NOT NULL,content_type TEXT NOT NULL,size_bytes INTEGER NOT NULL,sha256 TEXT NOT NULL,object_key TEXT NOT NULL)')
 
-    def parent(db, user, kind, record_id):
+    def parent(db, user, kind, record_id, write=False, file_id=None):
         if kind == 'order':
             permitted_order(db,record_id,user)
         elif kind == 'form':
             row=db.execute("SELECT owner_id FROM module_records WHERE organization_id=? AND kind='forms' AND id=?",(user['organization_id'],record_id)).fetchone()
             if not row or (user['role']!='admin' and row['owner_id']!=user['id']):
                 raise HTTPException(404,'Form not found')
+        elif kind == 'form_library':
+            # Forms Hub owns the rule: members get only the published file; admins upload and see unfinished files.
+            form_library_access(db,user,record_id,file_id,write)
+
+    def visible(db, user, kind, record_id, file_id):
+        try:
+            parent(db,user,kind,record_id,file_id=file_id)
+            return True
+        except HTTPException:
+            return False
 
     def metadata(row):
         return {k:row[k] for k in ('id','entity_kind','entity_id','filename','content_type','size_bytes','sha256')}
 
     @app.put('/api/files/{file_id}')
-    async def upload(file_id: UUID, request: Request, entity_kind: Literal['order','form'], entity_id: str=Query(min_length=1,max_length=128), filename: str=Query(min_length=1,max_length=200)):
+    async def upload(file_id: UUID, request: Request, entity_kind: Literal['order','form','form_library'], entity_id: str=Query(min_length=1,max_length=128), filename: str=Query(min_length=1,max_length=200)):
         user=actor(request)
         if not re.fullmatch(r'[\w .()-]+',filename) or filename.startswith('.'):
             raise HTTPException(422,'Use a simple filename without path separators')
         content_type=request.headers.get('content-type','').split(';')[0]
-        if content_type not in TYPES: raise HTTPException(415,'Only PDF, PNG and JPEG files are supported')
-        with connect() as db: parent(db,user,entity_kind,entity_id)
+        if content_type not in KIND_TYPES[entity_kind]: raise HTTPException(415,KIND_TYPE_ERRORS.get(entity_kind,'Only PDF, PNG and JPEG files are supported'))
+        with connect() as db: parent(db,user,entity_kind,entity_id,write=True)
         data=bytearray()
         async for chunk in request.stream():
             if len(data)+len(chunk)>MAX_BYTES: raise HTTPException(413,'File exceeds 10 MiB')
             data.extend(chunk)
         data=bytes(data)
-        if not data.startswith(TYPES[content_type]): raise HTTPException(415,'File signature does not match its type')
+        if content_type in OFFICE:
+            if not office_document_ok(data,content_type): raise HTTPException(415,'Not a valid Word (.docx) or Excel (.xlsx) file without macros')
+        elif not data.startswith(TYPES[content_type]): raise HTTPException(415,'File signature does not match its type')
         sha=hashlib.sha256(data).hexdigest()
         # Hash organization ID to prevent path injection through any identity source.
         key=hashlib.sha256(user['organization_id'].encode()).hexdigest()+'/'+str(file_id)
         values=(str(file_id),user['organization_id'],user['id'],entity_kind,entity_id,filename,content_type,len(data),sha,key)
         with connect() as db:
             db.execute('BEGIN IMMEDIATE')
-            parent(db,user,entity_kind,entity_id)
+            parent(db,user,entity_kind,entity_id,write=True)
+            # All entity kinds share organization/UUID object keys. Enforce retirement across
+            # every upload in the locked transaction, so stale cleanup cannot erase reused keys.
+            if form_library_retired(db,user['organization_id'],file_id):
+                raise HTTPException(409,'This file was deleted. Upload it again as a new file.')
             prior=db.execute('SELECT * FROM workspace_files WHERE id=?',(str(file_id),)).fetchone()
             if prior:
                 if tuple(prior[k] for k in ('id','organization_id','owner_id','entity_kind','entity_id','filename','content_type','size_bytes','sha256','object_key'))!=values:
@@ -118,11 +167,13 @@ def register(app, connect, actor, permitted_order, store):
             return metadata(db.execute('SELECT * FROM workspace_files WHERE id=?',(str(file_id),)).fetchone())
 
     @app.get('/api/files')
-    def listing(request: Request, entity_kind: Literal['order','form'], entity_id: str, offset: int=Query(0,ge=0)):
+    def listing(request: Request, entity_kind: Literal['order','form','form_library'], entity_id: str, offset: int=Query(0,ge=0)):
         user=actor(request)
         with connect() as db:
             parent(db,user,entity_kind,entity_id)
             rows=db.execute('SELECT * FROM workspace_files WHERE organization_id=? AND entity_kind=? AND entity_id=? ORDER BY id LIMIT 50 OFFSET ?',(user['organization_id'],entity_kind,entity_id,offset)).fetchall()
+            if entity_kind=='form_library':
+                rows=[r for r in rows if visible(db,user,entity_kind,entity_id,r['id'])]
         return {'items':[metadata(r) for r in rows]}
 
     @app.get('/api/files/{file_id}')
@@ -131,7 +182,7 @@ def register(app, connect, actor, permitted_order, store):
         with connect() as db:
             row=db.execute('SELECT * FROM workspace_files WHERE id=? AND organization_id=?',(str(file_id),user['organization_id'])).fetchone()
             if not row: raise HTTPException(404,'File not found')
-            parent(db,user,row['entity_kind'],row['entity_id'])
+            parent(db,user,row['entity_kind'],row['entity_id'],file_id=row['id'])
         try:
             data=store.get(row['object_key'])
             if hashlib.sha256(data).hexdigest()!=row['sha256']: raise ValueError('Integrity mismatch')

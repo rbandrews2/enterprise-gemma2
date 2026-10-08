@@ -37,7 +37,7 @@ test('Core report, unknown targets and missing-job links cannot navigate',()=>{
 test('Valid module navigation updates the context and reports success',()=>{
  const {context,events,elements}=navigation();
  assert.equal(context.window.atlasNavigate('forms'),true);
- assert.equal(context.atlasPage,'forms');assert.equal(elements.get('modules-view').hidden,false);
+ assert.equal(context.atlasPage,'forms');assert.equal(elements.get('forms-view').hidden,false);assert.equal(elements.get('modules-view').hidden,true);
  assert.equal(events.at(-1).detail,'forms');
  assert.equal(context.window.atlasNavigate('time_clock'),true);
  assert.equal(context.atlasPage,'time_clock');assert.equal(events.at(-1).type,'wzos:clock-open');

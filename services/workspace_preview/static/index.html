@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>WZOS · Operations workspace</title><link rel="stylesheet" href="/workspace.css"><script src="/account.js" defer></script><script src="/geometry.js" defer></script><script src="/files.js" defer></script><script src="/workspace.js" defer></script><script src="/timeclock.js" defer></script><script src="/modules.js" defer></script><script src="/report-map.js" defer></script><script src="/report.js" defer></script><script src="/team-modules.js" defer></script><script src="/assistant.js" defer></script></head>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>WZOS · Operations workspace</title><link rel="stylesheet" href="/workspace.css"><link rel="stylesheet" href="/forms-hub.css"><script src="/account.js" defer></script><script src="/geometry.js" defer></script><script src="/files.js" defer></script><script src="/workspace.js" defer></script><script src="/timeclock.js" defer></script><script src="/modules.js" defer></script><script src="/forms-hub.js" defer></script><script src="/report-map.js" defer></script><script src="/report.js" defer></script><script src="/team-modules.js" defer></script><script src="/assistant.js" defer></script></head>
 <body>
 <a class="skip" href="#main">Skip to workspace</a>
 <aside class="sidebar">
@@ -92,7 +92,18 @@
  <div class="clock-actions"><button id="clock-in" class="primary">Clock in</button><button id="clock-switch" class="secondary">Switch task</button><button id="clock-break" class="secondary">Start break</button><button id="clock-out" class="secondary">Clock out</button><button id="clock-retry" class="secondary" hidden>Retry unconfirmed action</button></div>
  <p class="fine">GPS and offline clock punches are not enabled. Offline time notes can be downloaded for review; reconnect to record a confirmed clock change.</p>
  </section><section class="panel"><div class="panel-heading"><h2>Time history</h2><label id="clock-team-label" hidden><input id="clock-team" type="checkbox"> Team records</label></div><label>Shift start date from (UTC)<input type="date" id="clock-from"></label><label>Through (UTC)<input type="date" id="clock-to"></label><button type="button" class="secondary" id="clock-export">Export filtered shifts (CSV)</button><div id="clock-history"></div><div class="clock-actions"><button id="clock-prev" class="secondary">Previous</button><button id="clock-next" class="secondary">Next</button></div><p id="clock-page" class="fine"></p></section></div>
-</section></main>
+</section>
+<section id="forms-view" hidden aria-labelledby="forms-title">
+ <div class="page-heading"><div><p class="eyebrow">SAFETY &amp; OPERATIONS</p><h1 id="forms-title">Forms hub</h1><p>Download or print the forms you need. Fill in a WZOS form on screen first if you like; entries are not saved.</p></div><button id="forms-refresh" class="secondary" type="button">Refresh</button></div>
+ <p id="forms-notice" role="status" aria-live="polite"></p>
+ <label class="forms-search">Search forms<input id="forms-search" type="search" maxlength="100" autocomplete="off"></label>
+ <div class="forms-layout">
+  <section class="panel" aria-labelledby="forms-library-title"><h2 id="forms-library-title">Team forms</h2><p class="fine">Forms your admin has added for the team, such as an agency's official forms. WZOS does not edit or verify them.</p><div id="forms-library-admin"></div><div id="forms-library" class="forms-card-list"></div></section>
+  <section class="panel" aria-labelledby="forms-builtin-title"><h2 id="forms-builtin-title">WZOS printable forms</h2><p class="fine">Internal WZOS worksheets. Print or download them blank, or open one to fill in before printing.</p><div id="forms-builtin" class="forms-card-list"></div></section>
+ </div>
+ <section id="forms-editor" class="panel forms-editor" hidden aria-labelledby="forms-editor-title"></section>
+</section>
+</main>
  <footer class="app-footer"><span>WZOS / Core + Enterprise</span><span>All records on this page are synthetic.</span></footer>
 </div>
 <div class="assistant-dock" id="assistant-dock">
@@ -107,4 +118,5 @@
  <button type="button" class="secondary" id="assistant-go">Show me where</button>
  <form id="assistant-question-form"><label for="assistant-question">Ask about an app function<input id="assistant-question" maxlength="300" required placeholder="How do I save a work order?" autocomplete="off"></label><button type="submit" class="primary">Ask Atlas</button></form>
 </section>
+<section id="forms-print" class="forms-print" aria-label="Printable form"></section>
 </body></html>
