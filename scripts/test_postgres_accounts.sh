@@ -11,7 +11,7 @@ for attempt in $(seq 1 40); do
   sleep 1
 done
 port=$(docker port "$container" 5432/tcp | cut -d: -f2)
-python3 -m venv .venv-accounts-test
+test -x .venv-accounts-test/bin/python || python3 -m venv .venv-accounts-test
 .venv-accounts-test/bin/pip -q install -r requirements-accounts.txt
 export WZOS_TEST_DATABASE_URL="postgresql://postgres:${test_password}@127.0.0.1:${port}/wzos_test"
 .venv-accounts-test/bin/python scripts/run_postgres_gate.py
