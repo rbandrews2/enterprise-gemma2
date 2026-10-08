@@ -29,3 +29,12 @@ This is a missing acceptance check, not evidence of a runtime defect.
 The currently running Cloud Shell Forms candidate `f52996d` does not include
 Time Clock PR #1. Its success must not be reported as Time Clock acceptance.
 No schema, deployment, or Claude-owned code was changed by this review.
+
+## Follow-up: PostgreSQL execution passed
+
+Codex candidate `7f1ea0a` ran in Cloud Shell on October 8: 228 tests in
+38.241 seconds, zero failures/errors/skips. All 11 PostgreSQL correction
+scenarios passed, including concurrent edits, restart persistence, offline
+review, export and tenant/role checks. Disposable container cleanup verified.
+The full-suite runner was copied from Forms `f638931`; the harness reused
+the existing virtual environment. Combined-branch and browser gates remain open.
