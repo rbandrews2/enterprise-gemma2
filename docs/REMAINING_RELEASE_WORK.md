@@ -6,7 +6,7 @@ Completed this pass: immutable saved-form internal submissions/admin review; sel
 
 ## Sequential remaining tasks
 
-1. Validate the integrated database schema in PostgreSQL, including passkeys, form submissions and training records; then complete integration branch review/merge.
+1. COMPLETED October8:337PostgreSQL tests/zero skips, private-GCS gate/cleanup and enterprise-v2 merge. See RELEASE_GATES_20261008.md.
 2. Finish restricted HTTPS Google sign-in, remembered-session/logout/revocation and real iOS/Android passkey enrollment/recovery checks.
 3. Finish organization setup, invitations, account recovery, employee profiles/qualifications and Core/Enterprise entitlement acceptance.
 4. Finish Forms Hub attachments, private uploads, signatures, templates, exports and cloud acceptance; connect approved external delivery.
@@ -25,3 +25,4 @@ Completed this pass: immutable saved-form internal submissions/admin review; sel
 17. Obtain production cutover approval and execute the verified release/rollback plan.
 
 See REMAINING_TASKS.md for the detailed historical checklist and SESSION_HANDOFF.md for current evidence. Existing implementation is reused; an open item may require acceptance and remaining integration rather than a rewrite.
+
