@@ -1,5 +1,9 @@
 # WZOS V2 remaining tasks — proposed execution order
 
+## Current development/testing budget
+
+Ray approved **an additional $150 for October 8–17, 2026**, separate from production hosting. Refresh actual usage before paid tests; include build/storage costs and billing lag. Do not exceed this cap without further authorization. Production cutover remains unscheduled.
+
 Updated October 2, 2026 for Ray Andrews, Molecular Project Development LLC.
 Product: WZOS powered by Atlas AI Assistant.
 
