@@ -21,6 +21,10 @@ Ray selected Google Meet; admins create/manage, members view/join only. Manual-l
 
 See [operational integration matrix](OPERATIONAL_INTEGRATION_20261008.md). The combined candidate restores saved member forms; delivery, meetings, training completion, account lifecycle, dispatch and live report/Atlas acceptance remain incomplete. Keep these distinct from menu availability. Admin authority stays inside the organization and edition. Combined PostgreSQL/private-files gates precede merging or deployment.
 
+## Mobile access requirement
+
+Phone-first members, desktop-first admins, both fully responsive. Add explicit persistence opt-in and passkey/biometric-compatible login. These authentication features are pending, not delivered by responsive CSS. See MOBILE_AUTH_ACCEPTANCE.md.
+
 ## Sequential checklist
 
 1. [x] **Finish the pending live Atlas citation test.** Accepted September 29 for one bounded case; see ATLAS_CITED_ACCEPTANCE_20260929.md. Refresh operator authentication, verify Git/cloud state and remaining approved trial spend. Test one saved job through private inference with revision/page citations, missing-evidence warnings, stale-version protection and tenant boundaries. Record the actual answer. Do not repeat previously accepted eight-module tests without a relevant change.

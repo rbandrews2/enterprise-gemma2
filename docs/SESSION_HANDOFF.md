@@ -4,6 +4,9 @@ Ray authorized a separate restricted Google Cloud V2 staging deployment. Product
 
 ## Latest resume checkpoint
 
+Mobile-first requirement: responsive CSS added for phone module cards, touch controls, single-column workspace, input sizing and dialogs. Browser work-order page checked at320/390/1440 with document width below viewport; viewport reset. Full all-module/device acceptance remains pending. Current auth is memory-only; persistence choice and WebAuthn passkeys are NOT implemented. Next implement secure sessions with revocation/CSRF, then passkeys and real-device validation per MOBILE_AUTH_ACCEPTANCE.md.
+
+
 Meeting-room UI: dedicated Video meetings navigation/view with glossy TV frame, organization schedule cards, validated join links and glass navigation cards. Browser verified selecting saved synthetic meeting, member Manage hidden, and switching to Core organization clears card/title/join. Preview8081 refreshed. JS syntax/diff checks passed. No backend/schema/cloud changes. Meet opens externally; no embedded conference or automatic OAuth creation claimed.
 
 
