@@ -20,7 +20,7 @@ class OperatorCredential(credentials.Base):
     def get_credential(self):return Credentials(gc('auth','print-access-token'),quota_project_id=PROJECT)
 def main():
     provider=firebase_admin.initialize_app(OperatorCredential(),options={'projectId':PROJECT})
-    uid=None;passed=False;removed=False;client=requests.Session()
+    uid=None;cid=None;token=None;passed=False;removed=False;client=requests.Session()
     key=gc('secrets','versions','access','latest','--secret=wzos-v2-staging-auth-web-key')
     url=gc('run','services','describe','wzos-v2-accounts','--region=us-central1','--format=value(status.url)')
     client.headers.update({'X-Serverless-Authorization':'Bearer '+gc('auth','print-identity-token'),'Origin':ORIGIN,'X-WZOS-Session':'1'})
@@ -52,7 +52,7 @@ def main():
         credential={'id':enc(cid),'rawId':enc(cid),'type':'public-key','response':{'clientDataJSON':enc(cd),'authenticatorData':enc(data),'signature':enc(signature),'userHandle':enc(hashlib.sha256(uid.encode()).digest())}}
         result=api('/api/account/passkeys/login/verify',{'credential':credential}).json()
         exchanged=google('signInWithCustomToken',{'token':result['custom_token'],'returnSecureToken':True})
-        assert exchanged['localId']==uid,'Custom token identity mismatch'
+        assert auth.verify_id_token(exchanged['idToken'],app=provider)['uid']==uid,'Custom token identity mismatch'
         api('/api/account/passkeys/login/verify',{'credential':credential},expected=401)
         client.headers['X-WZOS-Authorization']='Bearer '+exchanged['idToken']
         api('/api/account/passkeys/'+enc(cid),method='DELETE')
@@ -71,9 +71,16 @@ def main():
         print('AUTH PROBE FAILED: '+str(exc) if isinstance(exc,AssertionError) else 'AUTH PROBE FAILED: '+type(exc).__name__+' (credentials suppressed)')
     finally:
         if uid:
+            if cid and token and not removed:
+                try:
+                    client.headers['X-WZOS-Authorization']='Bearer '+token
+                    cleanup=client.delete(url+'/api/account/passkeys/'+enc(cid),timeout=30)
+                    removed=cleanup.status_code in (200,404)
+                except requests.RequestException:pass
             auth.update_user(uid,disabled=True,app=provider);auth.revoke_refresh_tokens(uid,app=provider)
             print('CLEANUP: synthetic identity disabled and tokens revoked; credential_removed='+str(removed))
         client.close();firebase_admin.delete_app(provider)
     return 0 if passed else 1
 if __name__=='__main__':raise SystemExit(main())
+
 
