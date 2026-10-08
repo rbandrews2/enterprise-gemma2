@@ -23,7 +23,7 @@ See [operational integration matrix](OPERATIONAL_INTEGRATION_20261008.md). The c
 
 ## Mobile access requirement
 
-Phone-first members, desktop-first admins, both fully responsive. Add explicit persistence opt-in and passkey/biometric-compatible login. These authentication features are pending, not delivered by responsive CSS. See MOBILE_AUTH_ACCEPTANCE.md.
+Phone-first members, desktop-first admins, both fully responsive. Persistence opt-in is locally implemented; PostgreSQL/real-provider/browser lifecycle acceptance is pending. Passkey/biometric login remains unimplemented. See MOBILE_AUTH_ACCEPTANCE.md.
 
 ## Sequential checklist
 

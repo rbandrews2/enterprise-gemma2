@@ -294,7 +294,7 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
     @app.get("/api/identities")
     def identities(request: Request):
         if accounts:
-            return {"mode":"verified_accounts", "identities":[], "auth_api_key":os.getenv("WZOS_AUTH_WEB_API_KEY",""), "auth_emulator":auth_emulator, "auth_header":accounts.auth_header}
+            return {"mode":"verified_accounts", "identities":[], "auth_api_key":os.getenv("WZOS_AUTH_WEB_API_KEY",""), "auth_emulator":auth_emulator, "auth_header":accounts.auth_header, "persistent_sessions":hasattr(accounts.verify,"create_session")}
         return {"mode": "restricted_staging" if private_staging else "synthetic_local_preview",
                 "identities": [ACTORS["enterprise-admin"]] if private_staging else list(ACTORS.values())}
 

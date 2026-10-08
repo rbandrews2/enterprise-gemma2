@@ -10,7 +10,7 @@ window.wzosAccount = (() => {
   const data=await r.json();if(!r.ok)throw Error('Account request could not be completed. Check your details or try again.');return data;
  }
  async function headers(){
-  if(!token)return {};
+  if(!token)return {"X-WZOS-Session":"1","X-WZOS-Organization":organization||""};
   if(Date.now()>expires-60000){
    if(!refreshing)refreshing=(async()=>{
     const r=await fetch(`${tokenBase}/v1/token?key=${encodeURIComponent(key)}`,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({grant_type:'refresh_token',refresh_token:refresh})});
@@ -18,7 +18,7 @@ window.wzosAccount = (() => {
    })().finally(()=>refreshing=null);
    await refreshing;
   }
-  return {[authHeader]:'Bearer '+token,'X-WZOS-Organization':organization||''};
+  return {'X-WZOS-Session':'1',[authHeader]:'Bearer '+token,'X-WZOS-Organization':organization||''};
  }
  async function api(path,body,method){
   const r=await fetch(path,{method:method||(body?'POST':'GET'),headers:{'Content-Type':'application/json',...await headers()},...(body?{body:JSON.stringify(body)}:{})});const d=await r.json();if(!r.ok)throw Error(typeof d.detail==='string'?d.detail:'Account request failed');return d;
@@ -36,12 +36,15 @@ window.wzosAccount = (() => {
   const email=element('input');email.type='email';email.autocomplete='username';email.required=true;
   const password=element('input');password.type='password';password.autocomplete='current-password';password.required=true;
   const form=element('form');const emailLabel=element('label','Email');emailLabel.append(email);const passwordLabel=element('label','Password');passwordLabel.append(password);
+  const remember=element('input');remember.type='checkbox';remember.checked=false;
+  const rememberLabel=element('label','Stay signed in on this device for up to 14 days');rememberLabel.className='remember-choice';rememberLabel.append(remember);rememberLabel.hidden=!config.persistent_sessions;
+  const privacy=element('p','Leave unchecked to sign in each time you reload or reopen WZOS. Use this on shared devices.');privacy.hidden=!config.persistent_sessions;
   const signin=element('button','Sign in');signin.type='submit';signin.disabled=!key;
   const signup=element('button','Create account');signup.type='button';signup.disabled=!key;
   const reset=element('button','Reset password');reset.type='button';reset.disabled=!key;
   const verify=element('button','Resend verification email');verify.type='button';verify.disabled=!key;
   const message=element('p');message.setAttribute('role','status');
-  form.append(emailLabel,passwordLabel,signin,signup,reset,verify);panel.append(title,note,form,message);document.body.append(panel);panel.addEventListener('cancel',e=>e.preventDefault());panel.showModal();
+  form.append(emailLabel,passwordLabel,rememberLabel,privacy,signin,signup,reset,verify);panel.append(title,note,form,message);document.body.append(panel);panel.addEventListener('cancel',e=>e.preventDefault());panel.showModal();
   const session=await new Promise(resolve=>{
    let working=false;
    async function run(task){if(working)return;working=true;for(const b of panel.querySelectorAll('button'))b.disabled=true;try{await task();}catch(e){message.textContent=e.message;}finally{working=false;for(const b of panel.querySelectorAll('button'))b.disabled=!key;}}
@@ -58,11 +61,14 @@ window.wzosAccount = (() => {
    }
    async function login(create){
     if(!email.reportValidity()||!password.reportValidity())return;
+    if(config.persistent_sessions)await api('/api/account/logout',{});
     const data=await provider(create?'signUp':'signInWithPassword',{email:email.value.trim(),password:password.value,returnSecureToken:true});
     token=data.idToken;refresh=data.refreshToken;expires=Date.now()+Number(data.expiresIn)*1000;
     if(create){try{await provider('sendOobCode',{requestType:'VERIFY_EMAIL',idToken:token});message.textContent='Check your email to verify your account, then sign in.';}finally{token=null;refresh=null;expires=0;password.value='';}return;}
+    if(remember.checked&&config.persistent_sessions){await api("/api/account/session",{});token=null;refresh=null;expires=0;}
     await choose();
    }
+   if(config.persistent_sessions)run(async()=>{try{await choose();}catch(e){token=null;refresh=null;expires=0;form.hidden=false;message.textContent="Sign in to continue.";}});
    form.onsubmit=e=>{e.preventDefault();run(()=>login(false));};signup.onclick=()=>run(()=>login(true));
    reset.onclick=()=>run(async()=>{if(!email.reportValidity())return;await provider('sendOobCode',{requestType:'PASSWORD_RESET',email:email.value.trim()});message.textContent='If the account is eligible, a reset email will arrive.';});
    verify.onclick=()=>run(async()=>{
@@ -82,7 +88,8 @@ window.wzosAccount = (() => {
    }catch(e){status.textContent=e.message;}
   };controls.append(manage);}
   controls.querySelector('strong').textContent='WZOS ACCOUNT';controls.querySelector('span').textContent=session.organization;
-  const logout=element('button','Sign out');logout.onclick=()=>{token=null;refresh=null;location.reload();};controls.append(logout);
+  const logout=element('button','Sign out');logout.onclick=async()=>{logout.disabled=true;try{if(config.persistent_sessions)await api('/api/account/logout',{});token=null;refresh=null;expires=0;location.reload();}catch(e){logout.textContent='Sign out failed — retry';logout.disabled=false;}};controls.append(logout);
+  if(config.persistent_sessions){const all=element('button','Forget remembered devices');all.onclick=async()=>{all.disabled=true;try{await api('/api/account/logout-all',{});token=null;refresh=null;expires=0;location.reload();}catch(e){all.textContent='Could not forget devices — retry';all.disabled=false;}};controls.append(all);}
   document.querySelector('.app-footer span:last-child').textContent='Private organization workspace';
   return session;
  }

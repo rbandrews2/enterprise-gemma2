@@ -46,3 +46,24 @@ for (const authHeader of ['Authorization','X-WZOS-Authorization']) test(authHead
  assert.equal((await account.headers())[authHeader],'Bearer renewed');
  assert.equal(refreshes,3);
 });
+for(const mode of ['opt-in','opt-out','restore']) test('persistent sign-in '+mode,async()=>{
+ const body=new Element('body'),bar=new Element('bar');let cookie=mode==='restore',exchanges=0,signins=0,reloads=0;
+ const response=(data,ok=true)=>({ok,json:async()=>data});
+ const fetch=async(url,options)=>{
+  if(url.includes('signInWithPassword')){signins++;return response({idToken:'first',refreshToken:'refresh',expiresIn:3600});}
+  if(url==='/api/account/logout'){cookie=false;return response({signed_out:true});}
+  if(url==='/api/account/session'){assert.equal(options.headers.Authorization,'Bearer first');assert.equal(options.headers['X-WZOS-Session'],'1');cookie=true;exchanges++;return response({persistent:true});}
+  if(url==='/api/account'){if(!cookie&&!options.headers.Authorization)return response({detail:'Sign in'},false);return response({organizations:[{id:'org-1',name:'Synthetic',role:'member',edition:'core'}]});}
+  if(url==='/api/session')return response({organization:'Synthetic',can_manage_team:false});
+  throw Error('Unexpected '+url);
+ };
+ const sandbox={window:{},document:{body,createElement:t=>new Element(t),querySelector:()=>bar},fetch,Date,URLSearchParams,location:{hostname:'localhost',reload(){reloads++;}}};
+ vm.runInNewContext(fs.readFileSync('services/workspace_preview/static/account.js','utf8'),sandbox);
+ const account=sandbox.window.wzosAccount,started=account.start({auth_api_key:'fake',persistent_sessions:true});await settle();
+ const panel=body.children[0],form=panel.children.find(c=>c.tag==='form');
+ if(mode!=='restore'){const inputs=form.querySelectorAll('input');inputs[0].value='test@example.test';inputs[1].value='password';assert.equal(inputs[2].checked,false);inputs[2].checked=mode==='opt-in';form.onsubmit({preventDefault(){}});await settle();}
+ const choices=panel.children.find(c=>c.className==='account-choices');assert.ok(choices);await choices.children[0].onclick();await started;
+ const headers=await account.headers();assert.equal(headers['X-WZOS-Organization'],'org-1');assert.equal(headers['X-WZOS-Session'],'1');assert.equal(headers.Authorization,mode==='opt-out'?'Bearer first':undefined);
+ assert.equal(exchanges,mode==='opt-in'?1:0);assert.equal(signins,mode==='restore'?0:1);
+ await bar.children.find(c=>c.textContent==='Sign out').onclick();assert.equal(cookie,false);assert.equal(reloads,1);
+});

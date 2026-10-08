@@ -4,6 +4,9 @@ Ray authorized a separate restricted Google Cloud V2 staging deployment. Product
 
 ## Latest resume checkpoint
 
+Persistent-session foundation: opt-in14-day Secure/HttpOnly/Strict host cookie, recent-auth exchange, hashed active-session registry, logout and forget remembered devices; provider revocation and membership checked. Unchecked mode remains memory-only. Full304Python:253passed/51PGskipped; Node19passed. Browser verified checkbox/explanation only. Additive browser_sessions startup DDL documented in PERSISTENT_SESSIONS.md; no cloud deployment. Next PostgreSQL and actual Google session issuance/browser mobile lifecycle acceptance, then passkey enrollment/authentication. Do not claim biometric access implemented.
+
+
 Quick meeting pagination repair: schedule listing supports meetings_only=true, applying the filter before count/limit/offset. Meeting room requests this filter and labels totals as meetings. Nine module tests passed, including pagination, unfiltered schedule preservation, member read-only and cross-org scope; Node syntax/diff checks passed. No schema/deployment changes. Combined PostgreSQL acceptance remains open. Next major task remains secure persistence choices and passkeys per MOBILE_AUTH_ACCEPTANCE.md.
 
 

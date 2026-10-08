@@ -6,9 +6,13 @@ Ray's requirement: members primarily use smartphones; admins primarily use deskt
 - Two-column glass module navigation on phones, one-column work area, wrapping controls, 44px minimum tap controls and 16px inputs.
 - Scrollable desktop sidebar and bounded mobile account dialogs. Preserve native password-manager autocomplete.
 
-## Required authentication work (not yet implemented)
+## Authentication status
+
+Persistent sessions now implemented locally in the integration candidate; not deployed or real-provider accepted. See PERSISTENT_SESSIONS.md. Passkeys remain unimplemented.
+
+## Required authentication acceptance
 - Explicit unchecked-by-default choice: Stay signed in on this device; alternate Sign in each time. Explain expiry and shared-device use.
-- Current account.js uses memory-only bearer/refresh tokens. Do not add a cosmetic checkbox until persistence really works.
+- Unchecked mode retains memory-only bearer/refresh tokens. Checked mode exchanges a fresh ID token for a secure HttpOnly session cookie and clears JavaScript tokens.
 - Implement server-verified secure HttpOnly session cookies with CSRF protection, same-origin validation, bounded lifetime, explicit logout, revocation checks and membership revalidation on every request. Restore organization only after access is checked. No passwords or refresh tokens in localStorage.
 - Define the lifetime in the UI. Firebase session cookies support a maximum of 14 days; staying signed in is not indefinite.
 - Passkeys via WebAuthn: verified challenge, origin and relying-party ID, replay prevention, user verification, enrollment after recent authentication, removal and recovery. Face/fingerprint/device PIN handled by the authenticator; WZOS does not store biometric templates. Password/recovery fallback remains available.

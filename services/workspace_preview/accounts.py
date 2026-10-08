@@ -29,7 +29,17 @@ class FirebaseVerifier:
         from firebase_admin import auth
         return auth.verify_id_token(token, app=self.app, check_revoked=True)
 
+    def create_session(self, token, lifetime):
+        from firebase_admin import auth
+        return auth.create_session_cookie(token, expires_in=lifetime, app=self.app)
 
+    def verify_session(self, cookie):
+        from firebase_admin import auth
+        return auth.verify_session_cookie(cookie, app=self.app, check_revoked=True)
+
+
+
+# Provider verification remains authoritative for remembered sessions.
 class NewOrganization(BaseModel):
     model_config = ConfigDict(extra='forbid', str_strip_whitespace=True)
     name: str = Field(min_length=2, max_length=120)
@@ -78,12 +88,16 @@ class Accounts:
         if cached:
             return cached
         header = request.headers.get(self.auth_header, '')
-        if not header.startswith('Bearer ') or len(header) > 8192:
-            raise HTTPException(401, 'Sign in to continue')
-        try:
-            claims = self.verify(header[7:])
-        except Exception:
-            raise HTTPException(401, 'Session expired or could not be verified') from None
+        if not header:
+            from .browser_sessions import verify_cookie
+            claims = verify_cookie(self, request)
+        else:
+            if not header.startswith('Bearer ') or len(header)>8192:
+                raise HTTPException(401, 'Sign in to continue')
+            try:
+                claims = self.verify(header[7:])
+            except Exception:
+                raise HTTPException(401, 'Session expired or could not be verified') from None
         if not claims.get('uid') or not claims.get('email') or claims.get('email_verified') is not True:
             raise HTTPException(403, 'Verify your email before accessing WZOS')
         person = {'id': claims['uid'], 'email': claims['email'].lower(),
@@ -122,6 +136,8 @@ class Accounts:
         return token
 
     def register(self, app):
+        from .browser_sessions import register
+        register(app, self)
         @app.get('/api/account/members')
         def members(request: Request):
             selected=self.actor(request)

@@ -100,3 +100,5 @@ body::before{content:"";position:fixed;inset:-4%;z-index:-2;pointer-events:none;
  .app-footer{padding:20px 16px 105px}.meeting-screen-bottom{line-height:1.6}.meeting-pagination span{overflow-wrap:anywhere}
 }
 @media(max-width:360px){.metrics{grid-template-columns:1fr}.sidebar nav{gap:6px}.sidebar .nav-item{padding:10px;font-size:12px}}
+
+.account-dialog .remember-choice{display:flex;align-items:center;gap:12px}.account-dialog .remember-choice[hidden]{display:none}.account-dialog .remember-choice input{width:22px;min-height:22px;flex:0 0 22px}
