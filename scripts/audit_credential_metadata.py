@@ -31,6 +31,7 @@ def audit(query=gcloud):
         if name in names:
             try:
                 states = query("secrets", "versions", "list", name, "--format=value(state)")
+                states = {state.strip().upper() for state in states}
                 status = "enabled_version_present" if "ENABLED" in states else "no_enabled_version"
             except (RuntimeError, OSError, subprocess.TimeoutExpired):
                 status = "version_metadata_unavailable"

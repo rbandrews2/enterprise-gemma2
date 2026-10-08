@@ -22,3 +22,10 @@ class CredentialMetadataTests(unittest.TestCase):
         self.assertEqual(result["status"], "unavailable")
         self.assertEqual(result["items"], {})
         self.assertNotIn("sensitive", str(result))
+
+    def test_gcloud_lowercase_state_and_disabled_versions(self):
+        for state, expected in [('enabled', 'enabled_version_present'), (' ENABLED ', 'enabled_version_present'), ('disabled', 'no_enabled_version'), ('destroyed', 'no_enabled_version')]:
+            with self.subTest(state=state):
+                def query(*args):
+                    return ['wzos-v2-staging-database-url'] if args[1]=='list' else [state]
+                self.assertEqual(audit(query)['items']['database']['status'],expected)
