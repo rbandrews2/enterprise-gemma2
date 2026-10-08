@@ -11,3 +11,7 @@ Unchecked stay-signed-in uses existing memory-only mode. Explicit logout failure
 Validation: full Python304 (253 passed,51 PostgreSQL skipped); Node19 passed. Four focused cookie lifecycle/security cases plus PostgreSQL equivalents added. Node tests cover checked/unchecked choice, restoration and logout. Browser sign-in dialog verified unchecked14-day option and accurate reload/reopen explanation. Actual Google cookie issuance, PostgreSQL schema gate, browser cookie restore and mobile OS lifecycle remain open. Local auth-validation server used for UI only; no real user credentials or account calls.
 
 Reference: https://firebase.google.com/docs/auth/admin/manage-cookies
+
+## October 8 validation follow-up
+
+Candidate780f473: full local309tests,256passed/53PostgreSQLskipped; account JavaScript5passed. Added provider-failure preservation, session replacement and required-header tests. PostgreSQL run at4f73180 is awaiting Docker image extraction in Cloud Shell; not accepted. Inspect ~/wzos-session-gate.log before retrying. Real provider cookie and mobile lifecycle acceptance remain open. Metadata-only credential audit now handles lowercase gcloud states; both expected secrets have enabled version1, but runtime access is unverified.
