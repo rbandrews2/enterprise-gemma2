@@ -175,15 +175,16 @@ window.atlasNavigate=id=>{
 
 window.wzosClock={api,getSession:()=>session,getOrders:()=>rows};
 window.showWzosView=view=>{
- if(!['orders','clock','forms','form_drafts','schedule','training','messages','navigation','report'].includes(view))return false;
+ if(!['orders','clock','forms','form_drafts','meetings','schedule','training','messages','navigation','report'].includes(view))return false;
  if(view==='report'&&!session?.can_prepare_atlas)return false;
  if(!canLeave() || (window.wzosModulesCanLeave && !window.wzosModulesCanLeave()) || (window.wzosFormsCanLeave && !window.wzosFormsCanLeave()))return false;
  atlasPage=({orders:"work_orders",clock:"time_clock",forms:"forms",form_drafts:"forms",schedule:"schedule",training:"training",messages:"messages",navigation:"navigation",report:"report"})[view]||"work_orders";
  $("team-view").hidden=!["training","messages","navigation"].includes(view);
+ $("meetings-view").hidden=view!=="meetings";
  $("report-view").hidden=view!=="report";
  $("orders-view").hidden=view!=="orders";$("clock-view").hidden=view!=="clock";$("modules-view").hidden=!["schedule","form_drafts"].includes(view);$("forms-view").hidden=view!=="forms";
- for(const [id,on] of [["training-nav",view==="training"],["messages-nav",view==="messages"],["navigation-nav",view==="navigation"],["report-nav",view==="report"],["jobs-nav",view==="orders"],["clock-nav",view==="clock"],["forms-nav",["forms","form_drafts"].includes(view)],["schedule-nav",view==="schedule"]]){ $(id).classList.toggle("active",on);if(on)$(id).setAttribute("aria-current","page");else $(id).removeAttribute("aria-current");}
- document.querySelector(".breadcrumb + strong").textContent=({training:"Video training",messages:"Messaging",navigation:"Navigation",report:"Work Zone Report",clock:"Time clock",forms:"Forms hub",form_drafts:"Saved form drafts",schedule:"Schedule management"})[view]||"Work orders";
+ for(const [id,on] of [["meetings-nav",view==="meetings"],["training-nav",view==="training"],["messages-nav",view==="messages"],["navigation-nav",view==="navigation"],["report-nav",view==="report"],["jobs-nav",view==="orders"],["clock-nav",view==="clock"],["forms-nav",["forms","form_drafts"].includes(view)],["schedule-nav",view==="schedule"]]){ $(id).classList.toggle("active",on);if(on)$(id).setAttribute("aria-current","page");else $(id).removeAttribute("aria-current");}
+ document.querySelector(".breadcrumb + strong").textContent=({meetings:"Video meetings",training:"Video training",messages:"Messaging",navigation:"Navigation",report:"Work Zone Report",clock:"Time clock",forms:"Forms hub",form_drafts:"Saved form drafts",schedule:"Schedule management"})[view]||"Work orders";
  document.dispatchEvent(new CustomEvent("wzos:view",{detail:view}));
  if(view==="clock")document.dispatchEvent(new CustomEvent("wzos:clock-open"));
  return true;

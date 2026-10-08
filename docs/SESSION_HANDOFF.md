@@ -4,6 +4,9 @@ Ray authorized a separate restricted Google Cloud V2 staging deployment. Product
 
 ## Latest resume checkpoint
 
+Meeting-room UI: dedicated Video meetings navigation/view with glossy TV frame, organization schedule cards, validated join links and glass navigation cards. Browser verified selecting saved synthetic meeting, member Manage hidden, and switching to Core organization clears card/title/join. Preview8081 refreshed. JS syntax/diff checks passed. No backend/schema/cloud changes. Meet opens externally; no embedded conference or automatic OAuth creation claimed.
+
+
 Google Meet increment: Ray selected Google Meet and admin-only creation. Schedule records now accept strictly validated Meet URLs; existing server role/org/version checks apply. Members join only; cancelled records hide Join. Focused module8 tests passed, JS syntax passed. Browser verified admin fields; synthetic save click timed out, so browser save/join acceptance remains open. Automatic Google space creation requires organizer OAuth and is not implemented. No new DDL or cloud deployment. See MEETINGS_INTEGRATION.md.
 
 
