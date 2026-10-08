@@ -17,11 +17,17 @@ def gate_passed(result):
     return result.testsRun > 0 and result.wasSuccessful() and not result.skipped
 
 
+def discover_suite(root=ROOT):
+    # tests is intentionally a non-package directory in a clean Git checkout.
+    # A fresh loader avoids retaining a previous discovery top-level directory.
+    return unittest.TestLoader().discover(str(root / "tests"))
+
+
 def main():
     if not os.environ.get('WZOS_TEST_DATABASE_URL', '').strip():
         print('PostgreSQL gate blocked: WZOS_TEST_DATABASE_URL is not configured.', file=sys.stderr)
         return 2
-    suite = unittest.defaultTestLoader.discover(str(ROOT / 'tests'), top_level_dir=str(ROOT))
+    suite = discover_suite()
     result = unittest.TextTestRunner(verbosity=2).run(suite)
     passed = gate_passed(result)
     print(f'PostgreSQL gate: {"PASS" if passed else "FAIL"}; '
