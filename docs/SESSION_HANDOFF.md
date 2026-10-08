@@ -4,6 +4,8 @@ Ray authorized a separate restricted Google Cloud V2 staging deployment. Product
 
 ## Latest resume checkpoint
 
+October 8 session-cookie permission approved and applied: custom wzosSessionIssuer contains only firebaseauth.users.createSession; project binding verified for staging runtime only. Live probe on revision00030-c6h PASSED Google sign-in, passkey verification/signing/token exchange, replay denial, credential removal, secure session cookie flags, cookie-only access and logout denial. Synthetic identity disabled and tokens revoked; credential removed. Android real-device acceptance remains pending; task3 remains held. Evidence: .local-data/session-cookie-live-pass.png. No public IAM, V1 or DNS changes.
+
 October8 task2 follow-up: approved self-only signBlob applied/readback; restricted staging00030-c6h deployed frombcf3bc9 with exact Cloud Shell passkey origin/RP. Real runtime signing and Google token exchange PASS via probe0e84c96; session creation FAILED503. Missing inspected permission firebaseauth.users.createSession proposal documented in RELEASE_GATES_20261008.md; awaiting separate action-time approval. Do not broaden IAM without it. API policy troubleshooting unavailable (disabled), not enabled. Latest probe identity disabled/revoked and credential removed; first probe disabled identity may retain inert public-key row. Android available; browser/device tests and task3 remain pending. No GPU/V1/DNS changes.
 
 
@@ -333,5 +335,3 @@ Live browser checks against an isolated synthetic Norfolk project (36.8508, -76.
 
 ## Placement readiness — 2026-09-20
 Atlas now returns versioned placement-readiness checks and displays them in the workspace. All 78 tests passed plus real HTTP workspace-script verification. See docs/PLACEMENT_RULES.md for the reviewed-rule provenance and geometry contract. No numeric agency rule or automatic placement is enabled. Next: review one stationary closure typical application, its tables/notes and measured approach geometry before implementing a narrowly scoped rule.
-
-
