@@ -4,6 +4,9 @@ Ray authorized a separate restricted Google Cloud V2 staging deployment. Product
 
 ## Latest resume checkpoint
 
+Quick meeting pagination repair: schedule listing supports meetings_only=true, applying the filter before count/limit/offset. Meeting room requests this filter and labels totals as meetings. Nine module tests passed, including pagination, unfiltered schedule preservation, member read-only and cross-org scope; Node syntax/diff checks passed. No schema/deployment changes. Combined PostgreSQL acceptance remains open. Next major task remains secure persistence choices and passkeys per MOBILE_AUTH_ACCEPTANCE.md.
+
+
 Mobile-first requirement: responsive CSS added for phone module cards, touch controls, single-column workspace, input sizing and dialogs. Browser work-order page checked at320/390/1440 with document width below viewport; viewport reset. Full all-module/device acceptance remains pending. Current auth is memory-only; persistence choice and WebAuthn passkeys are NOT implemented. Next implement secure sessions with revocation/CSRF, then passkeys and real-device validation per MOBILE_AUTH_ACCEPTANCE.md.
 
 

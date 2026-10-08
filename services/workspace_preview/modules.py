@@ -96,9 +96,13 @@ def register(app, connect, actor, permitted_row, actors, synthetic=True):
 
     @app.get("/api/modules/{kind}")
     def listing(kind: Literal["forms", "schedule"], request: Request,
-                offset: int = Query(0, ge=0), limit: int = Query(25, ge=1, le=50), day: date | None = None):
+                offset: int = Query(0, ge=0), limit: int = Query(25, ge=1, le=50), day: date | None = None, meetings_only: bool = False):
         selected = actor(request)
         clause, params = scope(kind, selected)
+        if meetings_only:
+            if kind != "schedule":
+                raise HTTPException(422, "Meeting filtering is only available for schedules")
+            clause += " AND COALESCE(json_extract(payload, '$.meeting_url'), '') <> ''"
         if day and kind == "schedule":
             clause += " AND substr(json_extract(payload, '$.start'),1,10)=?"
             params.append(day.isoformat())

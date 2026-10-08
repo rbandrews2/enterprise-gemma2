@@ -133,3 +133,20 @@ class ModuleTests(unittest.TestCase):
             self.assertEqual(self.save('schedule',body).status_code,422)
         form=self.body();form['meeting_url']='https://meet.google.com/abc-defg-hij'
         self.assertEqual(self.save('forms',form).status_code,422)
+
+    def test_meeting_filter_counts_before_pagination_and_preserves_scope(self):
+        for i in range(4):
+            body=self.body();body.update(title=f'Schedule {i}',start='2026-10-09T13:00:00Z',end='2026-10-09T14:00:00Z')
+            if i % 2: body['meeting_url']='https://meet.google.com/abc-defg-hij'
+            self.assertEqual(self.save('schedule',body).status_code,200)
+        path='/api/modules/schedule?meetings_only=true&limit=1'
+        first=self.client.get(path,headers=self.headers('enterprise-general')).json()
+        second=self.client.get(path+'&offset=1',headers=self.headers('enterprise-general')).json()
+        self.assertEqual(first['total'],2);self.assertEqual(second['total'],2)
+        self.assertEqual(len(first['items']),1);self.assertEqual(len(second['items']),1)
+        self.assertNotEqual(first['items'][0]['id'],second['items'][0]['id'])
+        self.assertTrue(first['items'][0]['meeting_url'])
+        self.assertEqual(self.client.get(path+'&offset=2',headers=self.headers('enterprise-general')).json()['items'],[])
+        self.assertEqual(self.client.get(path,headers=self.headers('core-admin')).json()['total'],0)
+        self.assertEqual(self.client.get('/api/modules/schedule',headers=self.headers('enterprise-admin')).json()['total'],4)
+        self.assertEqual(self.client.get('/api/modules/forms?meetings_only=true',headers=self.headers('enterprise-admin')).status_code,422)
