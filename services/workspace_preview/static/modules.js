@@ -42,20 +42,23 @@
   }catch(error){if(generation===epoch)notice(error.message);}
  }
  async function show(view){
-  // Forms Hub has its own view (forms-hub.js); this module now serves Schedule management only.
-  if(view!=="schedule")return;
-  $("module-attachments")?.replaceChildren();const showGeneration=++epoch;kind=view;offset=0;dirty=false;current=null;$("module-form").hidden=true;notice("");
-  $("module-title").textContent=kind==="forms"?"Forms hub":"Schedule management";
+  // Reuse the scoped, versioned draft editor alongside the printable Forms library.
+  if(!["schedule","form_drafts"].includes(view))return;
+  $("module-attachments")?.replaceChildren();const showGeneration=++epoch;kind=view==="form_drafts"?"forms":"schedule";offset=0;dirty=false;current=null;$("module-form").hidden=true;notice("");
+  $("module-title").textContent=kind==="forms"?"Saved form drafts":"Schedule management";
   $("module-description").textContent=kind==="forms"?"Incident, vehicle inspection and JSA planning drafts. Save, reopen and link to a work order. Official submissions and other templates are pending.":"Team schedule drafts. Admins edit; team members can read. Assignments use test members; overlapping active drafts are rejected. Saving does not dispatch or notify anyone.";
+  $("module-library").hidden=kind!=="forms";
   $("module-day-label").hidden=kind!=="schedule";$("module-assignees-label").hidden=kind!=="schedule";$("module-history").replaceChildren();
   try{const result=await api("/api/modules/roster");if(showGeneration!==epoch)return;roster=result.items;}catch(error){if(showGeneration!==epoch)return;roster=[];notice(error.message);}
   $("module-type-label").hidden=kind!=="forms";
   $("module-times").hidden=kind!=="schedule";$("module-start").required=$("module-end").required=kind==="schedule";
   refresh();
  }
+ $("forms-drafts-open").onclick=()=>window.showWzosView("form_drafts");
+ $("module-library").onclick=()=>window.showWzosView("forms");
  $("schedule-nav").onclick=()=>window.showWzosView("schedule");
  document.addEventListener("wzos:view",event=>show(event.detail));
- document.addEventListener("wzos:session",()=>{$("module-attachments")?.replaceChildren();epoch++;dirty=false;current=null;$("module-list").replaceChildren();$("module-form").hidden=true;if(!$("modules-view").hidden)show("schedule");});
+ document.addEventListener("wzos:session",()=>{$("module-attachments")?.replaceChildren();epoch++;dirty=false;current=null;$("module-list").replaceChildren();$("module-form").hidden=true;if(!$("modules-view").hidden)show(kind==="forms"?"form_drafts":"schedule");});
  $("module-day").onchange=()=>{offset=0;refresh();};
  async function loadHistory(row){const selectedKind=kind;try{const data=await api(`/api/modules/${kind}/${row.id}/history`);if(current?.id!==row.id||selectedKind!==kind)return;$("module-history").append(text("h3","Saved revision history"));for(const entry of data.items){const d=text("details","");d.append(text("summary",`Revision ${entry.version} · ${new Date(entry.saved_at).toLocaleString()}`),text("p",entry.record.title),text("p",entry.record.details||"No notes"));for(const [key,value] of Object.entries(entry.record.safety||{}))d.append(text("p",`${safetyFields[key]}: ${value||"Not recorded"}`));$("module-history").append(d);}}catch(error){notice(error.message);}}
  $("module-new").onclick=()=>{if(window.wzosModulesCanLeave())edit(null);};

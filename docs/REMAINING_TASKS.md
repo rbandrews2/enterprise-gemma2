@@ -13,6 +13,10 @@ This is the current sequential remaining-work list. Ray can add items or revise 
 
 Restricted Google account/database/private-file and SQL restore acceptance already passed. Full-size private Atlas replies and authenticated module guidance passed bounded earlier tests. The preserved source library is now in the staging image. Last verified staging revision 00029-d6k is Ready with Atlas disabled; trial GPU removed and synthetic accounts disabled. The September 29 saved-job/candidate-citation reply passed in 5.288 seconds; see ATLAS_CITED_ACCEPTANCE_20260929.md. Source freshness and job applicability are not approved. Existing code and useful V1 assets will be reused before replacements are built; Supabase is not the replacement runtime.
 
+## Expanded operational acceptance requested October8
+
+See [operational integration matrix](OPERATIONAL_INTEGRATION_20261008.md). The combined candidate restores saved member forms; delivery, meetings, training completion, account lifecycle, dispatch and live report/Atlas acceptance remain incomplete. Keep these distinct from menu availability. Admin authority stays inside the organization and edition. Combined PostgreSQL/private-files gates precede merging or deployment.
+
 ## Sequential checklist
 
 1. [x] **Finish the pending live Atlas citation test.** Accepted September 29 for one bounded case; see ATLAS_CITED_ACCEPTANCE_20260929.md. Refresh operator authentication, verify Git/cloud state and remaining approved trial spend. Test one saved job through private inference with revision/page citations, missing-evidence warnings, stale-version protection and tenant boundaries. Record the actual answer. Do not repeat previously accepted eight-module tests without a relevant change.
