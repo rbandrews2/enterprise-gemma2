@@ -9,3 +9,5 @@ October 8 validation: the old proxy returned HTML401 for both GET identities and
 Remembered-cookie desktop reload did not restore the session in this Cloud Shell preview, despite successful cookie-only access in the direct server probe. Keep browser persistence and actual Android passkey enrollment/login open as release gates. Do not infer either from password sign-in success.
 
 No passwords or token values are stored in repository files. The isolated test organization is empty; account and UI acceptance do not establish completion of other modules.
+
+Follow-up October8: Ray reported Android session persistence across page refresh and closing/reopening the page. This accepts those Android lifecycle scenarios. Desktop reload behavior, actual Android passkey ceremonies and logout/revocation remain distinct checks.
