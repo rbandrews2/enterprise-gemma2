@@ -4,6 +4,9 @@ Ray authorized a separate restricted Google Cloud V2 staging deployment. Product
 
 ## Latest resume checkpoint
 
+Google Meet increment: Ray selected Google Meet and admin-only creation. Schedule records now accept strictly validated Meet URLs; existing server role/org/version checks apply. Members join only; cancelled records hide Join. Focused module8 tests passed, JS syntax passed. Browser verified admin fields; synthetic save click timed out, so browser save/join acceptance remains open. Automatic Google space creation requires organizer OAuth and is not implemented. No new DDL or cloud deployment. See MEETINGS_INTEGRATION.md.
+
+
 October8 COMBINED OPERATIONAL CANDIDATE: codex/integration-release merges Forms and Time Clock with both help texts/assets preserved. Added metadata-only Secret Manager audit and restored saved form drafts from Forms Hub. Browser verified member save/reopen, same-org admin access and cross-org exclusion. Python292/47PGskips and Node16 passed before final routing repair; focused module7 and credential2 passed. No cloud deployment. Chrome binding failed (debugger unattached). Preview8081 is synthetic combined candidate;8083 remains older candidate. Next run combined PostgreSQL and real private-files gate, then implement internal form delivery/account lifecycle. Meeting provider selection is pending. See OPERATIONAL_INTEGRATION_20261008.md for concrete gaps.
 
 

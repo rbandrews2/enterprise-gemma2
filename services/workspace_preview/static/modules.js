@@ -27,8 +27,12 @@
   $("module-order").value=row?.order_id||"";
   $("module-start").value=localTime(row?.start);$("module-end").value=localTime(row?.end);$("module-status").value=row?.status||"draft";
   $("module-version").textContent=row?`Saved revision ${row.version} · ${new Date(row.updated_at).toLocaleString()}`:"Unsaved draft";
+  $("module-meeting-url").value=row?.meeting_url||"";
+  const join=$("module-meeting-join");join.removeAttribute("href");join.hidden=true;
+  if(kind==="schedule"&&row?.status!=="cancelled"&&/^https:\/\/meet\.google\.com\/[a-z]{3}-[a-z]{4}-[a-z]{3}$/.test(row?.meeting_url||"")){join.href=row.meeting_url;join.hidden=false;}
   const readOnly=kind==="schedule"&&window.wzosClock.getSession()?.role!=="admin";
   for(const input of $("module-form").elements)input.disabled=readOnly;
+  $("module-meeting-create").hidden=readOnly;$("module-meeting-help").hidden=readOnly;
   $("module-type").disabled=readOnly||Boolean(row);
  }
  async function refresh(){
@@ -44,12 +48,13 @@
  async function show(view){
   // Reuse the scoped, versioned draft editor alongside the printable Forms library.
   if(!["schedule","form_drafts"].includes(view))return;
-  $("module-attachments")?.replaceChildren();const showGeneration=++epoch;kind=view==="form_drafts"?"forms":"schedule";offset=0;dirty=false;current=null;$("module-form").hidden=true;notice("");
+  $("module-attachments")?.replaceChildren();const showGeneration=++epoch;kind=view==="form_drafts"?"forms":"schedule";offset=0;dirty=false;current=null;$("module-form").hidden=true;notice("");$("module-meeting-join").hidden=true;$("module-meeting-join").removeAttribute("href");
   $("module-title").textContent=kind==="forms"?"Saved form drafts":"Schedule management";
   $("module-description").textContent=kind==="forms"?"Incident, vehicle inspection and JSA planning drafts. Save, reopen and link to a work order. Official submissions and other templates are pending.":"Team schedule drafts. Admins edit; team members can read. Assignments use test members; overlapping active drafts are rejected. Saving does not dispatch or notify anyone.";
   $("module-library").hidden=kind!=="forms";
   $("module-day-label").hidden=kind!=="schedule";$("module-assignees-label").hidden=kind!=="schedule";$("module-history").replaceChildren();
   try{const result=await api("/api/modules/roster");if(showGeneration!==epoch)return;roster=result.items;}catch(error){if(showGeneration!==epoch)return;roster=[];notice(error.message);}
+  $("module-meeting").hidden=kind!=="schedule";
   $("module-type-label").hidden=kind!=="forms";
   $("module-times").hidden=kind!=="schedule";$("module-start").required=$("module-end").required=kind==="schedule";
   refresh();
@@ -58,7 +63,7 @@
  $("module-library").onclick=()=>window.showWzosView("forms");
  $("schedule-nav").onclick=()=>window.showWzosView("schedule");
  document.addEventListener("wzos:view",event=>show(event.detail));
- document.addEventListener("wzos:session",()=>{$("module-attachments")?.replaceChildren();epoch++;dirty=false;current=null;$("module-list").replaceChildren();$("module-form").hidden=true;if(!$("modules-view").hidden)show(kind==="forms"?"form_drafts":"schedule");});
+ document.addEventListener("wzos:session",()=>{$("module-attachments")?.replaceChildren();$("module-meeting-join").hidden=true;$("module-meeting-join").removeAttribute("href");epoch++;dirty=false;current=null;$("module-list").replaceChildren();$("module-form").hidden=true;if(!$("modules-view").hidden)show(kind==="forms"?"form_drafts":"schedule");});
  $("module-day").onchange=()=>{offset=0;refresh();};
  async function loadHistory(row){const selectedKind=kind;try{const data=await api(`/api/modules/${kind}/${row.id}/history`);if(current?.id!==row.id||selectedKind!==kind)return;$("module-history").append(text("h3","Saved revision history"));for(const entry of data.items){const d=text("details","");d.append(text("summary",`Revision ${entry.version} · ${new Date(entry.saved_at).toLocaleString()}`),text("p",entry.record.title),text("p",entry.record.details||"No notes"));for(const [key,value] of Object.entries(entry.record.safety||{}))d.append(text("p",`${safetyFields[key]}: ${value||"Not recorded"}`));$("module-history").append(d);}}catch(error){notice(error.message);}}
  $("module-new").onclick=()=>{if(window.wzosModulesCanLeave())edit(null);};
@@ -73,7 +78,7 @@
   const body={request_id:record.id,expected_version:record.version,title:$("module-name").value,location:$("module-location").value,details:$("module-details").value,order_id:$("module-order").value||null,status:$("module-status").value,start:null,end:null};
   if(kind==="forms"){body.form_type=$("module-type").value;if(body.form_type==="dvir"){body.inspection={vehicle_id:$("dvir-vehicle").value,odometer:$("dvir-odometer").value===""?null:Number($("dvir-odometer").value),trip_type:$("dvir-trip").value,defects:$("dvir-defects").value};for(const key of Object.keys(checks))body.inspection[key]=$("dvir-"+key).value;if(Object.keys(checks).some(key=>body.inspection[key]==="fail")&&!body.inspection.defects.trim()){notice("Describe the failed inspection items in Defects.");return;}}}
   if(kind==="forms"&&body.form_type==="jsa"){body.safety={};for(const key of Object.keys(safetyFields))body.safety[key]=$("safety-"+key).value;}
-  if(kind==="schedule"){body.assignees=Array.from($("module-assignees").selectedOptions,o=>o.value);body.start=new Date($("module-start").value).toISOString();body.end=new Date($("module-end").value).toISOString();if(body.end<=body.start){notice("End must be after start.");return;}}
+  if(kind==="schedule"){body.meeting_url=$("module-meeting-url").value.trim();body.assignees=Array.from($("module-assignees").selectedOptions,o=>o.value);body.start=new Date($("module-start").value).toISOString();body.end=new Date($("module-end").value).toISOString();if(body.end<=body.start){notice("End must be after start.");return;}}
   saving=true;for(const input of $("module-form").elements)input.disabled=true;$("identity").disabled=true;
   try{const saved=await api(`/api/modules/${kind}/${record.id}`,{method:"PUT",body:JSON.stringify(body)});if(generation!==epoch)return;edit(saved);notice("Draft saved. No submission or notification was sent.");await refresh();}
   catch(error){notice(error.message);}finally{saving=false;for(const input of $("module-form").elements)input.disabled=false;$("identity").disabled=false;$("module-type").disabled=Boolean(current?.version);}

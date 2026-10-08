@@ -76,10 +76,11 @@
  <label>Linked work order<select id="module-order"></select></label>
  <label>Location<input id="module-location" maxlength="500"></label>
  <label id="module-assignees-label">Assigned test members<select id="module-assignees" multiple></select></label><div id="module-times"><label>Start (your device timezone)<input id="module-start" type="datetime-local"></label><label>End (your device timezone)<input id="module-end" type="datetime-local"></label></div>
+ <div id="module-meeting" hidden><label>Google Meet link<input id="module-meeting-url" type="url" maxlength="100" placeholder="https://meet.google.com/abc-defg-hij"></label><p id="module-meeting-help">Admins: create a meeting in Google Meet, then paste its link here. Saving does not send invitations or change Google admission settings.</p><a id="module-meeting-create" href="https://meet.google.com/" target="_blank" rel="noopener noreferrer">Open Google Meet to create a meeting</a></div>
  <label id="module-details-label">Details<textarea id="module-details" maxlength="4000" rows="6"></textarea></label>
  <label>Status<select id="module-status"><option value="draft">Draft</option><option value="cancelled">Cancelled</option></select></label>
  <p id="module-version" class="fine"></p><button id="module-save" class="primary">Save draft</button>
- </form><div id="module-history"></div></section></div>
+ </form><a id="module-meeting-join" hidden target="_blank" rel="noopener noreferrer">Join Google Meet</a><div id="module-history"></div></section></div>
 </section>
 <section id="clock-view" hidden aria-labelledby="clock-title">
  <div class="page-heading"><div><p class="eyebrow">CREW OPERATIONS</p><h1 id="clock-title">Time clock</h1><p>Your shift, tasks and breaks in one place.</p></div><button id="clock-refresh" class="secondary">Refresh clock</button></div>

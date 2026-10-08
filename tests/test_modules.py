@@ -113,3 +113,23 @@ class ModuleTests(unittest.TestCase):
         response=self.client.get('/api/time/export',headers=admin)
         self.assertEqual(response.status_code,200);self.assertIn('Payroll calculated',response.text)
         self.assertEqual(self.client.get('/api/time/entries?start_date=2026-09-25&end_date=2026-09-24',headers=admin).status_code,422)
+
+    def test_meeting_links_admin_only_scoped_validated_and_versioned(self):
+        body=self.body();body.update(start="2026-10-09T13:00:00Z",end="2026-10-09T14:00:00Z",meeting_url="https://meet.google.com/abc-defg-hij")
+        record=str(uuid4())
+        self.assertEqual(self.save('schedule',body,'enterprise-general',record).status_code,403)
+        saved=self.save('schedule',body,record=record)
+        self.assertEqual(saved.status_code,200)
+        member=self.client.get('/api/modules/schedule',headers=self.headers('enterprise-general')).json()
+        self.assertFalse(member['can_edit']);self.assertEqual(member['items'][0]['meeting_url'],body['meeting_url'])
+        self.assertEqual(self.client.get('/api/modules/schedule',headers=self.headers('core-admin')).json()['total'],0)
+        body.update(status='cancelled',expected_version=1)
+        self.assertEqual(self.save('schedule',body,'enterprise-general',record).status_code,403)
+        self.assertEqual(self.save('schedule',body,record=record).json()['version'],2)
+        body.update(status='draft',expected_version=0)
+        self.assertEqual(self.save('schedule',body,record=record).status_code,409)
+        for link in ['http://meet.google.com/abc-defg-hij','https://meet.google.com.evil.test/abc-defg-hij','https://meet.google.com@evil.test/abc-defg-hij','javascript:alert(1)','https://meet.google.com/abc-defg-hij?token=secret']:
+            body['meeting_url']=link
+            self.assertEqual(self.save('schedule',body).status_code,422)
+        form=self.body();form['meeting_url']='https://meet.google.com/abc-defg-hij'
+        self.assertEqual(self.save('forms',form).status_code,422)

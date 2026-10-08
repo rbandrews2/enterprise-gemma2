@@ -1,5 +1,6 @@
 """Scoped synthetic scheduling and incident drafts adapted from recovered Core fields."""
 import json
+import re
 from datetime import date, datetime, timezone
 from typing import Literal
 from uuid import UUID
@@ -43,6 +44,7 @@ class ModuleRecord(BaseModel):
     inspection: VehicleInspection | None = None
     safety: SafetyWorksheet | None = None
     assignees: list[str] = Field(default_factory=list, max_length=50)
+    meeting_url: str = Field(default="", max_length=100)
     title: str = Field(min_length=1, max_length=120)
     location: str = Field(default="", max_length=500)
     details: str = Field(default="", max_length=4000)
@@ -53,6 +55,8 @@ class ModuleRecord(BaseModel):
 
     @model_validator(mode="after")
     def times(self):
+        if self.meeting_url and not re.fullmatch(r"https://meet\.google\.com/[a-z]{3}-[a-z]{4}-[a-z]{3}", self.meeting_url):
+            raise ValueError("Use a Google Meet link in https://meet.google.com/abc-defg-hij format")
         for value in (self.start, self.end):
             if value and (value.tzinfo is None or value.utcoffset() is None):
                 raise ValueError("Schedule times require a timezone")
@@ -123,6 +127,8 @@ def register(app, connect, actor, permitted_row, actors, synthetic=True):
             raise HTTPException(422, "Incident drafts cannot contain vehicle inspection fields")
         if kind == "schedule" and (payload.inspection is not None or payload.form_type != "incident"):
             raise HTTPException(422, "Vehicle inspections belong in Forms hub")
+        if kind == "forms" and payload.meeting_url:
+            raise HTTPException(422, "Meeting links belong in the team schedule")
         if kind == "forms" and (payload.start or payload.end):
             raise HTTPException(422, "Incident drafts do not use schedule times")
         allowed={a["id"] for a in actors(selected).values() if a["organization_id"]==selected["organization_id"]}
