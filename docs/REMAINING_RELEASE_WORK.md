@@ -7,7 +7,7 @@ Completed this pass: immutable saved-form internal submissions/admin review; sel
 ## Sequential remaining tasks
 
 1. COMPLETED October8:337PostgreSQL tests/zero skips, private-GCS gate/cleanup and enterprise-v2 merge. See RELEASE_GATES_20261008.md.
-2. IN PROGRESS: restricted HTTPS sign-in/server signing passed; Ray reported Android remembered-session refresh/reopen and real passkey enrollment/login passed. Finish cancellation/password fallback, device removal/recovery, session revocation, desktop reload follow-up and iOS coverage.
+2. IN PROGRESS: restricted HTTPS sign-in/server signing passed; Ray reported Android remembered-session refresh/reopen and real passkey enrollment/login passed. Android cancellation/password fallback also passed per Ray. Finish device removal/recovery, session revocation, desktop reload follow-up and iOS coverage.
 3. Finish organization setup, invitations, account recovery, employee profiles/qualifications and Core/Enterprise entitlement acceptance.
 4. Finish Forms Hub attachments, private uploads, signatures, templates, exports and cloud acceptance; connect approved external delivery.
 5. Complete Work Zone Report generation, cited Atlas recommendations, annotated imagery, PDF/private download, review and delivery records.
