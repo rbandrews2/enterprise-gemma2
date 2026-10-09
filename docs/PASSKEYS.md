@@ -16,3 +16,6 @@ Acceptance: cryptographically signed test ceremonies (including bad origin/chall
 ## Validation October 8
 
 Candidate447b240: full Python323tests,263passed/60PostgreSQLskipped; Node21passed. Seven real cryptographic ceremony tests plus PostgreSQL equivalents are included. Google provider token signing, PostgreSQL execution of these new tables, browser authenticator behavior and real phones remain unverified. Browser/Cloud Shell connection timed out twice; no deploy or configuration enablement. Install requirements-accounts.txt for the complete suite. Enrollment, removal, login/cancel/password fallback controls are wired in account.js but hidden when configuration or browser support is absent.
+
+## Real Android acceptance October 8
+Ray reported successful passkey creation and sign-in with the key on his Android phone against restricted staging. Android remembered-session refresh and closing/reopening were also user-observed passes. Cancellation/password fallback, device key removal/recovery, iOS coverage and desktop reload follow-up remain open. Server signing/exchange/replay/removal and secure cookies separately passed the real-provider probe on revision00030-c6h; the broader PostgreSQL gate passed337tests with zero skips. Preserve the working device credential.
