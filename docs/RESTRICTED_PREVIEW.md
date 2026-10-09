@@ -11,3 +11,5 @@ Remembered-cookie desktop reload did not restore the session in this Cloud Shell
 No passwords or token values are stored in repository files. The isolated test organization is empty; account and UI acceptance do not establish completion of other modules.
 
 Follow-up October8: Ray reported Android session persistence across page refresh and closing/reopening the page. This accepts those Android lifecycle scenarios. Desktop reload behavior, actual Android passkey ceremonies and logout/revocation remain distinct checks.
+
+Desktop follow-up October8: fresh Chrome remembered login succeeded; full page reload restored the authenticated organization selector without credentials. This resolves the earlier desktop reload discrepancy for the re-tested scenario under the supervised proxy. Android remembered logout across refresh/reopen passed per Ray.

@@ -23,3 +23,5 @@ Ray reported successful passkey creation and sign-in with the key on his Android
 Android follow-up: Ray confirmed passkey prompt cancellation followed by successful password sign-in. Device removal/password access/re-enrollment and session revocation remain to be checked.
 
 Android follow-up: Ray reported test passkey removal completed and successful password sign-in afterward. Re-enrollment after removal is not separately confirmed. Next verify remembered-session sign-out prevents access on refresh/reopen.
+
+Android follow-up: Ray confirmed remembered-session sign-out requires login after both refresh and closing/reopening. All-device revocation, real-email recovery and iOS were not inferred from this result.
