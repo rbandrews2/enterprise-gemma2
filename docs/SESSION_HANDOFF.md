@@ -8,7 +8,10 @@ October 10 repaired module assembly: branch codex/preproduction-modules contains
 Claude Messaging/Dispatch/Training/Offline repairs plus Codex's additional scoped
 Web Lock repair for concurrent offline drafts. Combined Python444 passed with119
 PostgreSQL skips; Node37 passed. See CLAUDE_REPAIR_ACCEPTANCE_20261010.md.
-Next: full combined disposable PostgreSQL and browser acceptance, then integration
+Cloud gate submitted at9c331c4 in ~/wzos-modules-20261010; result unread after
+browser timeout. Read ~/wzos-modules-pg-20261010.log and independently check
+/tmp/wzos-pg-gate.* cleanup. Local admin fixture is session11680 on8083.
+Next: confirm combined disposable PostgreSQL and browser acceptance, then integration
 release review. Candidate is not merged to enterprise-v2 or deployed.
 October10 completed local PDF candidate: implementation3d18f60 is pushed to
 codex/integration-release. Full timed regression passed359tests/663.867s,
@@ -461,4 +464,3 @@ Live browser checks against an isolated synthetic Norfolk project (36.8508, -76.
 
 ## Placement readiness — 2026-09-20
 Atlas now returns versioned placement-readiness checks and displays them in the workspace. All 78 tests passed plus real HTTP workspace-script verification. See docs/PLACEMENT_RULES.md for the reviewed-rule provenance and geometry contract. No numeric agency rule or automatic placement is enabled. Next: review one stationary closure typical application, its tables/notes and measured approach geometry before implementing a narrowly scoped rule.
-

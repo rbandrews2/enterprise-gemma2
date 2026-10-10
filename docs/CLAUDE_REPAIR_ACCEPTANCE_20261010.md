@@ -52,3 +52,7 @@ acceptance must precede deployment. Fake provider tests do not prove live SMS
 acceptance; training content/qualification approval and real-device offline
 acceptance remain open. Admin/member, organization isolation and Enterprise-only
 dispatch are preserved. No paid resources, customer sends or production changes.
+
+## Cloud/browser checkpoint
+
+Candidate 9c331c4 was pushed. The full native PostgreSQL harness was submitted in a new owned Cloud Shell checkout ~/wzos-modules-20261010. Output is ~/wzos-modules-pg-20261010.log. Browser control timed out while collecting it; result and independent /tmp/wzos-pg-gate.* cleanup verification are unconfirmed. The harness has an EXIT cleanup trap. No live app deployment occurred. The local synthetic admin sign-in reached organization selection, but browser module acceptance is not complete. Local fixture restarted on8083 (session11680). Next: read the cloud log, verify cleanup, then browser module/download checks.

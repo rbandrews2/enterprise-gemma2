@@ -32,5 +32,3 @@ Completed this pass: immutable saved-form internal submissions/admin review; sel
 17. Obtain production cutover approval and execute the verified release/rollback plan.
 
 See REMAINING_TASKS.md for the detailed historical checklist and SESSION_HANDOFF.md for current evidence. Existing implementation is reused; an open item may require acceptance and remaining integration rather than a rewrite.
-
-
