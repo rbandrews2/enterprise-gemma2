@@ -56,3 +56,7 @@ dispatch are preserved. No paid resources, customer sends or production changes.
 ## Cloud/browser checkpoint
 
 Candidate 9c331c4 was pushed. The full native PostgreSQL harness was submitted in a new owned Cloud Shell checkout ~/wzos-modules-20261010. Output is ~/wzos-modules-pg-20261010.log. Browser control timed out while collecting it; result and independent /tmp/wzos-pg-gate.* cleanup verification are unconfirmed. The harness has an EXIT cleanup trap. No live app deployment occurred. The local synthetic admin sign-in reached organization selection, but browser module acceptance is not complete. Local fixture restarted on8083 (session11680). Next: read the cloud log, verify cleanup, then browser module/download checks.
+
+## Recovered cloud result
+
+The Cloud Shell terminal subsequently showed the completed combined gate:444 tests in118.086s, failures0, errors0, skipped0, PASS. The clone/test command pinned9c331c4 before running. The trailing cluster search produced no paths and returned to the shell prompt. A separate explicit cleanup-marker/revision check was attempted, but browser focus timed out; its output remains unconfirmed. Browser acceptance is still open; do not promote this candidate solely on database results.

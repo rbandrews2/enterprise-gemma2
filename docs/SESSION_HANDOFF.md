@@ -8,10 +8,12 @@ October 10 repaired module assembly: branch codex/preproduction-modules contains
 Claude Messaging/Dispatch/Training/Offline repairs plus Codex's additional scoped
 Web Lock repair for concurrent offline drafts. Combined Python444 passed with119
 PostgreSQL skips; Node37 passed. See CLAUDE_REPAIR_ACCEPTANCE_20261010.md.
-Cloud gate submitted at9c331c4 in ~/wzos-modules-20261010; result unread after
-browser timeout. Read ~/wzos-modules-pg-20261010.log and independently check
-/tmp/wzos-pg-gate.* cleanup. Local admin fixture is session11680 on8083.
-Next: confirm combined disposable PostgreSQL and browser acceptance, then integration
+Cloud combined gate at9c331c4 passed444tests/118.086s with zero failures,
+errors or skips in ~/wzos-modules-20261010. Trailing cluster search showed no
+paths; separate cleanup-marker output is unconfirmed after focus timeout.
+Local admin fixture is session11680 on8083. Browser module acceptance remains
+open after synthetic sign-in reached organization selection.
+Next: finish browser acceptance and explicit cleanup confirmation, then integration
 release review. Candidate is not merged to enterprise-v2 or deployed.
 October10 completed local PDF candidate: implementation3d18f60 is pushed to
 codex/integration-release. Full timed regression passed359tests/663.867s,

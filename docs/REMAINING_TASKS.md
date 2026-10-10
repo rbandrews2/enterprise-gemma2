@@ -74,3 +74,5 @@ New items from Ray can be added below and then inserted into the sequence accord
 ## October 10 repaired module candidate
 
 Messaging, Enterprise dispatch, versioned training/reassignment and offline drafts are assembled on codex/preproduction-modules. Combined local Python444 and Node37 passed; PostgreSQL/browser acceptance precede release. See CLAUDE_REPAIR_ACCEPTANCE_20261010.md.
+
+Combined PostgreSQL acceptance subsequently passed444 tests/118.086s, zero skips/failures/errors at9c331c4. Browser gates and explicit cleanup confirmation remain before release.
