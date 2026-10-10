@@ -193,3 +193,29 @@ After `codex/integration-release` and `claude/messaging` merge into `enterprise-
 
 Rollback means reverting the dispatch commits. The tables become inert, and messages
 already delivered remain in Messaging history.
+
+## Review repair — October 10, 2026 (CLAUDE_MODULE_REVIEW_20261010.md, finding 5)
+
+**Defect:** cancellation and replacement notices took their times from the order's
+*current* requirements. If the job date changed and the original plan was then cancelled
+or replaced, the notice named the new date instead of the date being cancelled.
+
+**Repair:**
+- Cancellation and "no longer assigned" replacement notices use the immutable
+  `starts_at`/`ends_at` stored on each `dispatch_assignments` row.
+- Only new-assignment notices use the newly approved requirement times.
+- `when()` shows both dates for overnight or multi-day work, for example
+  `2026-10-20 22:00–2026-10-21 06:00 UTC`.
+- An unused requirement lookup was removed from cancel.
+- One f-string was made compatible with the Python 3.11 base image.
+
+**Messaging repair included:** the branch also merges `claude/messaging` at `0c6bfd5`
+(finding 1, verification-code secrecy). The merge commit is `49d11b7`.
+
+**Regressions:**
+- `test_cancellation_notice_names_the_cancelled_assignment_window`;
+- `test_replacement_notices_keep_old_and_new_windows_apart`;
+- `test_overnight_assignment_notices_show_both_dates`.
+
+**Focused result on this branch:** test_dispatch 14 and test_messaging 21 passed, 32
+PostgreSQL skipped.

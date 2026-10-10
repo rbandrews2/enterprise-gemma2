@@ -255,8 +255,11 @@ def register(app, connect, actor, permitted_row, actors):
                 background.append(queued['id'])
         return message_id
 
-    def when(req):
-        return f"{utc(req['starts_at']).strftime('%Y-%m-%d %H:%M')}–{utc(req['ends_at']).strftime('%H:%M')} UTC"
+    def when(starts_at, ends_at):
+        # Notices name the exact window; overnight or multi-day work shows both dates.
+        start, end = utc(starts_at), utc(ends_at)
+        finish = end.strftime('%H:%M') if end.date() == start.date() else end.strftime('%Y-%m-%d %H:%M')
+        return f"{start.strftime('%Y-%m-%d %H:%M')}–{finish} UTC"
 
     def deliver(user, background, ids):
         messaging = getattr(app.state, 'messaging', None)
@@ -372,12 +375,12 @@ def register(app, connect, actor, permitted_row, actors):
                 for item in db.execute("SELECT * FROM dispatch_assignments WHERE plan_id=? AND status IN ('sent','accepted')", (old['id'],)).fetchall():
                     db.execute("UPDATE dispatch_assignments SET status='replaced',updated_at=? WHERE id=?", (stamp, item['id']))
                     if item['user_id'] not in kept:
-                        notice(db, user, item['user_id'], f'Assignment cancelled: {title} {when(req)}. You are no longer assigned to this job.', item['id'] + ':cancel', queued)
+                        notice(db, user, item['user_id'], f'Assignment cancelled: {title} {when(item["starts_at"], item["ends_at"])}. You are no longer assigned to this job.', item['id'] + ':cancel', queued)
                 db.execute("UPDATE dispatch_plans SET status='superseded',updated_at=? WHERE id=?", (stamp, old['id']))
                 log(db, user, row['order_id'], old['id'], 'plan_superseded', 'replaced by ' + row['id'])
             for assignment in payload['assignments']:
                 assignment_id = str(uuid4())
-                text = f'New assignment: {title}, {roles[assignment["role_id"]]}, {when(req)}. Location: {address}. Open WZOS Messaging to accept or decline.'
+                text = f'New assignment: {title}, {roles[assignment["role_id"]]}, {when(req["starts_at"], req["ends_at"])}. Location: {address}. Open WZOS Messaging to accept or decline.'
                 db.execute('INSERT INTO dispatch_assignments VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
                            (assignment_id, user['organization_id'], row['id'], row['order_id'], assignment['user_id'], assignment['role_id'], 'sent',
                             req['starts_at'], req['ends_at'], None, None, '', stamp, stamp))
@@ -403,12 +406,11 @@ def register(app, connect, actor, permitted_row, actors):
             if row['status'] not in ('draft', 'sent') or row['version'] != body.expected_version:
                 raise HTTPException(409, 'This plan changed or was already handled. Reload before cancelling.')
             stamp = now()
-            req = requirement(db, user['organization_id'], row['order_id'])
             order = permitted_row(db, row['order_id'], user)
             title = json.loads(order['payload']).get('title', 'Work order')
             for item in db.execute("SELECT * FROM dispatch_assignments WHERE plan_id=? AND status IN ('sent','accepted','declined')", (row['id'],)).fetchall():
                 db.execute("UPDATE dispatch_assignments SET status='cancelled',updated_at=? WHERE id=?", (stamp, item['id']))
-                notice(db, user, item['user_id'], f'Assignment cancelled: {title} {when(req)}. Reason: {body.reason}', item['id'] + ':cancel', queued)
+                notice(db, user, item['user_id'], f'Assignment cancelled: {title} {when(item["starts_at"], item["ends_at"])}. Reason: {body.reason}', item['id'] + ':cancel', queued)
             db.execute("UPDATE dispatch_plans SET status='cancelled',version=version+1,updated_at=? WHERE id=?", (stamp, row['id']))
             log(db, user, row['order_id'], row['id'], 'plan_cancelled', body.reason)
             result = view(db, plan_row(db, user, plan_id))

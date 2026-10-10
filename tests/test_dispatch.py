@@ -195,6 +195,39 @@ class DispatchTests(unittest.TestCase):
         self.assertEqual(self.client.get('/api/dispatch/my-assignments', headers=self.h('member')).json()['items'][0]['status'], 'cancelled')
         self.assertEqual(self.client.post(f"/api/dispatch/plans/{sent['id']}/approve", headers=self.h(), json={'request_id': str(uuid4()), 'expected_version': 3}).status_code, 409)
 
+    def day(self, offset=0):
+        return (START + timedelta(days=offset)).strftime('%Y-%m-%d')
+
+    def test_cancellation_notice_names_the_cancelled_assignment_window(self):
+        self.requirements(); sent = self.approve(self.propose()).json()
+        moved = self.requirements(version=1, starts_at=(START + timedelta(days=1)).isoformat(), ends_at=(END + timedelta(days=1)).isoformat())
+        self.assertEqual(moved.status_code, 200, moved.text)
+        self.client.post(f"/api/dispatch/plans/{sent['id']}/cancel", headers=self.h(), json={'expected_version': sent['version'], 'reason': 'Permit withdrawn'})
+        notice = [m for m in self.inbox('member') if m.startswith('Assignment cancelled')][0]
+        self.assertIn(self.day(0) + ' 12:00–20:00 UTC', notice); self.assertNotIn(self.day(1), notice)
+
+    def test_replacement_notices_keep_old_and_new_windows_apart(self):
+        self.requirements(); self.approve(self.propose())
+        nxt = lambda d: d + timedelta(days=1)
+        self.profile('crew3', 'EMP-3', [window(nxt(START) - timedelta(hours=2), nxt(END) + timedelta(hours=2))], version=1)
+        self.requirements(version=1, starts_at=nxt(START).isoformat(), ends_at=nxt(END).isoformat())
+        revision = self.propose()
+        edited = self.client.put(f"/api/dispatch/plans/{revision['id']}", headers=self.h(), json={'expected_version': 1, 'assignments': [{'role_id': 'flagger', 'user_id': 'crew3'}]})
+        self.assertEqual(edited.status_code, 200, edited.text); self.assertEqual(self.approve(edited.json()).status_code, 200)
+        removed = [m for m in self.inbox('member') if m.startswith('Assignment cancelled')][0]
+        self.assertIn(self.day(0), removed); self.assertNotIn(self.day(1), removed)
+        added = [m for m in self.inbox('crew3') if m.startswith('New assignment')][0]
+        self.assertIn(self.day(1), added); self.assertNotIn(self.day(0), added)
+
+    def test_overnight_assignment_notices_show_both_dates(self):
+        start, end = START + timedelta(hours=10), START + timedelta(hours=18)  # 22:00 to 06:00 next day
+        self.profile('member', 'EMP-1', [window(start - timedelta(hours=1), end + timedelta(hours=1))], version=1)
+        self.requirements(starts_at=start.isoformat(), ends_at=end.isoformat()); sent = self.approve(self.propose()).json()
+        expected = f'{self.day(0)} 22:00–{self.day(1)} 06:00 UTC'
+        self.assertIn(expected, [m for m in self.inbox('member') if m.startswith('New assignment')][0])
+        self.client.post(f"/api/dispatch/plans/{sent['id']}/cancel", headers=self.h(), json={'expected_version': sent['version'], 'reason': 'Rain'})
+        self.assertIn(expected, [m for m in self.inbox('member') if m.startswith('Assignment cancelled')][0])
+
     def test_assignment_text_copy_uses_messaging_consent_and_outbox(self):
         contact = self.client.get('/api/messaging/sms/contact', headers=self.h('member')).json()
         self.client.put('/api/messaging/sms/contact', headers=self.h('member'), json={'request_id': str(uuid4()), 'expected_version': 0, 'phone': PHONE, 'consent': True, 'consent_version': contact['current_consent_version']})
