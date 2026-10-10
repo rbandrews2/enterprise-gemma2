@@ -219,3 +219,5 @@ or replaced, the notice named the new date instead of the date being cancelled.
 
 **Focused result on this branch:** test_dispatch 14 and test_messaging 21 passed, 32
 PostgreSQL skipped.
+
+**Full suites after repair (stacked branch):** Python 420 OK, 107 skipped (all PostgreSQL); Node 21/21. Combined merge of all four repaired branches (local scratch, not pushed): merges cleanly; module suites 122 run, 52 PostgreSQL skipped, OK; Node 32/32.
