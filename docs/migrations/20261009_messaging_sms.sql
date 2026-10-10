@@ -22,6 +22,10 @@ CREATE TABLE IF NOT EXISTS sms_outbox (
  created_by TEXT NOT NULL, created_at TEXT NOT NULL, updated_at TEXT NOT NULL,
  UNIQUE(organization_id, purpose, reference_id, recipient_id)
 );
+-- Verification codes only, kept apart from the outbox and deleted when their send resolves or expires.
+CREATE TABLE IF NOT EXISTS sms_secrets (
+ outbox_id TEXT PRIMARY KEY, secret TEXT NOT NULL, expires_at TEXT NOT NULL
+);
 CREATE TABLE IF NOT EXISTS sms_events (
  id TEXT PRIMARY KEY, organization_id TEXT NOT NULL, outbox_id TEXT, source TEXT NOT NULL,
  event TEXT NOT NULL, detail TEXT NOT NULL, actor_id TEXT, occurred_at TEXT NOT NULL
