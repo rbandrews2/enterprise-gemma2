@@ -4,6 +4,21 @@ Ray authorized a separate restricted Google Cloud V2 staging deployment. Product
 
 ## Latest resume checkpoint
 
+October9 availability follow-up: code committed/pushed6428915 on
+codex/integration-release. Full Python run19822 was interrupted after prolonged
+runtime and exited1 without a completed unittest summary. Latest log advanced
+beyond Forms Hub into later model-adapter cases; no specific Forms failure or
+deadlock was established. Treat the full regression gate as incomplete, not pass
+or diagnosed application failure. Keep .local-data/employee-full-python.log.
+Eight focused employee tests and Node21passes remain the completed evidence.
+Local browser viewport reset succeeded after recovery; earlier responsive checks
+still incomplete. Synthetic fixture15003 and employee preview tab remain available
+for follow-up. Cloud tab control failed again even after local test interruption;
+no database gate, cloud modification or merge to enterprise-v2 occurred. Next run
+a verbose bounded regression to identify slow cases, complete member/responsive UI
+coverage and disposable PostgreSQL acceptance before merge. Contract for Claude:
+EMPLOYEE_DIRECTORY_CONTRACT.md in this integration worktree/branch.
+
 October9 availability increment: employee profile JSON now includes at most100
 timezone-aware available/unavailable periods; overlapping windows fail validation,
 stored timestamps normalize to UTC, and missing coverage stays unknown. Shared
