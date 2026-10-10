@@ -8,12 +8,14 @@ October 10 assignment inbox increment: codex/preproduction-modules now adds
 Enterprise My jobs, pending-confirmation badge, frozen dispatched client/crew/
 notes, explicit receipt confirmation and Open in Navigation for both roles.
 See ASSIGNMENT_INBOX_20261010.md. Focused dispatch17 passed/17PG skips, Node42
-passed; synthetic member browser badge/details/confirmation passed. Full Python
-regression is running in .local-data/assignment-full-python.log; its PostgreSQL
-gate remains pending. Closed-app push delivery needs a separate implementation.
+passed; synthetic member browser badge/details/confirmation/reload passed. Full
+Python450/845.845s passed, zero failures/errors with122 PostgreSQL skips; evidence
+in .local-data/assignment-full-python.log. Its PostgreSQL gate remains pending
+after repeated Chrome control failures; no new cloud command was submitted.
+Closed-app push delivery needs a separate implementation.
 Synthetic assignment preview session40166 is running on8083, with example data
-only. No live deployment or customer sends. Next: collect full regression and
-run exact-candidate PostgreSQL; finish real-phone and background-push acceptance.
+only. No live deployment or customer sends. Next: reconnect Cloud Shell and run
+exact-candidate PostgreSQL; finish real-phone and background-push acceptance.
 
 October 10 repaired module assembly: branch codex/preproduction-modules contains
 Claude Messaging/Dispatch/Training/Offline repairs plus Codex's additional scoped

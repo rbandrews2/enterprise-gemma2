@@ -9,6 +9,6 @@ test('navigation uses documented directions parameters and encodes addresses saf
 });
 test('coordinate destinations are preserved; unusable destinations produce no link',()=>{
  const nav=setup();assert.equal(new URL(nav.url('36.85,-76.28')).searchParams.get('destination'),'36.85,-76.28');
- for(const value of ['', '   ',null,undefined,{},'x'.repeat(501)])assert.equal(nav.link(value),null);
+ for(const value of ['', '   ',null,undefined,{},'x'.repeat(501),'界'.repeat(500),'\ud800'])assert.equal(nav.link(value),null);
  assert.equal(new URL(nav.url('javascript:alert(1)')).origin,'https://www.google.com');
 });

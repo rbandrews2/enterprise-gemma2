@@ -3,7 +3,10 @@
 (() => {
  const url=destination=>{
   if(typeof destination!=='string'||!destination.trim()||destination.length>500)return null;
-  return 'https://www.google.com/maps/dir/?api=1&travelmode=driving&dir_action=navigate&destination='+encodeURIComponent(destination.trim());
+  try{
+   const href='https://www.google.com/maps/dir/?api=1&travelmode=driving&dir_action=navigate&destination='+encodeURIComponent(destination.trim());
+   return href.length<=2048?href:null;
+  }catch(error){return null;}
  };
  const link=destination=>{
   const href=url(destination);if(!href)return null;

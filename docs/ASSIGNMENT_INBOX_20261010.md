@@ -63,9 +63,22 @@ retains JSON metadata, though older approval code won't create new snapshots.
 - Screenshot: ignored `.local-data/assignment-member-preview.jpg`; synthetic only.
   Requested390px viewport actually reported733px; document width718, no horizontal
   overflow at that actual width. Real-phone390px acceptance remains open.
-- Full Python regression is running; collect `.local-data/assignment-full-python.log`.
+- Full Python regression passed450 tests in845.845s:328 passed,122 PostgreSQL
+  skips, zero failures/errors. Evidence: `.local-data/assignment-full-python.log`.
+- Receipt confirmation and badge0 survived reload and fresh synthetic sign-in.
+  Refresh/pagination errors and unavailable notification checks are visible; failed
+  initial checks remain unknown rather than falsely showing zero assignments.
+- Navigation tests also reject over2048-character encoded Maps URLs and malformed
+  Unicode safely. No destination is silently truncated.
 - This increment's PostgreSQL/cloud deployment acceptance remains pending. Earlier
  444-pass PostgreSQL gate predates this increment and is not its acceptance.
+  Chrome tab discovery worked, but accessibility/CDP control failed on repeated
+  attempts; no database command for this increment was submitted.
+
+The assignment brief does not expand editing access to the original work order,
+private reports or files. Connecting assigned-job access for other modules needs
+a separately reviewed read/write authorization contract; do not bypass existing
+private-draft rules as a shortcut.
 
 ### Must complete before launch
 
