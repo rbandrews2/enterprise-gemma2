@@ -24,10 +24,28 @@ window.wzosEmployees = (() => {
    const phone=field(form,'Phone (international format, e.g. +15555550123)',profile.phone,'tel');phone.maxLength=20;
    const start=field(form,'Agreed starting location',profile.starting_location);start.maxLength=400;
    const notes=field(form,'Profile notes',profile.notes);notes.maxLength=1000;
+   const availability=(profile.availability||[]).map(item=>({...item}));
+   form.append(node('h3','Availability'),node('p','Explicit available or unavailable periods. Unspecified time remains unknown. Enter times in your device timezone; saved records use UTC.'));
+   const windows=node('div');form.append(windows);
+   function renderWindows(){windows.replaceChildren();if(!availability.length)windows.append(node('p','No availability recorded.'));
+    availability.forEach((item,index)=>{const row=node('section');row.append(node('p',item.status+' • '+new Date(item.starts_at).toLocaleString()+' to '+new Date(item.ends_at).toLocaleString()),node('p',item.note));
+     if(session.can_manage_team){const remove=node('button','Remove period');remove.type='button';remove.onclick=()=>{availability.splice(index,1);dirty=true;renderWindows();};row.append(remove);}windows.append(row);});
+   }renderWindows();
+   if(session.can_manage_team){
+    const inputs=node('div');const from=field(inputs,'Period start','','datetime-local');const until=field(inputs,'Period end','','datetime-local');
+    const label=node('label','Availability');const state=node('select');for(const value of ['available','unavailable']){const option=node('option',value);option.value=value;state.append(option);}label.append(state);inputs.append(label);
+    const note=field(inputs,'Period note','');note.maxLength=200;const add=node('button','Add period');add.type='button';
+    add.onclick=()=>{if(!from.value||!until.value){message.textContent='Enter both start and end times.';return;}
+     const start=new Date(from.value),end=new Date(until.value);if(!Number.isFinite(start.getTime())||!Number.isFinite(end.getTime())||end<=start){message.textContent='End time must follow start time.';return;}
+     if(availability.length>=100){message.textContent='Maximum100 availability periods.';return;}
+     if(availability.some(item=>new Date(item.starts_at)<end&&new Date(item.ends_at)>start)){message.textContent='Availability periods must not overlap.';return;}
+     availability.push({starts_at:start.toISOString(),ends_at:end.toISOString(),status:state.value,note:note.value});availability.sort((a,b)=>a.starts_at.localeCompare(b.starts_at));dirty=true;from.value=until.value=note.value='';renderWindows();message.textContent='Period added to draft. Save employee to keep it.';
+    };inputs.append(add);form.append(inputs);
+   }
    if(!session.can_manage_team){for(const input of form.querySelectorAll('input'))input.readOnly=true;}
    else{const save=node('button','Save employee');save.type='submit';form.append(save);
     form.onsubmit=e=>{e.preventDefault();if(!form.reportValidity())return;save.disabled=true;run(async()=>{
-     await api('/api/account/employees/'+encodeURIComponent(id),{expected_version:profile.version||0,employee_number:number.value,address:address.value,phone:phone.value,starting_location:start.value,notes:notes.value},'PUT');
+     await api('/api/account/employees/'+encodeURIComponent(id),{expected_version:profile.version||0,employee_number:number.value,address:address.value,phone:phone.value,starting_location:start.value,notes:notes.value,availability},'PUT');
      await detail(id);message.textContent='Employee saved.';
     }).finally(()=>{save.disabled=false;});};}
    content.append(form,node('h3','Qualifications'),node('p','Admin verification records the evidence reviewed. It does not establish eligibility for every job or issue an agency certificate.'));

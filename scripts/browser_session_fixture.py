@@ -1,7 +1,7 @@
 """Loopback-only synthetic provider for browser cookie transport checks.
 Not Google emulator acceptance; never use real credentials or deploy this runner.
 """
-import os, sys, tempfile, time, threading, secrets
+import argparse, os, sys, tempfile, time, threading, secrets
 from pathlib import Path
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 import uvicorn
@@ -22,10 +22,14 @@ class Provider:
     def verify_session(self,cookie):return self.cookies[cookie]
 
 if __name__=='__main__':
+    parser=argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--role',choices=['member','admin'],default='member')
+    parser.add_argument('--port',type=int,choices=[8081,8083],default=8083)
+    args=parser.parse_args()
     if any(os.getenv(k) for k in ('K_SERVICE','GAE_ENV','NETLIFY')):raise SystemExit('Loopback only')
     os.environ.update(WZOS_ACCOUNT_WORKSPACE='1',WZOS_AUTH_EMULATOR='1',FIREBASE_AUTH_EMULATOR_HOST='127.0.0.1:9099',WZOS_AUTH_PROJECT='demo-browser-check',WZOS_AUTH_WEB_API_KEY='synthetic')
     provider=FastAPI()
-    provider.add_middleware(CORSMiddleware,allow_origins=['http://localhost:8083'],allow_methods=['POST'],allow_headers=['Content-Type'])
+    provider.add_middleware(CORSMiddleware,allow_origins=[f'http://localhost:{args.port}'],allow_methods=['POST'],allow_headers=['Content-Type'])
     @provider.post('/identitytoolkit.googleapis.com/v1/accounts:signInWithPassword')
     def sign_in(body:dict):
         if body.get('email')!='member@example.test' or body.get('password')!='synthetic-only':raise HTTPException(401)
@@ -46,6 +50,6 @@ if __name__=='__main__':
         app.add_api_route('/identitytoolkit.googleapis.com/v1/accounts:signInWithPassword',sign_in,methods=['POST'])
         with storage.connect() as db:
             db.execute('INSERT INTO organizations VALUES (?,?,?,?)',('browser-org','Synthetic browser checks','enterprise',1))
-            db.execute('INSERT INTO memberships VALUES (?,?,?,?)',('browser-org','browser-member','member',1))
+            db.execute('INSERT INTO memberships VALUES (?,?,?,?)',('browser-org','browser-member',args.role,1))
         thread=threading.Thread(target=lambda:uvicorn.run(provider,host='127.0.0.1',port=9099,log_level='warning'),daemon=True);thread.start()
-        uvicorn.run(app,host='127.0.0.1',port=8083,log_level='warning')
+        uvicorn.run(app,host='127.0.0.1',port=args.port,log_level='warning')

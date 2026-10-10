@@ -16,6 +16,24 @@ DDL = (
 )
 
 
+class AvailabilityWindow(BaseModel):
+    model_config = ConfigDict(extra='forbid', str_strip_whitespace=True)
+    starts_at: datetime
+    ends_at: datetime
+    status: Literal['available', 'unavailable']
+    note: str = Field(default='', max_length=200)
+
+    @model_validator(mode='after')
+    def valid_interval(self):
+        if self.starts_at.utcoffset() is None or self.ends_at.utcoffset() is None:
+            raise ValueError('Availability requires timezone-aware times')
+        self.starts_at = self.starts_at.astimezone(timezone.utc)
+        self.ends_at = self.ends_at.astimezone(timezone.utc)
+        if self.ends_at <= self.starts_at:
+            raise ValueError('Availability end must follow start')
+        return self
+
+
 class Profile(BaseModel):
     model_config = ConfigDict(extra='forbid', str_strip_whitespace=True)
     expected_version: int = Field(ge=0)
@@ -24,6 +42,15 @@ class Profile(BaseModel):
     phone: str = Field(default='', max_length=20, pattern=r'^$|^\+[1-9][0-9]{7,14}$')
     starting_location: str = Field(default='', max_length=400)
     notes: str = Field(default='', max_length=1000)
+    availability: list[AvailabilityWindow] = Field(default_factory=list, max_length=100)
+
+    @model_validator(mode='after')
+    def valid_availability(self):
+        self.availability.sort(key=lambda window: window.starts_at)
+        for previous, current in zip(self.availability, self.availability[1:]):
+            if current.starts_at < previous.ends_at:
+                raise ValueError('Availability windows must not overlap')
+        return self
 
 
 class Qualification(BaseModel):
@@ -61,6 +88,26 @@ def qualification_state(payload, on_date=None):
     if payload.get('expires_on') and date.fromisoformat(payload['expires_on']) < on_date:
         return 'expired'
     return 'verified_current'
+
+
+def availability_state(payload, starts_at, ends_at):
+    """Explicit profile availability only; scheduling/travel checks remain separate.
+
+    Intervals are [start,end), so adjacent jobs/windows do not overlap. Unknown
+    coverage must never be treated as available by the dispatch planner.
+    """
+    if starts_at.utcoffset() is None or ends_at.utcoffset() is None or ends_at <= starts_at:
+        raise ValueError('A valid timezone-aware job interval is required')
+    windows = [AvailabilityWindow.model_validate(item) for item in payload.get('availability', [])]
+    if any(window.status == 'unavailable' and window.starts_at < ends_at and window.ends_at > starts_at for window in windows):
+        return 'unavailable'
+    covered_until = starts_at
+    for window in sorted(windows, key=lambda item: item.starts_at):
+        if window.status == 'available' and window.starts_at <= covered_until and window.ends_at > covered_until:
+            covered_until = window.ends_at
+            if covered_until >= ends_at:
+                return 'available'
+    return 'unknown'
 
 
 def register(app, accounts):
@@ -119,7 +166,7 @@ def register(app, accounts):
     @app.put('/api/account/employees/{user_id}')
     def update_profile(user_id: str, body: Profile, request: Request):
         selected = access(request, user_id, write=True)
-        payload = body.model_dump(exclude={'expected_version'})
+        payload = body.model_dump(mode='json', exclude={'expected_version'})
         payload['employee_number'] = payload['employee_number'].upper()
         encoded = json.dumps(payload, sort_keys=True)
         stamp = datetime.now(timezone.utc).isoformat()

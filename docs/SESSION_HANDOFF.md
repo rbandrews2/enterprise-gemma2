@@ -4,6 +4,24 @@ Ray authorized a separate restricted Google Cloud V2 staging deployment. Product
 
 ## Latest resume checkpoint
 
+October9 availability increment: employee profile JSON now includes at most100
+timezone-aware available/unavailable periods; overlapping windows fail validation,
+stored timestamps normalize to UTC, and missing coverage stays unknown. Shared
+availability_state checks complete coverage without making scheduling/travel or
+job-eligibility decisions. No additional DDL beyond employee tables. Synthetic
+in-app browser admin saved FIELD-001, starting depot and availability, then saved
+a reviewed qualification with evidence/issuer/expiry; saved fields and current
+qualification status appeared. Eight focused cases passed/eight PostgreSQL skipped;
+Node21passed. Screenshot in ignored integration worktree
+.local-data/employee-editor-proof.png. Full Python running in session19822 with log
+.local-data/employee-full-python.log; first explicit-top-level discovery failed,
+restart uses -m unittest discover -s tests. Cloud control timed out twice, then
+again after Ray's reconnection; PostgreSQL not launched. Later responsive viewport
+operation timed out, so desktop/mobile layout coverage is incomplete and any
+applied preview viewport override needs clearing when browser control recovers.
+Next collect full suite result, run disposable PostgreSQL and finish member/editor
+browser coverage before merge/deploy. No cloud migration or customer communication.
+
 October9 employee-directory candidate in isolated codex/integration-release: shared
 employee profiles and qualification contracts implemented with admin-only writes,
 own-member reads, unique organization employee numbers, optimistic revisions,

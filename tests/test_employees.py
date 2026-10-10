@@ -1,7 +1,7 @@
 import os
 import tempfile
 import unittest
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from unittest.mock import patch
 from fastapi.testclient import TestClient
@@ -90,6 +90,31 @@ class EmployeeTests(unittest.TestCase):
     def test_script_and_page_wiring(self):
         self.assertEqual(self.client.get('/employees.js').status_code,200)
         self.assertIn('/employees.js',self.client.get('/').text)
+
+    def test_availability_roundtrip_retries_and_validation(self):
+        available={'starts_at':'2026-10-15T08:00:00-04:00','ends_at':'2026-10-15T16:00:00-04:00','status':'available'}
+        response=self.profile(availability=[available])
+        self.assertEqual(response.status_code,200,response.text)
+        self.assertEqual(response.json()['availability'][0]['starts_at'],'2026-10-15T12:00:00Z')
+        self.assertEqual(self.profile(availability=[available]).json()['version'],1)
+        self.assertEqual(self.profile(expected_version=1,availability=[available,{**available,'status':'unavailable'}]).status_code,422)
+        self.assertEqual(self.profile(expected_version=1,availability=[{**available,'starts_at':'2026-10-15T08:00:00'}]).status_code,422)
+        self.assertEqual(self.profile(expected_version=1,availability=[{**available,'ends_at':available['starts_at']}]).status_code,422)
+        self.assertEqual(self.profile(expected_version=1,availability=[available]*101).status_code,422)
+        read=self.client.get('/api/account/employees/member',headers=self.headers('member')).json()
+        self.assertEqual(read['profile']['availability'],response.json()['availability'])
+
+    def test_availability_requires_complete_explicit_coverage(self):
+        from services.workspace_preview.employees import availability_state
+        def stamp(hour):return datetime(2026,10,15,hour,tzinfo=timezone.utc)
+        def window(start,end,status='available'):
+            return {'starts_at':stamp(start).isoformat(),'ends_at':stamp(end).isoformat(),'status':status}
+        self.assertEqual(availability_state({},stamp(8),stamp(16)),'unknown')
+        self.assertEqual(availability_state({'availability':[window(8,12),window(12,16)]},stamp(8),stamp(16)),'available')
+        self.assertEqual(availability_state({'availability':[window(8,12),window(13,16)]},stamp(8),stamp(16)),'unknown')
+        self.assertEqual(availability_state({'availability':[window(8,12,'unavailable')]},stamp(11),stamp(16)),'unavailable')
+        self.assertEqual(availability_state({'availability':[window(8,12,'unavailable')]},stamp(12),stamp(16)),'unknown')
+        with self.assertRaises(ValueError):availability_state({},stamp(16),stamp(8))
 
 
 @unittest.skipUnless(os.environ.get('WZOS_TEST_DATABASE_URL'),'Disposable PostgreSQL required')
