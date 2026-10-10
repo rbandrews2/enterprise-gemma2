@@ -565,6 +565,10 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
     def employee_script():
         return FileResponse(STATIC / "employees.js", media_type="text/javascript")
 
+    @app.get("/navigation-link.js")
+    def navigation_link_script():
+        return FileResponse(STATIC / "navigation-link.js", media_type="text/javascript")
+
     @app.get("/dispatch.js")
     def dispatch_script():
         return FileResponse(STATIC / "dispatch.js", media_type="text/javascript")

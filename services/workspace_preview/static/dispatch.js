@@ -9,22 +9,34 @@
  const local=value=>new Date(value).toLocaleString();
  const inputTime=value=>{if(!value)return '';const d=new Date(value);return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,16);};
  const STATUS={draft:'Draft — not sent',sent:'Approved and sent',superseded:'Replaced by a newer plan',cancelled:'Cancelled'};
- const ASSIGNMENT={sent:'Waiting for response',accepted:'Accepted',declined:'Declined',cancelled:'Cancelled',replaced:'Replaced by a newer plan'};
- let selected='', notice=null;
+ const ASSIGNMENT={sent:'Confirmation needed',accepted:'Receipt confirmed',declined:'Declined',cancelled:'Cancelled',replaced:'Replaced by a newer plan'};
+ let selected='', notice=null, assignmentOffset=0, assignmentPhase='upcoming', assignmentEpoch=0;
  const say=text=>{if(notice)notice.textContent=text;};
  async function act(control,work,done,refresh){control.disabled=true;try{await work();await refresh();say(done);}catch(error){say(error.message);}finally{control.disabled=false;}}
 
  async function memberPanel(root,current){
-  const data=await api('/api/dispatch/my-assignments');if(!current())return;
+  const data=await api('/api/dispatch/my-assignments?phase='+assignmentPhase+'&offset='+assignmentOffset);if(!current())return;
   const panel=node('section');panel.className='report-section panel';panel.append(node('h2','My assignments'));
-  if(!data.items.length)panel.append(node('p','No assignments yet.'));
-  for(const item of data.items){const card=node('article');card.className='clock-entry';
-   card.append(node('p',`${item.order_title} · ${item.role_title}`),node('p',`${local(item.starts_at)} → ${local(item.ends_at)} · ${item.address}`),node('p','Status: '+(ASSIGNMENT[item.status]||item.status)+(item.responded_at?' · '+local(item.responded_at):'')));
+  const tabs=node('div');tabs.className='clock-actions';
+  for(const [phase,title] of [['upcoming','Coming up'],['finished','Finished / cancelled'],['all','All jobs']]){const b=button(title);b.setAttribute('aria-pressed',String(phase===assignmentPhase));b.onclick=()=>{assignmentPhase=phase;assignmentOffset=0;rerender(root,current);};tabs.append(b);}panel.append(tabs);
+  if(!data.items.length)panel.append(node('p','No jobs in this list.'));
+  for(const item of data.items){const card=node('details');card.className='assignment-card';
+   const summary=node('summary');summary.append(node('strong',item.order_title),node('span',`${local(item.starts_at)} · ${ASSIGNMENT[item.status]||item.status}`));card.append(summary);
+   const body=node('div');body.className='assignment-body';
+   const details=node('dl');
+   for(const [label,value] of [['Location',item.address],['Start time',local(item.starts_at)],['Estimated finish',local(item.ends_at)],['Your role',item.role_title],['Client company',item.client_company],['Client point of contact',item.client_contact_name],['Contact phone',item.client_contact_phone]])details.append(node('dt',label),node('dd',value||'Not provided'));
+   body.append(details);const direction=window.WzosNavigation.link(item.address);if(direction)body.append(direction);
+   body.append(node('h3','Assigned crew'));const crew=node('ul');for(const person of item.crew||[])crew.append(node('li',`${person.name} · ${person.role_title}`));if(!crew.children.length)crew.append(node('li','Crew details unavailable for this historical assignment.'));body.append(crew);
+   body.append(node('h3','Dispatcher notes'),node('p',item.notes||'No additional instructions.'));
+   body.append(node('p','Status: '+(ASSIGNMENT[item.status]||item.status)+(item.responded_at?' · '+local(item.responded_at):'')));
+   if(item.snapshot_state!=='dispatched')body.append(node('p','Historical dispatched details were not preserved; the address/title shown may reflect later edits. Contact your dispatcher to confirm.'));
    if(item.status==='sent'){const row=node('div');row.className='clock-actions';
-    for(const [response,label] of [['accepted','Accept'],['declined','Decline']]){const b=button(label,response==='accepted'?'primary':'secondary');
-     b.onclick=()=>act(b,()=>api('/api/dispatch/assignments/'+item.id+'/respond',{method:'POST',body:JSON.stringify({response})}),response==='accepted'?'Assignment accepted.':'Assignment declined. Your admin will see your response.',()=>rerender(root,current));row.append(b);}
-    card.append(row);}
+    for(const [response,label] of [['accepted','Confirm receipt'],['declined','Decline']]){const b=button(label,response==='accepted'?'primary':'secondary');
+     b.onclick=()=>act(b,()=>api('/api/dispatch/assignments/'+item.id+'/respond',{method:'POST',body:JSON.stringify({response})}),response==='accepted'?'Receipt confirmed. Your admin can see the confirmation.':'Assignment declined. Your admin will see your response.',async()=>{await rerender(root,current);await updateNotifications();});row.append(b);}
+    body.append(row);}card.append(body);
    panel.append(card);}
+  const pages=node('div');pages.className='clock-actions';const prev=button('Previous jobs'),next=button('Next jobs');prev.disabled=assignmentOffset===0;next.disabled=assignmentOffset+data.limit>=data.total;
+  prev.onclick=()=>{assignmentOffset=Math.max(0,assignmentOffset-data.limit);rerender(root,current);};next.onclick=()=>{assignmentOffset+=data.limit;rerender(root,current);};pages.append(prev,next);panel.append(node('p',`${data.total} job${data.total===1?"":"s"} · times shown in your device time zone`),pages);
   return panel;
  }
 
@@ -33,13 +45,14 @@
   const start=node('input'),end=node('input');start.type=end.type='datetime-local';start.value=inputTime(req?.starts_at);end.value=inputTime(req?.ends_at);
   const role=req?.roles?.[0]||{id:'crew',title:'Crew member',count:1,qualification_ids:[]};
   const title=node('input'),count=node('input'),quals=node('input'),notes=node('textarea');title.value=role.title;count.type='number';count.min=1;count.max=20;count.value=role.count;quals.value=(role.qualification_ids||[]).join(', ');notes.value=req?.notes||'';notes.maxLength=1000;
+  const company=node('input'),contact=node('input'),phone=node('input');company.maxLength=200;contact.maxLength=120;phone.maxLength=80;company.value=req?.client_company||'';contact.value=req?.client_contact_name||'';phone.value=req?.client_contact_phone||'';phone.type='tel';
   quals.placeholder='Qualification identifiers, e.g. flagger';
   const save=button('Save staffing requirements','primary');
   if(req?.roles?.length>1)form.append(node('p',`This order has ${req.roles.length} roles; only the first is editable here. Other roles are kept.`));
-  form.append(labelled('Job starts (your time zone)',start),labelled('Job ends',end),labelled('Role',title),labelled('People needed',count),labelled('Required qualification identifiers (comma separated)',quals),labelled('Notes for planning',notes),save);
+  form.append(labelled('Job starts (your time zone)',start),labelled('Estimated finish',end),labelled('Client company',company),labelled('Client point of contact',contact),labelled('Client contact phone',phone),labelled('Role',title),labelled('People needed',count),labelled('Required qualification identifiers (comma separated)',quals),labelled('Dispatcher notes (visible to assigned employees)',notes),save);
   save.onclick=()=>{if(!start.value||!end.value){say('Enter the job start and end.');return;}
    const first={id:(role.id||'crew'),title:title.value.trim(),count:Number(count.value),qualification_ids:quals.value.split(',').map(q=>q.trim()).filter(Boolean)};
-   const body={expected_version:req?.version||0,starts_at:new Date(start.value).toISOString(),ends_at:new Date(end.value).toISOString(),roles:[first,...(req?.roles||[]).slice(1)],notes:notes.value};
+   const body={expected_version:req?.version||0,starts_at:new Date(start.value).toISOString(),ends_at:new Date(end.value).toISOString(),roles:[first,...(req?.roles||[]).slice(1)],notes:notes.value,client_company:company.value,client_contact_name:contact.value,client_contact_phone:phone.value};
    act(save,()=>api('/api/dispatch/orders/'+selected+'/requirements',{method:'PUT',body:JSON.stringify(body)}),'Staffing requirements saved.',refresh);};
   return form;
  }
@@ -94,7 +107,7 @@
   return panel;
  }
 
- async function rerender(root,current){const host=root.querySelector('[data-dispatch]');if(!host)return;const fresh=await build(root,current);if(fresh&&current())host.replaceWith(fresh);}
+ async function rerender(root,current){const host=root.querySelector('[data-dispatch]');if(!host)return;let fresh;if(host.dataset.assignmentsOnly){fresh=node('div');fresh.dataset.dispatch='1';fresh.dataset.assignmentsOnly='1';const panel=await memberPanel(root,current);if(panel)fresh.append(panel);}else fresh=await build(root,current);if(fresh&&current())host.replaceWith(fresh);}
  async function build(root,current){
   const session=window.wzosClock.getSession();if(session?.edition!=='enterprise')return null;
   const wrap=node('div');wrap.dataset.dispatch='1';
@@ -104,4 +117,26 @@
  }
  // Called by the Messaging view; renders nothing for Core organizations.
  window.wzosDispatch={async render(root,current,status){notice=status;try{const panel=await build(root,current);if(panel&&current())root.append(panel);}catch(error){if(current())say(error.message);}}};
+ async function showAssignments(){
+  const epoch=++assignmentEpoch,root=document.getElementById('team-content');root.replaceChildren();document.getElementById('team-title').textContent='My jobs';notice=document.getElementById('team-notice');notice.textContent='Loading assignments…';
+  const session=window.wzosClock.getSession(),scope=session?.organization_id+':'+session?.id;
+  const current=()=>epoch===assignmentEpoch&&scope===window.wzosClock.getSession()?.organization_id+':'+window.wzosClock.getSession()?.id;
+  const host=node('div');host.dataset.dispatch='1';host.dataset.assignmentsOnly='1';root.append(host);
+  try{const panel=await memberPanel(root,current);if(panel&&current()){host.append(panel);say('Open a job, review the details and confirm receipt.');}}catch(error){if(current())say(error.message);}
+ }
+ let polling=false,notificationScope='';
+ async function updateNotifications(){
+  const session=window.wzosClock.getSession(),nav=document.getElementById('assignments-nav'),count=document.getElementById('assignment-count'),alert=document.getElementById('assignment-alert');
+  const scope=session?.organization_id+':'+session?.id;
+  nav.hidden=session?.edition!=='enterprise';
+  if(scope!==notificationScope){notificationScope=scope;count.textContent='0';alert.hidden=true;assignmentOffset=0;}
+  if(nav.hidden||polling||document.hidden||!navigator.onLine)return;
+  polling=true;
+  try{const data=await api('/api/dispatch/notifications');const next=window.wzosClock.getSession();if(scope!==next?.organization_id+':'+next?.id)return;count.textContent=String(data.pending_count);alert.hidden=!data.pending_count;alert.textContent=`${data.pending_count} work assignment${data.pending_count===1?'':'s'} ${data.pending_count===1?"needs":"need"} your confirmation. Open My jobs to review.`;}catch(error){/* Durable assignments remain on the server; retry on reconnect. */}finally{polling=false;}
+ }
+ document.getElementById('assignments-nav').onclick=()=>window.showWzosView('assignments');
+ document.addEventListener('wzos:view',event=>{assignmentEpoch++;if(event.detail==='assignments')showAssignments();});
+ document.addEventListener('wzos:session',()=>{assignmentEpoch++;updateNotifications();});
+ document.addEventListener('visibilitychange',updateNotifications);window.addEventListener('online',updateNotifications);
+ setInterval(updateNotifications,30000);
 })();

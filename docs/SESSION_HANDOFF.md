@@ -4,6 +4,17 @@ Ray authorized a separate restricted Google Cloud V2 staging deployment. Product
 
 ## Latest resume checkpoint
 
+October 10 assignment inbox increment: codex/preproduction-modules now adds
+Enterprise My jobs, pending-confirmation badge, frozen dispatched client/crew/
+notes, explicit receipt confirmation and Open in Navigation for both roles.
+See ASSIGNMENT_INBOX_20261010.md. Focused dispatch17 passed/17PG skips, Node41
+passed; synthetic member browser badge/details/confirmation passed. Full Python
+regression is running in .local-data/assignment-full-python.log; its PostgreSQL
+gate remains pending. Closed-app push delivery needs a separate implementation.
+Synthetic assignment preview session40166 is running on8083, with example data
+only. No live deployment or customer sends. Next: collect full regression and
+run exact-candidate PostgreSQL; finish real-phone and background-push acceptance.
+
 October 10 repaired module assembly: branch codex/preproduction-modules contains
 Claude Messaging/Dispatch/Training/Offline repairs plus Codex's additional scoped
 Web Lock repair for concurrent offline drafts. Combined Python444 passed with119

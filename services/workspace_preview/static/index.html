@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>WZOS · Operations workspace</title><link rel="stylesheet" href="/workspace.css"><link rel="stylesheet" href="/forms-hub.css"><link rel="stylesheet" href="/timeclock.css"><script src="/employees.js" defer></script><script src="/account.js" defer></script><script src="/geometry.js" defer></script><script src="/files.js" defer></script><script src="/workspace.js" defer></script><script src="/timeclock.js" defer></script><script src="/timeclock-review.js" defer></script><script src="/modules.js" defer></script><script src="/forms-hub.js" defer></script><script src="/report-map.js" defer></script><script src="/report.js" defer></script><script src="/team-modules.js" defer></script><script src="/assistant.js" defer></script><script src="/review-workflows.js" defer></script></head>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>WZOS · Operations workspace</title><link rel="stylesheet" href="/workspace.css"><link rel="stylesheet" href="/forms-hub.css"><link rel="stylesheet" href="/timeclock.css"><script src="/employees.js" defer></script><script src="/account.js" defer></script><script src="/geometry.js" defer></script><script src="/files.js" defer></script><script src="/navigation-link.js" defer></script><script src="/workspace.js" defer></script><script src="/timeclock.js" defer></script><script src="/timeclock-review.js" defer></script><script src="/modules.js" defer></script><script src="/forms-hub.js" defer></script><script src="/report-map.js" defer></script><script src="/report.js" defer></script><script src="/team-modules.js" defer></script><script src="/assistant.js" defer></script><script src="/review-workflows.js" defer></script></head>
 <body>
 <script src="/training-content.js" defer></script>
 <a class="skip" href="#main">Skip to workspace</a>
@@ -10,6 +10,7 @@
  <p class="nav-label">WORKSPACE</p>
  <nav aria-label="Workspace navigation">
   <button class="nav-item active" id="jobs-nav" aria-current="page"><span aria-hidden="true">▤</span> Work orders <span class="nav-count" id="nav-count">0</span></button>
+  <button class="nav-item" id="assignments-nav" hidden>My jobs <span class="nav-count" id="assignment-count">0</span></button>
   <button class="nav-item" id="report-nav">Work Zone Report</button>
   <button class="nav-item" id="atlas-nav"><span aria-hidden="true">✦</span> Atlas assistant</button>
   <button class="nav-item" id="forms-nav">Forms hub</button>
@@ -24,6 +25,7 @@
 <div class="app">
  <header class="topbar"><div><span class="breadcrumb">Workspace /</span> <strong>Work orders</strong></div><div class="profile"><span id="role-pill" class="pill">Member</span><span class="avatar">JL</span><span id="actor-name">Test user</span></div></header>
  <section class="preview-bar" aria-label="Preview controls"><div><strong>LOCAL PREVIEW</strong><span>Synthetic records · no production sign-in</span></div><label for="identity">Test identity <select id="identity" disabled></select></label></section>
+ <p id="assignment-alert" class="assignment-alert" role="status" hidden></p>
  <main id="main"><div id="orders-view">
   <div class="page-heading"><div><p class="eyebrow">FIELD OPERATIONS</p><h1>Work orders</h1><p id="scope-note">Your jobs, ready for the next step.</p></div><button id="new-order" class="primary" disabled>+ New work order</button></div>
   <div id="notice" role="status" aria-live="polite" hidden></div>

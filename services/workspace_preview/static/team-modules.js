@@ -17,7 +17,7 @@
     if(cached)root.append(node('p','Offline / connection unavailable — showing previously loaded destinations. Confirm addresses and site access before travel.'));
     if(!orders.length)root.append(node('p','No destinations loaded. Connect and open your jobs before going offline.'));
     else{const all=node('button','Save all destinations ('+orders.length+')');all.className='secondary';all.onclick=()=>saveSheet(orders,'wzos-destinations.txt');root.append(all);}
-    for(const order of orders){const card=node('section','');card.className='report-section panel';card.append(node('h2',order.title),node('p',order.address));const a=node('a','Open destination in Google Maps');a.href='https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(order.address);a.target='_blank';a.rel='noopener noreferrer';card.append(a);
+    for(const order of orders){const card=node('section','');card.className='report-section panel';card.append(node('h2',order.title),node('p',order.address));const a=window.WzosNavigation.link(order.address);if(a)card.append(a);
      if(order.work_date)card.append(node('p','Work date: '+order.work_date));const save=node('button','Save destination sheet');save.className='secondary';save.onclick=()=>saveSheet([order],'wzos-destination.txt');card.append(save);root.append(card);}return;
    }
    if(name==='training'){

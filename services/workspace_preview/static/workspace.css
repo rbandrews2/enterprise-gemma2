@@ -102,3 +102,14 @@ body::before{content:"";position:fixed;inset:-4%;z-index:-2;pointer-events:none;
 @media(max-width:360px){.metrics{grid-template-columns:1fr}.sidebar nav{gap:6px}.sidebar .nav-item{padding:10px;font-size:12px}}
 
 .account-dialog .remember-choice{display:flex;align-items:center;gap:12px}.account-dialog .remember-choice[hidden]{display:none}.account-dialog .remember-choice input{width:22px;min-height:22px;flex:0 0 22px}
+/* Assignment details are readable phone-first, with the established glass surface. */
+.assignment-card{margin:1rem 0;border:1px solid rgba(231,192,88,.24);border-radius:18px;background:linear-gradient(135deg,rgba(12,12,14,.85),rgba(30,28,22,.56));backdrop-filter:blur(14px);overflow:hidden}
+.assignment-card summary{padding:1.2rem;cursor:pointer;min-height:48px}
+.assignment-card summary strong,.assignment-card summary span{display:block;overflow-wrap:anywhere}
+.assignment-card summary span{margin-top:.5rem;color:#d2c5a6;font-size:.9rem}
+.assignment-body{padding:0 1.2rem 1.2rem}.assignment-body dl{display:grid;grid-template-columns:minmax(95px,1fr) minmax(0,2fr);gap:.8rem;margin:1rem 0}
+.assignment-body dt{color:#b5afa1}.assignment-body dd{margin:0;overflow-wrap:anywhere}.assignment-body p{white-space:pre-wrap;overflow-wrap:anywhere}
+.assignment-alert{margin:1rem 1.5rem 0;padding:.85rem 1rem;border:1px solid rgba(232,191,78,.4);border-radius:12px;background:rgba(32,24,9,.85);color:#f3d77e}
+.navigation-link{display:inline-flex;align-items:center;min-height:44px;margin:.5rem 0;padding:.6rem 1rem;border-radius:10px;border:1px solid rgba(236,200,104,.4);background:rgba(23,21,16,.82);color:#f5dc94;text-decoration:none}
+.navigation-link:focus-visible,.assignment-card summary:focus-visible{outline:2px solid #f5dc94;outline-offset:3px}
+@media(max-width:480px){.assignment-body dl{grid-template-columns:1fr;gap:.35rem}.assignment-body dd{margin-bottom:.6rem}.assignment-alert{margin:1rem .75rem 0}}

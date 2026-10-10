@@ -78,6 +78,63 @@ class DispatchTests(unittest.TestCase):
     def inbox(self, user):
         return [m['body'] for m in self.client.get('/api/messages', headers=self.h(user)).json()['items']]
 
+    def test_assignment_details_freeze_client_crew_and_notes(self):
+        self.profile('crew3', 'EMP-3', [window()], version=1)
+        self.requirements(count=2, client_company='Example Utilities', client_contact_name='Alex Test',
+                          client_contact_phone='555-0100', notes='Meet at the west entrance.\nBring radios.')
+        sent = self.approve(self.propose()).json()
+        item = self.client.get('/api/dispatch/my-assignments', headers=self.h('member')).json()['items'][0]
+        self.assertEqual(item['client_company'], 'Example Utilities')
+        self.assertEqual(item['client_contact_name'], 'Alex Test')
+        self.assertEqual(item['client_contact_phone'], '555-0100')
+        self.assertEqual(item['notes'], 'Meet at the west entrance.\nBring radios.')
+        self.assertEqual({p['name'] for p in item['crew']}, {'Member', 'Crew3'})
+        self.assertEqual(item['snapshot_state'], 'dispatched')
+        self.requirements(version=1, client_company='Later client', notes='Later instructions')
+        with self.app.state.accounts.connect() as db:
+            row = db.execute('SELECT payload FROM preview_orders WHERE id=?', (self.order,)).fetchone()
+            import json
+            payload = json.loads(row['payload']); payload['address'] = 'Later location'
+            db.execute('UPDATE preview_orders SET payload=? WHERE id=?', (json.dumps(payload), self.order))
+        again = self.client.get('/api/dispatch/my-assignments', headers=self.h('member')).json()['items'][0]
+        self.assertEqual(again['address'], item['address'])
+        self.assertEqual(again['notes'], item['notes'])
+        self.assertEqual(again['client_company'], item['client_company'])
+        for private in ('Private home address', '+15559990000', 'synthetic-card-1', 'override_reason'):
+            self.assertNotIn(private, str(again))
+
+    def test_notifications_confirmation_and_job_lists_are_tenant_scoped(self):
+        self.requirements(); sent = self.approve(self.propose()).json()
+        endpoint = '/api/dispatch/notifications'
+        self.assertEqual(self.client.get(endpoint, headers=self.h('member')).json()['pending_count'], 1)
+        self.assertEqual(self.client.get(endpoint, headers=self.h('other')).json()['pending_count'], 0)
+        self.assertEqual(self.client.get(endpoint, headers=self.h('rival', self.rival)).json()['pending_count'], 0)
+        self.assertEqual(self.client.get(endpoint, headers=self.h('coreadmin', self.core)).status_code, 403)
+        self.assertEqual(self.client.get('/api/dispatch/my-assignments?phase=unknown', headers=self.h('member')).status_code, 422)
+        data = self.client.get('/api/dispatch/my-assignments?phase=upcoming', headers=self.h('member')).json()
+        self.assertEqual((data['total'], data['limit'], data['offset']), (1, 25, 0))
+        self.assertEqual(self.client.get('/api/dispatch/my-assignments?offset=25', headers=self.h('member')).json()['items'], [])
+        url = '/api/dispatch/assignments/' + data['items'][0]['id'] + '/respond'
+        self.assertEqual(self.client.post(url, headers=self.h('other'), json={'response':'accepted'}).status_code, 404)
+        self.assertEqual(self.client.post(url, headers=self.h('member'), json={'response':'accepted'}).status_code, 200)
+        self.assertEqual(self.client.get(endpoint, headers=self.h('member')).json()['pending_count'], 0)
+        self.assertEqual(self.client.post(url, headers=self.h('member'), json={'response':'accepted'}).status_code, 200)
+        self.assertEqual(self.client.post(f"/api/dispatch/plans/{sent['id']}/cancel", headers=self.h(), json={'expected_version':sent['version'], 'reason':'Job cancelled'}).status_code, 200)
+        self.assertEqual(self.client.get('/api/dispatch/my-assignments?phase=upcoming', headers=self.h('member')).json()['total'], 0)
+        self.assertEqual(self.client.get('/api/dispatch/my-assignments?phase=finished', headers=self.h('member')).json()['total'], 1)
+
+    def test_navigation_script_served_and_legacy_details_explicit(self):
+        self.assertEqual(self.client.get('/navigation-link.js').status_code, 200)
+        self.requirements(); sent = self.approve(self.propose()).json()
+        import json
+        with self.app.state.accounts.connect() as db:
+            row = db.execute('SELECT payload FROM dispatch_plans WHERE id=?', (sent['id'],)).fetchone()
+            payload = json.loads(row['payload']); del payload['delivery_snapshot']
+            db.execute('UPDATE dispatch_plans SET payload=? WHERE id=?', (json.dumps(payload), sent['id']))
+        item = self.client.get('/api/dispatch/my-assignments', headers=self.h('member')).json()['items'][0]
+        self.assertEqual(item['snapshot_state'], 'legacy_unavailable')
+        self.assertEqual(item['crew'], [])
+
     def test_enterprise_admin_only(self):
         self.assertEqual(self.client.get(f'/api/dispatch/orders/{self.order}', headers=self.h('coreadmin', self.core)).status_code, 403)
         self.assertEqual(self.client.get('/api/dispatch/my-assignments', headers=self.h('coreadmin', self.core)).status_code, 403)

@@ -70,6 +70,9 @@ class Requirements(BaseModel):
     ends_at: datetime
     roles: list[Role] = Field(min_length=1, max_length=10)
     notes: str = Field(default='', max_length=1000)
+    client_company: str = Field(default='', max_length=200)
+    client_contact_name: str = Field(default='', max_length=120)
+    client_contact_phone: str = Field(default='', max_length=80)
 
     @model_validator(mode='after')
     def window(self):
@@ -370,6 +373,18 @@ def register(app, connect, actor, permitted_row, actors):
             stamp, title = now(), json.loads(order['payload']).get('title', 'Work order')
             address = json.loads(order['payload']).get('address', '')
             roles = {r['id']: r['title'] for r in req['roles']}
+            # Freeze only employee-visible dispatch details, never private profiles
+            # or qualification/availability overrides. Retain what was actually sent.
+            payload['delivery_snapshot'] = {
+                'order_title': title, 'address': address,
+                'notes': req.get('notes', ''),
+                'client_company': req.get('client_company', ''),
+                'client_contact_name': req.get('client_contact_name', ''),
+                'client_contact_phone': req.get('client_contact_phone', ''),
+                'crew': [{'name': a['name'], 'role_title': roles[a['role_id']]}
+                         for a in payload['assignments']],
+                'role_titles': roles, 'snapshot_state': 'dispatched',
+            }
             kept = {a['user_id'] for a in payload['assignments']}
             for old in previous:
                 for item in db.execute("SELECT * FROM dispatch_assignments WHERE plan_id=? AND status IN ('sent','accepted')", (old['id'],)).fetchall():
@@ -380,15 +395,15 @@ def register(app, connect, actor, permitted_row, actors):
                 log(db, user, row['order_id'], old['id'], 'plan_superseded', 'replaced by ' + row['id'])
             for assignment in payload['assignments']:
                 assignment_id = str(uuid4())
-                text = f'New assignment: {title}, {roles[assignment["role_id"]]}, {when(req["starts_at"], req["ends_at"])}. Location: {address}. Open WZOS Messaging to accept or decline.'
+                text = f'New assignment: {title}, {roles[assignment["role_id"]]}, {when(req["starts_at"], req["ends_at"])}. Location: {address}. Open WZOS My jobs to review details and confirm receipt.'
                 db.execute('INSERT INTO dispatch_assignments VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
                            (assignment_id, user['organization_id'], row['id'], row['order_id'], assignment['user_id'], assignment['role_id'], 'sent',
                             req['starts_at'], req['ends_at'], None, None, '', stamp, stamp))
                 message_id = notice(db, user, assignment['user_id'], text, assignment_id, queued)
                 db.execute('UPDATE dispatch_assignments SET message_id=? WHERE id=?', (message_id, assignment_id))
             db.execute("UPDATE dispatch_plans SET status='superseded',updated_at=? WHERE organization_id=? AND order_id=? AND status='draft' AND id<>?", (stamp, user['organization_id'], row['order_id'], row['id']))
-            db.execute("UPDATE dispatch_plans SET status='sent',version=version+1,approved_by=?,approved_at=?,approval_request_id=?,updated_at=? WHERE id=?",
-                       (user['id'], stamp, str(body.request_id), stamp, row['id']))
+            db.execute("UPDATE dispatch_plans SET status='sent',version=version+1,payload=?,approved_by=?,approved_at=?,approval_request_id=?,updated_at=? WHERE id=?",
+                       (json.dumps(payload, sort_keys=True), user['id'], stamp, str(body.request_id), stamp, row['id']))
             log(db, user, row['order_id'], row['id'], 'plan_approved_and_sent', f'{len(payload["assignments"])} assignments')
             result = view(db, plan_row(db, user, plan_id), order, req)
         deliver(user, background, queued)
@@ -417,20 +432,44 @@ def register(app, connect, actor, permitted_row, actors):
         deliver(user, background, queued)
         return result
 
-    @app.get('/api/dispatch/my-assignments')
-    def mine(request: Request, offset: int = Query(0, ge=0)):
+    @app.get('/api/dispatch/notifications')
+    def notifications(request: Request):
         user = enterprise(request, admin=False)
         with connect() as db:
-            rows = db.execute('SELECT * FROM dispatch_assignments WHERE organization_id=? AND user_id=? ORDER BY starts_at DESC,id LIMIT 25 OFFSET ?', (user['organization_id'], user['id'], offset)).fetchall()
+            count = db.execute("SELECT COUNT(*) AS n FROM dispatch_assignments WHERE organization_id=? AND user_id=? AND status='sent'", (user['organization_id'], user['id'])).fetchone()['n']
+        return {'pending_count': count}
+
+    @app.get('/api/dispatch/my-assignments')
+    def mine(request: Request, offset: int = Query(0, ge=0), phase: Literal['all', 'upcoming', 'finished'] = 'all'):
+        user = enterprise(request, admin=False)
+        with connect() as db:
+            where, args = 'organization_id=? AND user_id=?', [user['organization_id'], user['id']]
+            if phase == 'upcoming':
+                where += " AND ends_at>=? AND status IN ('sent','accepted')"
+                args.append(now())
+            elif phase == 'finished':
+                where += " AND (ends_at<? OR status IN ('declined','cancelled','replaced'))"
+                args.append(now())
+            total = db.execute('SELECT COUNT(*) AS n FROM dispatch_assignments WHERE ' + where, args).fetchone()['n']
+            pending = db.execute("SELECT COUNT(*) AS n FROM dispatch_assignments WHERE organization_id=? AND user_id=? AND status='sent'", (user['organization_id'], user['id'])).fetchone()['n']
+            sort = 'ASC' if phase == 'upcoming' else 'DESC'
+            rows = db.execute('SELECT * FROM dispatch_assignments WHERE ' + where + ' ORDER BY starts_at ' + sort + ',id LIMIT 25 OFFSET ?', [*args, offset]).fetchall()
             items = []
             for row in rows:
                 order = db.execute('SELECT payload FROM preview_orders WHERE id=? AND organization_id=?', (row['order_id'], user['organization_id'])).fetchone()
                 details = json.loads(order['payload']) if order else {}
-                req = requirement(db, user['organization_id'], row['order_id']) or {'roles': []}
-                titles = {r['id']: r['title'] for r in req['roles']}
+                plan = db.execute('SELECT payload FROM dispatch_plans WHERE id=? AND organization_id=?', (row['plan_id'], user['organization_id'])).fetchone()
+                snapshot = json.loads(plan['payload']).get('delivery_snapshot') if plan else None
+                # Historical records cannot truthfully reconstruct the dispatched
+                # client/crew/notes. Clearly label this fallback; never fabricate it.
+                snapshot = snapshot or {'order_title': details.get('title', ''), 'address': details.get('address', ''),
+                                        'snapshot_state': 'legacy_unavailable', 'crew': [], 'notes': '',
+                                        'client_company': '', 'client_contact_name': '', 'client_contact_phone': '', 'role_titles': {}}
+                titles = snapshot['role_titles']
                 items.append({**{k: row[k] for k in ('id', 'order_id', 'role_id', 'status', 'starts_at', 'ends_at', 'responded_at', 'response_note', 'updated_at')},
-                              'role_title': titles.get(row['role_id'], row['role_id']), 'order_title': details.get('title', ''), 'address': details.get('address', '')})
-        return {'items': items}
+                              **{k: v for k, v in snapshot.items() if k != 'role_titles'},
+                              'role_title': titles.get(row['role_id'], row['role_id'])})
+        return {'items': items, 'total': total, 'limit': 25, 'offset': offset, 'pending_count': pending, 'phase': phase}
 
     @app.post('/api/dispatch/assignments/{assignment_id}/respond')
     def respond(assignment_id: UUID, body: Response, request: Request):
