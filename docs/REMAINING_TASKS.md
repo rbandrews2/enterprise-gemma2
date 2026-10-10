@@ -70,3 +70,7 @@ New items from Ray can be added below and then inserted into the sequence accord
   4. Active-shift corrections: currently close the shift; decide whether adjusting a still-running shift is supported.
   5. Retention and access: define audit/submission/export retention and member audit exports.
   6. Payroll scope: current exports say payroll is not calculated; confirm the intended integration scope without treating payroll exclusion as decided.
+
+## October 10 repaired module candidate
+
+Messaging, Enterprise dispatch, versioned training/reassignment and offline drafts are assembled on codex/preproduction-modules. Combined local Python444 and Node37 passed; PostgreSQL/browser acceptance precede release. See CLAUDE_REPAIR_ACCEPTANCE_20261010.md.
