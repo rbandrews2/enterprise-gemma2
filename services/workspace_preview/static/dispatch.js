@@ -18,7 +18,8 @@
   const data=await api('/api/dispatch/my-assignments?phase='+assignmentPhase+'&offset='+assignmentOffset);if(!current())return;
   const panel=node('section');panel.className='report-section panel';panel.append(node('h2','My assignments'));
   const tabs=node('div');tabs.className='clock-actions';
-  for(const [phase,title] of [['upcoming','Coming up'],['finished','Finished / cancelled'],['all','All jobs']]){const b=button(title);b.setAttribute('aria-pressed',String(phase===assignmentPhase));b.onclick=()=>{assignmentPhase=phase;assignmentOffset=0;rerender(root,current);};tabs.append(b);}panel.append(tabs);
+  for(const [phase,title] of [['upcoming','Coming up'],['finished','Finished / cancelled'],['all','All jobs']]){const b=button(title);b.setAttribute('aria-pressed',String(phase===assignmentPhase));b.onclick=()=>{assignmentPhase=phase;assignmentOffset=0;rerender(root,current).catch(error=>say(error.message));};tabs.append(b);}
+  const reload=button('Refresh jobs');reload.onclick=()=>act(reload,()=>Promise.resolve(),'Jobs refreshed.',()=>rerender(root,current));tabs.append(reload);panel.append(tabs);
   if(!data.items.length)panel.append(node('p','No jobs in this list.'));
   for(const item of data.items){const card=node('details');card.className='assignment-card';
    const summary=node('summary');summary.append(node('strong',item.order_title),node('span',`${local(item.starts_at)} · ${ASSIGNMENT[item.status]||item.status}`));card.append(summary);
@@ -36,7 +37,7 @@
     body.append(row);}card.append(body);
    panel.append(card);}
   const pages=node('div');pages.className='clock-actions';const prev=button('Previous jobs'),next=button('Next jobs');prev.disabled=assignmentOffset===0;next.disabled=assignmentOffset+data.limit>=data.total;
-  prev.onclick=()=>{assignmentOffset=Math.max(0,assignmentOffset-data.limit);rerender(root,current);};next.onclick=()=>{assignmentOffset+=data.limit;rerender(root,current);};pages.append(prev,next);panel.append(node('p',`${data.total} job${data.total===1?"":"s"} · times shown in your device time zone`),pages);
+  prev.onclick=()=>{assignmentOffset=Math.max(0,assignmentOffset-data.limit);rerender(root,current).catch(error=>say(error.message));};next.onclick=()=>{assignmentOffset+=data.limit;rerender(root,current).catch(error=>say(error.message));};pages.append(prev,next);panel.append(node('p',`${data.total} job${data.total===1?"":"s"} · times shown in your device time zone`),pages);
   return panel;
  }
 
@@ -129,10 +130,12 @@
   const session=window.wzosClock.getSession(),nav=document.getElementById('assignments-nav'),count=document.getElementById('assignment-count'),alert=document.getElementById('assignment-alert');
   const scope=session?.organization_id+':'+session?.id;
   nav.hidden=session?.edition!=='enterprise';
-  if(scope!==notificationScope){notificationScope=scope;count.textContent='0';alert.hidden=true;assignmentOffset=0;}
-  if(nav.hidden||polling||document.hidden||!navigator.onLine)return;
+  if(scope!==notificationScope){notificationScope=scope;count.textContent='…';alert.hidden=true;assignmentOffset=0;}
+  if(nav.hidden){count.textContent='0';alert.hidden=true;return;}
+  if(polling||document.hidden)return;
+  if(!navigator.onLine){alert.hidden=false;alert.textContent='Offline — reconnect to check new work assignments.';return;}
   polling=true;
-  try{const data=await api('/api/dispatch/notifications');const next=window.wzosClock.getSession();if(scope!==next?.organization_id+':'+next?.id)return;count.textContent=String(data.pending_count);alert.hidden=!data.pending_count;alert.textContent=`${data.pending_count} work assignment${data.pending_count===1?'':'s'} ${data.pending_count===1?"needs":"need"} your confirmation. Open My jobs to review.`;}catch(error){/* Durable assignments remain on the server; retry on reconnect. */}finally{polling=false;}
+  try{const data=await api('/api/dispatch/notifications');const next=window.wzosClock.getSession();if(scope!==next?.organization_id+':'+next?.id)return;count.textContent=String(data.pending_count);alert.hidden=!data.pending_count;alert.textContent=`${data.pending_count} work assignment${data.pending_count===1?'':'s'} ${data.pending_count===1?"needs":"need"} your confirmation. Open My jobs to review.`;}catch(error){if(scope===notificationScope){alert.hidden=false;alert.textContent='New assignments could not be checked. Reconnect or refresh My jobs; WZOS will retry.';}}finally{polling=false;}
  }
  document.getElementById('assignments-nav').onclick=()=>window.showWzosView('assignments');
  document.addEventListener('wzos:view',event=>{assignmentEpoch++;if(event.detail==='assignments')showAssignments();});

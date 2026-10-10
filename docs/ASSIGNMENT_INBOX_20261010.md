@@ -56,8 +56,8 @@ retains JSON metadata, though older approval code won't create new snapshots.
 ## Acceptance and remaining gates
 
 - Focused dispatch: 34 tests, 17 passed, 17 PostgreSQL skips, zero failures/errors.
-- Full Node: 41 passed, zero failures/skips. New cases cover detail rendering,
-  explicit receipt, role visibility and safe address/coordinate URL construction.
+- Full Node: 42 passed, zero failures/skips. New cases cover detail rendering,
+  explicit receipt, role visibility, explicit unknown/retry states and safe address/coordinate URL construction.
 - Local synthetic member browser passed sign-in, badge1, jobs list, all details,
   receipt confirmation and badge0. Browser displayed a server confirmation time.
 - Screenshot: ignored `.local-data/assignment-member-preview.jpg`; synthetic only.
