@@ -4,6 +4,13 @@
  let generation=0, view=null, dirty=false, sending=false;
  const previous=window.wzosModulesCanLeave;
  window.wzosModulesCanLeave=()=>previous()&&!sending&&(!dirty||confirm('Leave the unsaved test message?'));
+ // Destination sheets are plain-text address references for travel without a connection.
+ // They are not maps, routes or verified site access, and they never include private files.
+ function saveSheet(orders,filename){
+  const lines=['WZOS destination sheet','Saved on device: '+new Date().toISOString(),'Address reference only. No map, route, traffic or safe-access verification. Confirm details with your admin before travel.',''];
+  for(const order of orders)lines.push(order.title,order.address,...(order.locality?['Locality: '+order.locality]:[]),...(order.work_date?['Work date: '+order.work_date]:[]),'Google Maps search: https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(order.address),'');
+  const url=URL.createObjectURL(new Blob([lines.join('\n')],{type:'text/plain;charset=utf-8'}));const link=node('a','');link.href=url;link.download=filename;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+ }
  async function show(name){
   generation++;view=name;dirty=false;const epoch=generation,root=$('team-content');root.replaceChildren();$('team-notice').textContent='';
   if(!['training','messages','navigation'].includes(name))return;
@@ -16,8 +23,9 @@
     if(epoch!==generation)return;
     if(cached)root.append(node('p','Offline / connection unavailable — showing previously loaded destinations. Confirm addresses and site access before travel.'));
     if(!orders.length)root.append(node('p','No destinations loaded. Connect and open your jobs before going offline.'));
+    else{const all=node('button','Save all destinations ('+orders.length+')');all.className='secondary';all.onclick=()=>saveSheet(orders,'wzos-destinations.txt');root.append(all);}
     for(const order of orders){const card=node('section','');card.className='report-section panel';card.append(node('h2',order.title),node('p',order.address));const a=node('a','Open destination in Google Maps');a.href='https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(order.address);a.target='_blank';a.rel='noopener noreferrer';card.append(a);
-     const save=node('button','Save destination sheet');save.className='secondary';save.onclick=()=>{const content=['WZOS destination sheet',order.title,order.address,'Saved on device: '+new Date().toISOString(),'Address reference only. No route, map, traffic or safe-access verification.'].join('\n');const url=URL.createObjectURL(new Blob([content],{type:'text/plain;charset=utf-8'}));const link=node('a','');link.href=url;link.download='wzos-destination.txt';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};card.append(save);root.append(card);}return;
+     if(order.work_date)card.append(node('p','Work date: '+order.work_date));const save=node('button','Save destination sheet');save.className='secondary';save.onclick=()=>saveSheet([order],'wzos-destination.txt');card.append(save);root.append(card);}return;
    }
    if(name==='training'){
     root.append(node('p','Recovered V1 course catalog. Course content and accreditation are awaiting review. These are personal study plans, not completion records or certificates.'));

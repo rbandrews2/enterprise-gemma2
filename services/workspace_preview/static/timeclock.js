@@ -3,12 +3,30 @@
  const node=id=>document.getElementById(id), text=(tag,value)=>{const n=document.createElement(tag);n.textContent=value;return n;};
  const button=(label,id)=>{const b=text('button',label);b.type='button';b.className='secondary';if(id)b.id=id;return b;};
  const labelled=(caption,control)=>{const l=text('label',caption);l.append(control);return l;};
- let active=null, loaded=false, busy=false, generation=0, offset=0, observed=0, baseSeconds=0, pending=null, actorId=null, lastVerified=null, drafts=[], submitting=false, membersLoaded=null;
+ let active=null, loaded=false, busy=false, generation=0, offset=0, observed=0, baseSeconds=0, pending=null, actorId=null, lastVerified=null, drafts=[], submitting=false, membersLoaded=null, persistence='tab';
  const TASKS={job_site:'Job Site',setup:'Setup',teardown:'Teardown',travel:'Travel Time',other:'Other'};
  const ACTIONS={clock_in:'Clock in',break_start:'Start break',break_end:'End break',switch_task:'Switch task',clock_out:'Clock out'};
  const BASIS={server_recorded:'Server recorded',admin_corrected:'Admin corrected',admin_entered:'Admin entered'};
  const STATUS={pending:'Awaiting admin review',applied:'Applied by admin',rejected:'Rejected by admin',duplicate:'Marked duplicate by admin'};
  const scope=session=>session?`${session.organization_id}:${session.id}`:null;
+ // Drafts persist on this device under one key per organization and account, so another
+ // account on a shared device never loads them. They stay device estimates until an admin
+ // reviews the submission; nothing here replays or verifies attendance.
+ const STORE='wzos.clockDrafts.v1:', RETAIN_MS=14*864e5, LOCAL_FIELDS=['submission'];
+ const storage=()=>{try{return window.localStorage||null;}catch(error){return null;}};
+ const tooOld=d=>new Date(d.stated_at||d.captured_at).getTime()<Date.now()-RETAIN_MS;
+ const wellFormed=d=>d&&typeof d.request_id==='string'&&ACTIONS[d.action]&&!isNaN(new Date(d.captured_at));
+ const outgoing=d=>Object.fromEntries(Object.entries(d).filter(([k])=>!LOCAL_FIELDS.includes(k)));
+ function loadDrafts(id){
+  const store=storage();persistence=store?'device':'tab';if(!id||!store)return [];
+  try{const saved=JSON.parse(store.getItem(STORE+id)||'null');return saved&&saved.scope===id&&Array.isArray(saved.drafts)?saved.drafts.filter(wellFormed):[];}
+  catch(error){persistence='tab';return [];}
+ }
+ function saveDrafts(){
+  const store=storage();if(!actorId||!store){persistence='tab';return;}
+  try{if(drafts.length)store.setItem(STORE+actorId,JSON.stringify({scope:actorId,saved_at:new Date().toISOString(),drafts}));else store.removeItem(STORE+actorId);persistence='device';}
+  catch(error){persistence='tab';}
+ }
  const format=n=>[Math.floor(n/3600),Math.floor(n%3600/60),n%60].map(v=>String(v).padStart(2,'0')).join(':');
  const message=value=>{node('clock-message').textContent=value;};
  const local=value=>new Date(value).toLocaleString();
@@ -35,8 +53,8 @@
   // Drafts are only for when confirmed clock actions are unavailable, which avoids duplicating live punches.
   const session=window.wzosClock.getSession();
   keep.disabled=!session||submitting||(loaded&&navigator.onLine)||drafts.length>=50;
-  submit.disabled=!drafts.length||submitting||!loaded||!navigator.onLine;
-  download.disabled=!drafts.length;removeLast.disabled=!drafts.length||submitting;
+  submit.disabled=!drafts.some(d=>!tooOld(d))||submitting||!loaded||!navigator.onLine;
+  download.disabled=!drafts.length;removeLast.disabled=!drafts.length||submitting;discard.disabled=!drafts.length||submitting;
  }
  function renderActive(data){
   active=data.active;loaded=true;lastVerified=new Date().toISOString();observed=performance.now();baseSeconds=active?.work_seconds||0;
@@ -97,19 +115,22 @@
  for(const id of ['clock-from','clock-to'])node(id).onchange=()=>{offset=0;refresh();};
  node('clock-export').onclick=async()=>{const exportButton=node('clock-export');exportButton.disabled=true;try{const response=await fetch(`/api/time/export?detail=${exportDetail.value}${filters()}`,{headers:{'X-Preview-Actor':window.wzosClock.getSession().id,...await window.wzosAccount.headers()}});if(!response.ok){const error=await response.json();throw Error(typeof error.detail==='string'?error.detail:'Check export dates');}const name=(response.headers.get('content-disposition')||'').match(/filename="([^"]+)"/)?.[1]||'wzos-time.csv';const url=URL.createObjectURL(await response.blob());const a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}catch(error){message(error.message);}finally{exportButton.disabled=false;}};
  document.addEventListener('wzos:clock-open',refresh);
- document.addEventListener('wzos:session',()=>{const id=scope(window.wzosClock.getSession());if(id!==actorId){actorId=id;pending=null;active=null;lastVerified=null;drafts=[];membersLoaded=null;employee.replaceChildren(option('','All team members'));submitted.replaceChildren();renderDrafts();baseSeconds=0;offset=0;node('clock-note').value='';node('clock-team').checked=false;node('clock-history').replaceChildren();node('clock-state').textContent='Loading clock';setConnection('checking','Checking connection');tick();message('');}refresh();});
- window.addEventListener('beforeunload',event=>{if(pending||drafts.length){event.preventDefault();event.returnValue='';}});
+ document.addEventListener('wzos:session',()=>{const id=scope(window.wzosClock.getSession());if(id!==actorId){actorId=id;pending=null;active=null;lastVerified=null;drafts=loadDrafts(id);membersLoaded=null;employee.replaceChildren(option('','All team members'));submitted.replaceChildren();renderDrafts();baseSeconds=0;offset=0;node('clock-note').value='';node('clock-team').checked=false;node('clock-history').replaceChildren();node('clock-state').textContent='Loading clock';setConnection('checking','Checking connection');tick();message('');}refresh();});
+ window.addEventListener('beforeunload',event=>{if(pending||submitting||(drafts.length&&persistence!=='device')){event.preventDefault();event.returnValue='';}});
+ // Another open tab for the same account changed the saved drafts.
+ window.addEventListener('storage',event=>{if(actorId&&event.key===STORE+actorId&&!submitting){drafts=loadDrafts(actorId);renderDrafts();}});
  // Offline attendance drafts: device-timestamped requests for admin review, never replayed as clock punches.
  const draftPanel=document.createElement('section');draftPanel.className='panel clock-drafts';draftPanel.id='clock-drafts';
  const draftAction=document.createElement('select');draftAction.id='clock-draft-action';draftAction.append(...Object.entries(ACTIONS).map(([k,v])=>option(k,v)));
  const draftTask=document.createElement('select');draftTask.id='clock-draft-task';draftTask.append(...Object.entries(TASKS).map(([k,v])=>option(k,v)));
  const draftWhen=document.createElement('input');draftWhen.type='datetime-local';draftWhen.id='clock-draft-when';draftWhen.step='60';
  const draftNote=document.createElement('textarea');draftNote.id='clock-draft-note';draftNote.maxLength=1000;draftNote.rows=2;draftNote.placeholder='What happened and why the clock was unavailable';
- const keep=button('Keep draft','clock-draft-keep'),submit=button('Submit drafts for admin review','clock-draft-submit'),download=button('Download drafts','clock-draft-download'),removeLast=button('Remove last draft','clock-draft-remove');
+ const discard=button('Discard all drafts','clock-draft-discard'),keep=button('Keep draft','clock-draft-keep'),submit=button('Submit drafts for admin review','clock-draft-submit'),download=button('Download drafts','clock-draft-download'),removeLast=button('Remove last draft','clock-draft-remove');
+ const storageNote=text('p','');storageNote.id='clock-draft-storage';storageNote.setAttribute('role','status');
  const draftList=document.createElement('ol');draftList.id='clock-draft-list';draftList.className='clock-draft-list';
  const submitted=document.createElement('ul');submitted.id='clock-submitted';submitted.className='clock-draft-list';
- const draftActions=document.createElement('div');draftActions.className='clock-actions';draftActions.append(keep,removeLast,submit,download);
- draftPanel.append(text('h2','Offline attendance drafts'),text('p','When the clock cannot reach the server, record what happened here. Each draft keeps your device time. When you reconnect, submit the drafts for admin review. Drafts never change your shift automatically and are not verified attendance or payroll records. They stay only in this open tab, so submit or download them before you close it or sign out.'),
+ const draftActions=document.createElement('div');draftActions.className='clock-actions';draftActions.append(keep,removeLast,submit,download,discard);
+ draftPanel.append(text('h2','Offline attendance drafts'),text('p','When the clock cannot reach the server, record what happened here. Each draft keeps your device time. When you reconnect, submit the drafts for admin review. Drafts never change your shift automatically and are not verified attendance or payroll records.'),storageNote,
   labelled('What happened',draftAction),labelled('Task',draftTask),labelled('When, if earlier than now (device time, optional)',draftWhen),labelled('Note',draftNote),draftActions,draftList,text('h3','Submitted for review'),submitted);
  node('clock-view').append(draftPanel);
  const effective=d=>d.stated_at||d.captured_at;
@@ -122,9 +143,14 @@
  const allowed={off_clock:['clock_in'],working:['break_start','switch_task','clock_out'],on_break:['break_end','clock_out']};
  function renderDrafts(){
   draftList.replaceChildren();
+  storageNote.dataset.persistence=persistence;
+  storageNote.textContent=persistence==='device'?'Drafts are saved on this device for your account and organization until you submit or discard them, even if you close the app. Other people using this device cannot open them in WZOS, but keep the device secure.'
+   :'This device is not saving drafts (private browsing or storage blocked). They stay only in this open tab, so submit or download them before you close it or sign out.';
   for(const d of drafts){
    const changed=lastVerified&&((active?.id||null)!==d.known_shift_id||(active?.version??null)!==d.known_version);
+   const state=tooOld(d)?'Too old to submit (over 14 days) — download it and ask an admin for a manual entry':d.submission==='unconfirmed'?'Submission not confirmed — submit again; it will not create duplicates':persistence==='device'?'Saved on this device — not yet submitted':'In this tab only — not yet submitted';
    const item=text('li',`${ACTIONS[d.action]}${d.task?' · '+TASKS[d.task]:''} · ${local(effective(d))} (device time, unverified)${d.note?' · '+d.note:''}`);
+   const status=text('small',' '+state);status.className='clock-draft-state';status.dataset.state=tooOld(d)?'too_old':d.submission||'local';item.append(status);
    if(changed)item.append(text('small',' Your shift changed on the server after this draft. The admin will check it for duplicates.'));
    draftList.append(item);
   }
@@ -138,22 +164,28 @@
   if(action==='switch_task'&&task===draftTask.value){message('Choose a different task to record a task switch.');return;}
   if(drafts.length&&(stated||now)<new Date(effective(drafts.at(-1)))){message('Drafts must be in time order. Check the earlier time.');return;}
   drafts.push({request_id:crypto.randomUUID(),action,task:['clock_in','switch_task'].includes(action)?draftTask.value:null,note:draftNote.value.trim(),captured_at:now.toISOString(),...(stated?{stated_at:stated.toISOString()}:{}),known_shift_id:lastVerified?active?.id||null:null,known_version:lastVerified?active?.version??null:null});
-  draftNote.value='';draftWhen.value='';renderDrafts();message('Draft kept in this tab only. It has not changed your shift. Submit it for review when you reconnect.');
+  saveDrafts();draftNote.value='';draftWhen.value='';renderDrafts();message(`Draft ${persistence==='device'?'saved on this device':'kept in this tab only'}. It has not changed your shift. Submit it for review when you reconnect.`);
  };
- removeLast.onclick=()=>{drafts.pop();renderDrafts();message('Removed the last draft.');};
+ removeLast.onclick=()=>{drafts.pop();saveDrafts();renderDrafts();message('Removed the last draft.');};
+ discard.onclick=()=>{if(!drafts.length||submitting||!window.confirm?.('Discard all unsubmitted offline drafts on this device? This cannot be undone.'))return;drafts=[];saveDrafts();renderDrafts();message('Offline drafts discarded. Nothing was sent to your admin.');};
  submit.onclick=async()=>{
   const session=window.wzosClock.getSession();if(!session||!drafts.length||!navigator.onLine||submitting)return;
-  const owner=scope(session), batch=drafts.slice();
+  const owner=scope(session), batch=drafts.filter(d=>!tooOld(d));if(!batch.length)return;
   submitting=true;controls();message('Submitting drafts for admin review…');
   try{
-   const result=await window.wzosClock.api('/api/time/offline-submissions',{method:'POST',body:JSON.stringify({device_submitted_at:new Date().toISOString(),drafts:batch})});
+   const result=await window.wzosClock.api('/api/time/offline-submissions',{method:'POST',body:JSON.stringify({device_submitted_at:new Date().toISOString(),drafts:batch.map(outgoing)})});
    if(owner!==scope(window.wzosClock.getSession()))return;
-   const sent=new Set(batch.map(d=>d.request_id));drafts=drafts.filter(d=>!sent.has(d.request_id));
+   const sent=new Set(batch.map(d=>d.request_id));drafts=drafts.filter(d=>!sent.has(d.request_id));saveDrafts();
    message(`${result.items.length} draft${result.items.length===1?'':'s'} submitted for admin review. Your recorded shift has not changed.`);loadSubmissions(session);
-  }catch(error){message(error.status&&error.status<500?error.message+' Your drafts are still kept in this tab.':'Submission not confirmed. Your drafts are still kept, and submitting again will not create duplicates.');}
+  }catch(error){
+   if(owner!==scope(window.wzosClock.getSession()))return;
+   const kept=persistence==='device'?'on this device':'in this tab';
+   if(error.status&&error.status<500){message(`${error.message} Your drafts are still kept ${kept}.`);}
+   else{const sent=new Set(batch.map(d=>d.request_id));drafts=drafts.map(d=>sent.has(d.request_id)?{...d,submission:'unconfirmed'}:d);saveDrafts();message(`Submission not confirmed. Your drafts are still kept ${kept}, and submitting again will not create duplicates.`);}
+  }
   finally{submitting=false;renderDrafts();}
  };
- download.onclick=()=>{const url=URL.createObjectURL(new Blob([JSON.stringify({type:'WZOS offline attendance drafts',automatic_sync:false,time_basis:'device_estimate_unverified',drafts},null,2)],{type:'application/json'}));const link=document.createElement('a');link.href=url;link.download='wzos-offline-drafts.json';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
+ download.onclick=()=>{const url=URL.createObjectURL(new Blob([JSON.stringify({type:'WZOS offline attendance drafts',automatic_sync:false,time_basis:'device_estimate_unverified',drafts:drafts.map(outgoing)},null,2)],{type:'application/json'}));const link=document.createElement('a');link.href=url;link.download='wzos-offline-drafts.json';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
  async function loadSubmissions(session){
   try{
    const data=await window.wzosClock.api('/api/time/offline-submissions?status=all');
