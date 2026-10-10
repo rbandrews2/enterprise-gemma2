@@ -4,13 +4,6 @@
  let generation=0, view=null, dirty=false, sending=false;
  const previous=window.wzosModulesCanLeave;
  window.wzosModulesCanLeave=()=>previous()&&!sending&&(!dirty||confirm('Leave the unsaved test message?'));
- // Destination sheets are plain-text address references for travel without a connection.
- // They are not maps, routes or verified site access, and they never include private files.
- function saveSheet(orders,filename){
-  const lines=['WZOS destination sheet','Saved on device: '+new Date().toISOString(),'Address reference only. No map, route, traffic or safe-access verification. Confirm details with your admin before travel.',''];
-  for(const order of orders)lines.push(order.title,order.address,...(order.locality?['Locality: '+order.locality]:[]),...(order.work_date?['Work date: '+order.work_date]:[]),'Google Maps search: https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(order.address),'');
-  const url=URL.createObjectURL(new Blob([lines.join('\n')],{type:'text/plain;charset=utf-8'}));const link=node('a','');link.href=url;link.download=filename;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
- }
  async function show(name){
   generation++;view=name;dirty=false;const epoch=generation,root=$('team-content');root.replaceChildren();$('team-notice').textContent='';
   if(!['training','messages','navigation'].includes(name))return;
@@ -41,6 +34,13 @@
     catch(error){if(epoch===generation)$('team-notice').textContent=error.message;}finally{sending=false;submit.disabled=body.disabled=recipient.disabled=false;}};root.append(form);
    for(const message of messages.items){const card=node('article','');card.className='report-section panel';card.append(node('p',`${message.sender_id} → ${message.recipient_id} · ${new Date(message.created_at).toLocaleString()}`),node('p',message.body));root.append(card);}
   }catch(error){if(epoch===generation)$('team-notice').textContent=error.message;}
+ }
+ // Destination sheets are plain-text address references for travel without a connection.
+ // They are not maps, routes or verified site access, and they never include private files.
+ function saveSheet(orders,filename){
+  const lines=['WZOS destination sheet','Saved on device: '+new Date().toISOString(),'Address reference only. No map, route, traffic or safe-access verification. Confirm details with your admin before travel.',''];
+  for(const order of orders)lines.push(order.title,order.address,...(order.locality?['Locality: '+order.locality]:[]),...(order.work_date?['Work date: '+order.work_date]:[]),'Google Maps search: https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(order.address),'');
+  const url=URL.createObjectURL(new Blob([lines.join('\n')],{type:'text/plain;charset=utf-8'}));const link=node('a','');link.href=url;link.download=filename;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
  }
  for(const name of ['training','messages','navigation'])$(name+'-nav').onclick=()=>window.showWzosView(name);
  document.addEventListener('wzos:view',event=>show(event.detail));
