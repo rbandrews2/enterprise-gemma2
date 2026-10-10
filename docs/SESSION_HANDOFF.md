@@ -11,7 +11,8 @@ PostgreSQL skips; Node37 passed. See CLAUDE_REPAIR_ACCEPTANCE_20261010.md.
 Cloud combined gate at9c331c4 passed444tests/118.086s with zero failures,
 errors or skips in ~/wzos-modules-20261010. Trailing cluster search showed no
 paths; separate cleanup-marker output is unconfirmed after focus timeout.
-Local admin fixture is session11680 on8083. Browser module acceptance remains
+Local admin fixture session11680 on8083 was stopped after testing. Restart it
+with scripts/browser_session_fixture.py --role admin --port 8083. Browser module acceptance remains
 open after synthetic sign-in reached organization selection.
 Next: finish browser acceptance and explicit cleanup confirmation, then integration
 release review. Candidate is not merged to enterprise-v2 or deployed.
