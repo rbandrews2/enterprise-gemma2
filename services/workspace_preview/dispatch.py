@@ -7,7 +7,7 @@ approval re-checks the records the proposal was based on, so stale plans cannot 
 Assignment notices go through Messaging (in-app, plus SMS only for members who enabled it).
 """
 import json
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from typing import Literal
 from uuid import UUID, uuid4
 
@@ -438,6 +438,36 @@ def register(app, connect, actor, permitted_row, actors):
         with connect() as db:
             count = db.execute("SELECT COUNT(*) AS n FROM dispatch_assignments WHERE organization_id=? AND user_id=? AND status='sent'", (user['organization_id'], user['id'])).fetchone()['n']
         return {'pending_count': count}
+
+    @app.get('/api/dispatch/schedule')
+    def scheduled_assignments(request: Request, offset: int = Query(0, ge=0), day: date | None = None):
+        user = enterprise(request, admin=False)
+        where, args = 'a.organization_id=?', [user['organization_id']]
+        if user['role'] != 'admin':
+            where += ' AND a.user_id=?'
+            args.append(user['id'])
+        if day:
+            start = datetime(day.year, day.month, day.day, tzinfo=timezone.utc)
+            where += ' AND a.starts_at<? AND a.ends_at>?'
+            args.extend([(start + timedelta(days=1)).isoformat(), start.isoformat()])
+        with connect() as db:
+            total = db.execute('''SELECT COUNT(*) AS n FROM dispatch_assignments a
+                JOIN dispatch_plans p ON p.id=a.plan_id AND p.organization_id=a.organization_id
+                WHERE ''' + where, args).fetchone()['n']
+            rows = db.execute('''SELECT a.*,p.payload AS plan_payload FROM dispatch_assignments a
+                JOIN dispatch_plans p ON p.id=a.plan_id AND p.organization_id=a.organization_id
+                WHERE ''' + where + ' ORDER BY a.starts_at,a.id LIMIT 25 OFFSET ?', [*args, offset]).fetchall()
+            team = people(user)
+            items = []
+            for row in rows:
+                snapshot = json.loads(row['plan_payload']).get('delivery_snapshot') or {}
+                items.append({**{key: row[key] for key in ('id', 'order_id', 'user_id', 'starts_at', 'ends_at', 'status')},
+                              'employee_name': team.get(row['user_id'], {}).get('name', 'Former member'),
+                              'title': snapshot.get('order_title', 'Historical assignment'),
+                              'address': snapshot.get('address', ''),
+                              'snapshot_state': snapshot.get('snapshot_state', 'legacy_unavailable')})
+        return {'items': items, 'total': total, 'offset': offset, 'limit': 25,
+                'day_basis': 'UTC', 'scope': 'organization' if user['role'] == 'admin' else 'own'}
 
     @app.get('/api/dispatch/my-assignments')
     def mine(request: Request, offset: int = Query(0, ge=0), phase: Literal['all', 'upcoming', 'finished'] = 'all'):

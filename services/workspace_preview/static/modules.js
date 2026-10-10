@@ -3,7 +3,7 @@
  const $=id=>document.getElementById(id), api=(...args)=>window.wzosClock.api(...args);
  const safetyFields={competent_person:"Competent person / reviewer",tasks:"Job tasks",hazards:"Hazards",controls:"Controls",emergency_plan:"Emergency plan",ppe:"PPE"};
  for(const [key,label] of Object.entries(safetyFields)){const wrap=document.createElement('label');wrap.textContent=label;const input=document.createElement('textarea');input.id='safety-'+key;input.maxLength=key==='competent_person'?200:key==='ppe'?1000:key==='emergency_plan'?2000:4000;wrap.append(input);$('safety-fields').append(wrap);}
- let roster=[];
+ let roster=[],linkableJobs=[],assignmentOffset=0;
  const checks={tires:"Tires",fluids:"Fluids",brakes:"Brakes",ebrake:"Emergency brake",mirrors:"Mirrors",windows:"Windows"};
  for(const [key,label] of Object.entries(checks)){const wrap=document.createElement("label");wrap.textContent=label;const select=document.createElement("select");select.id="dvir-"+key;for(const [value,title] of Object.entries({not_checked:"Not checked",pass:"Pass (reported)",fail:"Fail (reported)"})){const option=document.createElement("option");option.value=value;option.textContent=title;select.append(option);}wrap.append(select);$("dvir-checks").append(wrap);}
  function template(){$("module-safety").hidden=kind!=="forms"||$("module-type").value!=="jsa";const enabled=kind==="forms"&&$("module-type").value==="dvir";$("module-inspection").hidden=!enabled;$("dvir-vehicle").required=enabled;}
@@ -23,8 +23,10 @@
   current=row||{id:crypto.randomUUID(),version:0};dirty=false;$("module-form").hidden=false;
   for(const [id,key] of [["name","title"],["location","location"],["details","details"]])$("module-"+id).value=row?.[key]||"";
   const none=text("option","No linked work order");none.value="";$("module-order").replaceChildren(none);
-  for(const order of window.wzosClock.getOrders()){const option=text("option",order.title);option.value=order.id;$("module-order").append(option);}
+  for(const order of linkableJobs){const option=text("option",order.title+(order.access_basis==='dispatched_summary'?' · assigned job':''));option.value=order.id;$("module-order").append(option);}
+  if(row?.order_id&&!linkableJobs.some(order=>order.id===row.order_id)){const option=text('option',(row.order_reference?.title||'Previously linked job')+' · saved reference');option.value=row.order_id;$("module-order").append(option);}
   $("module-order").value=row?.order_id||"";
+  let reference=$('module-job-reference');if(!reference){reference=text('p','');reference.id='module-job-reference';$('module-order').parentNode.after(reference);}reference.textContent=row?.order_reference?`Saved job reference: ${row.order_reference.title} · ${row.order_reference.address}`:'';
   $("module-start").value=localTime(row?.start);$("module-end").value=localTime(row?.end);$("module-status").value=row?.status||"draft";
   $("module-version").textContent=row?`Saved revision ${row.version} · ${new Date(row.updated_at).toLocaleString()}`:"Unsaved draft";
   $("module-meeting-url").value=row?.meeting_url||"";
@@ -43,17 +45,21 @@
    if(!data.items.length)$("module-list").append(text("p","No saved records on this page."));
    $("module-page").textContent=`${total} records · ${data.items.length?offset+1:0}–${offset+data.items.length}`;
    $("module-prev").disabled=offset===0;$("module-next").disabled=offset+25>=total;
+   if(kind==='schedule')await showAssignments(generation);
   }catch(error){if(generation===epoch)notice(error.message);}
  }
  async function show(view){
   // Reuse the scoped, versioned draft editor alongside the printable Forms library.
   if(!["schedule","form_drafts"].includes(view))return;
-  $("module-attachments")?.replaceChildren();const showGeneration=++epoch;kind=view==="form_drafts"?"forms":"schedule";offset=0;dirty=false;current=null;$("module-form").hidden=true;notice("");$("module-meeting-join").hidden=true;$("module-meeting-join").removeAttribute("href");
+  $("module-attachments")?.replaceChildren();$("schedule-assignments")?.replaceChildren();const showGeneration=++epoch;kind=view==="form_drafts"?"forms":"schedule";offset=0;assignmentOffset=0;linkableJobs=[];dirty=false;current=null;$("module-new").disabled=true;$("module-form").hidden=true;notice("");$("module-meeting-join").hidden=true;$("module-meeting-join").removeAttribute("href");
   $("module-title").textContent=kind==="forms"?"Saved form drafts":"Schedule management";
-  $("module-description").textContent=kind==="forms"?"Incident, vehicle inspection and JSA planning drafts. Save, reopen and link to a work order. Official submissions and other templates are pending.":"Team schedule drafts. Admins edit; team members can read. Assignments use test members; overlapping active drafts are rejected. Saving does not dispatch or notify anyone.";
+  $("module-description").textContent=kind==="forms"?"Save and reopen incident, vehicle inspection and JSA drafts linked to your jobs. Submit saved versions for internal review in Forms hub.":"Admins manage team schedule drafts; members can read. Dispatched assignments appear separately below. Saving a schedule draft does not dispatch or notify anyone.";
   $("module-library").hidden=kind!=="forms";
   $("module-day-label").hidden=kind!=="schedule";$("module-assignees-label").hidden=kind!=="schedule";$("module-history").replaceChildren();
-  try{const result=await api("/api/modules/roster");if(showGeneration!==epoch)return;roster=result.items;}catch(error){if(showGeneration!==epoch)return;roster=[];notice(error.message);}
+  try{const result=await api("/api/modules/roster");if(showGeneration!==epoch)return;roster=result.items;
+   let next=0;while(true){const page=await api(`/api/modules/jobs?offset=${next}&limit=50`);if(showGeneration!==epoch)return;linkableJobs.push(...page.items);next+=page.items.length;if(next>=page.total||!page.items.length)break;}
+   $('module-new').disabled=false;
+  }catch(error){if(showGeneration!==epoch)return;roster=[];notice(error.message);}
   $("module-meeting").hidden=kind!=="schedule";
   $("module-type-label").hidden=kind!=="forms";
   $("module-times").hidden=kind!=="schedule";$("module-start").required=$("module-end").required=kind==="schedule";
@@ -63,8 +69,19 @@
  $("module-library").onclick=()=>window.showWzosView("forms");
  $("schedule-nav").onclick=()=>window.showWzosView("schedule");
  document.addEventListener("wzos:view",event=>show(event.detail));
- document.addEventListener("wzos:session",()=>{$("module-attachments")?.replaceChildren();$("module-meeting-join").hidden=true;$("module-meeting-join").removeAttribute("href");epoch++;dirty=false;current=null;$("module-list").replaceChildren();$("module-form").hidden=true;if(!$("modules-view").hidden)show(kind==="forms"?"form_drafts":"schedule");});
- $("module-day").onchange=()=>{offset=0;refresh();};
+ document.addEventListener("wzos:session",()=>{$("module-attachments")?.replaceChildren();$("schedule-assignments")?.replaceChildren();linkableJobs=[];$("module-meeting-join").hidden=true;$("module-meeting-join").removeAttribute("href");epoch++;dirty=false;current=null;$("module-list").replaceChildren();$("module-form").hidden=true;if(!$("modules-view").hidden)show(kind==="forms"?"form_drafts":"schedule");});
+ $("module-day").onchange=()=>{offset=0;assignmentOffset=0;refresh();};
+ async function showAssignments(generation){
+  let root=$('schedule-assignments');if(!root){root=text('section','');root.id='schedule-assignments';root.className='panel report-section';$('module-list').after(root);}root.replaceChildren();
+  if(window.wzosClock.getSession()?.edition!=='enterprise')return;
+  const data=await api(`/api/dispatch/schedule?offset=${assignmentOffset}${$('module-day').value?'&day='+$('module-day').value:''}`);if(generation!==epoch||kind!=='schedule')return;
+  root.append(text('h2','Dispatched assignments'),text('p','Read-only assignments · date filter uses UTC days; times below use your device timezone. Confirm receipt in My jobs.'));
+  for(const row of data.items){const card=text('article','');card.className='report-section panel';card.append(text('h3',row.title),text('p',`${row.employee_name} · ${row.status}`),text('p',`${new Date(row.starts_at).toLocaleString()} → ${new Date(row.ends_at).toLocaleString()} (estimated finish)`),text('p',row.address));const link=window.WzosNavigation.link(row.address);if(link)card.append(link);if(row.snapshot_state==='legacy_unavailable')card.append(text('p','Historical dispatched details are unavailable.'));root.append(card);}
+  if(!data.items.length)root.append(text('p','No dispatched assignments on this page.'));
+  const prev=text('button','Previous assignments'),next=text('button','Next assignments');prev.type=next.type='button';prev.disabled=assignmentOffset===0;next.disabled=assignmentOffset+data.limit>=data.total;
+  prev.onclick=()=>{if(window.wzosModulesCanLeave()){assignmentOffset=Math.max(0,assignmentOffset-data.limit);refresh();}};next.onclick=()=>{if(window.wzosModulesCanLeave()){assignmentOffset+=data.limit;refresh();}};
+  root.append(prev,next,text('p',`${data.total} assignments · ${data.items.length?assignmentOffset+1:0}–${assignmentOffset+data.items.length}`));
+ }
  async function loadHistory(row){const selectedKind=kind;try{const data=await api(`/api/modules/${kind}/${row.id}/history`);if(current?.id!==row.id||selectedKind!==kind)return;$("module-history").append(text("h3","Saved revision history"));for(const entry of data.items){const d=text("details","");d.append(text("summary",`Revision ${entry.version} · ${new Date(entry.saved_at).toLocaleString()}`),text("p",entry.record.title),text("p",entry.record.details||"No notes"));for(const [key,value] of Object.entries(entry.record.safety||{}))d.append(text("p",`${safetyFields[key]}: ${value||"Not recorded"}`));$("module-history").append(d);}}catch(error){notice(error.message);}}
  $("module-new").onclick=()=>{if(window.wzosModulesCanLeave())edit(null);};
  $("module-refresh").onclick=()=>{if(window.wzosModulesCanLeave()){dirty=false;$("module-form").hidden=true;refresh();}};

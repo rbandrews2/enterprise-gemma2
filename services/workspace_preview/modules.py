@@ -65,7 +65,7 @@ class ModuleRecord(BaseModel):
         return self
 
 
-def register(app, connect, actor, permitted_row, actors, synthetic=True):
+def register(app, connect, actor, permitted_row, actors, synthetic=True, reference_order=None, jobs=None):
     with connect() as db:
         db.execute("""CREATE TABLE IF NOT EXISTS module_records (
             id TEXT NOT NULL, kind TEXT NOT NULL, organization_id TEXT NOT NULL,
@@ -93,6 +93,13 @@ def register(app, connect, actor, permitted_row, actors, synthetic=True):
     def unpack(row):
         return {**json.loads(row["payload"]), "id": row["id"], "version": row["version"],
                 "updated_at": row["updated_at"], "owner_id": row["owner_id"]}
+
+    @app.get('/api/modules/jobs')
+    def selectable_jobs(request: Request, offset: int = Query(0, ge=0), limit: int = Query(50, ge=1, le=50)):
+        selected = actor(request)
+        with connect() as db:
+            items = jobs(db, selected) if jobs else []
+        return {'items': items[offset:offset + limit], 'total': len(items), 'offset': offset, 'limit': limit}
 
     @app.get("/api/modules/{kind}")
     def listing(kind: Literal["forms", "schedule"], request: Request,
@@ -142,7 +149,6 @@ def register(app, connect, actor, permitted_row, actors, synthetic=True):
         for key in ("start", "end"):
             if getattr(payload, key):
                 packed[key] = getattr(payload, key).astimezone(timezone.utc).isoformat()
-        serialized = json.dumps(packed, sort_keys=True)
         with connect() as db:
             db.execute("BEGIN IMMEDIATE")
             clause, params = scope(kind, selected)
@@ -153,8 +159,17 @@ def register(app, connect, actor, permitted_row, actors, synthetic=True):
                 raise HTTPException(404, "Record not found")
             if row and kind == "forms" and json.loads(row["payload"]).get("form_type", "incident") != payload.form_type:
                 raise HTTPException(409, "Create a new draft to use a different form template")
+            previous = json.loads(row['payload']) if row else {}
             if payload.order_id:
-                permitted_row(db, payload.order_id, selected)
+                if kind == 'forms' and row and previous.get('order_id') == payload.order_id:
+                    if 'order_reference' in previous:
+                        packed['order_reference'] = previous['order_reference']
+                else:
+                    resolver = (reference_order or permitted_row) if kind == 'forms' else permitted_row
+                    order = json.loads(resolver(db, payload.order_id, selected)['payload'])
+                    if kind == 'forms':
+                        packed['order_reference'] = {'title': order['title'], 'address': order.get('address', '')}
+            serialized = json.dumps(packed, sort_keys=True)
             version = row["version"] if row else 0
             # Retrying the same saved content is safe; stale conflicting edits are not.
             if row and row["payload"] == serialized and payload.expected_version == version - 1:

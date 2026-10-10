@@ -6,6 +6,10 @@ Current assembly priority (October10): complete internal module connections firs
 then connect Twilio, Maps and other providers. See TEST_MODEL_ASSEMBLY.md for the
 current capability matrix and sequential assembly passes. Assigned-job Time Clock
 linkage preserves private work-order permissions; see ASSIGNED_TIME_CONTRACT.md.
+Assigned-job own-form links and read-only dispatch schedule cards are implemented
+in the local candidate; see ASSIGNED_FORMS_SCHEDULE.md. Next internal work is
+durable completed printable forms and submitted attachments/signatures, followed
+by assignment update notifications. Provider connections remain a later phase.
 
 Ray approved **an additional $150 for October 8–17, 2026**, separate from production hosting. Refresh actual usage before paid tests; include build/storage costs and billing lag. Do not exceed this cap without further authorization. Production cutover remains unscheduled.
 

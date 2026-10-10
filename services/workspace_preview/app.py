@@ -528,7 +528,9 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
 
     roster = accounts.roster if accounts else lambda selected: ACTORS
     team_modules.register(app, connect, actor, roster, synthetic=not account_workspace)
-    modules.register(app, connect, actor, permitted_row, roster, synthetic=not account_workspace)
+    modules.register(app, connect, actor, permitted_row, roster, synthetic=not account_workspace,
+                     reference_order=lambda db, oid, user: time_order(db, oid, user),
+                     jobs=lambda db, user: time_jobs(db, user))
     forms_hub.register(app, connect, actor, roster, file_store=file_store)
     from . import form_submissions
     form_submissions.register(app, connect, actor)
@@ -606,7 +608,8 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
             for row in assigned_time_rows(conn, selected):
                 title = json.loads(row['payload']).get('delivery_snapshot', {}).get('order_title')
                 if row['order_id'] == order_id and title:
-                    return {'payload': json.dumps({'title': title})}
+                    snapshot = json.loads(row['payload'])['delivery_snapshot']
+                    return {'payload': json.dumps({'title': title, 'address': snapshot.get('address', '')})}
             raise error
 
     timeclock.register(app, connect, actor, time_order, roster, jobs=time_jobs)

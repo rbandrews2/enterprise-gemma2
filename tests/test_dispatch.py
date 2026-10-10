@@ -150,6 +150,53 @@ class DispatchTests(unittest.TestCase):
             db.execute("UPDATE dispatch_plans SET status='sent',payload='{}' WHERE id=?", (sent['id'],))
         self.assertEqual(self.client.get('/api/time/jobs', headers=member).json()['items'], [])
 
+    def test_assigned_form_link_is_private_frozen_and_survives_cancellation(self):
+        self.requirements(); self.approve(self.propose())
+        member = self.h('member'); record = str(uuid4())
+        body = {'request_id': str(uuid4()), 'title': 'Assigned incident', 'order_id': self.order}
+        endpoint = '/api/modules/forms/' + record
+        first = self.client.put(endpoint, headers=member, json=body)
+        self.assertEqual(first.status_code, 200, first.text)
+        reference = first.json()['order_reference']
+        self.assertEqual(reference['title'], 'Granby Street markings')
+        self.assertEqual(reference['address'], 'Granby Street, Norfolk, VA')
+        self.assertEqual(self.client.get('/api/modules/jobs', headers=member).json()['items'][0]['id'], self.order)
+        self.assertEqual(self.client.put('/api/modules/forms/' + str(uuid4()), headers=self.h('other'), json=body).status_code, 404)
+        self.assertEqual(self.client.get(endpoint + '/history', headers=self.h('other')).status_code, 404)
+        self.assertEqual(self.client.get('/api/orders/' + self.order, headers=member).status_code, 404)
+        with self.app.state.accounts.connect() as db:
+            db.execute("UPDATE dispatch_assignments SET status='cancelled' WHERE user_id=? AND organization_id=?", ('member', self.org))
+        changed = {**body, 'expected_version': 1, 'details': 'Late field notes'}
+        saved = self.client.put(endpoint, headers=member, json=changed)
+        self.assertEqual(saved.status_code, 200, saved.text)
+        self.assertEqual(saved.json()['order_reference'], reference)
+        self.assertEqual(self.client.put(endpoint, headers=member, json=changed).json(), saved.json())
+        self.assertEqual(self.client.put('/api/modules/forms/' + str(uuid4()), headers=member, json=body).status_code, 404)
+        unlinked = self.client.put(endpoint, headers=member, json={**changed, 'expected_version': 2, 'order_id': None})
+        self.assertEqual(unlinked.status_code, 200, unlinked.text)
+        self.assertNotIn('order_reference', unlinked.json())
+
+    def test_dispatch_schedule_scopes_pagination_and_overnight_day(self):
+        self.profile('crew3', 'EMP-3', [window()], version=1)
+        self.requirements(count=2); self.approve(self.propose())
+        endpoint = '/api/dispatch/schedule'
+        admin = self.client.get(endpoint, headers=self.h()).json()
+        self.assertEqual(admin['total'], 2)
+        own = self.client.get(endpoint, headers=self.h('member')).json()
+        self.assertEqual(own['total'], 1); self.assertEqual(own['scope'], 'own')
+        self.assertEqual(own['items'][0]['user_id'], 'member')
+        self.assertEqual(self.client.get(endpoint, headers=self.h('rival', self.rival)).json()['total'], 0)
+        self.assertEqual(self.client.get(endpoint, headers=self.h('coreadmin', self.core)).status_code, 403)
+        self.assertEqual(self.client.get(endpoint + '?offset=-1', headers=self.h()).status_code, 422)
+        self.assertEqual(self.client.get(endpoint + '?offset=2', headers=self.h()).json()['items'], [])
+        overnight = START.replace(hour=23)
+        with self.app.state.accounts.connect() as db:
+            db.execute('UPDATE dispatch_assignments SET starts_at=?,ends_at=?,status=? WHERE user_id=? AND organization_id=?',
+                       (overnight.isoformat(), (overnight + timedelta(hours=2)).isoformat(), 'cancelled', 'member', self.org))
+        tomorrow = self.client.get(endpoint + '?day=' + (JOB_DAY + timedelta(days=1)).isoformat(), headers=self.h('member')).json()
+        self.assertEqual(tomorrow['total'], 1); self.assertEqual(tomorrow['items'][0]['status'], 'cancelled')
+        self.assertEqual(self.client.get(endpoint + '?day=' + (JOB_DAY + timedelta(days=2)).isoformat(), headers=self.h('member')).json()['total'], 0)
+
     def test_notifications_confirmation_and_job_lists_are_tenant_scoped(self):
         self.requirements(); sent = self.approve(self.propose()).json()
         endpoint = '/api/dispatch/notifications'

@@ -4,6 +4,27 @@ Ray authorized a separate restricted Google Cloud V2 staging deployment. Product
 
 ## Latest resume checkpoint
 
+October10 assigned-form/schedule integration: codex/preproduction-modules connects
+own form drafts to active assigned jobs without original-order access, preserves
+saved title/address references through cancellation, and shows read-only dispatch
+cards in Schedule. Members see own assignments; admins see their organization;
+Core keeps existing schedules without Enterprise dispatch cards. UTC-day filters
+include overnight overlaps. Atlas guide text now explains both workflows.
+Contract/results: ASSIGNED_FORMS_SCHEDULE.md. Final focused Python59/172.722s:
+34 passed,25PG skips,zero failures/errors. Atlas guidance5/8.155s passed; full
+Node47 passed with zero failures/skips. Syntax/diff checks passed. Browser member
+schedule and assigned form save/reload/reopen/reference passed on synthetic data.
+Initial schedule test fixture was corrected for missing employee availability;
+final combined rerun passed. Evidence is in .local-data/forms-schedule-final-*
+logs, forms-schedule-atlas.log, assigned-form-preview.jpg and
+assigned-schedule-preview.jpg. Preview session48670 remains on8083.
+No new DDL, cloud deployment/provider sends or changes to main/V1/DNS.
+Exact-candidate full Python/PostgreSQL and broader device/cloud gates remain open.
+Next internal pass: durable completed printable forms and submitting versioned
+attachments/signatures with private exports; reuse existing draft file storage,
+template catalog and immutable submission review. Then finish assignment changes/
+notifications before provider connection phase per TEST_MODEL_ASSEMBLY.md.
+
 October10 internal test-model wiring: codex/preproduction-modules now connects
 dispatched jobs to the employee Time Clock and Navigation list. Time linking uses
 only a frozen dispatched title, scoped to the employee/organization and active

@@ -12,8 +12,8 @@ summaries; it does not declare production readiness.
 | Work orders | Saved versioned drafts, job details and measured geometry | Assigned employee access to appropriate job documents without exposing private drafts |
 | Dispatch | Enterprise admin proposals, eligibility/conflict checks, approval, frozen assignment details, in-app notifications, My jobs and explicit confirmation | Closed-app push delivery and cancellation/change notification experience |
 | Time Clock | Own shifts/breaks/tasks, timesheets, CSV, admin corrections, offline draft review; dispatched jobs now selectable | Exact-candidate PostgreSQL/cloud and field/offline acceptance |
-| Forms | Team library/uploads, printable templates, persisted incident/DVIR/JSA drafts, immutable internal submissions and admin review | Durable completed printable forms, attachments/signatures and approved external delivery |
-| Schedule | Admin schedule management, assignments and conflict checks | Unified calendar display of dispatched jobs and meeting changes |
+| Forms | Team library/uploads, printable templates, persisted incident/DVIR/JSA drafts, dispatched-job links, immutable internal submissions and admin review | Durable completed printable forms, submitted attachments/signatures and approved external delivery |
+| Schedule | Admin schedule management/conflict checks and read-only dispatched assignments; member own/admin organization scope | Meeting changes and broader calendar/field acceptance |
 | Navigation | Address/coordinate navigation links, assigned destination list and limited saved destination notes | Real Maps imagery and field/offline acceptance |
 | Messaging | Organization-scoped stored messages, Twilio adapter/outbox, consent/verification and status handling | Actual provider configuration and controlled delivery acceptance |
 | Meetings | Google Meet link scheduling; admins manage, members join | Organizer OAuth and automatic meeting creation; Google Meet remains external |
@@ -22,9 +22,9 @@ summaries; it does not declare production readiness.
 
 ## Next assembly passes, in order
 
-1. Complete assigned-job integration across own forms and
-   schedule display. Keep an explicit read/write permission contract for each
-   connection; a dispatched summary must not unlock private originals.
+1. Implemented: assigned-job links in own form drafts and dispatched assignment
+   cards in Schedule. Contract: ASSIGNED_FORMS_SCHEDULE.md. Exact-candidate
+   PostgreSQL/full regression and real-device acceptance remain open.
 2. Complete durable form instances, attachments and signatures, with revisioned
    submissions/private exports; reuse existing storage and form APIs.
 3. Complete assignment update/cancellation and in-app notification behavior;
