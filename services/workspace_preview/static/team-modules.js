@@ -35,6 +35,10 @@
    for(const message of messages.items){const card=node('article','');card.className='report-section panel';card.append(node('p',`${message.sender_id} → ${message.recipient_id} · ${new Date(message.created_at).toLocaleString()}`),node('p',message.body));root.append(card);}
   }catch(error){if(epoch===generation)$('team-notice').textContent=error.message;}
  }
+ for(const name of ['training','messages','navigation'])$(name+'-nav').onclick=()=>window.showWzosView(name);
+ document.addEventListener('wzos:view',event=>show(event.detail));
+ document.addEventListener('wzos:session',()=>show(view));
+ for(const event of ['online','offline'])window.addEventListener(event,()=>{if(view==='navigation')show(view);});
  // Destination sheets are plain-text address references for travel without a connection.
  // They are not maps, routes or verified site access, and they never include private files.
  function saveSheet(orders,filename){
@@ -42,9 +46,5 @@
   for(const order of orders)lines.push(order.title,order.address,...(order.locality?['Locality: '+order.locality]:[]),...(order.work_date?['Work date: '+order.work_date]:[]),'Google Maps search: https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(order.address),'');
   const url=URL.createObjectURL(new Blob([lines.join('\n')],{type:'text/plain;charset=utf-8'}));const link=node('a','');link.href=url;link.download=filename;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
  }
- for(const name of ['training','messages','navigation'])$(name+'-nav').onclick=()=>window.showWzosView(name);
- document.addEventListener('wzos:view',event=>show(event.detail));
- document.addEventListener('wzos:session',()=>show(view));
- for(const event of ['online','offline'])window.addEventListener(event,()=>{if(view==='navigation')show(view);});
  window.addEventListener('beforeunload',event=>{if(dirty||sending){event.preventDefault();event.returnValue='';}});
 })();
