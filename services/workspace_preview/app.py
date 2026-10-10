@@ -537,6 +537,9 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
     if accounts:
         accounts.register(app)
         app.state.accounts = accounts
+        # Dispatch reads the account employee contracts, so it exists only with accounts.
+        from . import dispatch
+        dispatch.register(app, connect, actor, permitted_row, roster)
     if file_store is not None:
         from services.workspace_preview.files import register as register_files
         register_files(app, connect, actor, permitted_row, file_store)
@@ -555,6 +558,10 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
     @app.get("/employees.js")
     def employee_script():
         return FileResponse(STATIC / "employees.js", media_type="text/javascript")
+
+    @app.get("/dispatch.js")
+    def dispatch_script():
+        return FileResponse(STATIC / "dispatch.js", media_type="text/javascript")
     report_history.register(app, connect, actor, report, knowledge_store)
     timeclock.register(app, connect, actor, permitted_row, roster)
     return app

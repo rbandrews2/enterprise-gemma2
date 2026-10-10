@@ -59,6 +59,8 @@
    if(message.acknowledgement_requested)card.append(node('p',message.acknowledged_at?'Acknowledged '+new Date(message.acknowledged_at).toLocaleString():'Acknowledgement requested — not yet acknowledged'));
    if(message.acknowledgement_requested&&!message.acknowledged_at&&message.recipient_id===me){const b=button('Acknowledge','primary');b.onclick=()=>guarded(epoch,b,()=>api('/api/messages/'+message.id+'/acknowledge',{method:'POST'}),'Acknowledged.');card.append(b);}
    root.append(card);}
+  // Enterprise dispatch (assignments and admin planning) renders here when available.
+  await window.wzosDispatch?.render(root,()=>epoch===generation,$('team-notice'));if(epoch!==generation)return;
   // The member's own text message settings; only the phone's owner can turn texts on.
   const mine=node('details',''),mineBody=node('form','');mineBody.onsubmit=event=>event.preventDefault();mine.className='report-section panel';mine.open=contact.status==='pending_verification';mine.append(node('summary','My text message settings'),mineBody);
   mineBody.append(node('p','Status: '+(CONTACT_STATUS[contact.status]||contact.status)+(contact.phone?' · '+contact.phone:'')));
