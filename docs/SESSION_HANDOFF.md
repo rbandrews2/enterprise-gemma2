@@ -4,6 +4,16 @@ Ray authorized a separate restricted Google Cloud V2 staging deployment. Product
 
 ## Latest resume checkpoint
 
+October 9 diagnostic regression follow-up: added an uncommitted timed local gate.
+The full run hit its 120-second per-test timeout during the knowledge revision
+rebuild test, with a trace in Path.glob. Basic local reads and browser control
+were also delayed, so no application defect has been established. Isolated
+revision-test rerun passed (one test,24.477s); full rerun uses a300-second
+diagnostic timeout and .local-data/employee-timed-retry.log.
+See EMPLOYEE_VALIDATION_CHECKPOINT_20261009.md
+for the evidence and resume sequence. Full regression, member browser acceptance
+and disposable PostgreSQL gates remain open; no merge or cloud change occurred.
+
 October9 availability follow-up: code committed/pushed6428915 on
 codex/integration-release. Full Python run19822 was interrupted after prolonged
 runtime and exited1 without a completed unittest summary. Latest log advanced
