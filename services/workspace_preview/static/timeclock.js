@@ -22,11 +22,23 @@
   try{const saved=JSON.parse(store.getItem(STORE+id)||'null');return saved&&saved.scope===id&&Array.isArray(saved.drafts)?saved.drafts.filter(wellFormed):[];}
   catch(error){persistence='tab';return [];}
  }
- function saveDrafts(){
-  const store=storage();if(!actorId||!store){persistence='tab';return;}
-  try{if(drafts.length)store.setItem(STORE+actorId,JSON.stringify({scope:actorId,saved_at:new Date().toISOString(),drafts}));else store.removeItem(STORE+actorId);persistence='device';}
-  catch(error){persistence='tab';}
+ // Every change re-reads the stored list and edits only the drafts it names, so a stale tab
+ // can never drop another tab's draft or restore one that was already submitted or discarded.
+ function mutate(id,change){
+  const store=storage();
+  if(id&&store&&(persistence==='device'||id!==actorId)){
+   try{
+    let saved=null;try{saved=JSON.parse(store.getItem(STORE+id)||'null');}catch(error){saved=null;}
+    const next=change(saved&&saved.scope===id&&Array.isArray(saved.drafts)?saved.drafts.filter(wellFormed):[]);
+    if(next.length)store.setItem(STORE+id,JSON.stringify({scope:id,saved_at:new Date().toISOString(),drafts:next}));else store.removeItem(STORE+id);
+    if(id===actorId)drafts=next;
+    return;
+   }catch(error){if(id!==actorId)return;persistence='tab';}
+  }
+  if(id===actorId)drafts=change(drafts);
  }
+ // Shows the latest saved drafts so actions such as discard only affect drafts on screen.
+ function reloadDrafts(){if(persistence==='device'&&actorId){drafts=loadDrafts(actorId);renderDrafts();}}
  const format=n=>[Math.floor(n/3600),Math.floor(n%3600/60),n%60].map(v=>String(v).padStart(2,'0')).join(':');
  const message=value=>{node('clock-message').textContent=value;};
  const local=value=>new Date(value).toLocaleString();
@@ -118,7 +130,7 @@
  document.addEventListener('wzos:session',()=>{const id=scope(window.wzosClock.getSession());if(id!==actorId){actorId=id;pending=null;active=null;lastVerified=null;drafts=loadDrafts(id);membersLoaded=null;employee.replaceChildren(option('','All team members'));submitted.replaceChildren();renderDrafts();baseSeconds=0;offset=0;node('clock-note').value='';node('clock-team').checked=false;node('clock-history').replaceChildren();node('clock-state').textContent='Loading clock';setConnection('checking','Checking connection');tick();message('');}refresh();});
  window.addEventListener('beforeunload',event=>{if(pending||submitting||(drafts.length&&persistence!=='device')){event.preventDefault();event.returnValue='';}});
  // Another open tab for the same account changed the saved drafts.
- window.addEventListener('storage',event=>{if(actorId&&event.key===STORE+actorId&&!submitting){drafts=loadDrafts(actorId);renderDrafts();}});
+ window.addEventListener('storage',event=>{if(actorId&&event.key===STORE+actorId&&persistence==='device'){drafts=loadDrafts(actorId);renderDrafts();}});
  // Offline attendance drafts: device-timestamped requests for admin review, never replayed as clock punches.
  const draftPanel=document.createElement('section');draftPanel.className='panel clock-drafts';draftPanel.id='clock-drafts';
  const draftAction=document.createElement('select');draftAction.id='clock-draft-action';draftAction.append(...Object.entries(ACTIONS).map(([k,v])=>option(k,v)));
@@ -158,30 +170,34 @@
  }
  keep.onclick=()=>{
   const session=window.wzosClock.getSession();if(!session)return;
+  reloadDrafts();
   const now=new Date(), stated=draftWhen.value?new Date(draftWhen.value):null, action=draftAction.value, {state,task}=expected();
   if(stated&&(isNaN(stated)||stated>now)){message('The earlier time must be a valid time that is not in the future.');return;}
   if(state!=='unknown'&&!allowed[state].includes(action)){message(`${ACTIONS[action]} does not follow your ${drafts.length?'last draft':'last confirmed status'}. Drafts must follow the order things happened.`);return;}
   if(action==='switch_task'&&task===draftTask.value){message('Choose a different task to record a task switch.');return;}
   if(drafts.length&&(stated||now)<new Date(effective(drafts.at(-1)))){message('Drafts must be in time order. Check the earlier time.');return;}
-  drafts.push({request_id:crypto.randomUUID(),action,task:['clock_in','switch_task'].includes(action)?draftTask.value:null,note:draftNote.value.trim(),captured_at:now.toISOString(),...(stated?{stated_at:stated.toISOString()}:{}),known_shift_id:lastVerified?active?.id||null:null,known_version:lastVerified?active?.version??null:null});
-  saveDrafts();draftNote.value='';draftWhen.value='';renderDrafts();message(`Draft ${persistence==='device'?'saved on this device':'kept in this tab only'}. It has not changed your shift. Submit it for review when you reconnect.`);
+  const draft={request_id:crypto.randomUUID(),action,task:['clock_in','switch_task'].includes(action)?draftTask.value:null,note:draftNote.value.trim(),captured_at:now.toISOString(),...(stated?{stated_at:stated.toISOString()}:{}),known_shift_id:lastVerified?active?.id||null:null,known_version:lastVerified?active?.version??null:null};
+  mutate(actorId,list=>list.some(d=>d.request_id===draft.request_id)?list:[...list,draft]);draftNote.value='';draftWhen.value='';renderDrafts();message(`Draft ${persistence==='device'?'saved on this device':'kept in this tab only'}. It has not changed your shift. Submit it for review when you reconnect.`);
  };
- removeLast.onclick=()=>{drafts.pop();saveDrafts();renderDrafts();message('Removed the last draft.');};
- discard.onclick=()=>{if(!drafts.length||submitting||!window.confirm?.('Discard all unsubmitted offline drafts on this device? This cannot be undone.'))return;drafts=[];saveDrafts();renderDrafts();message('Offline drafts discarded. Nothing was sent to your admin.');};
+ removeLast.onclick=()=>{const last=drafts.at(-1);if(!last)return;mutate(actorId,list=>list.filter(d=>d.request_id!==last.request_id));renderDrafts();message('Removed the last draft.');};
+ discard.onclick=()=>{if(!drafts.length||submitting||!window.confirm?.('Discard all unsubmitted offline drafts on this device? This cannot be undone.'))return;const shown=new Set(drafts.map(d=>d.request_id));mutate(actorId,list=>list.filter(d=>!shown.has(d.request_id)));renderDrafts();message('Offline drafts discarded. Nothing was sent to your admin.');};
  submit.onclick=async()=>{
   const session=window.wzosClock.getSession();if(!session||!drafts.length||!navigator.onLine||submitting)return;
   const owner=scope(session), batch=drafts.filter(d=>!tooOld(d));if(!batch.length)return;
   submitting=true;controls();message('Submitting drafts for admin review…');
   try{
    const result=await window.wzosClock.api('/api/time/offline-submissions',{method:'POST',body:JSON.stringify({device_submitted_at:new Date().toISOString(),drafts:batch.map(outgoing)})});
+   const sent=new Set(batch.map(d=>d.request_id));mutate(owner,list=>list.filter(d=>!sent.has(d.request_id)));
    if(owner!==scope(window.wzosClock.getSession()))return;
-   const sent=new Set(batch.map(d=>d.request_id));drafts=drafts.filter(d=>!sent.has(d.request_id));saveDrafts();
    message(`${result.items.length} draft${result.items.length===1?'':'s'} submitted for admin review. Your recorded shift has not changed.`);loadSubmissions(session);
   }catch(error){
+   const sent=new Set(batch.map(d=>d.request_id)), uncertain=!(error.status&&error.status<500);
+   // Mark only drafts still saved; a draft another tab already submitted is not re-created.
+   if(uncertain)mutate(owner,list=>list.map(d=>sent.has(d.request_id)?{...d,submission:'unconfirmed'}:d));
    if(owner!==scope(window.wzosClock.getSession()))return;
    const kept=persistence==='device'?'on this device':'in this tab';
-   if(error.status&&error.status<500){message(`${error.message} Your drafts are still kept ${kept}.`);}
-   else{const sent=new Set(batch.map(d=>d.request_id));drafts=drafts.map(d=>sent.has(d.request_id)?{...d,submission:'unconfirmed'}:d);saveDrafts();message(`Submission not confirmed. Your drafts are still kept ${kept}, and submitting again will not create duplicates.`);}
+   if(!uncertain){message(`${error.message} Your drafts are still kept ${kept}.`);}
+   else{message(`Submission not confirmed. Your drafts are still kept ${kept}, and submitting again will not create duplicates.`);}
   }
   finally{submitting=false;renderDrafts();}
  };

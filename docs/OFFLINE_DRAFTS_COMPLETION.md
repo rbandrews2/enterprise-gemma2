@@ -134,3 +134,33 @@ recheck after the first one merges.
 Merge as a normal front-end change. Nothing is deployed or migrated. Rollback means
 reverting the commit. Saved device drafts then remain inert in browser storage:
 older code ignores them and they can't be submitted until this code returns.
+
+## Review repair — October 10, 2026 (CLAUDE_MODULE_REVIEW_20261010.md, finding 2)
+
+**Defect:** a tab ignored storage events while submitting, then wrote its stale draft
+list back. A draft another tab added during the submission was deleted.
+
+**Repair:** whole-list writes are gone (`saveDrafts` was removed). Every change goes
+through `mutate(scope, change)`, which re-reads the stored list for that account and
+organization and edits only the drafts it names:
+- keep appends one draft;
+- remove-last and discard delete only the IDs shown in that tab;
+- a confirmed submission deletes only the acknowledged IDs, from the submitting
+  account's key even if the account changed meanwhile;
+- an uncertain submission marks only drafts still saved, and never re-creates one
+  another tab already submitted or discarded.
+
+Storage events now reload the list during submissions too. Keeping a draft first reloads
+and redraws the latest list, so validation and discard reflect what is on screen. The
+tab-only fallback (storage blocked) keeps the previous in-memory behavior.
+
+**Regressions (4 new Node tests):**
+- a delayed successful submission keeps another tab's draft, with and without the
+  storage event (the review's reproduction);
+- an uncertain submission keeps concurrent additions, and the retry reuses the original
+  request ID;
+- a stale tab can't restore a submitted draft or discard a draft it never showed;
+- switching account mid-submission clears only the original account's acknowledged
+  drafts.
+
+**Results:** offline-clock 16/16; full Node 32/32. No server or schema change.

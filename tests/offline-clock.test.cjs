@@ -1,5 +1,5 @@
 const test=require('node:test'),assert=require('node:assert/strict'),vm=require('node:vm'),fs=require('node:fs');
-function harness({fail=()=>false,storage,confirm=()=>true,session:initial}={}){
+function harness({fail=()=>false,gate=()=>null,storage,confirm=()=>true,session:initial}={}){
  const nodes=new Map(),events={},windowEvents={},created=[];
  const element=tag=>{const e={tag,value:'',checked:false,disabled:false,hidden:false,textContent:'',dataset:{},children:[],handlers:{},options:[],
   append(...x){this.children.push(...x)},after(x){this.afterNode=x},before(x){this.beforeNode=x},replaceChildren(...x){this.children=x},
@@ -14,7 +14,7 @@ function harness({fail=()=>false,storage,confirm=()=>true,session:initial}={}){
   if(path.startsWith('/api/time/entries'))return {items:[],limit:20,total:0};
   return {items:[]};
  };
- const window={localStorage:storage,confirm,addEventListener(k,v){windowEvents[k]=v},wzosClock:{getSession:()=>session,getOrders:()=>[],async api(path,options){calls.push([path,options]);if(fail(path,options))throw new Error('network');return responses(path,options);}}};
+ const window={localStorage:storage,confirm,addEventListener(k,v){windowEvents[k]=v},wzosClock:{getSession:()=>session,getOrders:()=>[],async api(path,options){calls.push([path,options]);const wait=gate(path,options);if(wait)await wait;if(fail(path,options))throw new Error('network');return responses(path,options);}}};
  vm.runInNewContext(fs.readFileSync('services/workspace_preview/static/timeclock.js','utf8'),{window,document,navigator,performance,Date,crypto:require('node:crypto').webcrypto,setInterval(){},setTimeout(){},URL,Blob,CustomEvent:class {}});
  const byId=id=>created.find(e=>e.id===id);
  const posts=prefix=>calls.filter(c=>c[1]?.method==='POST'&&c[0].startsWith(prefix));
@@ -142,4 +142,68 @@ test('another tab for the same account refreshes the draft list',async()=>{
  const storage=deviceStorage();const a=await offlineAfterLoad({storage}),b=await offlineAfterLoad({storage});draft(a,'clock_out');
  assert.equal(b.byId('clock-draft-list').children.length,0);b.windowEvents.storage({key:'wzos.clockDrafts.v1:org-b:member'});assert.equal(b.byId('clock-draft-list').children.length,0);
  b.windowEvents.storage({key:KEY});assert.equal(b.byId('clock-draft-list').children.length,1);
+});
+
+// Review repair (CLAUDE_MODULE_REVIEW_20261010 finding 2): tabs sharing device storage.
+const SUBMIT=(path,options)=>options?.method==='POST'&&path.startsWith('/api/time/offline-submissions');
+function held(){let release;const gate=(path,options)=>SUBMIT(path,options)?new Promise(r=>{release=r;}):null;return {gate,release:()=>release()};}
+const stored=storage=>storage.data.has(KEY)?JSON.parse(storage.data.get(KEY)).drafts:[];
+
+test('another tab draft added during a delayed submission is kept after success',async()=>{
+ for(const deliverEvent of [true,false]){
+  const storage=deviceStorage(),hold=held();
+  const a=await offlineAfterLoad({storage,gate:hold.gate});draft(a,'clock_out','Tab A');
+  const b=await offlineAfterLoad({storage});
+  a.navigator.onLine=true;a.windowEvents.online();await settle();
+  const submitting=a.byId('clock-draft-submit').onclick();await settle();
+  draft(b,'clock_in','Tab B');assert.deepEqual(stored(storage).map(d=>d.note),['Tab A','Tab B']);
+  if(deliverEvent)a.windowEvents.storage({key:KEY});
+  hold.release();await submitting;
+  assert.deepEqual(stored(storage).map(d=>d.note),['Tab B']);
+  assert.deepEqual(a.byId('clock-draft-list').children.map(li=>li.textContent.includes('Tab B')),[true]);
+  assert.equal(JSON.parse(a.posts('/api/time/offline-submissions')[0][1].body).drafts.length,1);
+ }
+});
+
+test('uncertain submission marks only its drafts and keeps concurrent additions',async()=>{
+ const storage=deviceStorage();let failing=true;
+ const a=await offlineAfterLoad({storage,fail:(path,options)=>failing&&SUBMIT(path,options)});draft(a,'clock_out','Tab A');
+ const b=await offlineAfterLoad({storage});draft(b,'clock_in','Tab B');
+ a.navigator.onLine=true;a.windowEvents.online();await settle();await a.byId('clock-draft-submit').onclick();
+ assert.deepEqual(stored(storage).map(d=>[d.note,d.submission||'local']),[['Tab A','unconfirmed'],['Tab B','local']]);
+ const firstIds=JSON.parse(a.posts('/api/time/offline-submissions')[0][1].body).drafts.map(d=>d.request_id);
+ // Same account: tab A now shows and resubmits both drafts, reusing tab A's original request ID.
+ failing=false;await a.byId('clock-draft-submit').onclick();
+ const second=JSON.parse(a.posts('/api/time/offline-submissions')[1][1].body).drafts;
+ assert.deepEqual(second.map(d=>d.note),['Tab A','Tab B']);assert.equal(second[0].request_id,firstIds[0]);
+ assert.deepEqual(stored(storage),[]);
+});
+
+test('a stale tab cannot restore a submitted draft or discard drafts it never saw',async()=>{
+ const storage=deviceStorage();
+ const a=await offlineAfterLoad({storage});draft(a,'clock_out','First');
+ const b=await offlineAfterLoad({storage});
+ b.navigator.onLine=true;b.windowEvents.online();await settle();await b.byId('clock-draft-submit').onclick();
+ assert.deepEqual(stored(storage),[]);
+ // Tab A still shows "First" (no storage event). Removing its last draft must not resurrect anything.
+ a.byId('clock-draft-remove').onclick();assert.deepEqual(stored(storage),[]);
+ const c=await offlineAfterLoad({storage});draft(c,'clock_out','Unseen by A');
+ draft(a,'clock_out','A after reload');
+ assert.deepEqual(stored(storage).map(d=>d.note),['Unseen by A']);
+ const d=await offlineAfterLoad({storage});draft(d,'clock_in','Newest');
+ // Tab A's screen shows only the draft it reloaded; discarding must not remove the newer one.
+ assert.deepEqual(a.byId('clock-draft-list').children.map(li=>li.textContent.includes('Unseen by A')),[true]);
+ a.byId('clock-draft-discard').onclick();
+ assert.deepEqual(stored(storage).map(x=>x.note),['Newest']);
+});
+
+test('switching account during a submission clears only the acknowledged drafts of the original account',async()=>{
+ const storage=deviceStorage(),hold=held();
+ const a=await offlineAfterLoad({storage,gate:hold.gate});draft(a,'clock_out','Org A draft');
+ a.navigator.onLine=true;a.windowEvents.online();await settle();
+ const submitting=a.byId('clock-draft-submit').onclick();await settle();
+ a.setSession({id:'member',organization_id:'org-b',role:'member'});a.events['wzos:session']();await settle();
+ hold.release();await submitting;
+ assert.equal(storage.data.has(KEY),false);assert.equal(a.byId('clock-draft-list').children.length,0);
+ assert.equal(storage.data.has('wzos.clockDrafts.v1:org-b:member'),false);
 });
