@@ -4,6 +4,23 @@ Ray authorized a separate restricted Google Cloud V2 staging deployment. Product
 
 ## Latest resume checkpoint
 
+October10 completed local PDF candidate: implementation3d18f60 is pushed to
+codex/integration-release. Full timed regression passed359tests/663.867s,
+zero failures/errors;281passed and78PostgreSQLcases skipped. Node21passed.
+After restarting the stale disposable browser fixture, real HTTP checks passed:
+member-created saved draft, authenticated PDF download, matching snapshot hash,
+extracted text and unauthenticated401. The synthetic export had3pages. Original
+two-page PDF layout proof remains visually checked. Narrow member dialog showed
+no horizontal document overflow at actual innerWidth534 (requested390override
+was not effective); real390px/phone and browser-download gates remain open.
+Evidence and cloud resume commands are in REPORT_PDF_EXPORT.md. Browser Cloud
+Shell control repeatedly timed out even after reconnection; new PDF PostgreSQL
+gate and independent temporary-cluster cleanup check remain pending. Keep the
+candidate unmerged and undeployed until those and required UI gates pass.
+Disposable local fixture restarted as session70663 on127.0.0.1:8083;
+synthetic sign-in reset. Next: cloud PDF gate, browser download/mobile check,
+then review Claude's repaired module handoffs and assemble combined candidate.
+
 October 10 preproduction continuation: employee baseline 8024631 passed the
 disposable native PostgreSQL16 gate in fresh owned Cloud Shell checkout
 `~/wzos-preproduction-20261010`:353tests/61.678s,zero failures/errors/skips.
