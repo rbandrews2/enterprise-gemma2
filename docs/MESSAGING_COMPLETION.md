@@ -234,3 +234,5 @@ member's number without the member's phone.
 
 **Focused result:** 21 passed, 18 PostgreSQL skipped. No code values appear in this
 document or in the evidence.
+
+**Full suites after repair:** Python 376 OK, 85 skipped (all PostgreSQL); Node 21/21.
