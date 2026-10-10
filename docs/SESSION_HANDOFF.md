@@ -4,6 +4,22 @@ Ray authorized a separate restricted Google Cloud V2 staging deployment. Product
 
 ## Latest resume checkpoint
 
+October9 employee-directory candidate in isolated codex/integration-release: shared
+employee profiles and qualification contracts implemented with admin-only writes,
+own-member reads, unique organization employee numbers, optimistic revisions,
+immutable history and explicit unreviewed/expired/unknown-expiry states. Account
+toolbar editor added; home addresses do not enter roster or Atlas context. See
+EMPLOYEE_DIRECTORY_CONTRACT.md and migrations/20261009_employee_directory.sql.
+Focused employee/account suite41tests:19passed,22PostgreSQL skips; full Node21passed;
+JS syntax/diff checks passed. Real loopback HTTP passed script/page/admin save/
+own-member read/member-directory403/coworker404 using the approved test Host.
+Initial random-port Host correctly returned local_preview_only; no boundary was
+relaxed. New PostgreSQL cases and interactive browser acceptance remain open,
+as does full integrated Python acceptance. No cloud deployment/migration, external
+message or production change. Next validate the candidate editor and PostgreSQL
+schema before merge; then add availability/evidence integration for dispatch and
+training. Claude may read this worktree contract; enterprise-v2 remains unchanged.
+
 October 8 desktop session recheck: Chrome fresh password sign-in with Stay signed in checked succeeded; full reload and a newly opened same-origin page restored the authenticated Enterprise admin organization selector without credentials. This resolves the previously observed desktop reload failure for these tested scenarios. Screenshot: .local-data/desktop-remembered-session-pass.png. Browser process restart was not tested. Android remembered-session logout across refresh/reopen passed per Ray. Next confirm Android re-enrollment after removal and all-device revocation; iOS and real-email recovery remain open.
 
 October 8 Android remembered-session logout acceptance: Ray confirmed that signing in with Stay signed in checked, then signing out, refreshing and closing/reopening requires login again. User-observed pass for session logout on that phone. This does not establish all-device revocation. Android enrollment/login, cancellation/password fallback, removal/password access and remembered persistence previously passed. Next verify the earlier desktop reload discrepancy; real-email recovery, iOS and re-enrollment confirmation remain open.

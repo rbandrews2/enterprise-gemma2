@@ -144,6 +144,8 @@ class Accounts:
         return token
 
     def register(self, app):
+        from .employees import register as register_employees
+        register_employees(app, self)
         from .browser_sessions import register
         register(app, self)
         from .passkeys import register as register_passkeys

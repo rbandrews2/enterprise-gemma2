@@ -551,6 +551,10 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
     @app.get("/account.js")
     def account_script():
         return FileResponse(STATIC / "account.js", media_type="text/javascript")
+
+    @app.get("/employees.js")
+    def employee_script():
+        return FileResponse(STATIC / "employees.js", media_type="text/javascript")
     report_history.register(app, connect, actor, report, knowledge_store)
     timeclock.register(app, connect, actor, permitted_row, roster)
     return app

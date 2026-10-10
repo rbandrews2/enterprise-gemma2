@@ -11,6 +11,13 @@ This is the current sequential remaining-work list. Ray can add items or revise 
 
 ## October 8 review-workflow increment
 
+October9 parallel module foundation: Codex's isolated integration-release candidate
+adds employee profile/qualification APIs and account editor. Contract:
+EMPLOYEE_DIRECTORY_CONTRACT.md. PostgreSQL/browser/full Python acceptance precede
+merge. Availability, qualification evidence uploads and account lifecycle delivery
+remain open. Claude owns Messaging, Enterprise dispatch, Training and expanded
+offline module work; Codex owns shared employee contracts, Atlas, report and Meet.
+
 Internal saved-form submissions and self-reported training acknowledgements now have immutable snapshots and organization-scoped admin review in the local integration candidate. They do not include external sending, attachments or qualification issuance. New startup DDL requires PostgreSQL acceptance before deployment. See INTERNAL_FORM_SUBMISSIONS.md, TRAINING_ACKNOWLEDGEMENTS.md and the concise ordered list in REMAINING_RELEASE_WORK.md.
 
 ## Starting point
