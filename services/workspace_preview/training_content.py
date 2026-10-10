@@ -20,6 +20,7 @@ DDL = (
     'CREATE TABLE IF NOT EXISTS training_module_versions (organization_id TEXT NOT NULL,module_id TEXT NOT NULL,version INTEGER NOT NULL,payload TEXT NOT NULL,published_by TEXT NOT NULL,published_at TEXT NOT NULL,PRIMARY KEY(organization_id,module_id,version))',
     'CREATE TABLE IF NOT EXISTS training_assignments (id TEXT PRIMARY KEY,organization_id TEXT NOT NULL,module_id TEXT NOT NULL,module_version INTEGER NOT NULL,user_id TEXT NOT NULL,due_on TEXT,status TEXT NOT NULL,assigned_by TEXT NOT NULL,created_at TEXT NOT NULL,updated_at TEXT NOT NULL,UNIQUE(organization_id,module_id,module_version,user_id))',
     'CREATE TABLE IF NOT EXISTS training_attempts (id TEXT PRIMARY KEY,organization_id TEXT NOT NULL,user_id TEXT NOT NULL,module_id TEXT NOT NULL,module_version INTEGER NOT NULL,answers TEXT NOT NULL,score INTEGER NOT NULL,passed INTEGER NOT NULL,submitted_at TEXT NOT NULL)',
+    'CREATE TABLE IF NOT EXISTS training_assignment_events (id TEXT PRIMARY KEY,organization_id TEXT NOT NULL,assignment_id TEXT NOT NULL,actor_id TEXT NOT NULL,event TEXT NOT NULL,detail TEXT NOT NULL,occurred_at TEXT NOT NULL)',
     'CREATE TABLE IF NOT EXISTS training_completions (id TEXT PRIMARY KEY,organization_id TEXT NOT NULL,user_id TEXT NOT NULL,module_id TEXT NOT NULL,module_version INTEGER NOT NULL,attempt_id TEXT NOT NULL,score INTEGER NOT NULL,completed_at TEXT NOT NULL,UNIQUE(organization_id,user_id,module_id,module_version))',
 )
 MODULE_ID = r'^[a-z0-9][a-z0-9_-]{0,59}$'
@@ -88,6 +89,11 @@ class Assign(BaseModel):
     due_on: date | None = None
 
 
+class Reassign(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    due_on: date | None = None
+
+
 class Attempt(BaseModel):
     model_config = ConfigDict(extra='forbid')
     request_id: UUID
@@ -99,6 +105,13 @@ def register(app, connect, actor, actors):
     with connect() as db:
         for sql in DDL:
             db.execute(sql)
+
+    def audit(db, org, assignment_id, actor_id, name, detail=''):
+        db.execute('INSERT INTO training_assignment_events VALUES (?,?,?,?,?,?,?)', (str(uuid4()), org, assignment_id, actor_id, name, detail, now()))
+
+    def assignment_view(row):
+        # A cancelled assignment is never silently reactivated by an assign retry.
+        return {**dict(row), 'reassign_required': row['status'] == 'cancelled'}
 
     def admin(request):
         user = actor(request)
@@ -190,7 +203,9 @@ def register(app, connect, actor, actors):
             db.execute('BEGIN IMMEDIATE')
             module_row(db, user['organization_id'], module_id)
             db.execute("UPDATE training_modules SET status='retired',updated_at=? WHERE organization_id=? AND id=?", (now(), user['organization_id'], module_id))
-            db.execute("UPDATE training_assignments SET status='cancelled',updated_at=? WHERE organization_id=? AND module_id=? AND status='assigned'", (now(), user['organization_id'], module_id))
+            for open_row in db.execute("SELECT id FROM training_assignments WHERE organization_id=? AND module_id=? AND status='assigned'", (user['organization_id'], module_id)).fetchall():
+                db.execute("UPDATE training_assignments SET status='cancelled',updated_at=? WHERE id=?", (now(), open_row['id']))
+                audit(db, user['organization_id'], open_row['id'], user['id'], 'cancelled', 'module retired')
             return admin_view(module_row(db, user['organization_id'], module_id))
 
     @app.get('/api/training-modules/{module_id}/versions/{version}')
@@ -220,12 +235,13 @@ def register(app, connect, actor, actors):
                 existing = db.execute('SELECT * FROM training_assignments WHERE organization_id=? AND module_id=? AND module_version=? AND user_id=?',
                                       (user['organization_id'], body.module_id, row['published_version'], uid)).fetchone()
                 if existing:
-                    created.append(dict(existing))
+                    created.append(assignment_view(existing))
                     continue
                 assignment_id, stamp = str(uuid4()), now()
                 db.execute('INSERT INTO training_assignments VALUES (?,?,?,?,?,?,?,?,?,?)', (assignment_id, user['organization_id'], body.module_id, row['published_version'], uid,
                                                                                             body.due_on.isoformat() if body.due_on else None, 'assigned', user['id'], stamp, stamp))
-                created.append(dict(db.execute('SELECT * FROM training_assignments WHERE id=?', (assignment_id,)).fetchone()))
+                audit(db, user['organization_id'], assignment_id, user['id'], 'assigned', f"version {row['published_version']}" + (f', due {body.due_on.isoformat()}' if body.due_on else ''))
+                created.append(assignment_view(db.execute('SELECT * FROM training_assignments WHERE id=?', (assignment_id,)).fetchone()))
         return {'items': created}
 
     @app.post('/api/training-assignments/{assignment_id}/cancel')
@@ -238,8 +254,42 @@ def register(app, connect, actor, actors):
                 raise HTTPException(404, 'Assignment not found')
             if row['status'] == 'completed':
                 raise HTTPException(409, 'Completed training stays on record')
-            db.execute("UPDATE training_assignments SET status='cancelled',updated_at=? WHERE id=?", (now(), row['id']))
-            return dict(db.execute('SELECT * FROM training_assignments WHERE id=?', (row['id'],)).fetchone())
+            if row['status'] != 'cancelled':
+                db.execute("UPDATE training_assignments SET status='cancelled',updated_at=? WHERE id=?", (now(), row['id']))
+                audit(db, user['organization_id'], row['id'], user['id'], 'cancelled')
+            return assignment_view(db.execute('SELECT * FROM training_assignments WHERE id=?', (row['id'],)).fetchone())
+
+    @app.post('/api/training-assignments/{assignment_id}/reassign')
+    def reassign(assignment_id: UUID, body: Reassign, request: Request):
+        """Explicitly restore a cancelled assignment or change an active one's due date."""
+        user = admin(request)
+        due = body.due_on.isoformat() if body.due_on else None
+        with connect() as db:
+            db.execute('BEGIN IMMEDIATE')
+            row = db.execute('SELECT * FROM training_assignments WHERE id=? AND organization_id=?', (str(assignment_id), user['organization_id'])).fetchone()
+            if not row:
+                raise HTTPException(404, 'Assignment not found')
+            if row['status'] == 'completed':
+                raise HTTPException(409, 'Completed training stays on record')
+            module = module_row(db, user['organization_id'], row['module_id'])
+            if row['status'] == 'cancelled':
+                if module['status'] != 'published' or module['published_version'] != row['module_version']:
+                    raise HTTPException(409, 'This module version is no longer current. Assign the current version instead.')
+                db.execute("UPDATE training_assignments SET status='assigned',due_on=?,updated_at=? WHERE id=?", (due, now(), row['id']))
+                audit(db, user['organization_id'], row['id'], user['id'], 'reassigned', f'due {due}' if due else 'no due date')
+            elif row['due_on'] != due:
+                db.execute('UPDATE training_assignments SET due_on=?,updated_at=? WHERE id=?', (due, now(), row['id']))
+                audit(db, user['organization_id'], row['id'], user['id'], 'due_changed', f"{row['due_on'] or 'none'} -> {due or 'none'}")
+            return assignment_view(db.execute('SELECT * FROM training_assignments WHERE id=?', (row['id'],)).fetchone())
+
+    @app.get('/api/training-assignments/{assignment_id}/events')
+    def assignment_events(assignment_id: UUID, request: Request):
+        user = admin(request)
+        with connect() as db:
+            if not db.execute('SELECT 1 FROM training_assignments WHERE id=? AND organization_id=?', (str(assignment_id), user['organization_id'])).fetchone():
+                raise HTTPException(404, 'Assignment not found')
+            rows = db.execute('SELECT actor_id,event,detail,occurred_at FROM training_assignment_events WHERE assignment_id=? AND organization_id=? ORDER BY occurred_at,id', (str(assignment_id), user['organization_id'])).fetchall()
+        return {'items': [dict(r) for r in rows]}
 
     @app.get('/api/training-assignments')
     def assignments(request: Request, offset: int = Query(0, ge=0), limit: int = Query(50, ge=1, le=100)):
@@ -252,7 +302,7 @@ def register(app, connect, actor, actors):
             rows = db.execute('SELECT a.*,(SELECT COUNT(*) FROM training_attempts t WHERE t.organization_id=a.organization_id AND t.user_id=a.user_id AND t.module_id=a.module_id AND t.module_version=a.module_version) AS attempts FROM training_assignments a WHERE '
                               + clause + ' ORDER BY a.created_at DESC,a.id LIMIT ? OFFSET ?', [*params, limit, offset]).fetchall()
             titles = {r['id']: json.loads(r['draft'])['title'] for r in db.execute('SELECT id,draft FROM training_modules WHERE organization_id=?', (user['organization_id'],)).fetchall()}
-        return {'items': [{**dict(r), 'title': titles.get(r['module_id'], r['module_id'])} for r in rows]}
+        return {'items': [{**assignment_view(r), 'title': titles.get(r['module_id'], r['module_id'])} for r in rows]}
 
     @app.post('/api/training-modules/{module_id}/attempts')
     def attempt(module_id: str, body: Attempt, request: Request):
@@ -262,7 +312,8 @@ def register(app, connect, actor, actors):
             db.execute('BEGIN IMMEDIATE')
             prior = db.execute('SELECT * FROM training_attempts WHERE id=?', (str(body.request_id),)).fetchone()
             if prior:
-                if prior['organization_id'] != org or prior['user_id'] != user['id'] or prior['module_id'] != module_id or json.loads(prior['answers']) != body.answers:
+                if (prior['organization_id'] != org or prior['user_id'] != user['id'] or prior['module_id'] != module_id
+                        or prior['module_version'] != body.module_version or json.loads(prior['answers']) != body.answers):
                     raise HTTPException(409, 'Assessment retry conflict')
                 return result(db, prior)
             row = module_row(db, org, module_id)
@@ -283,8 +334,10 @@ def register(app, connect, actor, actors):
             db.execute('INSERT INTO training_attempts VALUES (?,?,?,?,?,?,?,?,?)', (str(body.request_id), org, user['id'], module_id, body.module_version, json.dumps(body.answers), score, int(passed), stamp))
             if passed:
                 db.execute('INSERT INTO training_completions VALUES (?,?,?,?,?,?,?,?)', (str(uuid4()), org, user['id'], module_id, body.module_version, str(body.request_id), score, stamp))
-                db.execute("UPDATE training_assignments SET status='completed',updated_at=? WHERE organization_id=? AND user_id=? AND module_id=? AND module_version=? AND status='assigned'",
-                           (stamp, org, user['id'], module_id, body.module_version))
+                for done in db.execute("SELECT id FROM training_assignments WHERE organization_id=? AND user_id=? AND module_id=? AND module_version=? AND status='assigned'",
+                                       (org, user['id'], module_id, body.module_version)).fetchall():
+                    db.execute("UPDATE training_assignments SET status='completed',updated_at=? WHERE id=?", (stamp, done['id']))
+                    audit(db, org, done['id'], user['id'], 'completed', f'score {score}%')
             return result(db, db.execute('SELECT * FROM training_attempts WHERE id=?', (str(body.request_id),)).fetchone())
 
     def result(db, row):

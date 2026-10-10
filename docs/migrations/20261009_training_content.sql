@@ -19,6 +19,11 @@ CREATE TABLE IF NOT EXISTS training_attempts (
  id TEXT PRIMARY KEY, organization_id TEXT NOT NULL, user_id TEXT NOT NULL, module_id TEXT NOT NULL,
  module_version INTEGER NOT NULL, answers TEXT NOT NULL, score INTEGER NOT NULL, passed INTEGER NOT NULL, submitted_at TEXT NOT NULL
 );
+-- Audit trail for assignment changes (assigned, cancelled, reassigned, due_changed, completed).
+CREATE TABLE IF NOT EXISTS training_assignment_events (
+ id TEXT PRIMARY KEY, organization_id TEXT NOT NULL, assignment_id TEXT NOT NULL, actor_id TEXT NOT NULL,
+ event TEXT NOT NULL, detail TEXT NOT NULL, occurred_at TEXT NOT NULL
+);
 CREATE TABLE IF NOT EXISTS training_completions (
  id TEXT PRIMARY KEY, organization_id TEXT NOT NULL, user_id TEXT NOT NULL, module_id TEXT NOT NULL,
  module_version INTEGER NOT NULL, attempt_id TEXT NOT NULL, score INTEGER NOT NULL, completed_at TEXT NOT NULL,

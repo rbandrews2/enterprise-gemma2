@@ -110,6 +110,58 @@ class TrainingContentTests(unittest.TestCase):
         self.assertEqual(self.attempt([1, 0]).status_code, 409)
 
 
+    def attempts_stored(self):
+        with self.storage.connect() as db:
+            return db.execute('SELECT COUNT(*) FROM training_attempts').fetchone()[0]
+
+    def test_assessment_retry_identity_includes_the_module_version(self):
+        self.ready(); self.save(expected_version=1, title='Updated procedure'); self.publish(2)
+        self.save(expected_version=2, title='Third procedure')
+        rid = str(uuid4())
+        first = self.attempt([0, 1], version=2, request_id=rid); self.assertEqual(first.status_code, 200, first.text)
+        self.publish(3); stored = self.attempts_stored()
+        # Same request ID, same answers, different version: a conflict with no new write.
+        self.assertEqual(self.attempt([0, 1], version=3, request_id=rid).status_code, 409)
+        self.assertEqual(self.attempts_stored(), stored)
+        # The exact retry still returns the original result.
+        self.assertEqual(self.attempt([0, 1], version=2, request_id=rid).json(), first.json())
+        self.assertEqual(self.attempts_stored(), stored)
+
+    def test_cancelled_assignment_is_explicitly_reassigned_with_audit(self):
+        self.ready(); admin = self.h('enterprise-admin')
+        due = (date.today() + timedelta(days=7)).isoformat(); later = (date.today() + timedelta(days=14)).isoformat()
+        body = {'module_id': 'flagger', 'user_ids': ['enterprise-general'], 'due_on': due}
+        item = self.client.post('/api/training-assignments', headers=admin, json=body).json()['items'][0]
+        url = f"/api/training-assignments/{item['id']}"
+        self.assertEqual(self.client.post(url + '/cancel', headers=admin).json()['status'], 'cancelled')
+        self.assertEqual(self.client.post(url + '/cancel', headers=admin).json()['status'], 'cancelled')
+        # An assign retry never silently restores a cancellation; it says reassignment is required.
+        again = self.client.post('/api/training-assignments', headers=admin, json=body).json()['items'][0]
+        self.assertEqual((again['id'], again['status'], again['reassign_required']), (item['id'], 'cancelled', True))
+        self.assertEqual(self.client.post(url + '/reassign', headers=self.h(), json={'due_on': due}).status_code, 403)
+        self.assertEqual(self.client.post(url + '/reassign', headers=self.h('core-admin'), json={'due_on': due}).status_code, 404)
+        restored = self.client.post(url + '/reassign', headers=admin, json={'due_on': due}).json()
+        self.assertEqual((restored['status'], restored['due_on'], restored['reassign_required']), ('assigned', due, False))
+        self.assertEqual(self.client.post(url + '/reassign', headers=admin, json={'due_on': due}).json(), restored)
+        self.assertEqual(self.client.post(url + '/reassign', headers=admin, json={'due_on': later}).json()['due_on'], later)
+        self.assertEqual(self.client.get('/api/training-assignments', headers=self.h()).json()['items'][0]['status'], 'assigned')
+        self.assertTrue(self.attempt([1, 0]).json()['passed'])
+        self.assertEqual(self.client.post(url + '/reassign', headers=admin, json={'due_on': later}).status_code, 409)
+        self.assertEqual(self.client.post(url + '/cancel', headers=admin).status_code, 409)
+        events = [e['event'] for e in self.client.get(url + '/events', headers=admin).json()['items']]
+        self.assertEqual(events, ['assigned', 'cancelled', 'reassigned', 'due_changed', 'completed'])
+        self.assertEqual(self.client.get(url + '/events', headers=self.h('core-admin')).status_code, 404)
+
+    def test_reassigning_a_cancelled_old_version_requires_the_current_version(self):
+        self.ready(); admin = self.h('enterprise-admin')
+        item = self.client.post('/api/training-assignments', headers=admin, json={'module_id': 'flagger', 'user_ids': ['enterprise-general']}).json()['items'][0]
+        self.client.post(f"/api/training-assignments/{item['id']}/cancel", headers=admin)
+        self.save(expected_version=1, title='Revised'); self.publish(2)
+        self.assertEqual(self.client.post(f"/api/training-assignments/{item['id']}/reassign", headers=admin, json={}).status_code, 409)
+        fresh = self.client.post('/api/training-assignments', headers=admin, json={'module_id': 'flagger', 'user_ids': ['enterprise-general']}).json()['items'][0]
+        self.assertEqual((fresh['module_version'], fresh['status']), (2, 'assigned'))
+
+
 @unittest.skipUnless(os.getenv('WZOS_TEST_DATABASE_URL'), 'Dedicated PostgreSQL database not configured')
 class PostgreSQLTrainingContentTests(TrainingContentTests):
     make_storage = fixtures.PostgreSQLFormSubmissionTests.make_storage

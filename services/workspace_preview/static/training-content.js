@@ -87,7 +87,7 @@
    const published=admin?modules.items.filter(m=>m.status==='published'):modules.items;
    if(!published.length)learn.append(el('p','No published training yet.'));
    for(const m of published){const id=m.id,version=admin?m.published_version:m.version,title=admin?m.draft.title:m.title,a=due[id+':'+version];
-    const row=el('p',`${title} · version ${version}${a?` · ${a.status==='completed'?'Completed':'Assigned'}${a.due_on?' · due '+a.due_on:''}`:''}`);
+    const row=el('p',`${title} · version ${version}${a?` · ${({completed:'Completed',cancelled:'Assignment cancelled',assigned:'Assigned'})[a.status]||a.status}${a.due_on&&a.status==='assigned'?' · due '+a.due_on:''}`:''}`);
     const open=el('button','Open training');open.onclick=async()=>{try{takeModule(await api(`/api/training-modules/${id}/versions/${version}`),host,generation);host.scrollIntoView({block:'start'});}catch(e){say(e.message);}};
     learn.append(row,open);}
    learn.append(host);root.append(learn);
@@ -112,6 +112,14 @@
    assign.append(labelled('Published module',pick),people,labelled('Due date (optional)',dueOn),go);
    const names=Object.fromEntries(roster.map(p=>[p.id,p.name])),status=el('ul');
    for(const a of assignments.items){const li=el('li',`${names[a.user_id]||a.user_id} · ${a.title} v${a.module_version} · ${a.status}${a.due_on?' · due '+a.due_on:''} · attempts ${a.attempts}`);
+    const STATUS={assigned:'Assigned',completed:'Completed',cancelled:'Cancelled — reassign to restore'};li.textContent=li.textContent.replace(' · '+a.status,' · '+(STATUS[a.status]||a.status));
+    if(a.status!=='completed'){
+     // Explicit, audited actions: restore a cancelled assignment or change an active due date.
+     const when=el('input');when.type='date';Object.assign(when.style,{width:'auto',display:'inline-block'});when.value=a.due_on||'';when.setAttribute('aria-label','Due date for '+(names[a.user_id]||a.user_id));
+     const change=el('button',a.status==='cancelled'?'Reassign':'Change due date');
+     change.onclick=()=>run(change,()=>api(`/api/training-assignments/${a.id}/reassign`,{method:'POST',body:JSON.stringify({due_on:when.value||null})}),a.status==='cancelled'?'Assignment restored.':'Due date updated.');
+     li.append(' ',when,change);
+    }
     if(a.status==='assigned'){const c=el('button','Cancel');c.onclick=()=>run(c,()=>api(`/api/training-assignments/${a.id}/cancel`,{method:'POST'}),'Assignment cancelled.');li.append(' ',c);}status.append(li);}
    assign.append(el('h4','Assignment status'),status);root.append(assign);
    const records=el('section');records.append(el('h3','Assessment completions (organization)'));

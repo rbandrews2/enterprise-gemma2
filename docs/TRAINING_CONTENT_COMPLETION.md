@@ -149,3 +149,48 @@ Rollback means deploying the previous code and keeping the tables as history.
 Merge after review. Codex then runs the PostgreSQL class with `WZOS_TEST_DATABASE_URL`,
 plus browser acceptance with accounts, including the Employees qualification button.
 Rollback means reverting the commit; the tables become inert.
+
+## Review repairs — October 10, 2026 (CLAUDE_MODULE_REVIEW_20261010.md, findings 3 and 4)
+
+**Finding 3: assessment retry ignored the version.**
+- **Defect:** reusing a request ID for a different module version returned the earlier
+  attempt instead of a conflict, so the requested version was never assessed.
+- **Repair:** `module_version` is now part of the retry identity. An exact retry returns
+  the original result; a changed version returns 409 with no new write.
+- **Regression:** `test_assessment_retry_identity_includes_the_module_version`.
+
+**Finding 4: a cancelled assignment couldn't be given again.**
+- **Repair:**
+  - New `POST /api/training-assignments/{id}/reassign {due_on}`. It explicitly restores
+    a cancelled assignment of the current published version (`reassigned`), or changes
+    an active one's due date (`due_changed`). Completed records are refused (409). An
+    identical repeat is a no-op.
+  - `POST /api/training-assignments` stays an idempotent "ensure assigned". It never
+    silently reactivates a cancellation; cancelled rows come back with
+    `reassign_required: true`.
+  - A cancelled assignment of an older version must be assigned again at the current
+    version.
+  - Every assign, cancel (including cancellations from module retirement), reassign,
+    due-date change and completion is recorded in the new
+    `training_assignment_events` table. Admins read it through
+    `GET /api/training-assignments/{id}/events`.
+- **UI:**
+  - Cancelled rows read "Cancelled — reassign to restore" and have a due-date field and
+    a **Reassign** button.
+  - Active rows get **Change due date**.
+  - Members see "Assignment cancelled" instead of a misleading "Assigned".
+  - Browser check (local synthetic preview): the member saw "Assignment cancelled". The
+    admin's Reassign restored it to "Assigned · due 2026-10-20". Screenshot (outside
+    Git): `C:\Users\MolecularDev\claude-WZOS-2.0\evidence\training\admin-reassign-restored.jpg`.
+- **Regressions:**
+  - `test_cancelled_assignment_is_explicitly_reassigned_with_audit`;
+  - `test_reassigning_a_cancelled_old_version_requires_the_current_version`.
+
+**Schema:** one more additive startup table, `training_assignment_events` (SQL in the
+migration file).
+
+**Results:**
+- Focused: 9 passed, 9 PostgreSQL skipped.
+- Full Python: **355 tests OK, 76 skipped** (all PostgreSQL), no errors. The earlier
+  Atlas socket-test error didn't recur.
+- Node: 21/21.
