@@ -534,6 +534,8 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
     form_submissions.register(app, connect, actor)
     from . import training_records
     training_records.register(app, connect, actor)
+    from . import training_content
+    training_content.register(app, connect, actor, roster)
     if accounts:
         accounts.register(app)
         app.state.accounts = accounts
@@ -543,6 +545,10 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
     @app.get("/files.js")
     def files_script():
         return FileResponse(STATIC / "files.js", media_type="text/javascript")
+
+    @app.get("/training-content.js")
+    def training_content_script():
+        return FileResponse(STATIC / "training-content.js", media_type="text/javascript")
 
     @app.get("/review-workflows.js")
     def review_workflows_script():
