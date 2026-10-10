@@ -4,6 +4,17 @@ Ray authorized a separate restricted Google Cloud V2 staging deployment. Product
 
 ## Latest resume checkpoint
 
+October 10 Claude module review: read-only review of messaging99125c9,
+dispatch69d4316, training2426620 and offline-drafts f09fca5. Hold integration for
+five reproduced defects (verification-code exposure, concurrent-tab draft loss,
+assessment version retry conflict, cancelled training reassignment and wrong
+cancellation dates). See CLAUDE_MODULE_REVIEW_20261010.md for repair acceptance
+and independent tests. No contributor checkout changed or module merged/deployed.
+Recovered yesterday's full employee result:353tests,278passed,75PostgreSQLskips,
+zero failures/errors; remote codex/integration-release has abae32e. New employee
+PostgreSQL and member-browser gates remain open. Next review Claude's repairs,
+then validate an isolated combined candidate before integration.
+
 October 9 diagnostic regression follow-up: added an uncommitted timed local gate.
 The full run hit its 120-second per-test timeout during the knowledge revision
 rebuild test, with a trace in Path.glob. Basic local reads and browser control
