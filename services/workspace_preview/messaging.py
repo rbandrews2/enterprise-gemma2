@@ -36,6 +36,9 @@ DDL = (
     'CREATE TABLE IF NOT EXISTS message_receipts (organization_id TEXT NOT NULL,message_id TEXT NOT NULL,recipient_id TEXT NOT NULL,ack_required INTEGER NOT NULL,acknowledged_at TEXT,PRIMARY KEY(message_id,recipient_id))',
     'CREATE TABLE IF NOT EXISTS sms_contacts (organization_id TEXT NOT NULL,user_id TEXT NOT NULL,phone TEXT NOT NULL,status TEXT NOT NULL,consent_version TEXT NOT NULL,consented_at TEXT NOT NULL,verified_at TEXT,opted_out_at TEXT,code_hash TEXT,code_expires_at TEXT,code_attempts INTEGER NOT NULL,codes_day TEXT NOT NULL,codes_sent INTEGER NOT NULL,version INTEGER NOT NULL,updated_at TEXT NOT NULL,PRIMARY KEY(organization_id,user_id))',
     'CREATE TABLE IF NOT EXISTS sms_outbox (id TEXT PRIMARY KEY,organization_id TEXT NOT NULL,purpose TEXT NOT NULL,reference_id TEXT NOT NULL,recipient_id TEXT NOT NULL,phone TEXT NOT NULL,body TEXT NOT NULL,status TEXT NOT NULL,reason TEXT NOT NULL,attempts INTEGER NOT NULL,next_attempt_at TEXT NOT NULL,lease_until TEXT,provider_sid TEXT UNIQUE,provider_status TEXT,error_code TEXT,created_by TEXT NOT NULL,created_at TEXT NOT NULL,updated_at TEXT NOT NULL,UNIQUE(organization_id,purpose,reference_id,recipient_id))',
+    # Verification codes live only here, apart from the auditable outbox, and are deleted
+    # once their single send attempt resolves or the code expires.
+    'CREATE TABLE IF NOT EXISTS sms_secrets (outbox_id TEXT PRIMARY KEY,secret TEXT NOT NULL,expires_at TEXT NOT NULL)',
     'CREATE TABLE IF NOT EXISTS sms_events (id TEXT PRIMARY KEY,organization_id TEXT NOT NULL,outbox_id TEXT,source TEXT NOT NULL,event TEXT NOT NULL,detail TEXT NOT NULL,actor_id TEXT,occurred_at TEXT NOT NULL)',
 )
 
@@ -52,7 +55,12 @@ REASONS = {
     'not_verified': 'The recipient has not verified their number.',
     'opted_out': 'The recipient opted out of text messages.',
     'contact_changed': 'The recipient changed their number after this was queued.',
+    'code_expired': 'The verification code expired before it could be sent.',
+    'superseded': 'A newer verification code replaced this one.',
 }
+CODE_PLACEHOLDER = '{code}'
+# A code counts only after its text reached the provider; holding the code is not enough.
+CODE_SENT = ('sending', 'accepted', 'sent', 'delivered', 'ambiguous')
 
 
 def now():
@@ -161,7 +169,7 @@ class Messaging:
             return 'not_test_recipient'
         return None
 
-    def enqueue(self, db, *, organization_id, recipient_id, body, purpose, reference_id, actor_id, phone=None):
+    def enqueue(self, db, *, organization_id, recipient_id, body, purpose, reference_id, actor_id, phone=None, secret=None, secret_expires=None):
         """Queue one text inside the caller's transaction; repeats return the original row."""
         prior = db.execute('SELECT * FROM sms_outbox WHERE organization_id=? AND purpose=? AND reference_id=? AND recipient_id=?',
                            (organization_id, purpose, reference_id, recipient_id)).fetchone()
@@ -178,6 +186,8 @@ class Messaging:
         db.execute('INSERT INTO sms_outbox VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
                    (row['id'], organization_id, purpose, reference_id, recipient_id, phone, body, status, reason, 0,
                     created, None, None, None, None, actor_id, created, created))
+        if secret and status == 'queued':
+            db.execute('INSERT INTO sms_secrets VALUES (?,?,?)', (row['id'], secret, secret_expires))
         event(db, organization_id, row['id'], 'app', status, reason, actor_id)
         return dict(db.execute('SELECT * FROM sms_outbox WHERE id=?', (row['id'],)).fetchone())
 
@@ -188,7 +198,9 @@ class Messaging:
         with self.connect() as db:
             db.execute('BEGIN IMMEDIATE')
             scope, params = ('', []) if organization_id is None else (' AND organization_id=?', [organization_id])
+            db.execute("DELETE FROM sms_secrets WHERE expires_at<? OR outbox_id NOT IN (SELECT id FROM sms_outbox WHERE status IN ('queued','sending'))", (current,))
             for row in db.execute("SELECT * FROM sms_outbox WHERE status='sending' AND lease_until<?" + scope, [current, *params]).fetchall():
+                db.execute('DELETE FROM sms_secrets WHERE outbox_id=?', (row['id'],))
                 # A send that never recorded its outcome may have reached the provider.
                 db.execute("UPDATE sms_outbox SET status='ambiguous',reason='lease_expired',lease_until=NULL,updated_at=? WHERE id=?", (current, row['id']))
                 event(db, row['organization_id'], row['id'], 'app', 'ambiguous', 'lease_expired')
@@ -202,7 +214,13 @@ class Messaging:
                               ' ORDER BY created_at,id LIMIT ?', [current, *params, limit]).fetchall()
             for row in rows:
                 reason = self.blocker(db, row) or ('' if provider else 'not_configured')
+                text = row['body']
+                if not reason and row['purpose'] == 'verification':
+                    secret = db.execute('SELECT secret FROM sms_secrets WHERE outbox_id=? AND expires_at>=?', (row['id'], current)).fetchone()
+                    reason = '' if secret else 'code_expired'
+                    text = text.replace(CODE_PLACEHOLDER, secret['secret']) if secret else text
                 if reason:
+                    db.execute('DELETE FROM sms_secrets WHERE outbox_id=?', (row['id'],))
                     db.execute("UPDATE sms_outbox SET status='blocked',reason=?,updated_at=? WHERE id=?", (reason, current, row['id']))
                     event(db, row['organization_id'], row['id'], 'app', 'blocked', reason)
                     counts['blocked'] += 1
@@ -210,11 +228,12 @@ class Messaging:
                 lease = stamp(now() + timedelta(seconds=LEASE_SECONDS))
                 db.execute("UPDATE sms_outbox SET status='sending',attempts=attempts+1,lease_until=?,updated_at=? WHERE id=?", (lease, current, row['id']))
                 event(db, row['organization_id'], row['id'], 'app', 'sending', f'attempt {row["attempts"] + 1}')
-                claimed.append({**dict(row), 'attempts': row['attempts'] + 1})
+                # The rendered text exists only in memory for this send; it is never stored.
+                claimed.append({**dict(row), 'attempts': row['attempts'] + 1, 'rendered': text})
         for row in claimed:
             counts['claimed'] += 1
             try:
-                result = provider.send(row['id'], row['phone'], row['body'])
+                result = provider.send(row['id'], row['phone'], row['rendered'])
             except Exception:
                 result = sms_provider.SendResult('ambiguous', detail='Provider call failed unexpectedly')
             counts[self.record(row, result)] += 1
@@ -225,12 +244,12 @@ class Messaging:
             db.execute('BEGIN IMMEDIATE')
             current = db.execute('SELECT * FROM sms_outbox WHERE id=?', (row['id'],)).fetchone()
             updated = stamp()
-            redact = row['purpose'] == 'verification' and result.outcome != 'retryable'
-            body = '[verification code withheld]' if redact else current['body']
+            if result.outcome != 'retryable':
+                db.execute('DELETE FROM sms_secrets WHERE outbox_id=?', (row['id'],))
             if current['status'] != 'sending' or current['attempts'] != row['attempts']:
                 # A signed status callback already advanced this text; keep its state.
-                db.execute('UPDATE sms_outbox SET provider_sid=COALESCE(provider_sid,?),body=?,lease_until=NULL,updated_at=? WHERE id=?',
-                           (result.sid, body, updated, row['id']))
+                db.execute('UPDATE sms_outbox SET provider_sid=COALESCE(provider_sid,?),lease_until=NULL,updated_at=? WHERE id=?',
+                           (result.sid, updated, row['id']))
                 event(db, row['organization_id'], row['id'], 'provider_api', result.outcome, result.detail)
                 return 'accepted' if result.outcome == 'accepted' else 'ambiguous'
             outcome, status, reason, due = result.outcome, None, '', current['next_attempt_at']
@@ -241,6 +260,7 @@ class Messaging:
                 due = stamp(now() + timedelta(seconds=30 * 2 ** (row['attempts'] - 1)))
             elif outcome == 'retryable':
                 status, outcome, reason = 'failed', 'failed', 'retries_exhausted'
+                db.execute('DELETE FROM sms_secrets WHERE outbox_id=?', (row['id'],))
             elif outcome == 'rejected' and result.error_code in sms_provider.OPTED_OUT_CODES:
                 status, outcome, reason = 'blocked', 'blocked', 'opted_out'
                 self.opt_out(db, row['phone'], 'provider_api', organization_id=row['organization_id'])
@@ -248,8 +268,8 @@ class Messaging:
                 status, outcome, reason = 'failed', 'failed', 'provider_rejected'
             else:
                 status, reason = 'ambiguous', 'provider_response_unknown'
-            db.execute('UPDATE sms_outbox SET status=?,reason=?,next_attempt_at=?,lease_until=NULL,provider_sid=?,provider_status=?,error_code=?,body=?,updated_at=? WHERE id=?',
-                       (status, reason, due, result.sid, result.provider_status, result.error_code, body, updated, row['id']))
+            db.execute('UPDATE sms_outbox SET status=?,reason=?,next_attempt_at=?,lease_until=NULL,provider_sid=?,provider_status=?,error_code=?,updated_at=? WHERE id=?',
+                       (status, reason, due, result.sid, result.provider_status, result.error_code, updated, row['id']))
             event(db, row['organization_id'], row['id'], 'provider_api', status,
                   ' '.join(filter(None, [result.detail, result.error_code and 'code ' + result.error_code])))
             return outcome
@@ -265,6 +285,7 @@ class Messaging:
             event(db, contact['organization_id'], None, source, 'opted_out', masked(phone), contact['user_id'])
         for row in db.execute("SELECT id,organization_id FROM sms_outbox WHERE phone=? AND status='queued'" + scope, [phone, *params]).fetchall():
             db.execute("UPDATE sms_outbox SET status='blocked',reason='opted_out',updated_at=? WHERE id=?", (current, row['id']))
+            db.execute('DELETE FROM sms_secrets WHERE outbox_id=?', (row['id'],))
             event(db, row['organization_id'], row['id'], source, 'blocked', 'opted_out')
         return len(contacts)
 
@@ -276,7 +297,8 @@ def public(row, include_body=True):
     item['reason_text'] = REASONS.get(row['reason'], '')
     item['provider_sid'] = bool(row['provider_sid'])
     if include_body:
-        item['body'] = row['body']
+        # Verification texts are described only; the code is never part of a record.
+        item['body'] = 'Verification code text (code withheld)' if row['purpose'] == 'verification' else row['body']
     return item
 
 
@@ -367,9 +389,14 @@ def register(app, connect, actor, actors, live_permitted):
             else:
                 db.execute('INSERT INTO sms_contacts VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', (org, uid, *values))
             event(db, org, None, 'member', 'consent_recorded', f'{masked(body.phone)} consent {CONSENT_VERSION}', uid)
-            text = f'WZOS verification code: {code}. It expires in {CODE_MINUTES} minutes. If you did not request it, ignore this message. Reply STOP to opt out.'
+            # A new code replaces any older one still waiting to be sent.
+            for old in db.execute("SELECT id FROM sms_outbox WHERE organization_id=? AND recipient_id=? AND purpose='verification' AND status='queued'", (org, uid)).fetchall():
+                db.execute("UPDATE sms_outbox SET status='cancelled',reason='superseded',updated_at=? WHERE id=?", (current, old['id']))
+                db.execute('DELETE FROM sms_secrets WHERE outbox_id=?', (old['id'],))
+                event(db, org, old['id'], 'member', 'cancelled', 'superseded', uid)
+            text = f'WZOS verification code: {CODE_PLACEHOLDER}. It expires in {CODE_MINUTES} minutes. If you did not request it, ignore this message. Reply STOP to opt out.'
             queued = service.enqueue(db, organization_id=org, recipient_id=uid, body=text, purpose='verification',
-                                     reference_id=str(body.request_id), actor_id=uid, phone=body.phone)
+                                     reference_id=str(body.request_id), actor_id=uid, phone=body.phone, secret=code, secret_expires=expires)
             row = db.execute('SELECT * FROM sms_contacts WHERE organization_id=? AND user_id=?', (org, uid)).fetchone()
         if queued['status'] == 'queued':
             background.add_task(service.process, org, [queued['id']])
@@ -388,6 +415,9 @@ def register(app, connect, actor, actors, live_permitted):
                 raise HTTPException(409, 'Request a new verification code first')
             if row['code_attempts'] >= 5 or row['code_expires_at'] < stamp():
                 raise HTTPException(409, 'This code expired. Request a new verification code.')
+            latest = db.execute("SELECT status FROM sms_outbox WHERE organization_id=? AND recipient_id=? AND purpose='verification' ORDER BY created_at DESC,id DESC LIMIT 1", (org, uid)).fetchone()
+            if not latest or latest['status'] not in CODE_SENT:
+                raise HTTPException(409, 'Your verification text has not been sent. Request a new code when text messages are available.')
             if not secrets.compare_digest(row['code_hash'], code_hash(org, uid, body.code)):
                 db.execute('UPDATE sms_contacts SET code_attempts=code_attempts+1 WHERE organization_id=? AND user_id=?', (org, uid))
                 return Response('{"detail":"The code did not match"}', status_code=422, media_type='application/json')
@@ -416,6 +446,7 @@ def register(app, connect, actor, actors, live_permitted):
             event(db, org, None, 'member', 'opted_out', masked(row['phone']), uid)
             for queued in db.execute("SELECT id FROM sms_outbox WHERE organization_id=? AND recipient_id=? AND status='queued'", (org, uid)).fetchall():
                 db.execute("UPDATE sms_outbox SET status='blocked',reason='opted_out',updated_at=? WHERE id=?", (current, queued['id']))
+                db.execute('DELETE FROM sms_secrets WHERE outbox_id=?', (queued['id'],))
                 event(db, org, queued['id'], 'member', 'blocked', 'opted_out', uid)
             return contact_view(db.execute('SELECT * FROM sms_contacts WHERE organization_id=? AND user_id=?', (org, uid)).fetchone())
 

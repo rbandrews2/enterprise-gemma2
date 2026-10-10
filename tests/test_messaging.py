@@ -121,6 +121,65 @@ class MessagingTests(unittest.TestCase):
         self.assertNotIn('enterprise-general', {i['id'] for i in self.client.get('/api/messaging/sms/contacts', headers=self.h('core-admin')).json()['items']})
         self.assertEqual(self.client.get('/api/messaging/sms/contacts', headers=self.h()).status_code, 403)
 
+    def assert_code_hidden(self, code):
+        """The code must not appear in any admin view, audit event or stored outbox/event column."""
+        rows = self.client.get('/api/messaging/sms/outbox', headers=self.h('enterprise-admin')).json()['items']
+        seen = [str(rows), str(self.client.get('/api/messaging/sms/contacts', headers=self.h('enterprise-admin')).json()), str(self.contact())]
+        seen += [str(self.client.get(f"/api/messaging/sms/outbox/{r['id']}/events", headers=self.h('enterprise-admin')).json()) for r in rows]
+        with self.app.state.messaging.connect() as db:
+            seen += [str([dict(r) for r in db.execute(f'SELECT * FROM {table}').fetchall()]) for table in ('sms_outbox', 'sms_events', 'sms_contacts')]
+        for text in seen:
+            self.assertNotIn(code, text)
+
+    def secrets_left(self):
+        with self.app.state.messaging.connect() as db:
+            return db.execute('SELECT COUNT(*) FROM sms_secrets').fetchone()[0]
+
+    def test_verification_codes_are_never_exposed_and_unsent_codes_never_verify(self):
+        code = '424242'
+        verify = lambda: self.client.post('/api/messaging/sms/contact/verify', headers=self.h(), json={'code': code})
+        with patch('services.workspace_preview.messaging.secrets.randbelow', return_value=int(code)):
+            # Blocked: sending disabled, so no text left WZOS and the code must not verify.
+            with patch.dict(os.environ, {'WZOS_SMS_MODE': 'disabled'}):
+                blocked = self.enroll().json()['verification_delivery']
+            self.assertEqual(blocked['status'], 'blocked'); self.assert_code_hidden(code); self.assertEqual(self.secrets_left(), 0)
+            self.assertEqual(verify().status_code, 409); self.assertEqual(self.contact()['status'], 'pending_verification')
+            # Queued for retry: the worker keeps the secret, but no record shows it and it cannot verify yet.
+            self.provider.outcomes = [SendResult('retryable')]
+            queued = self.enroll().json()['verification_delivery']
+            self.assertEqual([r['status'] for r in self.outbox() if r['id'] == queued['id']], ['queued'])
+            self.assert_code_hidden(code); self.assertEqual(self.secrets_left(), 1); self.assertEqual(verify().status_code, 409)
+            # Failed: provider refused; the secret is discarded and the code still cannot verify.
+            self.provider.outcomes = [SendResult('rejected', error_code='21211')]
+            failed = self.enroll().json()['verification_delivery']
+            self.assertEqual([r['status'] for r in self.outbox() if r['id'] == failed['id']], ['failed'])
+            self.assert_code_hidden(code); self.assertEqual(verify().status_code, 409)
+            # Accepted: only the provider received the rendered code; then it verifies.
+            accepted = self.enroll().json()['verification_delivery']
+            self.assertIn(code, self.provider.sent[-1]['body']); self.assert_code_hidden(code)
+            self.assertEqual([r['status'] for r in self.outbox() if r['id'] == accepted['id']], ['accepted'])
+            self.assertEqual(verify().json()['status'], 'verified')
+            self.assertEqual(self.secrets_left(), 0)
+            self.assertEqual(self.outbox()[0]['body'], 'Verification code text (code withheld)')
+
+    def test_retried_verification_uses_its_secret_once_and_expired_codes_are_not_sent(self):
+        messaging = self.app.state.messaging
+        self.provider.outcomes = [SendResult('retryable')]
+        first = self.enroll().json()['verification_delivery']
+        with messaging.connect() as db:
+            db.execute("UPDATE sms_outbox SET next_attempt_at='2000-01-01T00:00:00+00:00' WHERE id=?", (first['id'],))
+        messaging.process('enterprise-demo')
+        self.assertRegex(self.provider.sent[-1]['body'], r'code: \d{6}\.'); self.assertEqual(self.secrets_left(), 0)
+        self.provider.outcomes = [SendResult('retryable')]
+        second = self.enroll().json()['verification_delivery']; sends = len(self.provider.sent)
+        with messaging.connect() as db:
+            db.execute("UPDATE sms_outbox SET next_attempt_at='2000-01-01T00:00:00+00:00' WHERE id=?", (second['id'],))
+            db.execute("UPDATE sms_secrets SET expires_at='2000-01-01T00:00:00+00:00'")
+        messaging.process('enterprise-demo')
+        row = [r for r in self.outbox() if r['id'] == second['id']][0]
+        self.assertEqual((row['status'], row['reason']), ('blocked', 'code_expired')); self.assertEqual(len(self.provider.sent), sends)
+        self.assertEqual(self.secrets_left(), 0)
+
     def test_verification_attempts_expiry_and_daily_limit(self):
         self.enroll()
         self.assertEqual(self.client.post('/api/messaging/sms/contact/verify', headers=self.h(), json={'code': 'abc123'}).status_code, 422)

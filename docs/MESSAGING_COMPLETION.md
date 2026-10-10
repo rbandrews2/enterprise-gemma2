@@ -201,3 +201,36 @@ Checkbox sizing uses CSSOM styles inside the module script, so no CSP change is 
    treats YES as an opt-in keyword.]
 6. What are the retention periods for consent, opt-out, delivery events and message
    bodies? [Kept indefinitely.]
+
+## Review repair — October 10, 2026 (CLAUDE_MODULE_REVIEW_20261010.md, finding 1)
+
+**Defect:** admin outbox and audit views returned verification-message bodies that
+contained the code, even for texts that were never sent. An admin could verify a
+member's number without the member's phone.
+
+**Repair:**
+- Outbox bodies now hold only a `{code}` placeholder. The code is stored in a separate
+  `sms_secrets` row with the code's 10-minute expiry. The worker renders it in memory
+  only for the provider call.
+- The secret is deleted when the send resolves (accepted, failed, rejected or ambiguous),
+  on lease expiry, when the text is blocked, cancelled or superseded, and on expiry. An
+  expired secret blocks the send (`code_expired`) instead of sending a stale code.
+- Requesting a new code cancels any older verification text still queued (`superseded`).
+- Admin and API views describe verification texts only as "Verification code text
+  (code withheld)".
+- **Verification now requires possession, not just the code.**
+  `POST /api/messaging/sms/contact/verify` returns 409 unless the member's latest
+  verification text reached the provider (sending, accepted, sent, delivered or
+  ambiguous). Blocked, queued, failed and cancelled codes never verify.
+
+**Schema:** one more additive startup table, `sms_secrets` (SQL in the migration file).
+
+**Regressions:**
+- `test_verification_codes_are_never_exposed_and_unsent_codes_never_verify` covers
+  blocked, queued/retryable, failed and accepted rows. It uses a fixed synthetic code
+  and checks the admin outbox, events and contacts, the member view, and the raw
+  `sms_outbox`, `sms_events` and `sms_contacts` columns.
+- `test_retried_verification_uses_its_secret_once_and_expired_codes_are_not_sent`.
+
+**Focused result:** 21 passed, 18 PostgreSQL skipped. No code values appear in this
+document or in the evidence.
