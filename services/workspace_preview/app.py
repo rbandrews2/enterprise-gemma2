@@ -512,7 +512,7 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
                     "approved_for_field_use": False,
                     "limitations": ["Live draft view; refresh after changes. No approved or frozen report has been issued.",
                         "Linked drafts are supporting records, not proof of required-form completion or vehicle clearance.",
-                        "Site imagery is a live optional display, not stored in this report. Annotated placements, diagrams, PDF and email delivery are not connected."]}
+                        "Site imagery is a live optional display, not stored in this report. Annotated placements, diagrams and email delivery are not connected. Saved drafts can be downloaded as PDFs."]}
 
     @app.post("/api/orders/{order_id}/preparation")
     def preparation(order_id: str, request: Request, expected_version: int):

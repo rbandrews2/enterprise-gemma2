@@ -45,7 +45,17 @@
    for(const item of data.items){const button=node("button",`${new Date(item.saved_at).toLocaleString()} · job revision ${item.order_version}${item.basis_changed?" · inputs changed":""}`);button.className="job";button.type="button";
     button.onclick=async()=>{const generation=++epoch;$("report-save").disabled=true;$("report-prepare").disabled=true;$("report-references").replaceChildren();
      try{const saved=await api(`/api/orders/${encodeURIComponent(id)}/reports/${item.id}`);if(generation!==epoch)return;current=null;document.dispatchEvent(new Event("wzos:report-context"));render(saved.report);renderReferences(saved.report.preparation);$("report-save").disabled=true;$("report-prepare").disabled=true;$("report-message").textContent=`SAVED DRAFT · ${new Date(saved.saved_at).toLocaleString()}${saved.basis_changed?" · Inputs have changed; refresh for the current job.":" · Read only. Refresh to return to current inputs."}`;}catch(error){if(generation===epoch)$("report-message").textContent=error.message;}
-    };$("report-history").append(button);}
+    };
+    const download=node('button','Download draft PDF');download.type='button';download.className='secondary';
+    download.onclick=async()=>{const selectedEpoch=epoch,session=window.wzosClock.getSession();if(!session)return;download.disabled=true;
+     try{const response=await fetch(`/api/orders/${encodeURIComponent(id)}/reports/${item.id}/pdf`,{headers:{'X-Preview-Actor':session.id,...await window.wzosAccount.headers()}});
+      if(!response.ok){const error=await response.json();throw Error(typeof error.detail==='string'?error.detail:'PDF download failed');}
+      const blob=await response.blob();if(selectedEpoch!==epoch)return;
+      const url=URL.createObjectURL(blob),link=node('a','');link.href=url;link.download=`wzos-report-${item.id}.pdf`;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+      $('report-message').textContent='Saved draft PDF downloaded. Review is required before field use.';
+     }catch(error){if(selectedEpoch===epoch)$('report-message').textContent=error.message;}finally{download.disabled=false;}
+    };
+    const row=node('div','');row.append(button,download);$("report-history").append(row);}
   }catch(error){if(generation===epoch)$("report-history").replaceChildren(node("p",error.message));}
  }
  $("report-save").onclick=async()=>{

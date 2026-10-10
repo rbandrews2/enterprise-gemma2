@@ -3,7 +3,7 @@ import hashlib
 import json
 from datetime import datetime, timezone
 from uuid import UUID
-from fastapi import HTTPException, Request, Query
+from fastapi import HTTPException, Request, Query, Response
 from pydantic import BaseModel, ConfigDict, Field
 from services.workspace_preview.atlas_adapter import prepare_order
 
@@ -77,3 +77,25 @@ def register(app, connect, actor, report, knowledge):
                            (str(snapshot_id),order_id,selected['organization_id'],selected['id'])).fetchone()
         if not row: raise HTTPException(404,'Saved report not found')
         return {**summary(row,current),"report":json.loads(row['payload'])}
+
+    @app.get('/api/orders/{order_id}/reports/{snapshot_id}/pdf')
+    def pdf(order_id: str, snapshot_id: UUID, request: Request):
+        saved = detail(order_id, snapshot_id, request)  # Same actor/org/edition boundary.
+        with connect() as db:
+            row = db.execute('SELECT payload,sha256 FROM report_snapshots WHERE id=?',
+                             (str(snapshot_id),)).fetchone()
+        if hashlib.sha256(row['payload'].encode()).hexdigest() != row['sha256']:
+            raise HTTPException(409, 'Saved report integrity check failed')
+        if len(row['payload'].encode()) > 2 * 1024 * 1024:
+            raise HTTPException(413, 'Saved report is too large to export')
+        from .report_pdf import render_pdf
+        try:
+            document = render_pdf(saved)
+        except ValueError:
+            raise HTTPException(413, 'Saved report exceeds PDF export limits') from None
+        return Response(document, media_type='application/pdf', headers={
+            'Content-Disposition': f'attachment; filename="wzos-report-{snapshot_id}.pdf"',
+            'Cache-Control': 'private, no-store', 'X-Content-Type-Options': 'nosniff',
+            'X-WZOS-Snapshot-SHA256': saved['sha256'],
+            'X-WZOS-Basis-Changed': str(saved['basis_changed']).lower(),
+        })

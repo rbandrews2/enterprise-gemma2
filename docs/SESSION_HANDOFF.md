@@ -4,6 +4,23 @@ Ray authorized a separate restricted Google Cloud V2 staging deployment. Product
 
 ## Latest resume checkpoint
 
+October 10 preproduction continuation: employee baseline 8024631 passed the
+disposable native PostgreSQL16 gate in fresh owned Cloud Shell checkout
+`~/wzos-preproduction-20261010`:353tests/61.678s,zero failures/errors/skips.
+This covers employee startup DDL, not the later PDF increment. Cleanup trap is
+installed; independent cleanup verification remains pending after Chrome control
+timed out. Synthetic member sign-in/organization selection and read-only My
+employee record passed in the reconnected local preview. Responsive checks remain
+open. Saved-draft PDF export implemented on codex/integration-release; see
+REPORT_PDF_EXPORT.md. Three focused SQLite cases and Node21 passed, three new
+PostgreSQL PDF cases skipped locally. Two-page PDF rendered and visually checked.
+Full local suite is running via scripts/run_local_gate.py with300s timeout;
+collect `.local-data/report-full-python.log`. The initial manual unittest command
+with `-t .` failed discovery because tests is a non-package; no app failure.
+Next: collect regression, commit/push candidate, run its full PostgreSQL gate,
+complete browser download/mobile checks, then review Claude's repaired module
+handoffs before combined integration. No merge/deployment or production changes.
+
 October 10 Claude module review: read-only review of messaging99125c9,
 dispatch69d4316, training2426620 and offline-drafts f09fca5. Hold integration for
 five reproduced defects (verification-code exposure, concurrent-tab draft loss,

@@ -1,6 +1,12 @@
 # Remaining release work after the two review workflows
 
-Updated October 8, 2026. Local integration candidate only; no production deployment.
+Updated October 10, 2026. Local integration candidate only; no production deployment.
+
+Current progress: employee profiles/qualifications/availability baseline passed
+353 disposable PostgreSQL tests, zero skips. Saved draft report PDF export is
+implemented and visually checked, with full candidate/database/browser gates
+pending. See REPORT_PDF_EXPORT.md. Claude is repairing five reviewed module
+defects; those branches are not yet integrated.
 
 Completed this pass: immutable saved-form internal submissions/admin review; self-reported training study records/admin review. Admin/member and organization checks remain enforced. Neither workflow sends external messages or issues qualifications.
 
