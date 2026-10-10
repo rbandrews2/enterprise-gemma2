@@ -2,12 +2,13 @@
 
 Updated October 10, 2026. Local integration candidate only; no production deployment.
 
-Current progress: employee profiles/qualifications/availability baseline passed
-353 disposable PostgreSQL tests, zero skips. Saved draft report PDF export is
-implemented and visually checked; full local359-test regression and real HTTP
-export passed. New PDF database/browser-download gates remain pending.
-See REPORT_PDF_EXPORT.md. Claude is repairing five reviewed module
-defects; those branches are not yet integrated.
+Current progress: Claude's repaired Messaging/Dispatch/Training/Offline modules
+are assembled with Codex employee records, report PDF and additional offline race
+repairs in codex/preproduction-modules. The prior combined PostgreSQL gate passed
+444 tests without skips. My jobs/assignment notifications/navigation were added
+after that gate. Assigned-job Time Clock integration is now being validated.
+See TEST_MODEL_ASSEMBLY.md for current capabilities and the remaining internal
+connections. Real provider connections follow internal workflow assembly, per Ray.
 
 Completed this pass: immutable saved-form internal submissions/admin review; self-reported training study records/admin review. Admin/member and organization checks remain enforced. Neither workflow sends external messages or issues qualifications.
 

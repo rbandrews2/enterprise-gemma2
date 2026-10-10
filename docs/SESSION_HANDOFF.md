@@ -4,6 +4,26 @@ Ray authorized a separate restricted Google Cloud V2 staging deployment. Product
 
 ## Latest resume checkpoint
 
+October10 internal test-model wiring: codex/preproduction-modules now connects
+dispatched jobs to the employee Time Clock and Navigation list. Time linking uses
+only a frozen dispatched title, scoped to the employee/organization and active
+assignment/sent plan; original work-order read/edit and private reports remain
+protected. Cancelled jobs cannot authorize new punches; existing shifts can close.
+Navigation reuses frozen addresses with scoped in-memory offline caching and
+late-response guards. No new DDL/provider connections/cloud changes.
+See ASSIGNED_TIME_CONTRACT.md and TEST_MODEL_ASSEMBLY.md; the latter is the current
+assembly matrix and internal-first/provider-second execution order requested by Ray.
+Validation: focused Python66/211.147s,36 passed/30PG skips,zero failures/errors;
+full Node44 passed,zero failures/skips. Synthetic browser clock-in/out/timesheet
+and assigned Navigation passed. Logs: .local-data/assigned-time-regression.log,
+assembly-node.log; screenshots: assigned-time-preview.jpg,
+assigned-navigation-preview.jpg. Preview session98394 remains on8083.
+Exact-candidate full Python/PostgreSQL and real-device gates remain pending;
+prior full/PG results below do not certify this increment. Next: assigned-job
+own-form linkage and schedule display, then durable form attachments/signatures
+and assignment update/notification completion. No claim of complete production
+or live provider operation. Main enterprise-v2 and V1/DNS remain unchanged.
+
 October 10 assignment inbox increment: codex/preproduction-modules now adds
 Enterprise My jobs, pending-confirmation badge, frozen dispatched client/crew/
 notes, explicit receipt confirmation and Open in Navigation for both roles.

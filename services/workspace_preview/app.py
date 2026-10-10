@@ -573,5 +573,41 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
     def dispatch_script():
         return FileResponse(STATIC / "dispatch.js", media_type="text/javascript")
     report_history.register(app, connect, actor, report, knowledge_store)
-    timeclock.register(app, connect, actor, permitted_row, roster)
+    def assigned_time_rows(conn, selected):
+        if not account_workspace or selected['edition'] != 'enterprise':
+            return []
+        return conn.execute("""SELECT a.order_id,p.payload FROM dispatch_assignments a
+            JOIN dispatch_plans p ON p.id=a.plan_id AND p.organization_id=a.organization_id
+            WHERE a.organization_id=? AND a.user_id=? AND a.status IN ('sent','accepted')
+            AND p.status='sent' ORDER BY a.updated_at DESC,a.id DESC""",
+            (selected['organization_id'], selected['id'])).fetchall()
+
+    def time_jobs(conn, selected):
+        clause, params = 'organization_id=?', [selected['organization_id']]
+        if selected['role'] != 'admin':
+            clause += ' AND owner_id=?'
+            params.append(selected['id'])
+        rows = conn.execute('SELECT id,payload FROM preview_orders WHERE ' + clause, params).fetchall()
+        jobs = {r['id']: {'id': r['id'], 'title': json.loads(r['payload'])['title'],
+                         'access_basis': 'work_order'} for r in rows}
+        for row in assigned_time_rows(conn, selected):
+            title = json.loads(row['payload']).get('delivery_snapshot', {}).get('order_title')
+            if title and row['order_id'] not in jobs:
+                jobs[row['order_id']] = {'id': row['order_id'], 'title': title,
+                                         'access_basis': 'dispatched_summary'}
+        return sorted(jobs.values(), key=lambda j: (j['title'].casefold(), j['id']))
+
+    def time_order(conn, order_id, selected):
+        try:
+            return permitted_row(conn, order_id, selected)
+        except HTTPException as error:
+            if error.status_code != 404:
+                raise
+            for row in assigned_time_rows(conn, selected):
+                title = json.loads(row['payload']).get('delivery_snapshot', {}).get('order_title')
+                if row['order_id'] == order_id and title:
+                    return {'payload': json.dumps({'title': title})}
+            raise error
+
+    timeclock.register(app, connect, actor, time_order, roster, jobs=time_jobs)
     return app

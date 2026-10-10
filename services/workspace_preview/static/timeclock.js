@@ -91,8 +91,15 @@
   if(!navigator.onLine){showOffline();return;}
   const epoch=++generation;loaded=false;controls();
   const admin=session.role==='admin';node('clock-team-label').hidden=!admin;employeeLabel.hidden=!admin;if(!admin){node('clock-team').checked=false;employee.value='';}
-  const options=[text('option','Unassigned')];options[0].value='';for(const row of window.wzosClock.getOrders()){const o=text('option',row.title);o.value=row.id;options.push(o);}node('clock-order').replaceChildren(...options);
   try{
+   const options=[option('','Unassigned')];let next=0;
+   while(true){
+    const jobs=await window.wzosClock.api(`/api/time/jobs?offset=${next}&limit=50`);
+    if(epoch!==generation||scope(session)!==scope(window.wzosClock.getSession()))return;
+    for(const row of jobs.items)options.push(option(row.id,row.title+(row.access_basis==='dispatched_summary'?' · assigned job':'')));
+    next+=jobs.items.length;if(next>=jobs.total||!jobs.items.length)break;
+   }
+   node('clock-order').replaceChildren(...options);
    await loadMembers(session).catch(()=>{});
    const [state,history]=await Promise.all([window.wzosClock.api('/api/time/status'),window.wzosClock.api(`/api/time/entries?offset=${offset}${filters()}`)]);
    if(epoch!==generation||scope(session)!==scope(window.wzosClock.getSession()))return;

@@ -2,6 +2,11 @@
 
 ## Current development/testing budget
 
+Current assembly priority (October10): complete internal module connections first,
+then connect Twilio, Maps and other providers. See TEST_MODEL_ASSEMBLY.md for the
+current capability matrix and sequential assembly passes. Assigned-job Time Clock
+linkage preserves private work-order permissions; see ASSIGNED_TIME_CONTRACT.md.
+
 Ray approved **an additional $150 for October 8–17, 2026**, separate from production hosting. Refresh actual usage before paid tests; include build/storage costs and billing lag. Do not exceed this cap without further authorization. Production cutover remains unscheduled.
 
 Updated October 2, 2026 for Ray Andrews, Molecular Project Development LLC.

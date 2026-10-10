@@ -103,6 +103,53 @@ class DispatchTests(unittest.TestCase):
         for private in ('Private home address', '+15559990000', 'synthetic-card-1', 'override_reason'):
             self.assertNotIn(private, str(again))
 
+    def test_assigned_time_link_does_not_unlock_private_order(self):
+        self.requirements(); self.approve(self.propose())
+        member = self.h('member')
+        jobs = self.client.get('/api/time/jobs?limit=1', headers=member).json()
+        self.assertEqual(jobs['items'], [{'id': self.order, 'title': 'Granby Street markings', 'access_basis': 'dispatched_summary'}])
+        self.assertEqual(self.client.get('/api/orders/' + self.order, headers=member).status_code, 404)
+        self.assertEqual(self.client.get('/api/time/jobs', headers=self.h('other')).json()['items'], [])
+        self.assertEqual(self.client.get('/api/time/jobs', headers=self.h('rival', self.rival)).json()['items'], [])
+        self.assertEqual(self.client.get('/api/time/jobs?limit=51', headers=member).status_code, 422)
+        command = {'request_id': str(uuid4()), 'action': 'clock_in', 'order_id': self.order}
+        first = self.client.post('/api/time/commands', headers=member, json=command)
+        self.assertEqual(first.status_code, 200, first.text)
+        entry = first.json()['entry']
+        self.assertEqual(entry['order_title'], 'Granby Street markings')
+        with self.app.state.accounts.connect() as db:
+            db.execute("UPDATE dispatch_assignments SET status='cancelled' WHERE organization_id=? AND user_id=?", (self.org, 'member'))
+        self.assertEqual(self.client.get('/api/time/jobs', headers=member).json()['items'], [])
+        out = self.client.post('/api/time/commands', headers=member, json={'request_id': str(uuid4()), 'action': 'clock_out', 'shift_id': entry['id'], 'expected_version': entry['version']})
+        self.assertEqual(out.status_code, 200, out.text)
+        self.assertEqual(self.client.post('/api/time/commands', headers=member, json={**command, 'request_id': str(uuid4())}).status_code, 404)
+        # The existing receipt can still be retried after permission revocation.
+        self.assertEqual(self.client.post('/api/time/commands', headers=member, json=command).json(), first.json())
+
+    def test_time_job_summary_is_frozen_and_requires_active_dispatch(self):
+        import json
+        self.requirements(); sent = self.approve(self.propose()).json()
+        member = self.h('member')
+        with self.app.state.accounts.connect() as db:
+            row = db.execute('SELECT payload FROM preview_orders WHERE id=?', (self.order,)).fetchone()
+            payload = json.loads(row['payload']); payload['title'] = 'Private revised title'
+            db.execute('UPDATE preview_orders SET payload=? WHERE id=?', (json.dumps(payload), self.order))
+        self.assertEqual(self.client.get('/api/time/jobs', headers=member).json()['items'][0]['title'], 'Granby Street markings')
+        self.assertEqual(self.client.get('/api/time/jobs?offset=1', headers=member).json()['items'], [])
+        for status in ('declined', 'cancelled', 'replaced'):
+            with self.app.state.accounts.connect() as db:
+                db.execute('UPDATE dispatch_assignments SET status=? WHERE user_id=? AND organization_id=?', (status, 'member', self.org))
+            self.assertEqual(self.client.get('/api/time/jobs', headers=member).json()['items'], [])
+        with self.app.state.accounts.connect() as db:
+            db.execute("UPDATE dispatch_assignments SET status='accepted' WHERE user_id=? AND organization_id=?", ('member', self.org))
+        self.assertEqual(len(self.client.get('/api/time/jobs', headers=member).json()['items']), 1)
+        with self.app.state.accounts.connect() as db:
+            db.execute("UPDATE dispatch_plans SET status='cancelled' WHERE id=?", (sent['id'],))
+        self.assertEqual(self.client.get('/api/time/jobs', headers=member).json()['items'], [])
+        with self.app.state.accounts.connect() as db:
+            db.execute("UPDATE dispatch_plans SET status='sent',payload='{}' WHERE id=?", (sent['id'],))
+        self.assertEqual(self.client.get('/api/time/jobs', headers=member).json()['items'], [])
+
     def test_notifications_confirmation_and_job_lists_are_tenant_scoped(self):
         self.requirements(); sent = self.approve(self.propose()).json()
         endpoint = '/api/dispatch/notifications'

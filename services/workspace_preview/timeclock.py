@@ -209,7 +209,7 @@ def validate_times(body: ShiftTimes, now):
             [{"task": s.task, "start": iso(s.start), "end": iso(s.end)} for s in segments])
 
 
-def register(app, connect, actor, permitted_order, roster=None):
+def register(app, connect, actor, permitted_order, roster=None, jobs=None):
     initialize(connect)
 
     def members(selected):
@@ -283,6 +283,13 @@ def register(app, connect, actor, permitted_order, roster=None):
     @app.get("/timeclock.css")
     def clock_styles():
         return FileResponse(STATIC / "timeclock.css", media_type="text/css")
+
+    @app.get("/api/time/jobs")
+    def selectable_jobs(request: Request, offset: int = Query(0, ge=0), limit: int = Query(50, ge=1, le=50)):
+        selected = actor(request)
+        with connect() as conn:
+            items = jobs(conn, selected) if jobs else []
+        return {'items': items[offset:offset + limit], 'total': len(items), 'offset': offset, 'limit': limit}
 
     @app.get("/api/time/status")
     def status(request: Request):
