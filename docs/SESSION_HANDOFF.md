@@ -1,4 +1,17 @@
 
+## October 10 rollback digest and live-schema attempt
+
+Ray supplied, and Codex independently observed in Cloud Shell, rollback image:
+`us-central1-docker.pkg.dev/enterprise-gemma2/enterprise-gemma2/wzos-v2-accounts@sha256:13cb755a8973dc9923c76ea4eed229a57b16ba357db2f19178ea8ca953222284`.
+The SQL proxy exists at /usr/bin/cloud-sql-proxy. Exact candidate checkout
+/tmp/wzos-release-cf35780.oP5Pc8bN is at cf35780 with reusable account-test venv.
+Port5544 was not listening before preflight. Read-only schema command prepared
+with pinned helper03a2bac, private evidence directory and EXIT proxy cleanup.
+Chrome timed out during submission; execution is UNKNOWN. Inspect terminal and
+port5544 before repeating. No build/deployment was attempted. Current spend still
+requires verification; earlier billing totals are not current budget acceptance.
+
+
 ## October 10 release execution checkpoint
 
 Ray authorized completion of schema/rollback/budget checks and restricted mobile
