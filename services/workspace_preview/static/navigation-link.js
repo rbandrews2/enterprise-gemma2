@@ -1,5 +1,5 @@
 "use strict";
-// Google's documented cross-platform Maps URL; no API key or app location read.
+// Address actions enter the authorized WZOS Navigation workspace.
 (() => {
  const url=destination=>{
   if(typeof destination!=='string'||!destination.trim()||destination.length>500)return null;
@@ -8,10 +8,15 @@
    return href.length<=2048?href:null;
   }catch(error){return null;}
  };
- const link=destination=>{
+ let pending=null;
+ const scope=()=>{const s=window.wzosClock?.getSession();return JSON.stringify([s?.organization_id,s?.id,s?.edition]);};
+ const link=(destination,target)=>{
   const href=url(destination);if(!href)return null;
-  const a=document.createElement('a');a.textContent='Open in Navigation';a.className='navigation-link';
-  a.href=href;a.target='_blank';a.rel='noopener noreferrer';return a;
+  if(!target?.id&&!target?.assignment_id)return null;
+  const a=document.createElement('button');a.type='button';a.textContent='Open in Navigation';a.className='navigation-link secondary';
+  a.onclick=()=>{pending={id:target.id,assignment_id:target.assignment_id,scope:scope()};if(!window.showWzosView('navigation'))pending=null;};return a;
  };
- window.WzosNavigation={url,link};
+ const take=()=>{const target=pending;pending=null;return target?.scope===scope()?target:null;};
+ document.addEventListener('wzos:session',()=>{pending=null;});
+ window.WzosNavigation={url,link,take};
 })();

@@ -1,4 +1,22 @@
-## Latest checkpoint — private Navigation live route accepted, October 11, 2026
+## Latest checkpoint — address-to-Navigation flow correction, October 11, 2026
+
+Ray clarified: Open in Navigation belongs beside addresses in work orders,
+assignments and schedule cards; it opens the selected permitted destination inside
+WZOS. Local candidate implements that flow, removes the duplicate external link
+inside Navigation, uses Get directions there, enlarges mobile directions and hides
+the mobile Atlas greeting while leaving its avatar. Pending targets clear on account
+changes/refused unsaved-work transitions; server destination permissions unchanged.
+Full Node58 passed. Enterprise-admin/Core-member local browser handoff passed,
+no external URL; starting controls focused, mobile input16px/greeting hidden.
+Focused Python34 passed/six PostgreSQL-only skips (146.739s); six route tests
+passed again after focus adjustment. See NAVIGATION_RELEASE_20261011.md.
+No new deployment yet; private00036 remains the earlier UI. Ray reports Android
+directions/map fit and map was correctly centered before he moved it. Do not treat
+the screenshot's moved map as a centering defect. Real screenshots contain location
+details: do not commit/reuse them as synthetic fixtures. Next exact-candidate release
+gates and private deployment, then verify revised Android flow/live assignment checks.
+
+## Earlier checkpoint — private Navigation live route accepted, October 11, 2026
 
 Read NAVIGATION_RELEASE_20261011.md. Exact6c78ae8 PostgreSQL492 passed with zero
 failures/errors/skips (133.682s); cleanup verified. Build736a3f9a succeeded with

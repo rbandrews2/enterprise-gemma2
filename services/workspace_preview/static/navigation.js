@@ -7,8 +7,8 @@
  document.addEventListener('wzos:session',clear);
  document.addEventListener('wzos:view',clear);
  window.addEventListener('offline',clear);
- function attach(card,job){
-  const open=node('button','Route inside WZOS');open.type='button';open.className='secondary';card.append(open);
+ function attach(card,job,{autoOpen=false}={}){
+  const open=node('button','Get directions');open.type='button';open.className='secondary';card.append(open);
   open.onclick=async()=>{
    clear();const token=epoch, identity=scope(), panel=node('section');current=panel;
    panel.className='panel navigation-route';panel.setAttribute('aria-label','In-app route to '+job.title);
@@ -34,7 +34,7 @@
    locate.disabled=!navigator.geolocation;
    try{const config=await window.wzosClock.api('/api/navigation/config');if(!active())return;
     configured=config.routes_enabled&&navigator.onLine;calculate.disabled=!configured||locating;
-    status.textContent=configured?'Ready. Confirm the job address and starting point.':'In-app routing is not configured or you are offline. Open in Navigation and saved destination sheets remain available.';
+    status.textContent=configured?'Ready. Confirm the job address and starting point.':'Routing is not configured or you are offline. Saved destination sheets remain available.';
    }catch(error){if(active())status.textContent=error.message;}
    form.onsubmit=async event=>{
     event.preventDefault();if(!configured||locating||request)return;
@@ -62,7 +62,9 @@
     }catch(error){if(active())status.textContent=error.name==='AbortError'?'Route request cancelled.':error.message;}
     finally{if(request===controller)request=null;if(active()){calculate.disabled=!configured;locate.disabled=!navigator.geolocation;origin.disabled=false;}}
    };
+   if(active()){panel.scrollIntoView?.({block:'start'});origin.focus?.({preventScroll:true});}
   };
+  if(autoOpen)open.onclick();
  }
  window.WzosNavigationRoute={attach,clear};
 })();

@@ -2,6 +2,13 @@
 
 ## Latest execution — October 11, 2026
 
+Address flow clarified and locally implemented: Open in Navigation beside job/
+assignment/schedule addresses enters the selected internal destination. Get directions
+inside Navigation; duplicate external link removed. Larger phone text and compact
+Atlas greeting behavior. Full Node58 passed; admin/member browser handoff passed.
+Release gates/restricted updated deployment remain. Ray's Android fit/correct initial
+map centering confirmed; newer flow has not yet been deployed to his phone.
+
 Navigation exact6c78ae8 PostgreSQL492 passed/no skips; cleanup/build source checks
 passed. Credential replacement/deletion verified, version2 pinned; quotas20/day,6/min.
 Private00036-ray zero-main-traffic candidate deployed; synthetic admin route,

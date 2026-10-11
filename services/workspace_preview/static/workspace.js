@@ -19,13 +19,13 @@ function canLeave(){return !(dirty||checklistDirty)||confirm("Discard unsaved jo
 function renderList(){
  const query=$("search").value.toLowerCase();$("job-list").replaceChildren();
  const filtered=rows.filter(r=>`${r.title} ${r.address} ${r.locality}`.toLowerCase().includes(query));
- for(const row of filtered){const button=el("button",undefined,"job");button.type="button";button.setAttribute("aria-pressed",String(selected?.id===row.id));const top=el("span",undefined,"job-top");top.append(el("span",types[row.work_type],"job-type"),el("span","Draft","pill draft"));button.append(top,el("strong",row.title),el("small",row.address),el("small",row.work_date?`Planned ${row.work_date}`:"Work date needed"));button.addEventListener("click",()=>{if(!busy&&canLeave())openWorkOrder(row);});const item=el("article",undefined,"job-item");item.append(button);const direction=window.WzosNavigation.link(row.address);if(direction)item.append(direction);$("job-list").append(item);}
+ for(const row of filtered){const button=el("button",undefined,"job");button.type="button";button.setAttribute("aria-pressed",String(selected?.id===row.id));const top=el("span",undefined,"job-top");top.append(el("span",types[row.work_type],"job-type"),el("span","Draft","pill draft"));button.append(top,el("strong",row.title),el("small",row.address),el("small",row.work_date?`Planned ${row.work_date}`:"Work date needed"));button.addEventListener("click",()=>{if(!busy&&canLeave())openWorkOrder(row);});const item=el("article",undefined,"job-item");item.append(button);const direction=window.WzosNavigation.link(row.address,row);if(direction)item.append(direction);$("job-list").append(item);}
  if(!filtered.length)$("job-list").append(el("p",query?"No matching jobs. Try another search.":"No work orders yet. Create your first draft.","muted"));
  $("metric-total").textContent=rows.length;$("metric-drafts").textContent=rows.length;$("metric-date").textContent=rows.filter(r=>!r.work_date).length;$("nav-count").textContent=rows.length;
 }
 function openWorkOrder(record){
  let destination=$("order-navigation");if(!destination){destination=el('div');destination.id='order-navigation';$("address").after(destination);}
- destination.replaceChildren();const navigation=window.WzosNavigation.link(record?.address);if(navigation)destination.append(navigation);
+ destination.replaceChildren();const navigation=window.WzosNavigation.link(record?.address,record);if(navigation)destination.append(navigation);
  readGeometry=window.WzosGeometry.mount($("geometry-fields"),record?.job_geometry);
  document.dispatchEvent(new CustomEvent("wzos:job-context"));
  let attachments=$("order-attachments");if(!attachments){attachments=el("div");attachments.id="order-attachments";$("order-form").after(attachments);}window.wzosFiles.mount(attachments,"order",record?.id);
@@ -189,6 +189,7 @@ window.showWzosView=view=>{
  for(const [id,on] of [["assignments-nav",view==="assignments"],["meetings-nav",view==="meetings"],["training-nav",view==="training"],["messages-nav",view==="messages"],["navigation-nav",view==="navigation"],["report-nav",view==="report"],["jobs-nav",view==="orders"],["clock-nav",view==="clock"],["forms-nav",["forms","form_drafts"].includes(view)],["schedule-nav",view==="schedule"]]){ $(id).classList.toggle("active",on);if(on)$(id).setAttribute("aria-current","page");else $(id).removeAttribute("aria-current");}
  document.querySelector(".breadcrumb + strong").textContent=({assignments:"My jobs",meetings:"Video meetings",training:"Video training",messages:"Messaging",navigation:"Navigation",report:"Work Zone Report",clock:"Time clock",forms:"Forms hub",form_drafts:"Saved form drafts",schedule:"Schedule management"})[view]||"Work orders";
  document.dispatchEvent(new CustomEvent("wzos:view",{detail:view}));
+ document.body.classList.toggle('navigation-active',view==='navigation');
  if(view==="clock")document.dispatchEvent(new CustomEvent("wzos:clock-open"));
  return true;
 };

@@ -89,3 +89,34 @@ acceptance and current billing reconciliation. PostgreSQL role/tenant tests pass
 but do not substitute for those live checks. No production promotion or V1/DNS change.
 Rollback: retain00031 main traffic and00032 Maps tag; remove only the Navigation tag
 to end candidate access. Disable routing before any quota/key/access rollback.
+
+## Android feedback and address-flow correction
+
+Ray reports Android map/directions fit. Text is small. Ray explicitly confirmed the
+map was correctly centered before he manually moved it; no centering repair made.
+His screenshots are private location evidence, not synthetic test assets for Git.
+
+Local follow-up: address actions on work orders, My jobs and schedule cards open
+WZOS Navigation with an existing job/assignment identity, never an arbitrary external
+destination. Navigation offers Get directions; removed external Open in Navigation
+and Route inside WZOS duplication there. Failed leave confirmation discards pending
+selection; account switch invalidates it. Assigned snapshots and backend authorization
+remain authoritative. Multiple assignments to the same order retain their separate
+assignment identities. Phone controls16px, directions18px; Atlas greeting hidden only
+in phone Navigation while avatar stays available, with space below the directions.
+Route entry scrolls/focuses its starting controls without reading location.
+
+Full Node58 passed, zero skips. Enterprise-admin and Core-member local browser checks
+confirmed address-to-selected-panel behavior and unchanged localhost URL. At390px,
+no horizontal overflow, input16px and greeting display:none verified. No provider
+route/map call from these local checks; routes disabled. Final screenshot capture
+was interrupted; DOM/computed-style evidence was observed. Earlier screenshot path
+is not proof of the final focus adjustment. Updated UI is not deployed yet;00036
+still serves the earlier code. Exact release checks precede staging update.
+
+Focused Python regression34 tests: passed, six PostgreSQL-only skips,146.739s.
+Test import path included the repository tests directory for its existing
+`test_knowledge` fixture import. Atlas guidance retains explicit Google Maps/provider
+attribution. Full Node58 passed/no skips, followed by six route tests passing after
+the focus adjustment. Diff whitespace checks passed. No backend route or schema
+change in this follow-up; exact full release gate remains before deployment.

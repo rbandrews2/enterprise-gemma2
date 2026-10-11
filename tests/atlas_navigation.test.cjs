@@ -11,7 +11,7 @@ function navigation({core=false,job=true,leave=true,moduleLeave=true}={}){
  };
  const context={window:{wzosModulesCanLeave:()=>moduleLeave},session:{can_prepare_atlas:!core},selected:job?{id:'synthetic'}:null,
   api(){},rows:[],canLeave:()=>leave,$:get,atlasPage:'work_orders',CustomEvent:class{constructor(type,options){this.type=type;this.detail=options?.detail;}},
-  document:{querySelector:()=>({}),dispatchEvent:event=>events.push(event)}};
+  document:{body:{classList:{toggle(){}}},querySelector:()=>({}),dispatchEvent:event=>events.push(event)}};
  const code=fs.readFileSync('services/workspace_preview/static/workspace.js','utf8');
  // Run the actual shipped navigation definitions, with only their DOM dependencies stubbed.
  vm.runInNewContext(code.slice(code.indexOf('window.atlasNavigate='),code.indexOf('$("clock-nav").addEventListener')),context);

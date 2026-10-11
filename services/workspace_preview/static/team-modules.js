@@ -19,10 +19,10 @@
       const assigned=new Map();let offset=0;
       while(true){let page;try{page=await api(`/api/dispatch/my-assignments?phase=upcoming&offset=${offset}`);}catch(error){if(error.status!==404)throw error;assignmentsUnavailable=true;break;}
        if(epoch!==generation||JSON.stringify([window.wzosClock.getSession()?.organization_id,window.wzosClock.getSession()?.id,window.wzosClock.getSession()?.edition])!==scope)return;
-       for(const job of page.items)if(!assigned.has(job.order_id))assigned.set(job.order_id,{id:job.order_id,assignment_id:job.id,title:job.order_title,address:job.address,assigned:true});
+       for(const job of page.items)if(!assigned.has(job.id))assigned.set(job.id,{id:job.order_id,assignment_id:job.id,title:job.order_title,address:job.address,assigned:true});
        offset+=page.items.length;if(offset>=page.total||!page.items.length)break;
       }
-      orders=[...assigned.values(),...orders.filter(order=>!assigned.has(order.id))];
+      orders=[...assigned.values(),...orders.filter(order=>![...assigned.values()].some(job=>job.id===order.id))];
      }
      if(epoch!==generation||JSON.stringify([window.wzosClock.getSession()?.organization_id,window.wzosClock.getSession()?.id,window.wzosClock.getSession()?.edition])!==scope)return;
      destinationCache={scope,items:orders};
@@ -32,9 +32,12 @@
     if(cached)root.append(node('p','Offline / connection unavailable — showing previously loaded destinations. Confirm addresses and site access before travel.'));
     if(!orders.length)root.append(node('p','No destinations loaded. Connect and open your jobs before going offline.'));
     else{const all=node('button','Save all destinations ('+orders.length+')');all.className='secondary';all.onclick=()=>saveSheet(orders,'wzos-destinations.txt');root.append(all);}
-    for(const order of orders){const card=node('section','');card.className='report-section panel';card.append(node('h2',order.title),node('p',order.address));if(order.assigned)card.append(node('p','Dispatched destination · confirm current site access in My jobs.'));const a=window.WzosNavigation.link(order.address);if(a)card.append(a);
-     if(window.WzosNavigationRoute)window.WzosNavigationRoute.attach(card,order);
-     if(order.work_date)card.append(node('p','Work date: '+order.work_date));const save=node('button','Save destination sheet');save.className='secondary';save.onclick=()=>saveSheet([order],'wzos-destination.txt');card.append(save);root.append(card);}return;
+    const requested=window.WzosNavigation.take?.();let found=false;
+    for(const order of orders){const card=node('section','');card.className='report-section panel';card.append(node('h2',order.title),node('p',order.address));if(order.assigned)card.append(node('p','Dispatched destination · confirm current site access in My jobs.'));
+     const selected=!!requested&&(requested.assignment_id?order.assignment_id===requested.assignment_id:order.id===requested.id);found=found||selected;
+     if(window.WzosNavigationRoute)window.WzosNavigationRoute.attach(card,order,{autoOpen:selected});
+     if(order.work_date)card.append(node('p','Work date: '+order.work_date));const save=node('button','Save destination sheet');save.className='secondary';save.onclick=()=>saveSheet([order],'wzos-destination.txt');card.append(save);root.append(card);}
+    if(requested&&!found)$('team-notice').textContent='That destination is no longer available in your permitted active jobs.';return;
    }
    if(name==='training'){
     root.append(node('p','Recovered V1 course catalog. Course content and accreditation are awaiting review. These are personal study plans, not completion records or certificates.'));
