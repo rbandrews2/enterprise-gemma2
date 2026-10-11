@@ -1,3 +1,20 @@
+## Paused at Ray request — October 10, 2026
+
+Stop work here; resume only on Ray's request. Application candidate remains
+cf357802f6d979667225ebb0eed3ce5cea19d826; PostgreSQL465 passed with zero skips.
+Rollback digest and SQL proxy installation were independently observed and saved.
+Latest pushed documentation checkpoint before this pause is96da55d.
+
+Next inspect Cloud Shell terminal and port5544 to determine whether the last
+read-only schema preflight ran; its submission/result is unknown after browser
+control timed out. Do not blindly repeat it. Verify any temporary proxy cleanup.
+Then complete live schema comparison and refresh actual October8-10 spending
+against the150USD October8-17 authorization, verify release ZIP transfer/hash,
+build preserved-source image, and deploy/validate restricted mobile staging.
+No image build, deployment, traffic change, IAM expansion, provider send or
+production/V1/DNS change was performed in this session. Preserve private rollback
+exports and backup evidence in Cloud Shell; credentials remain outside Git.
+
 
 ## October 10 rollback digest and live-schema attempt
 
