@@ -1,4 +1,19 @@
-## Latest checkpoint — Twilio preparation, October 11, 2026
+## Latest checkpoint — Maps acceptance and Twilio hold, October 11, 2026
+
+Read MAPS_ACCEPTANCE_20261011.md. Ray saved the corrected sender and explicitly
+put Twilio delivery on hold pending registration approval. Maps revision00032
+environment/image/identity/resources and private IAM checks passed; remains
+zero main traffic. Synthetic admin/job workflow and hybrid imagery passed.
+Street View metadata returned2025-11 but panorama was black; visual acceptance
+remains open. Local candidate adds external Street View fallback and removes
+misleading "Saved locally" wording. No production/IAM/traffic changes occurred.
+Full Node49 passed without skips; live admin Navigation destination link verified.
+New local visual acceptance remains open (browser client blocking and correctly
+rejected unapproved port8182; temporary server stopped). Next validate new UI on
+an allowed local port, then private-file/member module checks;
+do not resume Twilio sends until registration approval is confirmed.
+
+## Earlier checkpoint — Twilio preparation, October 11, 2026
 
 Read TWILIO_STAGING_CONNECTION_20261011.md, then STAGING_DEPLOYMENT_20261011.md.
 Three enabled Twilio secrets exist. SID format/nonempty token checks passed;

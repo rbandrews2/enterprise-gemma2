@@ -2,6 +2,12 @@
 
 ## Actual checkpoint
 
+Update from Ray: the corrected sender version is saved, but Twilio registration
+is pending and approval is not immediate. Twilio delivery is explicitly on hold
+until registration is approved. The new version has not yet been independently
+revalidated. Continue independent Maps/module readiness work meanwhile; do not
+send test messages or treat sender eligibility as accepted.
+
 Secret Manager contains enabled version 1 of:
 
 - `wzos-v2-twilio-account-sid`

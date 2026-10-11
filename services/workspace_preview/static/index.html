@@ -20,7 +20,7 @@
   <button class="nav-item" id="messages-nav">Messaging</button>
   <button class="nav-item" id="meetings-nav">Video meetings</button><button class="nav-item" id="training-nav">Video training</button>
  </nav>
- <div class="sidebar-foot"><span class="status-dot"></span> Local development <small>Unavailable modules are dimmed.</small><p>Molecular Project Development LLC</p></div>
+ <div class="sidebar-foot"><span class="status-dot"></span> Organization workspace <small>Unavailable modules are dimmed.</small><p>Molecular Project Development LLC</p></div>
 </aside>
 <div class="app">
  <header class="topbar"><div><span class="breadcrumb">Workspace /</span> <strong>Work orders</strong></div><div class="profile"><span id="role-pill" class="pill">Member</span><span class="avatar">JL</span><span id="actor-name">Test user</span></div></header>
@@ -53,7 +53,7 @@
      <label for="checklist-revision">Saved revision <select id="checklist-revision"></select></label>
      <form id="checklist-form"><div id="checklist-items"></div><button id="save-checklist" class="secondary" type="submit">Save checklist</button></form>
     </section>
-    <section class="atlas-card" aria-labelledby="atlas-title"><div class="atlas-top"><div><p class="eyebrow">WZOS powered by Atlas AI Assistant</p><h3 id="atlas-title">Prepare the next step</h3></div><span class="atlas-symbol" aria-hidden="true">✦</span></div><p id="atlas-description">Check a saved job for missing site details before planning.</p><button id="prepare" class="secondary" disabled>Let Atlas help</button><p class="fine">Uses saved job details and the local agency library. Imagery generation and field approval are not connected. Ask Atlas in the conversation bubble for help.</p><div id="atlas-output" role="status" aria-live="polite"></div></section>
+    <section class="atlas-card" aria-labelledby="atlas-title"><div class="atlas-top"><div><p class="eyebrow">WZOS powered by Atlas AI Assistant</p><h3 id="atlas-title">Prepare the next step</h3></div><span class="atlas-symbol" aria-hidden="true">✦</span></div><p id="atlas-description">Check a saved job for missing site details before planning.</p><button id="prepare" class="secondary" disabled>Let Atlas help</button><p class="fine">Uses saved job details and the agency reference library. Imagery generation and field approval are not connected. Ask Atlas in the conversation bubble for help.</p><div id="atlas-output" role="status" aria-live="polite"></div></section>
    </section>
   </div>
  </div>
@@ -118,7 +118,7 @@
 </div>
 <section id="assistant-panel" class="assistant-panel" role="dialog" aria-modal="false" aria-labelledby="assistant-heading" hidden>
  <header><img src="/atlas-assistant.png" alt="" width="48" height="48"><div><h2 id="assistant-heading">Atlas</h2><small>Your WZOS AI assistant</small></div><button type="button" id="assistant-close" aria-label="Close Atlas assistant">&#215;</button></header>
- <p class="assistant-mode">Local development assistant. AI replies can be mistaken; verify project guidance.</p>
+ <p class="assistant-mode">Atlas app assistant. AI replies can be mistaken; verify project guidance.</p>
  <label for="assistant-topic">Help me with<select id="assistant-topic"><option value="orders">Work orders</option><option value="checklist">Readiness checklist</option><option value="planning">Atlas planning &amp; references</option><option value="forms">Forms &amp; documents</option><option value="time">Time clock &amp; tracking</option><option value="dispatch">Scheduling &amp; dispatch</option><option value="maps">Maps &amp; navigation</option><option value="messages">Messages &amp; video meetings</option><option value="training">Training</option><option value="integrations">Integrations</option><option value="admin">Organization &amp; admin access</option></select></label>
  <div id="assistant-answer" role="status" aria-live="polite"></div><div id="assistant-navigation"></div><button type="button" id="assistant-stop" class="secondary" hidden>Stop waiting</button>
  <button type="button" class="secondary" id="assistant-go">Show me where</button>

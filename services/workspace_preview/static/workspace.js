@@ -33,7 +33,7 @@ function openWorkOrder(record){
  $("detail-title").textContent=record?record.title:"New work order";$("record-meta").textContent=record?`SAVED DRAFT · REVISION ${record.version}`:"NEW DRAFT";
  for(const name of ["title","address","locality","notes"])$(name).value=record?.[name]||"";
  $("work-type").value=record?.work_type||"line_striping";$("work-date").value=record?.work_date||"";
- $("save-state").textContent=record?"Saved locally":"Not saved yet";$("save-order").textContent=record?"Save changes":"Create draft";$("reload-order").hidden=!record;
+ $("save-state").textContent=record?"Saved":"Not saved yet";$("save-order").textContent=record?"Save changes":"Create draft";$("reload-order").hidden=!record;
  $("road-authority").value=record?.road_authority||"";$("speed-limit").value=record?.site?.speed_limit_mph??"";$("lane-count").value=record?.site?.lane_count??"";$("work-period").value=record?.site?.work_period||"unknown";
  renderList();lock(false);loadChecklist();
 }
@@ -58,7 +58,7 @@ $("order-form").addEventListener("submit",async event=>{
  const body={title:$("title").value,work_type:$("work-type").value,address:$("address").value,locality:$("locality").value,work_date:$("work-date").value||null,notes:$("notes").value,road_authority:$("road-authority").value.trim()||null,site:{...selected?.site,speed_limit_mph:$("speed-limit").value?Number($("speed-limit").value):null,lane_count:$("lane-count").value?Number($("lane-count").value):null,work_period:$("work-period").value},job_geometry:geometry};
  if(!selected){const signature=JSON.stringify(body);if(lastCreateBody!==null&&lastCreateBody!==signature)requestId=crypto.randomUUID();lastCreateBody=signature;}
  try{const record=await api(selected?`/api/orders/${selected.id}`:"/api/orders",{method:selected?"PUT":"POST",body:JSON.stringify({...body,...(selected?{expected_version:selected.version}:{request_id:requestId})})});
-  openWorkOrder(record);lock(true);notify(`Saved locally · revision ${record.version}.`);try{await loadRows();}catch{notify(`Saved revision ${record.version}, but the job board could not refresh. Use Refresh to try again.`,true);}
+  openWorkOrder(record);lock(true);notify(`Saved · revision ${record.version}.`);try{await loadRows();}catch{notify(`Saved revision ${record.version}, but the job board could not refresh. Use Refresh to try again.`,true);}
  }catch(error){notify(error.message,true);$("save-state").textContent="Save not confirmed · draft retained";}finally{lock(false);}
 });
 async function refresh(){if(busy||!canLeave())return;lock(true);try{const id=selected?.id;await loadRows();const record=rows.find(r=>r.id===id)||rows[0];if(record)openWorkOrder(record);else{resetChecklist();selected=null;dirty=false;$("order-form").hidden=true;$("empty-detail").hidden=false;$("atlas-output").replaceChildren();}notify("Loaded the latest saved records.");}catch(error){notify(error.message,true);}finally{lock(false);}}

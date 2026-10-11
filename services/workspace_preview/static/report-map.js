@@ -26,7 +26,11 @@
   const status=element('p',center?'Imagery loads only when you request it. Saved coordinates will be sent to Google.':'Save work-limit or approach coordinates in Work orders before loading imagery. Address lookup is not connected.');status.setAttribute('role','status');
   const load=element('button','Load site imagery'), street=element('button','Nearby Street View');load.type=street.type='button';load.className=street.className='secondary';load.disabled=!center;street.disabled=true;
   const mapBox=element('div',''), streetBox=element('div','');mapBox.className=streetBox.className='report-map';mapBox.hidden=streetBox.hidden=true;
-  container.append(load,street,status,mapBox,streetBox);
+  const externalStreet=element('a','Open Street View in Google Maps');
+  externalStreet.target='_blank';externalStreet.rel='noopener noreferrer';externalStreet.className='secondary';externalStreet.hidden=!center;
+  const streetUrl=pano=>'https://www.google.com/maps/@?'+new URLSearchParams({api:'1',map_action:'pano',viewpoint:`${center.latitude},${center.longitude}`,...(pano?{pano}:{})});
+  if(center)externalStreet.href=streetUrl();
+  container.append(load,street,externalStreet,status,mapBox,streetBox);
   const active=()=>token===generation&&container.isConnected;
   let map=null;
   const authFailure=()=>{if(active()){mapBox.hidden=streetBox.hidden=true;street.disabled=true;status.textContent='Google rejected map access. Check the workspace key and permitted website.';}};
@@ -44,8 +48,9 @@
   street.onclick=async()=>{
    street.disabled=true;status.textContent='Looking for nearby Street View…';
    try{const result=await new google.maps.StreetViewService().getPanorama({location:{lat:center.latitude,lng:center.longitude},radius:50});if(!active())return;
+    externalStreet.href=streetUrl(result.data.location.pano);
     streetBox.hidden=false;if(panorama)panorama.setVisible(false);panorama=new google.maps.StreetViewPanorama(streetBox);panorama.setPano(result.data.location.pano);panorama.setVisible(true);
-    status.textContent=`Nearby Street View · capture date ${result.data.imageDate||'unavailable'}. Verify it shows this work area. Overhead geometry is not projected onto the panorama.`;
+    status.textContent=`Nearby Street View · capture date ${result.data.imageDate||'unavailable'}. Verify it shows this work area. If the viewer is blank, use Open Street View in Google Maps. Overhead geometry is not projected onto the panorama.`;
    }catch{if(active()){streetBox.hidden=true;status.textContent='No nearby Street View was returned, or the provider request failed. Use the overhead map and field verification.';}}
    finally{if(active())street.disabled=false;}
   };

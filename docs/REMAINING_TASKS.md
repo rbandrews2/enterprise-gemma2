@@ -2,6 +2,12 @@
 
 ## Latest execution — October 11, 2026
 
+Twilio delivery is explicitly on hold pending registration; Ray reports the
+corrected sender is saved. See MAPS_ACCEPTANCE_20261011.md: private configuration
+and live hybrid imagery passed; embedded Street View is black despite successful
+metadata and remains unaccepted. Local candidate adds external fallback and
+accurate shared/cloud saving labels. No traffic promotion or production change.
+
 Twilio preparation: see TWILIO_STAGING_CONNECTION_20261011.md. Three enabled
 secrets exist, but the sender format needs a corrected version from Ray.
 Callback relay is implemented and locally validated (Python476/126 PG skips,
