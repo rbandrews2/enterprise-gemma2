@@ -4,6 +4,26 @@ Ray authorized a separate restricted Google Cloud V2 staging deployment. Product
 
 ## Latest resume checkpoint
 
+October10 latest-additions release preparation: application cf35780 packaged as
+.local-data/release-cf35780/wzos-accounts-cf35780.zip (80,280,010 bytes), SHA256
+3b14b7ad59e1cdd73fae531ff431d13e6fc79f68707b5cf953cb610a74d81c17.
+Allowlisted Git archive plus preserved official-source snapshot; 258 context
+files,139 source files,32 catalog sources,25 available sources,27 revisions.
+ZIP CRC and all context SHA256 hashes verified; seven source gaps/applicability
+remain explicit. Full local Python465/700.656s:339 passed,126 PostgreSQL-dependent
+skips,zero failures/errors. Full Node47 passed. See
+LOCAL_ADDITIONS_RELEASE_20261010.md for package, gates, migration/configuration
+controls and rollback. Historical deployment script must not be used unchanged:
+it omits source binaries and replaces environment configuration. Prepare an
+image-only restricted update after exact PostgreSQL and private live config/
+backup/rollback review. No deployment, merge, provider send, GPU or V1/DNS change.
+Cloud browser control continues timing out. Ray's first manual PG attempt failed
+before tests with an empty clone destination; supplied a single fail-fast Bash
+command using a new /tmp checkout of the exact SHA. Await zero-skip PG result and
+independent container cleanup evidence. Primary checkout is clean at2dc5935.
+Next: accept PG result, refresh live state/budget and preserve configuration,
+then build/validate the restricted candidate for mobile review.
+
 October10 Atlas intelligence/context pass on codex/preproduction-modules:
 Atlas receives bounded own assignments/forms and explicit admin organization
 review counts for relevant questions. Context excludes private notes, HR/contact

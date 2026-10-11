@@ -2,6 +2,12 @@
 
 ## Current development/testing budget
 
+October10 latest-additions staging preparation: cf35780 release bundle/source
+snapshot verified; full local Python465 passed with126 PG-dependent skips,
+full Node47 passed. Exact PostgreSQL, live configuration/backup/rollback capture,
+build and restricted mobile acceptance remain open. See
+LOCAL_ADDITIONS_RELEASE_20261010.md. No deployment/enterprise-v2 merge yet.
+
 October10 priority from Ray: increase Atlas intelligence. Bounded operational
 context and corrected app capability guidance are implemented in the owned
 candidate; see ATLAS_CONTEXT_INTELLIGENCE.md. Next: eight bounded live private
