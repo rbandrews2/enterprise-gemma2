@@ -1,5 +1,16 @@
 # WZOS V2 remaining tasks — proposed execution order
 
+## Latest execution — October 11, 2026
+
+See STAGING_DEPLOYMENT_20261011.md. Exact cf35780 and verified sources are built
+and deployed to restricted staging (00031-h5t, 100%). Live schema, backup and
+real-provider role/tenant checks passed. Maps revision 00032-9rw is tagged with
+zero main traffic; acceptance and promotion remain open. Ray is entering Twilio
+credentials himself. Next finish Maps/private-file/module acceptance, connect
+provider callbacks/delivery, complete bounded Atlas acceptance and production
+routing/passkey/security gates. V1 remains online. Requested cutover authority
+does not mark incomplete features below as finished. Older snapshots are historical.
+
 ## Current development/testing budget
 
 October10 latest-additions staging preparation: cf35780 release bundle/source

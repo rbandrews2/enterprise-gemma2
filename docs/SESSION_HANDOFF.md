@@ -1,3 +1,19 @@
+## Latest checkpoint — October 11, 2026
+
+Read STAGING_DEPLOYMENT_20261011.md first. Exact cf35780 and preserved source
+snapshot built successfully. Real-provider account/role/tenant checks passed;
+restricted staging serves 00031-h5t at 100%. Maps candidate 00032-9rw is privately
+tagged with zero main traffic; acceptance/promotion remain open. Ray approved
+one staging Maps referrer and controlled provider recipients and will enter Twilio
+values directly. Browser timed out during Secret Manager navigation; do not read
+or capture credential-entry fields. V1 production is unchanged. Mobile proxy has
+a 45-minute lifetime. Provider/module/Atlas and production cutover gates remain.
+
+## Earlier October 11 preparation — historical
+
+See RELEASE_EXECUTION_20261011.md for current authorization, schema/backup acceptance,
+provider gaps and active build66e0492f-c516-48d4-8ae2-0724ab0c3074. No deployment yet.
+
 ## Paused at Ray request — October 10, 2026
 
 Stop work here; resume only on Ray's request. Application candidate remains
