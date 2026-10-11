@@ -65,5 +65,7 @@ commit and current accepted revision/image/configuration before any deployment.
 - [Google pricing](https://developers.google.com/maps/billing-and-pricing/pricing)
 - [Key creation flags](https://docs.cloud.google.com/sdk/gcloud/reference/services/api-keys/create)
 
-Status: proposed; no new cloud key, grant, API activation or deployment has been
-performed for this increment.
+Status: approved by Ray. The scoped setup command was submitted; Ray reported
+`ROUTES_SETUP_COMPLETE` after browser control timed out. Independently verify
+API/key/secret/IAM metadata before considering setup accepted. No routing
+deployment or live provider call has occurred for this increment.

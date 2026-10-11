@@ -6,7 +6,8 @@ preserved. Focused Python10 passed/six PG skips; full Node56 passed/no skips;
 desktop and phone-width disabled-state UI and local HTTP verified. Full Python
 regression still needs final result capture, then exact PostgreSQL candidate gate.
 Ray approved dedicated Routes setup; Cloud Shell command submitted but browser
-timed out before completion verification. Inspect metadata before repeating any
+timed out before completion verification. Ray reported ROUTES_SETUP_COMPLETE;
+independently inspect metadata before repeating any
 mutation. No routing deployment/live route calls/traffic/V1/DNS change. Twilio hold.
 Next capture tests, save candidate, run PG, reconcile cloud credential setup and
 quota/billing, deploy private candidate, then capped provider/Android acceptance.

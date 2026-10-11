@@ -27,7 +27,11 @@
   disabled provider, successful map drawing, failed map retaining directions,
   session cancellation, and unavailable/forbidden assignment responses.
 - Real local HTTP: authenticated synthetic admin session and Navigation config
-  returned successfully; routes/maps unavailable flags are accurate.
+  returned successfully; routes/maps unavailable flags are accurate. A newly
+  created UUID work order returned503 for unconfigured routing; a member requesting
+  that private admin work order returned404; anonymous config returned401. Historical
+  seeded preview IDs are non-UUID and correctly fail request validation; provider
+  acceptance must use normally created UUID jobs.
 - Real desktop browser: permitted work-order destination and Route inside WZOS
   panel rendered. Calculate is disabled until routing is configured. No location
   permission was requested automatically.
@@ -45,7 +49,9 @@ Ray explicitly approved NAVIGATION_STAGING_ACTIVATION.md: Routes API enablement,
 dedicated Routes-only key, secret, and secret-scoped runtime accessor grant.
 Read-only inventory showed no dedicated Routes key/secret before execution.
 The Cloud Shell command was submitted, then browser control timed out before its
-result could be read. **Completion is unverified.** Do not create duplicates or
+result could be read. Ray subsequently reported `ROUTES_SETUP_COMPLETE` while
+refreshing the shell connection. **Independent completion verification remains
+open.** Do not create duplicates or
 repeat grants blindly. Inspect key restriction metadata, API enablement, secret
 version metadata and IAM binding without revealing the key value.
 
