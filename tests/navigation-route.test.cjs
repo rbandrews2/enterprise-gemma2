@@ -1,0 +1,48 @@
+const test=require('node:test'),assert=require('node:assert/strict'),vm=require('node:vm'),fs=require('node:fs');
+function harness({enabled=true,mapFailure=true}={}){
+ const events={},windowEvents={},calls=[],gps=[],maps=[];let session={id:'member',organization_id:'org1',edition:'enterprise'},hold=null;
+ function element(tag){return{tag,textContent:'',value:'',children:[],isConnected:true,append(...nodes){this.children.push(...nodes);},replaceChildren(...nodes){this.children=nodes;},setAttribute(){},remove(){this.isConnected=false;}};}
+ const document={createElement:element,addEventListener:(name,fn)=>events[name]=fn};
+ const navigator={onLine:true,geolocation:{getCurrentPosition:(...args)=>gps.push(args)}};
+ const response={status:'ready',distance_meters:2400,duration_seconds:300,calculated_at:new Date().toISOString(),destination:'Frozen site',destination_basis:'dispatched_snapshot',directions:[{instruction:'Head east <script>'}],encoded_polyline:'??'};
+ const window={addEventListener:(name,fn)=>windowEvents[name]=fn,wzosClock:{getSession:()=>session,api:async(path,options)=>{
+  calls.push({path,options});if(path.endsWith('/config'))return{routes_enabled:enabled};return hold||response;
+ }},WzosReportMap:{ready:async()=>{if(mapFailure)throw Error('Maps unavailable');}}};
+ const google={maps:{importLibrary:async()=>({encoding:{decodePath:()=>[{lat:()=>36.8,lng:()=>-76.2},{lat:()=>36.9,lng:()=>-76.3}]}}),Map:class{constructor(node,options){maps.push({node,options});}fitBounds(){}},Polyline:class{constructor(options){maps.push(options);}},LatLngBounds:class{extend(){}}}};
+ vm.runInNewContext(fs.readFileSync('services/workspace_preview/static/navigation.js','utf8'),{window,document,navigator,AbortController,Date,google});
+ const card=element('article');window.WzosNavigationRoute.attach(card,{id:'order',assignment_id:'assignment',title:'Assigned job'});
+ const flatten=n=>[n,...n.children.flatMap(flatten)],find=text=>flatten(card).find(n=>n.textContent===text),text=()=>flatten(card).map(n=>n.textContent).join(' ');
+ return{card,calls,gps,maps,events,windowEvents,navigator,find,text,response,open:()=>card.children[0].onclick(),submit:()=>find('Calculate route')&&flatten(card).find(n=>n.tag==='form').onsubmit({preventDefault(){}}),origin:()=>flatten(card).find(n=>n.tag==='input'),setSession:s=>session=s,setHold:p=>hold=p};
+}
+test('No automatic location or route calls; manual calculation uses assignment, retains directions on map failure',async()=>{
+ const h=harness();await h.open();assert.equal(h.gps.length,0);assert.equal(h.calls.length,1);
+ h.origin().value='Starting address';await h.submit();
+ assert.equal(h.calls.length,2);assert.equal(h.calls[1].options.method,'POST');
+ const body=JSON.parse(h.calls[1].options.body);assert.equal(body.assignment_id,'assignment');assert.equal(body.order_id,undefined);
+ assert.equal(body.origin.address,'Starting address');assert.match(h.text(),/Head east <script>/);assert.match(h.text(),/Map display unavailable/);
+});
+test('Geolocation requires a click and denial allows manual address',async()=>{
+ const h=harness();await h.open();h.find('Use my current location').onclick();assert.equal(h.gps.length,1);
+ assert.equal(h.calls.length,1);h.gps[0][1]();assert.match(h.text(),/permission was declined/);
+ h.origin().value='Manual origin';await h.submit();assert.equal(h.calls.length,2);
+});
+test('Configured map draws the returned route inside WZOS without extra route requests',async()=>{
+ const h=harness({mapFailure:false});await h.open();h.origin().value='Public starting site';await h.submit();
+ assert.equal(h.maps.length,2);assert.equal(h.maps[0].node.hidden,false);assert.equal(h.maps[1].path.length,2);
+ assert.equal(h.calls.filter(c=>c.path.endsWith('/route')).length,1);assert.doesNotMatch(h.text(),/Map display unavailable/);
+});
+test('Disabled routes cannot issue a billable request',async()=>{
+ const h=harness({enabled:false});await h.open();h.origin().value='Norfolk';await h.submit();
+ assert.equal(h.calls.length,1);assert.match(h.text(),/not configured/);assert.equal(h.find('Calculate route').disabled,true);
+});
+test('Organization changes abort pending requests and discard late route content',async()=>{
+ const h=harness();await h.open();let release;h.setHold(new Promise(resolve=>release=resolve));h.origin().value='Origin';const task=h.submit();
+ const panel=h.card.children[1],signal=h.calls[1].options.signal;h.setSession({id:'other',organization_id:'org2',edition:'core'});h.events['wzos:session']();
+ assert.equal(signal.aborted,true);assert.equal(panel.isConnected,false);release(h.response);await task;
+ assert.doesNotMatch(h.text(),/Frozen site/);assert.doesNotMatch(h.text(),/Head east/);
+});
+test('View change and offline clear route panels',async()=>{
+ for(const event of ['view','offline']){const h=harness();await h.open();const panel=h.card.children[1];
+  if(event==='view')h.events['wzos:view']();else h.windowEvents.offline();assert.equal(panel.isConnected,false);
+ }
+});

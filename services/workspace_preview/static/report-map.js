@@ -55,5 +55,5 @@
    finally{if(active())street.disabled=false;}
   };
  }
- window.WzosReportMap={clear,mount};
+ window.WzosReportMap={clear,mount,ready};
 })();

@@ -12,14 +12,14 @@
    if(name==='navigation'){
     root.append(node('p','Loaded destinations remain available in this open app when offline. Save a destination sheet before travel for access after closing the app. Map imagery, live traffic and route guidance require connectivity or separately downloaded maps in your navigation app.'));
     const session=window.wzosClock.getSession(),scope=session?JSON.stringify([session.organization_id,session.id,session.edition]):null;
-    let orders=destinationCache?.scope===scope?destinationCache.items:window.wzosClock.getOrders(),cached=!navigator.onLine;
+    let orders=destinationCache?.scope===scope?destinationCache.items:window.wzosClock.getOrders(),cached=!navigator.onLine,assignmentsUnavailable=false;
     if(navigator.onLine){try{
      orders=(await api('/api/orders')).items;
      if(session?.edition==='enterprise'){
       const assigned=new Map();let offset=0;
-      while(true){const page=await api(`/api/dispatch/my-assignments?phase=upcoming&offset=${offset}`);
+      while(true){let page;try{page=await api(`/api/dispatch/my-assignments?phase=upcoming&offset=${offset}`);}catch(error){if(error.status!==404)throw error;assignmentsUnavailable=true;break;}
        if(epoch!==generation||JSON.stringify([window.wzosClock.getSession()?.organization_id,window.wzosClock.getSession()?.id,window.wzosClock.getSession()?.edition])!==scope)return;
-       for(const job of page.items)if(!assigned.has(job.order_id))assigned.set(job.order_id,{id:job.order_id,title:job.order_title,address:job.address,assigned:true});
+       for(const job of page.items)if(!assigned.has(job.order_id))assigned.set(job.order_id,{id:job.order_id,assignment_id:job.id,title:job.order_title,address:job.address,assigned:true});
        offset+=page.items.length;if(offset>=page.total||!page.items.length)break;
       }
       orders=[...assigned.values(),...orders.filter(order=>!assigned.has(order.id))];
@@ -28,10 +28,12 @@
      destinationCache={scope,items:orders};
     }catch(error){if(error.status)throw error;cached=true;orders=destinationCache?.scope===scope?destinationCache.items:window.wzosClock.getOrders();}}
     if(epoch!==generation||JSON.stringify([window.wzosClock.getSession()?.organization_id,window.wzosClock.getSession()?.id,window.wzosClock.getSession()?.edition])!==scope)return;
+    if(assignmentsUnavailable)root.append(node('p','Assigned destinations are unavailable in this environment. Showing permitted work orders only.'));
     if(cached)root.append(node('p','Offline / connection unavailable — showing previously loaded destinations. Confirm addresses and site access before travel.'));
     if(!orders.length)root.append(node('p','No destinations loaded. Connect and open your jobs before going offline.'));
     else{const all=node('button','Save all destinations ('+orders.length+')');all.className='secondary';all.onclick=()=>saveSheet(orders,'wzos-destinations.txt');root.append(all);}
     for(const order of orders){const card=node('section','');card.className='report-section panel';card.append(node('h2',order.title),node('p',order.address));if(order.assigned)card.append(node('p','Dispatched destination · confirm current site access in My jobs.'));const a=window.WzosNavigation.link(order.address);if(a)card.append(a);
+     if(window.WzosNavigationRoute)window.WzosNavigationRoute.attach(card,order);
      if(order.work_date)card.append(node('p','Work date: '+order.work_date));const save=node('button','Save destination sheet');save.className='secondary';save.onclick=()=>saveSheet([order],'wzos-destination.txt');card.append(save);root.append(card);}return;
    }
    if(name==='training'){

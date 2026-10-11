@@ -255,6 +255,10 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
     def report_map_script():
         return FileResponse(STATIC / "report-map.js", media_type="text/javascript")
 
+    @app.get('/navigation.js')
+    def navigation_script():
+        return FileResponse(STATIC / 'navigation.js', media_type='text/javascript')
+
     @app.get("/report.js")
     def report_script():
         return FileResponse(STATIC / "report.js", media_type="text/javascript")
@@ -531,6 +535,8 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
 
     roster = accounts.roster if accounts else lambda selected: ACTORS
     team_modules.register(app, connect, actor, roster, synthetic=not account_workspace)
+    from services.workspace_preview import navigation
+    navigation.register(app, connect, actor, permitted_row, accounts=account_workspace)
     modules.register(app, connect, actor, permitted_row, roster, synthetic=not account_workspace,
                      reference_order=lambda db, oid, user: time_order(db, oid, user),
                      jobs=lambda db, user: time_jobs(db, user))
