@@ -2,6 +2,16 @@
 
 ## Latest execution — October 11, 2026
 
+Navigation exact6c78ae8 PostgreSQL492 passed/no skips; cleanup/build source checks
+passed. Credential replacement/deletion verified, version2 pinned; quotas20/day,6/min.
+Private00036-ray zero-main-traffic candidate deployed; synthetic admin route,
+directions and visible Google map overlay accepted using one route/map. Anonymous
+401/public403 verified. See NAVIGATION_RELEASE_20261011.md. Next Android device,
+live member/assigned destination and denied private-job, cancellation/lifecycle,
+and billing reconciliation before promotion. Main traffic/V1 unchanged; Twilio hold.
+
+Earlier implementation checkpoint (superseded by release evidence above):
+
 In-app Navigation is locally implemented; see NAVIGATION_IMPLEMENTATION_20261011.md.
 Full Node56 passed, focused backend10 passed/six PG skips, local HTTP and responsive
 browser disabled state verified. Full Python492 passed with132 PG-dependent skips;

@@ -1,4 +1,18 @@
-## Latest checkpoint — in-app Navigation implementation, October 11, 2026
+## Latest checkpoint — private Navigation live route accepted, October 11, 2026
+
+Read NAVIGATION_RELEASE_20261011.md. Exact6c78ae8 PostgreSQL492 passed with zero
+failures/errors/skips (133.682s); cleanup verified. Build736a3f9a succeeded with
+frozen source verification. Ray replaced the exposed key; old key deletion/new
+Routes-only metadata and secret version2 verified. ComputeRoutes quotas20/day,6/min.
+Private tag navigation-6c78ae8 points to Ready00036-ray, zero main traffic; exact
+env delta only Routes enable/secret binding, identity/resources unchanged. Synthetic
+admin live route/map/directions passed (one request/map); anonymous401/public403.
+Android and live member/assigned-job gates remain; billing$35 is user-reported,
+not reconciled. Main00031-h5t and Maps tag00032-9rw, V1/DNS unchanged; Twilio hold.
+Protected Cloud Shell preview has a45-minute proxy expiry. Next physical Android,
+member/assignment denial and cancellation/lifecycle checks before any promotion.
+
+## Earlier checkpoint — in-app Navigation implementation, October 11, 2026
 
 Read NAVIGATION_IMPLEMENTATION_20261011.md and NAVIGATION_STAGING_ACTIVATION.md.
 Local backend/UI/Atlas guidance implemented, role/tenant/frozen dispatch access
