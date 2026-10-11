@@ -4,6 +4,12 @@ Ray authorized a separate restricted Google Cloud V2 staging deployment. Product
 
 ## Latest resume checkpoint
 
+October10 release PG follow-up: Ray reports the Docker gate blocked because
+postgres:16-alpine download failed/exceeded300seconds. No tests ran in that attempt.
+Next reuse scripts/test_postgres_native.sh from the exact cf35780 checkout;
+verify native PostgreSQL binaries, zero-skip result and temporary cluster cleanup.
+The older native acceptance is historical, not acceptance of this candidate.
+
 October10 latest-additions release preparation: application cf35780 packaged as
 .local-data/release-cf35780/wzos-accounts-cf35780.zip (80,280,010 bytes), SHA256
 3b14b7ad59e1cdd73fae531ff431d13e6fc79f68707b5cf953cb610a74d81c17.

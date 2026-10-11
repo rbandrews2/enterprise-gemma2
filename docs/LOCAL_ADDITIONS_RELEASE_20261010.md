@@ -79,6 +79,13 @@ connection string. The existing script reuses the cached PostgreSQL image.
 The first operator attempt reported an empty clone destination and did not run
 tests. The revised single-line command confines variables to one Bash process,
 uses an explicit /tmp destination and stops immediately on a failed step.
+The revised Docker attempt was blocked downloading postgres:16-alpine after
+300 seconds; no test result was produced. Use the existing
+scripts/test_postgres_native.sh harness in the verified candidate checkout when
+native PostgreSQL binaries are available. That harness previously passed an
+older candidate in Cloud Shell; current installation and this candidate's result
+still require verification. It avoids Docker and uses a temporary private UTF8
+Unix-socket cluster with automatic cleanup. Do not replace this with the staging DB.
 
 ## Configuration and migration controls
 
