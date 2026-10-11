@@ -2,6 +2,17 @@
 
 ## Latest execution — October 11, 2026
 
+Ray clarified that Navigation must be WZOS's own in-app function powered by
+Google Maps APIs, for both admin and member. Existing external Maps directions
+links are interim/fallback behavior, not completion of this requirement. Plan
+the web route/map experience using Maps JavaScript and server-side Routes API:
+route display, directions, distance/ETA and supported traffic information. Keep
+server credentials private, apply role/tenant-scoped job access and bound requests.
+Verify API enablement, credentials, pricing and Android behavior before accepting
+integration. Google's Navigation SDK targets Android/iOS native applications;
+do not imply it is a browser SDK or promise equivalent background/voice/offline
+navigation for the web app. Full native guidance is a separate architecture decision.
+
 Twilio delivery is explicitly on hold pending registration; Ray reports the
 corrected sender is saved. See MAPS_ACCEPTANCE_20261011.md: private configuration
 and live hybrid imagery passed; embedded Street View is black despite successful
