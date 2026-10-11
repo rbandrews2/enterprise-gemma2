@@ -11,6 +11,32 @@ from services.workspace_preview.app import create_app
 from services.v2.knowledge.store import Store
 
 class IntelligenceTests(unittest.TestCase):
+    def test_own_form_facts_reach_engine_without_private_details_or_mutation(self):
+        from uuid import uuid4
+        class Fake:
+            context = None
+            async def reply(self, payload, context):
+                self.context = context
+                return 'Review your saved draft before internal submission.'
+        fake = Fake()
+        with tempfile.TemporaryDirectory() as directory, patch.dict(os.environ, {'WZOS_WORKSPACE_PREVIEW':'1','K_SERVICE':'','GAE_ENV':'','NETLIFY':''}):
+            with TestClient(create_app(Path(directory)/'db.sqlite', Store(Path(directory)/'sources', {}), fake)) as client:
+                headers = {'X-Preview-Actor':'enterprise-general'}
+                ident = str(uuid4())
+                saved = client.put('/api/modules/forms/'+ident, headers=headers, json={
+                    'request_id':str(uuid4()), 'title':'My incident draft', 'details':'PRIVATE INCIDENT NOTES'})
+                self.assertEqual(saved.status_code, 200, saved.text)
+                response = client.post('/api/assistant/chat', headers=headers, json={
+                    'page':'forms', 'question':'Explain the situation of my saved records and suggest next steps.'})
+                self.assertEqual(response.status_code, 200, response.text)
+                facts = fake.context['operational_facts']['own_saved_forms']
+                self.assertEqual(facts['total'], 1)
+                self.assertEqual(facts['items'][0]['title'], 'My incident draft')
+                self.assertFalse(facts['items'][0]['current_version_submitted'])
+                self.assertNotIn('PRIVATE INCIDENT NOTES', str(fake.context))
+                self.assertEqual(response.json()['actions_performed'], [])
+                self.assertEqual(client.get('/api/modules/forms', headers=headers).json()['items'][0]['version'], 1)
+
     def test_failure_reason_and_correlation_are_safe_and_actionable(self):
         class Fake:
             async def reply(self, payload, context):

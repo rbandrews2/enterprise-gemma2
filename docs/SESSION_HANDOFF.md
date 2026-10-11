@@ -4,6 +4,25 @@ Ray authorized a separate restricted Google Cloud V2 staging deployment. Product
 
 ## Latest resume checkpoint
 
+October10 Atlas intelligence/context pass on codex/preproduction-modules:
+Atlas receives bounded own assignments/forms and explicit admin organization
+review counts for relevant questions. Context excludes private notes, HR/contact
+details, credentials, file URLs and assessment keys. Current form revisions,
+cancelled/past assignments, tenant/role/edition limits and truncation are tested.
+Updated capability guides cover implemented training/assessments, messaging,
+Google Meet links, assigned-job time/navigation and private report PDF exports.
+No autonomous actions; missing app records do not establish noncompliance.
+Focused Python31/43.484s and full Node47 passed with zero failures/skips;
+syntax/diff checks passed. Synthetic Training and Messages quick-guide browser
+checks passed; evidence .local-data/atlas-context-preview.png. The preview's AI
+conversation is off; model transport tests use mocks. See
+ATLAS_CONTEXT_INTELLIGENCE.md for contract, results and eight live evaluation cases.
+No DDL, paid resources, provider sends, deployment or main/V1/DNS changes.
+Next Atlas task: refresh private service/budget state and execute bounded live
+full-size Gemma evaluation; exact-candidate full Python/PostgreSQL gates remain
+open before integration/deployment. Internal form/notification assembly resumes
+after the prioritized Atlas pass.
+
 October10 assigned-form/schedule integration: codex/preproduction-modules connects
 own form drafts to active assigned jobs without original-order access, preserves
 saved title/address references through cancellation, and shows read-only dispatch

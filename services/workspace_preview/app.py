@@ -326,7 +326,10 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
             raise HTTPException(403, 'Work Zone Report requires Enterprise')
         from services.workspace_preview.intelligence import module_context
         context = {"edition": selected["edition"], "role": selected["role"], "page": payload.page,
+                   "account_workspace": account_workspace,
                    "module_help": module_context(payload.page, selected['role'])}
+        from services.workspace_preview.atlas_context import operational_context
+        context['operational_facts'] = operational_context(connect, selected, payload.page, payload.question, account_workspace)
         if payload.page == 'time_clock' or re.search(r'\b(clock(?:ed)?|shift|break|timesheet|payroll)\b', payload.question, re.I):
             context["time_clock"] = timeclock.summary(connect, selected)
         citations = []

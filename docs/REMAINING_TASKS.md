@@ -2,6 +2,12 @@
 
 ## Current development/testing budget
 
+October10 priority from Ray: increase Atlas intelligence. Bounded operational
+context and corrected app capability guidance are implemented in the owned
+candidate; see ATLAS_CONTEXT_INTELLIGENCE.md. Next: eight bounded live private
+Gemma evaluation cases, then return to durable forms/assignment notifications.
+Mock transport and synthetic browser success do not close live AI acceptance.
+
 Current assembly priority (October10): complete internal module connections first,
 then connect Twilio, Maps and other providers. See TEST_MODEL_ASSEMBLY.md for the
 current capability matrix and sequential assembly passes. Assigned-job Time Clock
