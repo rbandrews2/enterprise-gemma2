@@ -7,6 +7,11 @@ snapshot verified; full local Python465 passed with126 PG-dependent skips,
 full Node47 passed. Exact PostgreSQL, live configuration/backup/rollback capture,
 build and restricted mobile acceptance remain open. See
 LOCAL_ADDITIONS_RELEASE_20261010.md. No deployment/enterprise-v2 merge yet.
+Update: exact-candidate native PostgreSQL465 passed with zero failures/errors/skips
+(135.288s), reported by Ray and independently observed in Cloud Shell.
+Independent temporary-cluster cleanup remains open along with live config/backup,
+build, staging and mobile acceptance. No additional regression is needed for
+documentation-only acceptance updates.
 
 October10 priority from Ray: increase Atlas intelligence. Bounded operational
 context and corrected app capability guidance are implemented in the owned

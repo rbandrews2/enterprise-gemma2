@@ -45,8 +45,11 @@ Verify the same SHA256 after transfer to Cloud Shell before extracting/building.
 1. Full local Python regression: 465 tests, 339 passed, 126 PostgreSQL-dependent
    skips, zero failures/errors; 700.656 seconds. This is local acceptance only.
 2. Full Node regression: 47 passed, zero failures/skips.
-3. Exact-candidate PostgreSQL: pending Cloud Shell control/manual operator run.
-   Earlier 444-test acceptance predates this candidate and cannot substitute.
+3. Exact-candidate PostgreSQL: PASS, 465 tests in 135.288 seconds, zero failures,
+   errors or skips. Ray supplied the native-harness result; Codex independently
+   observed the same summary in the Cloud Shell accessibility output. Independent
+   temporary-cluster cleanup remains unconfirmed. Earlier 444-test acceptance
+   predates this candidate and is not used as its acceptance evidence.
 4. Refresh live service/configuration, IAM, secret-version metadata, cost ledger,
    database backup and previous immutable image/revision for rollback.
 5. Build the verified context, check its digest and source verification, and
@@ -86,6 +89,12 @@ native PostgreSQL binaries are available. That harness previously passed an
 older candidate in Cloud Shell; current installation and this candidate's result
 still require verification. It avoids Docker and uses a temporary private UTF8
 Unix-socket cluster with automatic cleanup. Do not replace this with the staging DB.
+
+Current native gate has now passed as recorded above. Cloud browser state showed
+the PASS and the returned shell prompt. A subsequent attempt to inspect temporary
+directories and privately capture live configuration/IAM timed out; whether that
+command was submitted is unknown. Verify the current shell state before repeating
+it. Do not treat a capture attempt as evidence of a completed rollback snapshot.
 
 ## Configuration and migration controls
 

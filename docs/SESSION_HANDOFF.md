@@ -4,6 +4,18 @@ Ray authorized a separate restricted Google Cloud V2 staging deployment. Product
 
 ## Latest resume checkpoint
 
+October10 exact-candidate PostgreSQL acceptance: Ray reported465 tests/135.288s,
+zero failures/errors/skips on the supplied cf35780 native-harness command.
+Codex independently observed the same465 PASS summary and returned shell prompt
+in Chrome Cloud Shell. Full local Python465 and Node47 previously passed.
+Independent temporary-cluster cleanup and live configuration/backup/rollback
+capture remain unconfirmed: browser timed out during the follow-up attempt;
+command submission is unknown. Check shell state before retrying. No deployment,
+merge, public IAM, provider sends or production changes. Update release-validation
+sidecar against the immutable ZIP; do not rebuild the application artifact solely
+for these documentation updates. Next: verify cleanup/live state/budget and
+backup, then build the preserved-source image and validate restricted staging.
+
 October10 release PG follow-up: Ray reports the Docker gate blocked because
 postgres:16-alpine download failed/exceeded300seconds. No tests ran in that attempt.
 Next reuse scripts/test_postgres_native.sh from the exact cf35780 checkout;
