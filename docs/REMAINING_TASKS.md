@@ -2,6 +2,14 @@
 
 ## Latest execution — October 11, 2026
 
+### Still to do — added at Ray's stopping point
+
+1. Change the Time Clock UI.
+2. Clarify offline functions and their limits, including local drafts, reconnect/
+   reconciliation requirements, and features that need internet connectivity.
+
+Development paused at Ray's request so the laptop can cool; do not auto-resume.
+
 Address flow clarified and locally implemented: Open in Navigation beside job/
 assignment/schedule addresses enters the selected internal destination. Get directions
 inside Navigation; duplicate external link removed. Larger phone text and compact

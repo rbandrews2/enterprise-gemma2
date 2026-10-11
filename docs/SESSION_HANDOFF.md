@@ -1,4 +1,14 @@
-## Latest checkpoint — address-to-Navigation flow correction, October 11, 2026
+## Stopping point — Ray requested break, October 11, 2026
+
+Stop development/testing so the laptop can cool. Still to do, explicitly requested:
+1. Change the Time Clock UI.
+2. Clarify offline functions: what remains usable, what must reconnect, what is
+   locally saved versus server-verified, and what cannot run offline.
+Navigation flow correction committed as2d90292; release checks and staging update
+remain. Resume from the checkpoint below, verify Git/cloud state first. No automatic
+continuation. No new paid provider calls or production changes at this pause.
+
+## Earlier checkpoint — address-to-Navigation flow correction, October 11, 2026
 
 Ray clarified: Open in Navigation belongs beside addresses in work orders,
 assignments and schedule cards; it opens the selected permitted destination inside
