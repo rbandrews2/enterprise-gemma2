@@ -147,3 +147,19 @@ On failed acceptance, restore the previous staging image/traffic and exact saved
 configuration. Keep additive tables and audit history; do not drop tables as a
 code rollback. Preserve Ray's existing passkey/test identity. V1, DNS, production
 and customer delivery are outside this release.
+
+
+### Verified cloud preflight follow-up
+
+Cloud Shell control recovered. No `/tmp/wzos-pg-gate.*` directories remained
+between the TEMP_CLUSTER_CHECK and CHECK_DONE markers. The service and IAM
+exports were saved privately in Cloud Shell, outside Git. The inspected service
+is still `wzos-v2-accounts-00030-c6h`, with 100 percent traffic and image tag
+`auth-bcf3bc9`; IAM contains no allUsers or allAuthenticatedUsers binding.
+Authentication, passkey, storage, SQL and Atlas environment names are present;
+secret values were not printed. Cloud SQL backup 1791612000000 completed
+SUCCESSFUL on 2026-10-10 at 08:44:31.655 UTC; the preceding two automated backups
+also succeeded. This is backup availability evidence, not a restore test.
+Immutable prior-image digest, live schema comparison, cost refresh, artifact
+transfer/build and restricted candidate acceptance remain open. No deployment
+or traffic change was performed.
