@@ -1,4 +1,28 @@
 
+## October 10 release execution checkpoint
+
+Ray authorized completion of schema/rollback/budget checks and restricted mobile
+staging deployment. Chrome Cloud Shell control timed out three times; submission
+of the read-only image/tool-location command is unknown. No build or deployment
+was started. Next reconnect and inspect terminal before repeating any command.
+
+Added operator-only scripts/check_staging_schema.py. It extracts 42 candidate
+table definitions locally and compares live columns using a read-only PostgreSQL
+transaction through an existing localhost:5544 SQL proxy. Secrets stay in memory;
+evidence is created exclusively with mode0600. Missing tables require review
+(including preview-only definitions), never automatic DDL. Offline extraction and
+focused matching/type-conflict/missing-column/missing-table checks passed.
+
+Reviewed schema-bearing candidate diff against bcf3bc9: listed employee, dispatch,
+messaging and training changes add tables with IF NOT EXISTS; no ALTER/DROP in
+that reviewed diff. This is not live schema acceptance. Candidate artifact remains
+cf35780 with the previously verified ZIP hash and465-test PostgreSQL acceptance.
+Previous cloud capture/backup and cleanup acceptance remain recorded. Remaining:
+read-only live schema comparison, immutable rollback image digest, current
+October8-17 spend against150USD cap, artifact transfer verification, source-aware
+build, image-only restricted deployment and authenticated mobile acceptance.
+
+
 
 ### Verified cloud preflight follow-up
 
