@@ -2,6 +2,12 @@
 
 ## Latest execution — October 11, 2026
 
+Twilio preparation: see TWILIO_STAGING_CONNECTION_20261011.md. Three enabled
+secrets exist, but the sender format needs a corrected version from Ray.
+Callback relay is implemented and locally validated (Python476/126 PG skips,
+Node47, gateway11); provider authentication, candidate PostgreSQL and live
+callback/delivery acceptance remain open. No new IAM grants or deployment yet.
+
 See STAGING_DEPLOYMENT_20261011.md. Exact cf35780 and verified sources are built
 and deployed to restricted staging (00031-h5t, 100%). Live schema, backup and
 real-provider role/tenant checks passed. Maps revision 00032-9rw is tagged with

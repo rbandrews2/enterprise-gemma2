@@ -1,4 +1,16 @@
-## Latest checkpoint — October 11, 2026
+## Latest checkpoint — Twilio preparation, October 11, 2026
+
+Read TWILIO_STAGING_CONNECTION_20261011.md, then STAGING_DEPLOYMENT_20261011.md.
+Three enabled Twilio secrets exist. SID format/nonempty token checks passed;
+sender format failed. Ray was asked to add a corrected E.164 sender version.
+No provider request/message or new IAM/deployment action occurred. Separate
+signature-gated callback relay and 11 focused tests are implemented locally;
+full Python476 passed with126 PostgreSQL-dependent skips; Node47 passed.
+Next verify corrected sender/provider ownership, run candidate PostgreSQL gate,
+prepare exact scoped permissions and callback deployment for approval, then
+perform live callback/test-delivery acceptance. Existing staging/V1 unchanged.
+
+## Earlier deployment checkpoint — October 11, 2026
 
 Read STAGING_DEPLOYMENT_20261011.md first. Exact cf35780 and preserved source
 snapshot built successfully. Real-provider account/role/tenant checks passed;
