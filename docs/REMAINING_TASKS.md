@@ -4,8 +4,9 @@
 
 In-app Navigation is locally implemented; see NAVIGATION_IMPLEMENTATION_20261011.md.
 Full Node56 passed, focused backend10 passed/six PG skips, local HTTP and responsive
-browser disabled state verified. Full Python final capture and exact PostgreSQL
-gate remain. Dedicated Routes setup approved/submitted, cloud completion unverified
+browser disabled state verified. Full Python492 passed with132 PG-dependent skips;
+exact PostgreSQL gate remains. Dedicated Routes setup approved/submitted; Ray
+reports ROUTES_SETUP_COMPLETE, but independent cloud completion is unverified
 after browser timeout. Reconcile metadata without revealing secrets, apply quota/
 billing controls, private-tag deployment, bounded live routes and Android acceptance.
 No production change, no live routing request; Twilio remains on hold.

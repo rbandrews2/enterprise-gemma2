@@ -3,13 +3,13 @@
 Read NAVIGATION_IMPLEMENTATION_20261011.md and NAVIGATION_STAGING_ACTIVATION.md.
 Local backend/UI/Atlas guidance implemented, role/tenant/frozen dispatch access
 preserved. Focused Python10 passed/six PG skips; full Node56 passed/no skips;
-desktop and phone-width disabled-state UI and local HTTP verified. Full Python
-regression still needs final result capture, then exact PostgreSQL candidate gate.
+desktop and phone-width disabled-state UI and local HTTP verified. Full Python492
+passed with132 PostgreSQL-dependent skips; exact PostgreSQL candidate gate remains.
 Ray approved dedicated Routes setup; Cloud Shell command submitted but browser
 timed out before completion verification. Ray reported ROUTES_SETUP_COMPLETE;
 independently inspect metadata before repeating any
 mutation. No routing deployment/live route calls/traffic/V1/DNS change. Twilio hold.
-Next capture tests, save candidate, run PG, reconcile cloud credential setup and
+Code candidate4f88979 pushed; evidence updates also saved. Next run PG, reconcile cloud credential setup and
 quota/billing, deploy private candidate, then capped provider/Android acceptance.
 
 ## Earlier checkpoint — Maps acceptance and Twilio hold, October 11, 2026

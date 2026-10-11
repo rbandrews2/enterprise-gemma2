@@ -39,9 +39,9 @@
   This is a responsive browser check, not Android device acceptance.
 - Screenshots in ignored `.local-data/navigation-route-desktop-20261011.png` and
   `navigation-route-mobile-20261011.png`. Local preview on127.0.0.1:8083.
-- Full Python regression was started, log `.local-data/navigation-python-gate.log`;
-  final result must be captured before release acceptance. It had reached the
-  messaging tests with no observed failure when Cloud Shell control stalled.
+- Full Python regression:492 tests, passed with132 PostgreSQL-dependent skips
+  (1128.559s during a slow local run). Process exited0. Log:
+  `.local-data/navigation-python-gate.log`. This does not close PostgreSQL acceptance.
 
 ## Cloud status and next checkpoint
 
@@ -58,8 +58,10 @@ version metadata and IAM binding without revealing the key value.
 No routing deployment, live Google route request, main traffic promotion, V1/DNS
 change or Twilio send occurred in this increment. Twilio remains on hold.
 
-Next: collect full local Python result; commit/push the candidate; run exact
-candidate disposable PostgreSQL gate and verify cleanup; reconcile cloud setup;
+Code saved/pushed as4f88979; subsequent evidence-only updates on the same candidate
+branch. Working tree checked clean after the earlier evidence push.
+
+Next: run exact candidate disposable PostgreSQL gate and verify cleanup; reconcile cloud setup;
 inspect/apply low aggregate quotas and current billing; build/private-tag candidate
 with pinned Routes secret; perform capped twenty-route/twenty-map synthetic
 provider checks and Android acceptance. Main accepted revision remains unchanged.
