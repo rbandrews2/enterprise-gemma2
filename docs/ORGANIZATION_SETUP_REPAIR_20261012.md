@@ -55,3 +55,11 @@ Clipboard may still contain activation because connection loss prevented clearin
 clear via browser clipboard API when reconnected, and clear editor selection.
 Latest client repair d44af92 remains local/Git only; private runtime00038 unchanged.
 No public routing, IAM, password, customer send or other-tenant change.
+
+## User-confirmed creation outcome
+
+After the interruption, Ray reports Molecular Project Development LLC appears for
+selection. Organization creation therefore succeeded from the user-visible list;
+prior UNKNOWN checkpoint is superseded by this observation. Ray instructed to
+select its admin/Enterprise entry. Workspace entry and independent live membership/
+audit readback remain open. Chrome is absent from connected browser inventory.

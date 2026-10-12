@@ -1,3 +1,10 @@
+## User-confirmed organization creation — October 12, 2026
+
+Ray reports Molecular Project Development LLC now appears for selection after the
+approved activation flow. Prior unknown creation outcome is superseded; no repeat
+activation or organization creation. Select its admin/Enterprise entry next.
+Workspace entry and independent role/audit readback remain open. Chrome currently
+absent from connected inventory; activation clipboard cleanup still required.
 ## Latest approved admin setup checkpoint — October 12, 2026
 
 Ray approved Enterprise organization/admin setup. Provider identity verified/active;
