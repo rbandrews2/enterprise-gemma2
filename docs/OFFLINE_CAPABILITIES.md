@@ -1,3 +1,22 @@
+# Integrated offline behavior — October 12, 2026
+
+Time Tracker regular controls can record device-estimate shift/task/break events
+when an already loaded, authenticated app loses connectivity. Cross-tab-safe drafts
+persist where browser storage and Web Locks work; otherwise they remain in the tab
+with warnings and download. Submit after reconnecting for admin review. Submission
+returns the timer to confirmed server state and does not apply attendance; pending
+review is separate. Scoped device evidence is hidden from other accounts.
+
+A full offline app launch is not supported: there is no cached authenticated shell.
+GPS fixes require permission and availability; missing fixes keep explicit reasons.
+Location uploads retry idempotently after reconnecting; closed/suspended browser
+tracking is not guaranteed. Navigation keeps permitted loaded destinations and
+explicitly downloaded address sheets; no offline Google map tiles, traffic or routes.
+Messaging, meetings, provider delivery and Atlas inference need connectivity.
+Read TIME_TRACKER_INTEGRATION_20261012.md; deployment/phone gates remain open.
+
+## Earlier standalone implementation evidence
+
 # Initial offline support
 
 ## October 11 Time Tracker increment (local candidate)

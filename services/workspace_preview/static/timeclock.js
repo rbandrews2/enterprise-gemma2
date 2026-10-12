@@ -47,7 +47,7 @@
  const local=value=>new Date(value).toLocaleString();
  const option=(value,label)=>{const o=text('option',label);o.value=value;return o;};
  const storageKey='wzos.time-tracker.v1:';
- let locations=[], locationBusy=false, flushing=false, snapshotAt=null, storageFailed=false;
+ let locations=[], locationBusy=false, flushing=false, snapshotAt=null, storageFailed=false, locationMemoryOnly=false;
  function persist(){
   if(!actorId)return false;
   try{window.localStorage.setItem(storageKey+actorId,JSON.stringify({owner:actorId,active,lastVerified,snapshotAt,baseSeconds,pending}));storageFailed=false;return true;}
@@ -86,9 +86,9 @@
     let saved=null;try{saved=JSON.parse(store.getItem(key)||'null');}catch{}
     const list=saved?.owner===owner&&Array.isArray(saved.items)?saved.items.filter(p=>p&&typeof p.request_id==='string'):locations;
     const next=change(list);if(next.length)store.setItem(key,JSON.stringify({owner,items:next}));else store.removeItem(key);
-    locations=next;
+    locations=next;locationMemoryOnly=false;
    });
-  }catch{if(owner===actorId){storageFailed=true;locations=change(locations);locationStatus.textContent='Location evidence stays in this tab: device storage or locking unavailable. Download it before closing.';}}
+  }catch{if(owner===actorId){locationMemoryOnly=true;locations=change(locations);locationStatus.textContent='Location evidence stays in this tab: device storage or locking unavailable. Download it before closing.';}}
  }
  async function flushLocations(){
   if(flushing||pending||!navigator.onLine||!locations.length)return;
@@ -114,6 +114,7 @@
   if(owner!==actorId)return;
   await mutateLocations(owner,list=>list.some(p=>p.request_id===item.request_id)?list:[...list,{...item,...position}]);if(owner!==actorId)return;persist();controls();
   locationStatus.textContent=position.unavailable?`Location ${position.unavailable.replaceAll('_',' ')} · time tracking continues.`:`Location captured at ${new Date(item.captured_at).toLocaleTimeString()} · accuracy ${Math.round(position.accuracy)} m.`;
+  if(locationMemoryOnly)locationStatus.textContent+=' Evidence stays in this tab; download before closing.';
   await flushLocations();
  }
  // Connection state is separate from the polite status message so it stays visible.
@@ -236,7 +237,7 @@
  node('clock-export').onclick=async()=>{const exportButton=node('clock-export');exportButton.disabled=true;try{const response=await fetch(`/api/time/export?detail=${exportDetail.value}${filters()}`,{headers:{'X-Preview-Actor':window.wzosClock.getSession().id,...await window.wzosAccount.headers()}});if(!response.ok){const error=await response.json();throw Error(typeof error.detail==='string'?error.detail:'Check export dates');}const name=(response.headers.get('content-disposition')||'').match(/filename="([^"]+)"/)?.[1]||'wzos-time.csv';const url=URL.createObjectURL(await response.blob());const a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}catch(error){message(error.message);}finally{exportButton.disabled=false;}};
  document.addEventListener('wzos:clock-open',refresh);
  document.addEventListener('wzos:session',()=>{const id=scope(window.wzosClock.getSession());if(id!==actorId){actorId=id;pending=null;active=null;lastVerified=null;drafts=loadDrafts(id);locations=[];snapshotAt=null;baseSeconds=0;restore(id);membersLoaded=null;employee.replaceChildren(option('','All team members'));submitted.replaceChildren();renderDrafts();offset=0;node('clock-note').value='';node('clock-team').checked=false;node('clock-history').replaceChildren();node('clock-state').textContent='Loading clock';setConnection('checking','Checking connection');tick();message('');}refresh();});
-  window.addEventListener('beforeunload',event=>{if(pending||submitting||draftWrites||(drafts.length&&persistence!=='device')||(storageFailed&&locations.length)){event.preventDefault();event.returnValue='';}});
+  window.addEventListener('beforeunload',event=>{if(pending||submitting||draftWrites||(drafts.length&&persistence!=='device')||((storageFailed||locationMemoryOnly)&&locations.length)){event.preventDefault();event.returnValue='';}});
  // Another open tab for the same account changed the saved drafts.
  window.addEventListener('storage',event=>{if(actorId&&event.key===STORE+actorId&&persistence==='device'){drafts=loadDrafts(actorId);renderDrafts();tick();}});
  // Offline attendance drafts: device-timestamped requests for admin review, never replayed as clock punches.
