@@ -102,6 +102,11 @@ body::before{content:"";position:fixed;inset:-4%;z-index:-2;pointer-events:none;
 @media(max-width:360px){.metrics{grid-template-columns:1fr}.sidebar nav{gap:6px}.sidebar .nav-item{padding:10px;font-size:12px}}
 
 .account-dialog .remember-choice{display:flex;align-items:center;gap:12px}.account-dialog .remember-choice[hidden]{display:none}.account-dialog .remember-choice input{width:22px;min-height:22px;flex:0 0 22px}
+.account-dialog .password-field{position:relative;display:block;margin:12px 0}
+.account-dialog .password-field input{margin:0;padding-right:58px;min-height:48px}
+.account-dialog .password-visibility-button{position:absolute;right:3px;top:50%;transform:translateY(-50%);display:grid;place-items:center;width:44px;min-height:44px;margin:0;padding:10px;background:transparent;color:#efcc82;border:0;border-radius:5px;cursor:pointer}
+.account-dialog .password-visibility-button svg{display:block;width:22px;height:22px}
+.account-dialog .password-visibility-button:focus-visible{outline:2px solid #efcc82;outline-offset:-2px}
 /* Assignment details are readable phone-first, with the established glass surface. */
 .assignment-card{margin:1rem 0;border:1px solid rgba(231,192,88,.24);border-radius:18px;background:linear-gradient(135deg,rgba(12,12,14,.85),rgba(30,28,22,.56));backdrop-filter:blur(14px);overflow:hidden}
 .assignment-card summary{padding:1.2rem;cursor:pointer;min-height:48px}

@@ -70,8 +70,19 @@ window.wzosAccount = (() => {
   const panel=element('dialog');panel.className='account-dialog';
   const title=element('h2','Welcome to WZOS');const note=element('p',key?'Sign in to your organization.':'Account sign-in is awaiting Google authentication configuration.');
   const email=element('input');email.type='email';email.autocomplete='username';email.required=true;
-  const password=element('input');password.type='password';password.autocomplete='current-password';password.required=true;
-  const form=element('form');const emailLabel=element('label','Email');emailLabel.append(email);const passwordLabel=element('label','Password');passwordLabel.append(password);
+  const password=element('input');password.type='password';password.autocomplete='current-password';password.required=true;password.setAttribute('aria-label','Password');
+  const form=element('form');const emailLabel=element('label','Email');emailLabel.append(email);const passwordLabel=element('label','Password');
+  const passwordField=element('span');passwordField.className='password-field';
+  const passwordVisibility=element('button');passwordVisibility.type='button';passwordVisibility.className='password-visibility-button';
+  function passwordVisible(visible){
+   password.type=visible?'text':'password';
+   passwordVisibility.setAttribute('aria-label',visible?'Hide password':'Show password');
+   passwordVisibility.setAttribute('aria-pressed',String(visible));
+   passwordVisibility.title=visible?'Hide password':'Show password';
+   passwordVisibility.innerHTML='<svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/>'+(visible?'':'<path d="m3 3 18 18"/>')+'</svg>';
+  }
+  passwordVisible(false);passwordVisibility.onclick=()=>passwordVisible(password.type==='password');
+  passwordField.append(password,passwordVisibility);passwordLabel.append(passwordField);
   const remember=element('input');remember.type='checkbox';remember.checked=false;
   const rememberLabel=element('label','Stay signed in on this device for up to 14 days');rememberLabel.className='remember-choice';rememberLabel.append(remember);rememberLabel.hidden=!config.persistent_sessions;
   const privacy=element('p','Leave unchecked to sign in each time you reload or reopen WZOS. Use this on shared devices.');privacy.hidden=!config.persistent_sessions;
@@ -98,6 +109,7 @@ window.wzosAccount = (() => {
    }
    async function login(create){
     if(!email.reportValidity()||!password.reportValidity())return;
+    passwordVisible(false);
     if(config.persistent_sessions)await api('/api/account/logout',{});
     const data=await provider(create?'signUp':'signInWithPassword',{email:email.value.trim(),password:password.value,returnSecureToken:true});
     token=data.idToken;refresh=data.refreshToken;expires=Date.now()+Number(data.expiresIn)*1000;

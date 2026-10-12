@@ -85,3 +85,9 @@ clear tokens/password either way and retain the verified-email access requiremen
 Full Node74passed/zero failures/skips, including10new provider-error/token-clear tests.
 Next exact candidate PostgreSQL/build/deploy and user-operated retry; real failure
 cause and real admin setup remain open until observed.
+
+Password visibility control requested by Ray: eye button inside the input,
+44px touch target, open/closed SVG states, accessible Show/Hide labels and pressed
+state; password remains unchanged, defaults masked and remasks on submission.
+Full Node75 passed/no skips; synthetic browser eye toggle rendered correctly.
+No real password entered/created by the agent. No schema/backend changes.

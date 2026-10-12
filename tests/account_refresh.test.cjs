@@ -7,7 +7,7 @@ const fs=require('node:fs');
 class Element {
  constructor(tag,text=''){this.tag=tag;this.textContent=text;this.children=[];this.value='';}
  append(...nodes){this.children.push(...nodes);}
- setAttribute(){} addEventListener(){} showModal(){} close(){} remove(){}
+ setAttribute(name,value){this.attributes??={};this.attributes[name]=value;} addEventListener(){} showModal(){} close(){} remove(){}
  reportValidity(){return true;}
  insertBefore(node){this.append(node);}
  querySelectorAll(tag){return this.children.flatMap(c=>[...(c.tag===tag?[c]:[]),...c.querySelectorAll(tag)]);}
@@ -24,6 +24,17 @@ function accountFailureFixture(fetch){
  const inputs=form.querySelectorAll('input');inputs[0].value='synthetic@example.test';inputs[1].value='synthetic-only';
  return {account,panel,form,inputs,message:panel.children[panel.children.length-1],signup:form.querySelectorAll('button').find(b=>b.textContent==='Create account')};
 }
+test('password eye shows and hides the same value and remasks before a request',async()=>{
+ let requests=0;const ui=accountFailureFixture(async()=>{requests++;return {ok:false,json:async()=>({error:{message:'EMAIL_EXISTS'}})};});
+ const eye=ui.form.querySelectorAll('button').find(b=>b.className==='password-visibility-button');
+ assert.equal(ui.inputs[1].type,'password');assert.equal(eye.type,'button');
+ assert.equal(eye.attributes['aria-label'],'Show password');assert.match(eye.innerHTML,/m3 3 18 18/);
+ eye.onclick();assert.equal(ui.inputs[1].type,'text');assert.equal(eye.attributes['aria-label'],'Hide password');
+ assert.equal(eye.attributes['aria-pressed'],'true');assert.doesNotMatch(eye.innerHTML,/m3 3 18 18/);
+ assert.equal(ui.inputs[1].value,'synthetic-only');assert.equal(requests,0);
+ eye.onclick();assert.equal(ui.inputs[1].type,'password');eye.onclick();
+ await ui.signup.onclick();assert.equal(ui.inputs[1].type,'password');assert.equal(requests,1);
+});
 for(const [code,expected] of [
  ['WEAK_PASSWORD : private provider detail','Choose a stronger password'],
  ['EMAIL_EXISTS','An account may already exist'],
