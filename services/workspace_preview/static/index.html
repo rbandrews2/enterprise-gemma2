@@ -14,7 +14,7 @@
   <button class="nav-item" id="report-nav">Work Zone Report</button>
   <button class="nav-item" id="atlas-nav"><span aria-hidden="true">✦</span> Atlas assistant</button>
   <button class="nav-item" id="forms-nav">Forms hub</button>
-  <button class="nav-item" id="clock-nav"><span aria-hidden="true">◷</span> Time clock</button>
+  <button class="nav-item" id="clock-nav"><span aria-hidden="true">⚡</span> Time Tracker</button>
   <button class="nav-item" id="schedule-nav">Schedule management</button>
   <button class="nav-item" id="navigation-nav">Navigation</button>
   <button class="nav-item" id="messages-nav">Messaging</button>
@@ -86,16 +86,16 @@
  </form><a id="module-meeting-join" hidden target="_blank" rel="noopener noreferrer">Join Google Meet</a><div id="module-history"></div></section></div>
 </section>
 <section id="meetings-view" hidden aria-labelledby="meetings-title"><div class="page-heading"><div><p class="eyebrow">CONNECTED CREW / GOOGLE MEET</p><h1 id="meetings-title">The meeting room</h1><p>Your team. One screen. Wherever the work takes you.</p></div><button id="meetings-manage" class="secondary" hidden>Manage meetings</button></div><div class="meeting-tv"><div class="meeting-screen"><div class="meeting-screen-top"><span>WZOS / TEAM CONNECTION</span><span id="meetings-state">STANDBY</span></div><div class="meeting-screen-content"><span class="meeting-emblem" aria-hidden="true">W</span><p class="eyebrow">VIDEO MEETINGS</p><h2 id="meeting-selected-title">A place to connect.</h2><p id="meeting-selected-detail">Select a scheduled meeting below.</p><a id="meeting-screen-join" class="primary" hidden target="_blank" rel="noopener noreferrer">Join on Google Meet &#8599;</a></div><div class="meeting-screen-bottom"><span>Google Meet opens in a separate tab.</span><span>WZOS powered by Atlas AI Assistant</span></div></div><div class="meeting-bezel"><span class="meeting-power"></span><span>W Z O S</span><span>TEAM / VIDEO</span></div></div><div class="meeting-list-heading"><h2>Your organization’s meetings</h2><button id="meetings-refresh" class="secondary">Refresh meetings</button></div><p id="meetings-notice" role="status" aria-live="polite"></p><div id="meetings-cards" class="meeting-cards"></div><div class="meeting-pagination"><button id="meetings-prev" class="secondary">Previous</button><span id="meetings-page"></span><button id="meetings-next" class="secondary">Next</button></div></section><section id="clock-view" hidden aria-labelledby="clock-title">
- <div class="page-heading"><div><p class="eyebrow">CREW OPERATIONS</p><h1 id="clock-title">Time clock</h1><p>Your shift, tasks and breaks in one place.</p></div><button id="clock-refresh" class="secondary">Refresh clock</button></div>
+ <div class="page-heading"><div><p class="eyebrow">CREW OPERATIONS</p><h1 id="clock-title"><span class="clock-brand" aria-hidden="true">⚡</span> Time Tracker</h1><p>Your shift, tasks and breaks in one place.</p></div><button id="clock-refresh" class="secondary">Refresh clock</button></div>
  <p id="clock-message" role="status" aria-live="polite"></p>
- <div class="workspace-grid"><section class="panel">
+ <div class="workspace-grid"><section class="panel clock-face">
  <p id="clock-state" class="eyebrow">Loading clock</p><strong id="clock-timer" class="clock-timer">00:00:00</strong><p class="fine">Recorded work time excludes tracked breaks. This is not a payroll calculation.</p>
  <p id="clock-active-job"></p>
  <label>Work order (optional)<select id="clock-order"><option value="">Unassigned</option></select></label>
  <label>Task / work area<select id="clock-task"><option value="job_site">Job Site</option><option value="setup">Setup</option><option value="teardown">Teardown</option><option value="travel">Travel Time</option><option value="other">Other</option></select></label>
  <label>Shift note<textarea id="clock-note" maxlength="1000" rows="2"></textarea></label>
  <div class="clock-actions"><button id="clock-in" class="primary">Clock in</button><button id="clock-switch" class="secondary">Switch task</button><button id="clock-break" class="secondary">Start break</button><button id="clock-out" class="secondary">Clock out</button><button id="clock-retry" class="secondary" hidden>Retry unconfirmed action</button></div>
- <p class="fine">GPS is not enabled. Confirmed clock actions need a connection. While offline, keep drafts below and submit them for admin review when you reconnect.</p>
+ <p class="fine">Location is requested at punches, task changes and every 5 minutes while clocked in. Allow location access on this device. Offline clock records stay on this device until submitted for admin review.</p>
  </section><section class="panel"><div class="panel-heading"><h2>Time history</h2><label id="clock-team-label" hidden><input id="clock-team" type="checkbox"> Team records</label></div><label>Shift start date from (UTC)<input type="date" id="clock-from"></label><label>Through (UTC)<input type="date" id="clock-to"></label><button type="button" class="secondary" id="clock-export">Export filtered shifts (CSV)</button><div id="clock-history"></div><div class="clock-actions"><button id="clock-prev" class="secondary">Previous</button><button id="clock-next" class="secondary">Next</button></div><p id="clock-page" class="fine"></p></section></div>
 </section>
 <section id="forms-view" hidden aria-labelledby="forms-title">

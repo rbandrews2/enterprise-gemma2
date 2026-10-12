@@ -1,5 +1,28 @@
 # Initial offline support
 
+## October 11 Time Tracker increment (local candidate)
+
+This supersedes the older Time Clock limitations below. Normal punches, breaks
+and task changes maintain a device-time timeline while disconnected after one
+verified load. Total work time excludes breaks; current-task duration updates.
+The scoped snapshot, pending command UUID, drafts and location outbox persist in
+localStorage. Reload recovers them once the authenticated app can load. Explicit
+sign-out or organization changes clear device records. Storage errors stay visible
+and enable download/unload protection. No private service-worker cache is added;
+starting/reloading the complete app without a network remains unsupported.
+
+Reconnection verifies server status without overwriting unresolved device records.
+Members submit attendance evidence for existing audited admin reconciliation;
+server attendance is never silently replayed at receipt time. Until reconciliation,
+the regular buttons continue recording device evidence. GPS resumes automatically
+on reconnect and is requested at punches/task changes and five-minute intervals
+while clocked in. Missing fixes retain explicit reasons rather than later coordinates.
+Location uploads use idempotent, authenticated, organization-scoped APIs. Closed or
+suspended browsers cannot guarantee background GPS. Real-phone and PostgreSQL
+acceptance remain open. See TIME_TRACKER_CONTRACT.md and TIME_TRACKER_COMPLETION.md.
+
+## Historical implementation
+
 Implemented locally September 29. Not cloud-deployed or full offline/PWA acceptance.
 
 - Navigation uses already-authorized loaded destinations during connection loss. A user can save an address-only destination sheet for later use. No map tiles, imagery, live traffic or turn-by-turn routes are cached.

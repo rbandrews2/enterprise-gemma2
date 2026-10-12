@@ -89,6 +89,25 @@ class OfflineBatch(BaseModel):
     drafts: list[OfflineDraft] = Field(min_length=1, max_length=50)
 
 
+class LocationEvent(BaseModel):
+    model_config = ConfigDict(extra="forbid", allow_inf_nan=False)
+    request_id: UUID
+    command_id: UUID | None = None
+    shift_id: str | None = Field(default=None, max_length=100)
+    event: Literal["clock_in", "clock_out", "switch_task", "break_start", "break_end", "interval", "reconnect"]
+    task: Task
+    captured_at: AwareDatetime
+    latitude: float | None = Field(default=None, ge=-90, le=90)
+    longitude: float | None = Field(default=None, ge=-180, le=180)
+    accuracy: float | None = Field(default=None, ge=0, le=100000)
+    unavailable: Literal["offline", "permission_denied", "timeout", "unavailable"] | None = None
+
+
+class LocationBatch(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    items: list[LocationEvent] = Field(min_length=1, max_length=50)
+
+
 class Resolution(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
     decision: Literal["rejected", "duplicate"]
@@ -158,6 +177,12 @@ def initialize(connect):
             resolved_by TEXT, resolved_at TEXT, resolution_reason TEXT, resolution_ref TEXT, resolved_shift_id TEXT,
             UNIQUE(organization_id,employee_id,request_id))""")
         conn.execute("CREATE INDEX IF NOT EXISTS time_offline_status ON time_offline_submissions(organization_id,status,estimated_at)")
+        conn.execute("""CREATE TABLE IF NOT EXISTS time_location_events (
+            organization_id TEXT NOT NULL, employee_id TEXT NOT NULL, request_id TEXT NOT NULL,
+            shift_id TEXT, captured_at TEXT NOT NULL, received_at TEXT NOT NULL,
+            request_hash TEXT NOT NULL, payload TEXT NOT NULL,
+            PRIMARY KEY(organization_id,employee_id,request_id))""")
+        conn.execute("CREATE INDEX IF NOT EXISTS time_location_shift ON time_location_events(organization_id,shift_id,captured_at)")
 
 
 def summary(connect, selected):
@@ -299,6 +324,55 @@ def register(app, connect, actor, permitted_order, roster=None, jobs=None):
             row = conn.execute("SELECT * FROM preview_shifts WHERE organization_id=? AND employee_id=? AND active=1",
                                (selected["organization_id"], selected["id"])).fetchone()
         return {"active": present(row, now) if row else None, "server_time": now, "tasks": TASKS}
+
+    @app.post("/api/time/locations")
+    def save_locations(body: LocationBatch, request: Request):
+        selected = actor(request)
+        org, employee = selected["organization_id"], selected["id"]
+        now, accepted = utc_now(), []
+        with connect() as conn:
+            conn.execute("BEGIN IMMEDIATE")
+            for item in body.items:
+                data = item.model_dump(mode="json")
+                request_hash = digest(data)
+                prior = conn.execute("SELECT request_hash FROM time_location_events WHERE organization_id=? AND employee_id=? AND request_id=?",
+                                     (org, employee, str(item.request_id))).fetchone()
+                if prior:
+                    if prior["request_hash"] != request_hash:
+                        raise HTTPException(409, "Location retry ID was used for different evidence")
+                    accepted.append(str(item.request_id))
+                    continue
+                has_fix = all(v is not None for v in (item.latitude, item.longitude, item.accuracy))
+                if (not has_fix and any(v is not None for v in (item.latitude, item.longitude, item.accuracy))) or has_fix == (item.unavailable is not None):
+                    raise HTTPException(422, "Provide a complete location fix or an unavailable reason")
+                if iso(item.captured_at) > iso(parse(now) + FUTURE_TOLERANCE) or item.captured_at < parse(now) - OFFLINE_WINDOW:
+                    raise HTTPException(422, "Location device time is outside the accepted window")
+                shift_id = item.shift_id
+                if shift_id and not conn.execute("SELECT id FROM preview_shifts WHERE id=? AND organization_id=? AND employee_id=?",
+                                                 (shift_id, org, employee)).fetchone():
+                    raise HTTPException(404, "Shift unavailable")
+                if item.command_id:
+                    linked = conn.execute("SELECT shift_id FROM preview_clock_events WHERE organization_id=? AND employee_id=? AND request_id=?",
+                                          (org, employee, str(item.command_id))).fetchone()
+                    if linked:
+                        shift_id = linked["shift_id"]
+                conn.execute("INSERT INTO time_location_events VALUES (?,?,?,?,?,?,?,?)",
+                             (org, employee, str(item.request_id), shift_id, iso(item.captured_at), now, request_hash, json.dumps(data)))
+                accepted.append(str(item.request_id))
+        return {"accepted": accepted, "received_at": now, "record_basis": "device_reported_unverified"}
+
+    @app.get("/api/time/locations")
+    def locations(request: Request, team: bool = False, employee_id: str | None = Query(None, max_length=200),
+                  shift_id: str | None = Query(None, max_length=100), limit: int = Query(100, ge=1, le=500)):
+        selected = actor(request)
+        where, values = scope(selected, team, employee_id, None, None)
+        if shift_id:
+            where += " AND shift_id=?"
+            values.append(shift_id)
+        with connect() as conn:
+            rows = conn.execute("SELECT * FROM time_location_events WHERE " + where + " ORDER BY captured_at DESC LIMIT ?", [*values, limit]).fetchall()
+        return {"items": [{**json.loads(row["payload"]), "shift_id": row["shift_id"], "employee_id": row["employee_id"],
+                           "received_at": row["received_at"], "record_basis": "device_reported_unverified"} for row in rows]}
 
     @app.get("/api/time/members")
     def time_members(request: Request):

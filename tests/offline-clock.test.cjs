@@ -11,39 +11,41 @@ function lockManager(storage){
  }
  return sharedLocks.get(storage);
 }
-function harness({fail=()=>false,gate=()=>null,storage,locks,confirm=()=>true,session:initial}={}){
+function harness({fail=()=>false,gate=()=>null,storage,locks,confirm=()=>true,session:initial,geo=false,denyGeo=false}={}){
  const nodes=new Map(),events={},windowEvents={},created=[];
  const element=tag=>{const e={tag,value:'',checked:false,disabled:false,hidden:false,textContent:'',dataset:{},children:[],handlers:{},options:[],
   append(...x){this.children.push(...x)},after(x){this.afterNode=x},before(x){this.beforeNode=x},replaceChildren(...x){this.children=x},
   setAttribute(){},addEventListener(k,v){this.handlers[k]=v},click(){this.onclick?.()},focus(){},remove(){}};created.push(e);return e;};
  const get=id=>{if(!nodes.has(id))nodes.set(id,element());return nodes.get(id)};
+ const intervals=[];let now=Date.now();class DeviceDate extends Date{constructor(...args){super(...(args.length?args:[now]))}static now(){return now}};
  let session=initial||{id:'member',organization_id:'org-a',role:'member'},calls=[];
- const navigator={onLine:true,locks:locks===false?undefined:locks||(storage?lockManager(storage):undefined)};
+ const navigator={onLine:true,...(geo?{geolocation:{getCurrentPosition(ok,fail){if(denyGeo)fail({code:1});else ok({coords:{latitude:37,longitude:-79,accuracy:12}})}}}:{}),locks:locks===false?undefined:locks||(storage?lockManager(storage):undefined)};
  const document={getElementById:get,createElement:element,addEventListener(k,v){events[k]=v},dispatchEvent(){}};
  const responses=(path,options)=>{
-  if(path.includes('/status'))return {active:{id:'shift',version:1,work_seconds:100,status:'working',task:'job_site'},tasks:{job_site:'Job Site'}};
+  if(path.includes('/status'))return {active:{id:'shift',version:1,work_seconds:100,status:'working',task:'job_site',note:''},tasks:{job_site:'Job Site'}};
   if(path.startsWith('/api/time/offline-submissions')&&options?.method==='POST')return {items:JSON.parse(options.body).drafts.map(d=>({...d,status:'pending'}))};
+  if(path.startsWith('/api/time/locations'))return {accepted:JSON.parse(options.body).items.map(i=>i.request_id)};
   if(path.startsWith('/api/time/entries'))return {items:[],limit:20,total:0};
   return {items:[]};
  };
  const window={localStorage:storage,confirm,addEventListener(k,v){windowEvents[k]=v},wzosClock:{getSession:()=>session,getOrders:()=>[],async api(path,options){calls.push([path,options]);const wait=gate(path,options);if(wait)await wait;if(fail(path,options))throw new Error('network');return responses(path,options);}}};
- vm.runInNewContext(fs.readFileSync('services/workspace_preview/static/timeclock.js','utf8'),{window,document,navigator,performance,Date,crypto:require('node:crypto').webcrypto,setInterval(){},setTimeout(){},URL,Blob,CustomEvent:class {}});
+ vm.runInNewContext(fs.readFileSync('services/workspace_preview/static/timeclock.js','utf8'),{window,document,navigator,performance,Date:DeviceDate,crypto:require('node:crypto').webcrypto,setInterval(fn,ms){intervals.push([fn,ms])},setTimeout(){},URL,Blob,CustomEvent:class {}});
  const byId=id=>created.find(e=>e.id===id);
  const posts=prefix=>calls.filter(c=>c[1]?.method==='POST'&&c[0].startsWith(prefix));
- return {get,byId,navigator,events,windowEvents,calls,posts,setSession(s){session=s}};
+ return {get,byId,navigator,events,windowEvents,calls,posts,storage,intervals,advance(seconds){now+=seconds*1000;intervals.find(i=>i[1]===1000)[0]()},setSession(s){session=s}};
 }
 const settle=()=>new Promise(resolve=>setImmediate(resolve));
 async function offlineAfterLoad(options){const h=harness(options);h.events['wzos:session']();await settle();h.navigator.onLine=false;h.windowEvents.offline();return h;}
 async function draft(h,action,note=''){h.byId('clock-draft-action').value=action;h.byId('clock-draft-note').value=note;await h.byId('clock-draft-keep').onclick();}
 
-test('offline preserves last-known shift, shows connection state and cannot issue clock commands',async()=>{
+test('normal punches keep the offline timeline and never issue server clock commands',async()=>{
  const h=harness();h.events['wzos:session']();await settle();assert.equal(h.get('clock-state').textContent,'CLOCKED IN');
  assert.equal(h.byId('clock-connection').dataset.state,'online');assert.equal(h.byId('clock-draft-keep').disabled,true);
- h.navigator.onLine=false;h.windowEvents.offline();assert.match(h.get('clock-state').textContent,/LAST KNOWN/);assert.equal(h.get('clock-out').disabled,true);
+ h.navigator.onLine=false;h.windowEvents.offline();assert.match(h.get('clock-state').textContent,/LAST KNOWN/);assert.equal(h.get('clock-out').disabled,false);
  assert.equal(h.byId('clock-connection').dataset.state,'offline');assert.match(h.byId('clock-connection').textContent,/estimate/);
- await h.get('clock-out').handlers.click();assert.equal(h.posts('/api/time/commands').length,0);
+ await h.get('clock-out').handlers.click();assert.equal(h.posts('/api/time/commands').length,0);assert.match(h.get('clock-state').textContent,/CLOCKED OUT/);
  h.navigator.onLine=true;h.windowEvents.online();assert.equal(h.byId('clock-connection').dataset.state,'reconnecting');
- await settle();assert.equal(h.get('clock-state').textContent,'CLOCKED IN');assert.equal(h.byId('clock-connection').dataset.state,'online');
+ await settle();assert.match(h.get('clock-state').textContent,/CLOCKED OUT/);assert.equal(h.byId('clock-connection').dataset.state,'online');
 });
 
 test('offline drafts follow the known shift and refuse duplicate or impossible actions',async()=>{
@@ -62,7 +64,7 @@ test('reconnect submits drafts for review once, keeps device times and never pos
  const [[,request]]=h.posts('/api/time/offline-submissions');const body=JSON.parse(request.body);
  assert.equal(body.drafts.length,1);assert.equal(body.drafts[0].action,'clock_out');assert.equal(body.drafts[0].known_shift_id,'shift');assert.equal(body.drafts[0].known_version,1);
  assert.ok(body.drafts[0].captured_at&&body.device_submitted_at&&body.drafts[0].request_id);
- assert.equal(h.byId('clock-draft-list').children.length,0);assert.match(h.get('clock-message').textContent,/has not changed/);
+ assert.equal(h.byId('clock-draft-list').children.length,0);assert.equal(h.byId('clock-draft-submit').disabled,true);assert.match(h.get('clock-message').textContent,/has not changed/);
  assert.equal(h.posts('/api/time/commands').length,0);
 });
 
@@ -72,7 +74,7 @@ test('unconfirmed submission keeps drafts and retries with the same request ids'
  await h.byId('clock-draft-submit').onclick();assert.equal(h.byId('clock-draft-list').children.length,1);assert.match(h.get('clock-message').textContent,/will not create duplicates/);
  failing=false;await h.byId('clock-draft-submit').onclick();
  const [first,second]=h.posts('/api/time/offline-submissions').map(c=>JSON.parse(c[1].body).drafts[0].request_id);assert.equal(first,second);
- assert.equal(h.byId('clock-draft-list').children.length,0);
+ assert.equal(h.byId('clock-draft-list').children.length,0);assert.equal(h.byId('clock-draft-submit').disabled,true);
 });
 
 test('drafts clear on organization change and never show another scope',async()=>{
@@ -272,4 +274,27 @@ test('a refused cross-tab lock falls back safely without deleting saved device d
  await draft(h,'clock_out','Fallback');
  assert.equal(storage.data.has(KEY),false);assert.equal(h.byId('clock-draft-list').children.length,1);
  assert.equal(h.byId('clock-draft-storage').dataset.persistence,'tab');
+});
+
+test('device timer excludes offline breaks and resumes the selected task',async()=>{
+ const storage=deviceStorage(),h=await offlineAfterLoad({storage});h.advance(60);assert.equal(h.get('clock-timer').textContent,'00:02:40');
+ await h.get('clock-break').handlers.click();h.advance(120);assert.equal(h.get('clock-timer').textContent,'00:02:40');
+ await h.get('clock-break').handlers.click();h.advance(30);assert.equal(h.get('clock-timer').textContent,'00:03:10');
+ h.get('clock-task').value='travel';await h.get('clock-switch').handlers.click();h.advance(20);assert.match(h.get('clock-active-job').textContent,/Travel Time/);assert.equal(h.posts('/api/time/commands').length,0);
+ const resumed=await reopen(storage);assert.equal(resumed.get('clock-task').value,'travel');assert.match(resumed.get('clock-active-job').textContent,/pending admin review/);
+});
+test('offline missing GPS evidence stays missing; reconnect captures a separate fresh fix',async()=>{
+ const storage=deviceStorage(),h=await offlineAfterLoad({storage,geo:true});h.get('clock-task').value='setup';await h.get('clock-switch').handlers.click();await settle();
+ const key='wzos.time-tracker.v1:org-a:member:locations',saved=JSON.parse(storage.data.get(key));assert.equal(saved.items[0].unavailable,'offline');assert.equal(saved.items[0].latitude,undefined);
+ h.navigator.onLine=true;h.windowEvents.online();await settle();await settle();const items=h.posts('/api/time/locations').flatMap(c=>JSON.parse(c[1].body).items);
+ assert.ok(items.some(p=>p.event==='switch_task'&&p.unavailable==='offline'&&p.latitude===undefined));assert.ok(items.some(p=>p.event==='reconnect'&&p.latitude===37));
+});
+test('location permission denial preserves clock actions and uploads the reason',async()=>{
+ const h=harness({storage:deviceStorage(),geo:true,denyGeo:true});h.events['wzos:session']();await settle();await h.get('clock-out').handlers.click();await settle();
+ assert.equal(h.posts('/api/time/commands').length,1);assert.ok(h.posts('/api/time/locations').some(c=>JSON.parse(c[1].body).items.some(p=>p.unavailable==='permission_denied')));
+});
+test('uncertain clock command retains its original retry ID after reopening',async()=>{
+ const storage=deviceStorage(),first=await reopen(storage,{fail:p=>p==='/api/time/commands'});await first.get('clock-out').handlers.click();
+ const original=JSON.parse(first.posts('/api/time/commands')[0][1].body).request_id,second=await reopen(storage);await second.get('clock-retry').handlers.click();
+ assert.equal(JSON.parse(second.posts('/api/time/commands')[0][1].body).request_id,original);
 });

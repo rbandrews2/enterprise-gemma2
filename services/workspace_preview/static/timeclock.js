@@ -46,6 +46,76 @@
  const message=value=>{node('clock-message').textContent=value;};
  const local=value=>new Date(value).toLocaleString();
  const option=(value,label)=>{const o=text('option',label);o.value=value;return o;};
+ const storageKey='wzos.time-tracker.v1:';
+ let locations=[], locationBusy=false, flushing=false, snapshotAt=null, storageFailed=false;
+ function persist(){
+  if(!actorId)return false;
+  try{window.localStorage.setItem(storageKey+actorId,JSON.stringify({owner:actorId,active,lastVerified,snapshotAt,baseSeconds,pending}));storageFailed=false;return true;}
+  catch{storageFailed=true;locationStatus.textContent='Device tracker storage unavailable. Keep this tab open and download device records before closing.';return false;}
+ }
+ function restore(owner){
+  if(!owner)return;
+  try{const saved=JSON.parse(window.localStorage.getItem(storageKey+owner)||'null');
+   if(saved?.owner===owner){active=saved.active;lastVerified=saved.lastVerified;snapshotAt=saved.snapshotAt;baseSeconds=saved.baseSeconds||0;pending=saved.pending;const evidence=JSON.parse(window.localStorage.getItem(storageKey+owner+':locations')||'null');locations=evidence?.owner===owner&&Array.isArray(evidence.items)?evidence.items.filter(p=>p&&typeof p.request_id==='string').slice(0,2000):[];observed=performance.now();node('clock-task').value=timeline().task;}
+   else window.localStorage.removeItem(storageKey+owner);
+  }catch{message('The saved clock could not be restored. Connect to verify your shift.');}
+ }
+ function timeline(){
+  let state=lastVerified?(active?.status||'off_clock'):'unknown',task=active?.task||node('clock-task').value;
+  let seconds=baseSeconds,cursor=Date.parse(snapshotAt||lastVerified)||Date.now(),taskStart=Date.parse(active?.segments?.at(-1)?.start)||cursor;
+  for(const d of drafts){
+   const when=Date.parse(effective(d));
+   if(state==='working')seconds+=Math.max(0,(when-cursor)/1000);
+   cursor=when;
+   if(d.action==='clock_in'){seconds=0;taskStart=when;}
+   if(d.action==='switch_task'||d.action==='break_end')taskStart=when;
+   state=d.action==='break_start'?'on_break':d.action==='clock_out'?'off_clock':'working';
+   if(d.task)task=d.task;
+  }
+  if(state==='working')seconds+=Math.max(0,(Date.now()-cursor)/1000);
+  return {state,task,seconds:Math.floor(seconds),taskSeconds:state==='working'?Math.max(0,Math.floor((Date.now()-taskStart)/1000)):0};
+ }
+ const locationStatus=text('p','Location will be requested when you punch in.');locationStatus.id='clock-location';locationStatus.className='fine';locationStatus.setAttribute('role','status');node('clock-message').after(locationStatus);
+ async function mutateLocations(owner,change){
+  if(owner!==actorId)return;
+  const store=storage(),key=storageKey+owner+':locations';
+  try{
+   if(!store||!navigator.locks?.request)throw Error('Device locking unavailable');
+   await navigator.locks.request(key,()=>{
+    if(owner!==actorId)return;
+    let saved=null;try{saved=JSON.parse(store.getItem(key)||'null');}catch{}
+    const list=saved?.owner===owner&&Array.isArray(saved.items)?saved.items.filter(p=>p&&typeof p.request_id==='string'):locations;
+    const next=change(list);if(next.length)store.setItem(key,JSON.stringify({owner,items:next}));else store.removeItem(key);
+    locations=next;
+   });
+  }catch{if(owner===actorId){storageFailed=true;locations=change(locations);locationStatus.textContent='Location evidence stays in this tab: device storage or locking unavailable. Download it before closing.';}}
+ }
+ async function flushLocations(){
+  if(flushing||pending||!navigator.onLine||!locations.length)return;
+  const owner=actorId;flushing=true;
+  try{while(locations.length&&owner===actorId&&navigator.onLine){
+   const batch=locations.slice(0,50),result=await window.wzosClock.api('/api/time/locations',{method:'POST',body:JSON.stringify({items:batch})});
+   if(owner!==actorId)return;
+   const sent=new Set(result.accepted);await mutateLocations(owner,list=>list.filter(p=>!sent.has(p.request_id)));persist();
+   if(!batch.some(p=>sent.has(p.request_id)))break;
+  }}catch(error){if(owner===actorId)locationStatus.textContent=error.status&&error.status<500?`Location upload needs review: ${error.message}. Download device records to preserve evidence.`:'Location upload pending. Saved evidence will retry when connected.';}
+  finally{flushing=false;controls();}
+ }
+ async function captureLocation(event,commandId=null,task=timeline().task,shiftId=active?.id||null){
+  const owner=actorId;if(!owner)return;
+  if(locations.length>=2000){locationStatus.textContent='Location storage full. Connect to upload saved evidence.';return;}
+  const item={request_id:crypto.randomUUID(),command_id:commandId,shift_id:shiftId,event,task,captured_at:new Date().toISOString()};
+  const position=await new Promise(resolve=>{
+   if(!navigator.onLine){resolve({unavailable:'offline'});return;}
+   if(!navigator.geolocation){resolve({unavailable:'unavailable'});return;}
+   navigator.geolocation.getCurrentPosition(p=>resolve({latitude:p.coords.latitude,longitude:p.coords.longitude,accuracy:p.coords.accuracy}),
+    e=>resolve({unavailable:e.code===1?'permission_denied':e.code===3?'timeout':'unavailable'}),{enableHighAccuracy:true,maximumAge:0,timeout:10000});
+  });
+  if(owner!==actorId)return;
+  await mutateLocations(owner,list=>list.some(p=>p.request_id===item.request_id)?list:[...list,{...item,...position}]);if(owner!==actorId)return;persist();controls();
+  locationStatus.textContent=position.unavailable?`Location ${position.unavailable.replaceAll('_',' ')} · time tracking continues.`:`Location captured at ${new Date(item.captured_at).toLocaleTimeString()} · accuracy ${Math.round(position.accuracy)} m.`;
+  await flushLocations();
+ }
  // Connection state is separate from the polite status message so it stays visible.
  const connection=text('p','Checking connection');connection.id='clock-connection';connection.className='clock-connection';connection.setAttribute('role','status');
  node('clock-message').before(connection);
@@ -55,31 +125,52 @@
  const employeeLabel=labelled('Employee',employee);employeeLabel.id='clock-employee-label';employeeLabel.hidden=true;
  const exportDetail=document.createElement('select');exportDetail.id='clock-export-detail';exportDetail.append(option('shifts','One row per shift'),option('intervals','Task and break intervals'));
  node('clock-to').parentNode?.after(employeeLabel);node('clock-export').before(labelled('Export detail',exportDetail));
+ const locationHistory=document.createElement('details');locationHistory.className='clock-audit';
+ const locationList=document.createElement('ul'),locationLoad=button('Load location history');
+ locationHistory.append(text('summary','Location history'),text('p','Device-reported GPS evidence, including missing fixes. Team and employee filters also apply here.'),locationLoad,locationList);
+ node('clock-page').after(locationHistory);
+ locationLoad.onclick=async()=>{
+  const owner=actorId;locationLoad.disabled=true;locationList.replaceChildren(text('li','Loading location evidence…'));
+  try{const data=await window.wzosClock.api(`/api/time/locations?team=${node('clock-team').checked}${employee.value?'&employee_id='+encodeURIComponent(employee.value):''}`);
+   if(owner!==actorId)return;
+   locationList.replaceChildren(...data.items.map(p=>text('li',`${p.employee_id} · ${ACTIONS[p.event]||p.event} · ${TASKS[p.task]} · ${local(p.captured_at)} · ${p.unavailable?'Location '+p.unavailable.replaceAll('_',' '):`${p.latitude.toFixed(5)}, ${p.longitude.toFixed(5)} (±${Math.round(p.accuracy)} m)`} · device reported`)));
+   if(!data.items.length)locationList.append(text('li','No location evidence recorded yet.'));
+  }catch(error){if(owner===actorId)locationList.replaceChildren(text('li',error.message||'Location history unavailable.'));}
+  finally{locationLoad.disabled=false;}
+ };
  const filters=()=>`&team=${node('clock-team').checked}${employee.value?'&employee_id='+encodeURIComponent(employee.value):''}${node('clock-from').value?'&start_date='+node('clock-from').value:''}${node('clock-to').value?'&end_date='+node('clock-to').value:''}`;
  function controls(){
-  const blocked=busy||!loaded||!!pending||!navigator.onLine, onBreak=active?.status==='on_break';
-  node('clock-in').hidden=!!active;node('clock-out').hidden=!active;node('clock-break').hidden=!active;node('clock-switch').hidden=!active;
+  const current=timeline(),hasShift=['working','on_break'].includes(current.state);
+  const blocked=busy||(!loaded&&!lastVerified)||!!pending||drafts.length>=50, onBreak=current.state==='on_break';
+  node('clock-in').hidden=hasShift;node('clock-out').hidden=!hasShift;node('clock-break').hidden=!hasShift;node('clock-switch').hidden=!hasShift;
   for(const id of ['clock-in','clock-out','clock-break'])node(id).disabled=blocked;
-  node('clock-switch').disabled=blocked||onBreak||node('clock-task').value===active?.task;
+  node('clock-switch').disabled=blocked||onBreak||node('clock-task').value===current.task;
   node('clock-break').textContent=onBreak?'End break':'Start break';
-  node('clock-order').disabled=blocked||!!active;node('clock-note').disabled=blocked||!!active;node('clock-task').disabled=blocked||onBreak;
+  node('clock-order').disabled=blocked||hasShift;node('clock-note').disabled=blocked||hasShift;node('clock-task').disabled=blocked||onBreak;
+  if(node('clock-order').parentNode)node('clock-order').parentNode.hidden=hasShift;
+  if(node('clock-note').parentNode)node('clock-note').parentNode.hidden=hasShift;
   node('clock-retry').hidden=!pending;node('clock-retry').disabled=busy||!navigator.onLine;
   node('clock-refresh').disabled=busy;node('clock-team').disabled=busy;
   // Drafts are only for when confirmed clock actions are unavailable, which avoids duplicating live punches.
   const session=window.wzosClock.getSession();
   keep.disabled=!session||submitting||(loaded&&navigator.onLine)||drafts.length>=50;
   submit.disabled=!drafts.some(d=>!tooOld(d))||submitting||!loaded||!navigator.onLine;
-  download.disabled=!drafts.length;removeLast.disabled=!drafts.length||submitting;discard.disabled=!drafts.length||submitting;
+  download.disabled=!drafts.length&&!locations.length;removeLast.disabled=!drafts.length||submitting;discard.disabled=!drafts.length||submitting;
  }
  function renderActive(data){
-  active=data.active;loaded=true;lastVerified=new Date().toISOString();observed=performance.now();baseSeconds=active?.work_seconds||0;
+  // Preserve the original device timeline until offline evidence has been reconciled.
+  if(!drafts.length){active=data.active;lastVerified=new Date().toISOString();snapshotAt=lastVerified;baseSeconds=active?.work_seconds||0;}
+  loaded=true;observed=performance.now();persist();
   node('clock-state').textContent=active?active.status==='on_break'?'ON BREAK':'CLOCKED IN':'OFF THE CLOCK';
   node('clock-active-job').textContent=active?`${active.order_title||'Unassigned work'} · ${data.tasks[active.task]} · revision ${active.version}`:'';
-  if(active){node('clock-task').value=active.task;node('clock-order').value=active.order_id||'';node('clock-note').value=active.note;}
-  setConnection('online','Online · shift verified with the server at '+new Date(lastVerified).toLocaleTimeString());
-  tick();controls();renderDrafts();
+  if(active){node('clock-task').value=timeline().task;node('clock-order').value=active.order_id||'';node('clock-note').value=active.note;}
+  setConnection('online',drafts.length?'Online · device timeline pending admin verification':'Online · shift verified with the server at '+new Date(lastVerified).toLocaleTimeString());
+  tick();controls();renderDrafts();flushLocations();
  }
- function tick(){node('clock-timer').textContent=format(baseSeconds+(active?.status==='working'?Math.max(0,Math.floor((performance.now()-observed)/1000)):0));}
+ function tick(){const current=timeline();node('clock-timer').textContent=format(current.seconds);
+  if(drafts.length){node('clock-state').textContent=current.state==='off_clock'?'CLOCKED OUT · DEVICE RECORD':current.state==='on_break'?'ON BREAK · DEVICE RECORD':'CLOCKED IN · DEVICE RECORD';node('clock-active-job').textContent=`${TASKS[current.task]} · ${format(current.taskSeconds)} on this task · pending admin review`;}
+  else if(active)node('clock-active-job').textContent=`${active.order_title||'Unassigned work'} · ${TASKS[current.task]}${current.state==='working'?' · '+format(current.taskSeconds)+' on this task':''} · revision ${active.version}`;
+ }
  async function loadMembers(session){
   if(session.role!=='admin'||membersLoaded===scope(session))return;
   const data=await window.wzosClock.api('/api/time/members');
@@ -119,28 +210,35 @@
   finally{if(epoch===generation)controls();}
  }
  async function send(action,retry=false){
+  if(!retry&&(!navigator.onLine||!loaded||drafts.length)){
+   if(busy||pending||!lastVerified||drafts.length>=50)return;
+   const current=timeline();if(!allowed[current.state]?.includes(action))return;
+   draftAction.value=action;draftTask.value=node('clock-task').value;draftNote.value=node('clock-note').value;draftWhen.value='';await keep.onclick();tick();controls();return;
+  }
   if(!navigator.onLine){showOffline();return;}
   if(busy||(!retry&&(!loaded||pending)))return;
   const session=window.wzosClock.getSession();if(!session)return;
   if(!retry)pending={actor:scope(session),body:{request_id:crypto.randomUUID(),action,shift_id:active?.id||null,expected_version:active?.version||0,task:node('clock-task').value,...(action==='clock_in'?{order_id:node('clock-order').value||null,note:node('clock-note').value}:{})}};
   if(pending.actor!==scope(session))return;
-  busy=true;node('identity').disabled=true;controls();message('Saving clock action…');
-  try{await window.wzosClock.api('/api/time/commands',{method:'POST',body:JSON.stringify(pending.body)});pending=null;message(session.restricted_staging?'Clock action saved in temporary cloud staging.':'Clock action saved locally.');document.dispatchEvent(new CustomEvent('wzos:time-context'));}
-  catch(error){if(error.status>=400&&error.status<500){pending=null;message(error.message);}else message('Save not confirmed. Reconnect and retry the same action; duplicate records will be prevented.');}
-  finally{busy=false;node('identity').disabled=false;await refresh();controls();}
+  if(!retry)captureLocation(action,pending.body.request_id,pending.body.task);
+  persist();busy=true;node('identity').disabled=true;controls();message('Saving clock action…');
+  const owner=scope(session);
+  try{await window.wzosClock.api('/api/time/commands',{method:'POST',body:JSON.stringify(pending.body)});if(owner!==actorId)return;pending=null;persist();message(session.restricted_staging?'Clock action saved in temporary cloud staging.':'Clock action saved locally.');document.dispatchEvent(new CustomEvent('wzos:time-context'));}
+  catch(error){if(owner===actorId){if(error.status>=400&&error.status<500){pending=null;persist();message(error.message);}else message('Save not confirmed. Reconnect and retry the same action; duplicate records will be prevented.');}}
+  finally{busy=false;node('identity').disabled=false;if(owner===actorId)await refresh();controls();}
  }
  node('clock-in').addEventListener('click',()=>send('clock_in'));node('clock-out').addEventListener('click',()=>send('clock_out'));
- node('clock-switch').addEventListener('click',()=>send('switch_task'));node('clock-break').addEventListener('click',()=>send(active?.status==='on_break'?'break_end':'break_start'));
+ node('clock-switch').addEventListener('click',()=>send('switch_task'));node('clock-break').addEventListener('click',()=>send(timeline().state==='on_break'?'break_end':'break_start'));
  node('clock-retry').addEventListener('click',()=>send(null,true));node('clock-refresh').addEventListener('click',refresh);node('clock-task').addEventListener('change',controls);
  node('clock-team').addEventListener('change',()=>{offset=0;if(!node('clock-team').checked)employee.value='';refresh();});node('clock-prev').addEventListener('click',()=>{offset=Math.max(0,offset-20);refresh();});node('clock-next').addEventListener('click',()=>{offset+=20;refresh();});
  employee.addEventListener('change',()=>{offset=0;if(employee.value)node('clock-team').checked=true;refresh();});
  for(const id of ['clock-from','clock-to'])node(id).onchange=()=>{offset=0;refresh();};
  node('clock-export').onclick=async()=>{const exportButton=node('clock-export');exportButton.disabled=true;try{const response=await fetch(`/api/time/export?detail=${exportDetail.value}${filters()}`,{headers:{'X-Preview-Actor':window.wzosClock.getSession().id,...await window.wzosAccount.headers()}});if(!response.ok){const error=await response.json();throw Error(typeof error.detail==='string'?error.detail:'Check export dates');}const name=(response.headers.get('content-disposition')||'').match(/filename="([^"]+)"/)?.[1]||'wzos-time.csv';const url=URL.createObjectURL(await response.blob());const a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}catch(error){message(error.message);}finally{exportButton.disabled=false;}};
  document.addEventListener('wzos:clock-open',refresh);
- document.addEventListener('wzos:session',()=>{const id=scope(window.wzosClock.getSession());if(id!==actorId){actorId=id;pending=null;active=null;lastVerified=null;drafts=loadDrafts(id);membersLoaded=null;employee.replaceChildren(option('','All team members'));submitted.replaceChildren();renderDrafts();baseSeconds=0;offset=0;node('clock-note').value='';node('clock-team').checked=false;node('clock-history').replaceChildren();node('clock-state').textContent='Loading clock';setConnection('checking','Checking connection');tick();message('');}refresh();});
-  window.addEventListener('beforeunload',event=>{if(pending||submitting||draftWrites||(drafts.length&&persistence!=='device')){event.preventDefault();event.returnValue='';}});
+ document.addEventListener('wzos:session',()=>{const id=scope(window.wzosClock.getSession());if(id!==actorId){actorId=id;pending=null;active=null;lastVerified=null;drafts=loadDrafts(id);locations=[];snapshotAt=null;baseSeconds=0;restore(id);membersLoaded=null;employee.replaceChildren(option('','All team members'));submitted.replaceChildren();renderDrafts();offset=0;node('clock-note').value='';node('clock-team').checked=false;node('clock-history').replaceChildren();node('clock-state').textContent='Loading clock';setConnection('checking','Checking connection');tick();message('');}refresh();});
+  window.addEventListener('beforeunload',event=>{if(pending||submitting||draftWrites||(drafts.length&&persistence!=='device')||(storageFailed&&locations.length)){event.preventDefault();event.returnValue='';}});
  // Another open tab for the same account changed the saved drafts.
- window.addEventListener('storage',event=>{if(actorId&&event.key===STORE+actorId&&persistence==='device'){drafts=loadDrafts(actorId);renderDrafts();}});
+ window.addEventListener('storage',event=>{if(actorId&&event.key===STORE+actorId&&persistence==='device'){drafts=loadDrafts(actorId);renderDrafts();tick();}});
  // Offline attendance drafts: device-timestamped requests for admin review, never replayed as clock punches.
  const draftPanel=document.createElement('section');draftPanel.className='panel clock-drafts';draftPanel.id='clock-drafts';
  const draftAction=document.createElement('select');draftAction.id='clock-draft-action';draftAction.append(...Object.entries(ACTIONS).map(([k,v])=>option(k,v)));
@@ -152,7 +250,7 @@
  const draftList=document.createElement('ol');draftList.id='clock-draft-list';draftList.className='clock-draft-list';
  const submitted=document.createElement('ul');submitted.id='clock-submitted';submitted.className='clock-draft-list';
  const draftActions=document.createElement('div');draftActions.className='clock-actions';draftActions.append(keep,removeLast,submit,download,discard);
- draftPanel.append(text('h2','Offline attendance drafts'),text('p','When the clock cannot reach the server, record what happened here. Each draft keeps your device time. When you reconnect, submit the drafts for admin review. Drafts never change your shift automatically and are not verified attendance or payroll records.'),storageNote,
+ draftPanel.append(text('h2','Device records & review'),text('p','Use the regular clock buttons offline after your shift loads. Device times and task changes are unverified estimates. Submit drafts after reconnecting for admin review; submission does not change attendance. Once submitted, the timer returns to the confirmed server shift; review status stays below.'),storageNote,
   labelled('What happened',draftAction),labelled('Task',draftTask),labelled('When, if earlier than now (device time, optional)',draftWhen),labelled('Note',draftNote),draftActions,draftList,text('h3','Submitted for review'),submitted);
  node('clock-view').append(draftPanel);
  const effective=d=>d.stated_at||d.captured_at;
@@ -182,7 +280,7 @@
   const session=window.wzosClock.getSession();if(!session)return;
   const owner=scope(session), now=new Date(), stated=draftWhen.value?new Date(draftWhen.value):null, action=draftAction.value;
   if(stated&&(isNaN(stated)||stated>now)){message('The earlier time must be a valid time that is not in the future.');return;}
-  const draft={request_id:crypto.randomUUID(),action,task:['clock_in','switch_task'].includes(action)?draftTask.value:null,note:draftNote.value.trim(),captured_at:now.toISOString(),...(stated?{stated_at:stated.toISOString()}:{}),known_shift_id:lastVerified?active?.id||null:null,known_version:lastVerified?active?.version??null:null};
+  const draft={request_id:crypto.randomUUID(),action,task:['clock_in','switch_task'].includes(action)?draftTask.value:null,note:draftNote.value.trim(),captured_at:now.toISOString(),...(stated?{stated_at:stated.toISOString()}:{}),order_id:action==='clock_in'?node('clock-order').value||null:null,known_shift_id:lastVerified?active?.id||null:null,known_version:lastVerified?active?.version??null:null};
   let added=false;
   await mutate(owner,list=>{
    if(owner!==actorId)return list;
@@ -193,9 +291,9 @@
    added=true;return [...list,draft];
   });
   if(owner!==actorId)return;
-  renderDrafts();if(added){draftNote.value='';draftWhen.value='';message(`Draft ${persistence==='device'?'saved on this device':'kept in this tab only'}. It has not changed your shift. Submit it for review when you reconnect.`);}
+  renderDrafts();tick();controls();if(added){persist();captureLocation(action,draft.request_id,draft.task||timeline().task);draftNote.value='';draftWhen.value='';message(`Draft ${persistence==='device'?'saved on this device':'kept in this tab only'}. It has not changed your shift. Submit it for review when you reconnect.`);}
  };
- removeLast.onclick=async()=>{const owner=actorId,last=drafts.at(-1);if(!last)return;await mutate(owner,list=>list.filter(d=>d.request_id!==last.request_id));if(owner!==actorId)return;renderDrafts();message('Removed the last draft.');};
+ removeLast.onclick=async()=>{const owner=actorId,last=drafts.at(-1);if(!last)return;await mutate(owner,list=>list.filter(d=>d.request_id!==last.request_id));if(owner!==actorId)return;renderDrafts();tick();controls();message('Removed the last draft.');};
  discard.onclick=async()=>{if(!drafts.length||submitting||!window.confirm?.('Discard all unsubmitted offline drafts on this device? This cannot be undone.'))return;const owner=actorId,shown=new Set(drafts.map(d=>d.request_id));await mutate(owner,list=>list.filter(d=>!shown.has(d.request_id)));if(owner!==actorId)return;renderDrafts();message('Offline drafts discarded. Nothing was sent to your admin.');};
  submit.onclick=async()=>{
   const session=window.wzosClock.getSession();if(!session||!drafts.length||!navigator.onLine||submitting)return;
@@ -217,7 +315,7 @@
   }
   finally{submitting=false;renderDrafts();}
  };
- download.onclick=()=>{const url=URL.createObjectURL(new Blob([JSON.stringify({type:'WZOS offline attendance drafts',automatic_sync:false,time_basis:'device_estimate_unverified',drafts:drafts.map(outgoing)},null,2)],{type:'application/json'}));const link=document.createElement('a');link.href=url;link.download='wzos-offline-drafts.json';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
+ download.onclick=()=>{const url=URL.createObjectURL(new Blob([JSON.stringify({type:'WZOS offline attendance drafts',automatic_sync:false,time_basis:'device_estimate_unverified',drafts:drafts.map(outgoing),location_evidence:locations},null,2)],{type:'application/json'}));const link=document.createElement('a');link.href=url;link.download='wzos-offline-drafts.json';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
  async function loadSubmissions(session){
   try{
    const data=await window.wzosClock.api('/api/time/offline-submissions?status=all');
@@ -226,9 +324,12 @@
    if(!data.items.length)submitted.append(text('li','Nothing submitted yet.'));
   }catch(error){/* Status list is informational; the clock remains usable. */}
  }
- function showOffline(){loaded=false;node('clock-state').textContent=lastVerified?'CONNECTION UNAVAILABLE — LAST KNOWN STATUS':'CONNECTION UNAVAILABLE — STATUS NOT LOADED';setConnection('offline',lastVerified?'Offline · showing the status confirmed at '+new Date(lastVerified).toLocaleTimeString()+'. The timer is an estimate.':'Offline · your shift status has not loaded yet.');message(lastVerified?'Confirmed clock actions need a connection. You can keep offline drafts for admin review.':'Connect once to load your shift. You can keep offline drafts for admin review.');controls();}
+ function showOffline(){loaded=false;node('clock-state').textContent=lastVerified?'OFFLINE · LAST KNOWN STATUS':'OFFLINE · STATUS NOT LOADED';setConnection('offline',lastVerified?'Offline · device time estimate · clock and task records stay on this device.':'Offline · connect once to load your shift.');message(lastVerified?'Keep using the clock. Device records need admin verification when connected.':'Connect once to load your shift.');tick();controls();}
  window.addEventListener('offline',()=>{generation++;showOffline();});
- window.addEventListener('online',()=>{setConnection('reconnecting','Reconnected · checking your current shift with the server');message(drafts.length?`Connection restored. You have ${drafts.length} offline draft${drafts.length===1?'':'s'}. Review and submit them for admin review; they do not change your shift.`:'Connection restored. Checking your current shift.');refresh();});
+ window.addEventListener('online',()=>{setConnection('reconnecting','Reconnected · checking your current shift with the server');message(drafts.length?`Connection restored. You have ${drafts.length} offline draft${drafts.length===1?'':'s'} pending verification. Submit them for admin review.`:'Connection restored. Checking your current shift.');
+  refresh().then(()=>{if(['working','on_break'].includes(timeline().state))captureLocation('reconnect');flushLocations();});});
+ document.addEventListener('visibilitychange',()=>{if(!document.hidden&&navigator.onLine&&['working','on_break'].includes(timeline().state))captureLocation('reconnect');});
+ setInterval(()=>{if(!locationBusy&&['working','on_break'].includes(timeline().state)){locationBusy=true;captureLocation('interval').finally(()=>{locationBusy=false;});}},5*60*1000);
  renderDrafts();
  setInterval(tick,1000);controls();
 })();

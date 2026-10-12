@@ -27,3 +27,31 @@
 .clock-interval-row:not(:has(select)){grid-template-columns:minmax(12rem,1fr) minmax(12rem,1fr) auto}
 @media(max-width:650px){.clock-interval-row,.clock-interval-row:not(:has(select)){grid-template-columns:1fr}.clock-basis{margin:.3rem 0 0;display:table}#clock-view .panel{padding:1rem}.clock-actions button{flex:1 1 100%}}
 @media(prefers-reduced-motion:reduce){.clock-connection::before{animation:none!important}}
+
+/* TIME_TRACKER reference: slate gradient, rounded surfaces, orange accents. */
+#clock-view{--muted:#a3b3ca;color:#f8fafc;background:linear-gradient(135deg,#0f172a,#1e293b 48%,#0f172a);padding:clamp(1rem,3vw,2rem);border-radius:28px;min-width:0}
+#clock-view .page-heading{align-items:center;margin-bottom:1.5rem}
+#clock-view h1{font-size:clamp(1.6rem,4vw,2.2rem);letter-spacing:-.03em}
+#clock-view .eyebrow,.clock-brand{color:#fb923c}
+#clock-view .panel{background:linear-gradient(145deg,#1e293bee,#172033ee);border:1px solid #334155;border-radius:24px;box-shadow:0 12px 32px #02061733}
+#clock-view .workspace-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:1.5rem}
+#clock-view .clock-face{max-width:560px;width:100%;justify-self:center;box-sizing:border-box}
+#clock-view .clock-timer{display:block;text-align:center;font-size:clamp(2.5rem,6vw,4.4rem);font-variant-numeric:tabular-nums;font-family:ui-monospace,monospace;font-weight:750;letter-spacing:.04em;color:#fff;margin:1.2rem 0}
+#clock-state,#clock-active-job{text-align:center}
+#clock-view label{color:#cbd5e1}
+#clock-view input:not([type=checkbox]),#clock-view select,#clock-view textarea{background:#0f172acc;border:1px solid #475569;color:#f8fafc;border-radius:14px;padding:.85rem;width:100%;box-sizing:border-box}
+#clock-view button{border-radius:14px;min-height:44px;background:#334155;color:#f8fafc;border:1px solid #475569}
+#clock-view button:focus-visible,#clock-view select:focus-visible{outline:3px solid #fb923c;outline-offset:3px}
+#clock-view .clock-face>.clock-actions{display:grid;grid-template-columns:1fr 1fr;justify-content:center;gap:.8rem;margin:1.5rem 0}
+#clock-view .clock-face #clock-in,#clock-view .clock-face #clock-out{grid-column:1/-1;justify-self:center;order:-1}
+#clock-in,#clock-out{width:164px;height:164px;flex:0 0 164px!important;border-radius:50%!important;font-size:1.05rem;font-weight:750;text-transform:uppercase;border:0!important;box-shadow:0 8px 32px #10b98144}
+#clock-view #clock-in{background:linear-gradient(135deg,#10b981,#059669)}
+#clock-view #clock-out{background:linear-gradient(135deg,#ef4444,#dc2626);box-shadow:0 8px 32px #ef444444}
+#clock-in::before{content:'▶';display:block;font-size:2.5rem;margin-bottom:.5rem}
+#clock-out::before{content:'■';display:block;font-size:2.5rem;margin-bottom:.5rem}
+#clock-view #clock-break{color:#fbbf24}
+#clock-view #clock-switch{color:#fb923c}
+#clock-view .clock-entry{background:#0f172a66;border:1px solid #334155;border-radius:18px;padding:1rem;margin:1rem 0}
+#clock-view .clock-connection{background:#0f172a;border-color:#475569}
+#clock-view .clock-drafts{background:#172033}
+@media(max-width:850px){#clock-view .workspace-grid{grid-template-columns:minmax(0,1fr)}#clock-view .page-heading{flex-wrap:wrap;gap:1rem}#clock-view{padding:1rem}#clock-view .clock-timer{font-size:clamp(2rem,9vw,3.6rem)}}
