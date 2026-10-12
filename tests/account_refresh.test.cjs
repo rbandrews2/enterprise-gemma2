@@ -147,3 +147,35 @@ for(const cancelled of [false,true]) test('passkey sign-in '+(cancelled?'cancell
  if(cancelled){assert.equal(verified,0);assert.equal(exchanged,0);assert.match(panel.children.at(-1).textContent,/cancelled or timed out/);assert.equal(form.children.find(c=>c.textContent==='Sign in').disabled,false);}
  else{const choices=panel.children.find(c=>c.className==='account-choices');await choices.children[0].onclick();await started;assert.equal(exchanged,1);assert.equal(verified,1);assert.equal((await sandbox.window.wzosAccount.headers())['X-WZOS-Organization'],'org-1');}
 });
+
+async function organizationFixture(failure){
+ const requests=[];
+ const ui=accountFailureFixture(async(url,options)=>{
+  requests.push({url,body:options.body});
+  if(url.includes('signInWithPassword'))return {ok:true,json:async()=>({idToken:'synthetic',refreshToken:'synthetic',expiresIn:3600})};
+  if(url==='/api/account')return {ok:true,json:async()=>({organizations:[]})};
+  return failure;
+ });
+ ui.form.onsubmit({preventDefault(){}});await settle();
+ return {...ui,requests,choices:ui.panel.children.find(c=>c.className==='account-choices')};
+}
+test('organization setup explains missing fields without submitting empty requests',async()=>{
+ const ui=await organizationFixture();
+ const inputs=ui.choices.querySelectorAll('input'),buttons=ui.choices.querySelectorAll('button');
+ await buttons.find(b=>b.textContent==='Create organization').onclick();
+ assert.match(ui.message.textContent,/organization name/);
+ inputs[0].value='Synthetic company';
+ await buttons.find(b=>b.textContent==='Create organization').onclick();
+ assert.match(ui.message.textContent,/activation code is required/);
+ await buttons.find(b=>b.textContent==='Join organization').onclick();
+ assert.match(ui.message.textContent,/invitation token is required/);
+ assert.equal(ui.requests.filter(r=>r.url==='/api/account/organizations'||r.url==='/api/account/join').length,0);
+});
+for(const field of ['activation_code','token'])test('organization validation safely explains '+field,async()=>{
+ const ui=await organizationFixture({ok:false,status:422,json:async()=>({detail:[{loc:['body',field],input:'PRIVATE_VALUE',msg:'PRIVATE_ERROR'}]})});
+ const inputs=ui.choices.querySelectorAll('input'),buttons=ui.choices.querySelectorAll('button');
+ inputs[0].value=' Synthetic company ';inputs[1].value='x'.repeat(32);inputs[2].value='x'.repeat(32);
+ await buttons.find(b=>b.textContent===(field==='token'?'Join organization':'Create organization')).onclick();
+ assert.match(ui.message.textContent,field==='token'?/invitation token supplied/:/activation code supplied/);
+ assert.doesNotMatch(ui.message.textContent,/PRIVATE/);
+});

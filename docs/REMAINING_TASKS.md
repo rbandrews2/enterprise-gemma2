@@ -1,3 +1,15 @@
+## Latest organization setup checkpoint — October 12, 2026
+
+Firebase recovery repair applied under Ray's explicit approval; fresh SDK config
+HTTP200/project/key matched. Ray confirms successful password reset. Organization
+chooser reached, no listed membership. Organization/join requests422 in live logs;
+UI concealed validation arrays. Local client now explains activation/invitation and
+validates fields before sending; full Node78 passed/no skips. No backend/schema
+change or new deployment yet. See ORGANIZATION_SETUP_REPAIR_20261012.md.
+Next confirm single-use Enterprise activation/admin setup for Molecular Project
+Development LLC and admin@workzoneos.org, inspect existing membership to avoid
+duplication, then normal audited creation and candidate deployment. Public release,
+Atlas and Twilio acceptance remain pending. V1/public routing unchanged.
 ## Latest password-recovery checkpoint — October 12, 2026
 
 Ray confirms admin@workzoneos.org account already exists; reset email arrived but

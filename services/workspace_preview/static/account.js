@@ -56,7 +56,18 @@ window.wzosAccount = (() => {
   return {'X-WZOS-Session':'1',[authHeader]:'Bearer '+token,'X-WZOS-Organization':organization||''};
  }
  async function api(path,body,method){
-  const r=await fetch(path,{method:method||(body?'POST':'GET'),headers:{'Content-Type':'application/json',...await headers()},...(body?{body:JSON.stringify(body)}:{})});const d=await r.json();if(!r.ok)throw Error(typeof d.detail==='string'?d.detail:'Account request failed');return d;
+  let r;try{r=await fetch(path,{method:method||(body?'POST':'GET'),headers:{'Content-Type':'application/json',...await headers()},...(body?{body:JSON.stringify(body)}:{})});}catch(e){throw Error('The account service could not be reached. Check your connection and try again.');}
+  let d;try{d=await r.json();}catch(e){throw Error('The account service returned an unexpected response. Try again later.');}
+  if(!r.ok){
+   if(r.status===422){
+    const fields=Array.isArray(d.detail)?d.detail.map(item=>item?.loc?.[1]):[];
+    if(fields.includes('name'))throw Error('Enter an organization name between 2 and 120 characters.');
+    if(fields.includes('activation_code'))throw Error('Enter the activation code supplied for your organization (32–128 characters).');
+    if(fields.includes('token'))throw Error('Enter the invitation token supplied by your organization administrator (32–128 characters).');
+    throw Error('Check the required fields and try again.');
+   }
+   throw Error(typeof d.detail==='string'?d.detail:'Account request failed. Try again or contact your organization administrator.');
+  }return d;
  }
  async function start(config){
   authHeader=config.auth_header||'Authorization';
@@ -102,10 +113,16 @@ window.wzosAccount = (() => {
     for(const org of account.organizations){const button=element('button',`${org.name}  -  ${org.role}  -  ${org.edition}`);button.onclick=()=>run(async()=>{organization=org.id;const current=await api('/api/session');panel.close();panel.remove();resolve(current);});choices.append(button);}
     const name=element('input');name.placeholder='Organization name';name.setAttribute('aria-label','Organization name');
     const activation=element('input');activation.placeholder='Activation code';activation.setAttribute('aria-label','Activation code');
-    const create=element('button','Create organization');create.onclick=()=>run(async()=>{await api('/api/account/organizations',{name:name.value,activation_code:activation.value});await choose();});
+    const create=element('button','Create organization');create.onclick=()=>run(async()=>{
+     const orgName=name.value.trim(),code=activation.value.trim();
+     if(orgName.length<2||orgName.length>120)throw Error('Enter an organization name between 2 and 120 characters.');
+     if(code.length<32||code.length>128)throw Error('An activation code is required to create your organization. Ask WZOS support for your activation code.');
+     await api('/api/account/organizations',{name:orgName,activation_code:code});await choose();});
     const invitation=element('input');invitation.placeholder='Invitation token';invitation.setAttribute('aria-label','Invitation token');
-    const join=element('button','Join organization');join.onclick=()=>run(async()=>{await api('/api/account/join',{token:invitation.value});await choose();});
-    choices.append(name,activation,create,invitation,join);panel.insertBefore(choices,message);
+    const join=element('button','Join organization');join.onclick=()=>run(async()=>{
+     const inviteToken=invitation.value.trim();if(inviteToken.length<32||inviteToken.length>128)throw Error('An invitation token is required to join. Ask your organization administrator for an invitation.');
+     await api('/api/account/join',{token:inviteToken});await choose();});
+    choices.append(element('p','Creating a new organization requires a WZOS activation code. Joining an existing organization requires an invitation from its administrator.'),name,activation,create,invitation,join);panel.insertBefore(choices,message);
    }
    async function login(create){
     if(!email.reportValidity()||!password.reportValidity())return;

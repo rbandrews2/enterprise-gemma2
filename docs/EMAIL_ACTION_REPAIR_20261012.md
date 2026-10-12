@@ -71,3 +71,18 @@ risk, and blocked transmitting the stored key in an API-key lookup URL. Neither
 blocked action is needed for this proposal; metadata-only resource listing and
 key restrictions were used instead. Explicit approval is needed for the proposed
 authentication-key origin expansion and public Hosting client configuration.
+
+## Applied and accepted — October 12, 2026
+
+Ray approved the narrow Firebase repair. Existing auth key kept both API
+restrictions and three referrers; only Firebase email-action origin added.
+WebApp1:910004733138:web:4637cebf8f530a453d990b reuses the existing key UID.
+Default Hosting site linked to it. The site had no releases; an empty bootstrap
+release activated reserved SDK configuration without replacing app content.
+Release sites/enterprise-gemma2/releases/1791840839205000. Fresh init.json HTTP200,
+project and key comparisons true, API key present; no secret value printed.
+Prior metadata and release evidence saved privately in Cloud Shell release folder.
+Ray successfully reset his password himself and reached the organization chooser.
+Password recovery accepted; organization membership still pending separately.
+No WZOS public cutover, verification bypass, new key or IAM change.
+The proposal and pending-approval wording above are historical, superseded here.
