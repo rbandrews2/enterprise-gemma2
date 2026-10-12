@@ -91,3 +91,27 @@ Password visibility control requested by Ray: eye button inside the input,
 state; password remains unchanged, defaults masked and remasks on submission.
 Full Node75 passed/no skips; synthetic browser eye toggle rendered correctly.
 No real password entered/created by the agent. No schema/backend changes.
+
+## Password-eye/account-error cloud acceptance
+
+Frozen code2b425601af9508f47798d08a531a9a4ed5933e95. Full Node75 passed;
+full native PostgreSQL498 passed/zero failures/errors/skips,151.867s.
+Buildd6aa530a-3ff0-4903-a721-4866e37be1e4 SUCCESS.
+Private revision00038-yoz Ready, auth-2b42560 tag, zero main traffic.
+No authentication/IAM/schema/public-routing changes. Synthetic local mobile/tap/
+keyboard eye tests passed; evidence .local-data/password-eye-mobile.png.
+
+Public routing correction: the inspected gemma-load-balancer URL map is not the
+one attached to HTTPS. Actual target proxy gemma-load-balancer-target-proxy uses
+app-workzoneos-org-url-map, whose app.workzoneos.org host and /* path currently
+route to gemma-assistant-api-backend. gemma2-certificate is ACTIVE for that hostname.
+Existing backend IAP is enabled. Retain its export as rollback; exposing V2 requires
+reviewed host/path/backend and access changes, not blind default replacement.
+User-operated real signup retry remains required; the generic earlier message did
+not establish its actual provider failure. Do not bypass verification or create a
+password for Ray. Atlas activation and provider readiness remain separate work.
+Live acceptance after proxy update: candidate HTML200; served account.js byte-for-byte
+matches frozen2b42560. Online sign-in refreshed and shows the closed-eye password
+control; admin@workzoneos.org prefilled for user-operated retry. Evidence:
+.local-data/password-eye-live-00038.png. Disposable PostgreSQL process cleanup
+verified; local synthetic fixture stopped. New proxy expires after45minutes.

@@ -1,3 +1,15 @@
+## Latest authentication UI checkpoint — October 12, 2026
+
+Ray's admin account creation returned a generic provider error; root cause not yet
+established. Client error handling repaired and requested open/closed password eye
+added. Full Node75 and native PostgreSQL498 passed, no failures/errors/skips.
+Exact2b42560 built/delivered as private00038-yoz, auth-2b42560, no main traffic,
+IAM/schema/public changes. Ray must retry real account signup/sign-in himself.
+Readonly admin identity lookup403 did not establish account absence. Real password
+creation remains user-operated; no verification bypass. See
+RELEASE_ASSEMBLY_20261012.md for evidence and actual IAP/TLS/public URL-map findings.
+Next user retry, real admin/org setup and retire weak synthetic admin; activate
+private Atlas/bind providers and prepare confirmed public cutover. V1 unchanged.
 ## Latest release checkpoint — October 12, 2026
 
 Ray requests public V2 tonight. Exact1afe3d6 passed498native PostgreSQL tests
