@@ -15,6 +15,47 @@ class Element {
 }
 const settle=()=>new Promise(resolve=>setImmediate(resolve));
 
+function accountFailureFixture(fetch){
+ const body=new Element('body'),bar=new Element('bar');
+ const sandbox={window:{},document:{body,createElement:t=>new Element(t),querySelector:()=>bar},fetch,Date,URLSearchParams,location:{hostname:'localhost',reload(){}}};
+ vm.runInNewContext(fs.readFileSync('services/workspace_preview/static/account.js','utf8'),sandbox);
+ const account=sandbox.window.wzosAccount;account.start({auth_api_key:'synthetic-only'});
+ const panel=body.children[0],form=panel.children.find(c=>c.tag==='form');
+ const inputs=form.querySelectorAll('input');inputs[0].value='synthetic@example.test';inputs[1].value='synthetic-only';
+ return {account,panel,form,inputs,message:panel.children[panel.children.length-1],signup:form.querySelectorAll('button').find(b=>b.textContent==='Create account')};
+}
+for(const [code,expected] of [
+ ['WEAK_PASSWORD : private provider detail','Choose a stronger password'],
+ ['EMAIL_EXISTS','An account may already exist'],
+ ['INVALID_EMAIL','Enter a valid email'],
+ ['OPERATION_NOT_ALLOWED','temporarily unavailable'],
+ ['TOO_MANY_ATTEMPTS_TRY_LATER','Wait a few minutes'],
+ ['UNKNOWN_PRIVATE_DIAGNOSTIC','Check your details or try again']
+])test('account creation reports safe actionable error '+code.split(' : ')[0],async()=>{
+ const ui=accountFailureFixture(async()=>({ok:false,json:async()=>({error:{message:code}})}));
+ await ui.signup.onclick();assert.ok(ui.message.textContent.includes(expected));
+ assert.ok(!ui.message.textContent.includes('private provider detail'));
+ assert.ok(!ui.message.textContent.includes('UNKNOWN_PRIVATE_DIAGNOSTIC'));
+ assert.equal((await ui.account.headers()).Authorization,undefined);
+});
+for(const mode of ['network','malformed'])test('account creation handles '+mode+' response without leaking provider error',async()=>{
+ const ui=accountFailureFixture(async()=>{if(mode==='network')throw Error('private URL and key');return {ok:false,json:async()=>{throw Error('private server body');}};});
+ await ui.signup.onclick();assert.match(ui.message.textContent,mode==='network'?/could not be reached/:/unexpected response/);
+ assert.doesNotMatch(ui.message.textContent,/private/);
+});
+test('created account with failed verification request clears tokens and permits safe resend',async()=>{
+ const ui=accountFailureFixture(async url=>url.includes('signUp')?{ok:true,json:async()=>({idToken:'synthetic-token',refreshToken:'synthetic-refresh',expiresIn:3600})}:{ok:false,json:async()=>({error:{message:'PRIVATE_MAIL_FAILURE'}})});
+ await ui.signup.onclick();assert.match(ui.message.textContent,/account was created/);
+ assert.match(ui.message.textContent,/Resend verification email/);
+ assert.equal(ui.inputs[1].value,'');assert.equal((await ui.account.headers()).Authorization,undefined);
+});
+test('failed sign-in does not distinguish missing account from invalid credentials',async()=>{
+ const ui=accountFailureFixture(async()=>({ok:false,json:async()=>({error:{message:'EMAIL_NOT_FOUND'}})}));
+ ui.form.onsubmit({preventDefault(){}});await settle();
+ assert.match(ui.message.textContent,/Check your details or try again/);
+ assert.doesNotMatch(ui.message.textContent,/EMAIL_NOT_FOUND|does not exist/);
+});
+
 for (const authHeader of ['Authorization','X-WZOS-Authorization']) test(authHeader+': session refresh is shared, preserves organization, and fails closed',async()=>{
  const body=new Element('body'),bar=new Element('bar');let now=0,refreshes=0,fail=false;
  const document={body,createElement:t=>new Element(t),querySelector:()=>bar};

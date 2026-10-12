@@ -27,9 +27,22 @@ window.wzosAccount = (() => {
   }catch(e){if(e.name==='NotAllowedError'||e.name==='AbortError')throw Error('Passkey request cancelled or timed out. You can use your password.');throw e;}
  }
  const element=(tag,text)=>{const n=document.createElement(tag);if(text)n.textContent=text;return n;};
+ function providerMessage(action,data){
+  // Never display provider payloads: they may contain identifiers or configuration.
+  const code=typeof data?.error?.message==='string'?data.error.message.split(' : ')[0].split(':')[0].trim():'';
+  if(code==='INVALID_EMAIL')return 'Enter a valid email address.';
+  if(action==='signUp'&&code==='WEAK_PASSWORD')return 'Choose a stronger password that meets the account password requirements.';
+  if(action==='signUp'&&code==='EMAIL_EXISTS')return 'An account may already exist for this email. Use Sign in or Reset password.';
+  if(code==='TOO_MANY_ATTEMPTS_TRY_LATER'||code==='QUOTA_EXCEEDED')return 'Too many account requests. Wait a few minutes before trying again.';
+  if(['OPERATION_NOT_ALLOWED','CONFIGURATION_NOT_FOUND','API_KEY_INVALID','API_KEY_SERVICE_BLOCKED'].includes(code))return 'Account sign-in is temporarily unavailable. Contact your organization administrator.';
+  return 'Account request could not be completed. Check your details or try again.';
+ }
  async function provider(action,body){
-  const r=await fetch(`${authBase}/v1/accounts:${action}?key=${encodeURIComponent(key)}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
-  const data=await r.json();if(!r.ok)throw Error('Account request could not be completed. Check your details or try again.');return data;
+  let r;
+  try{r=await fetch(`${authBase}/v1/accounts:${action}?key=${encodeURIComponent(key)}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});}
+  catch(e){throw Error('The account service could not be reached. Check your connection and try again.');}
+  let data;try{data=await r.json();}catch(e){throw Error('The account service returned an unexpected response. Try again later.');}
+  if(!r.ok)throw Error(providerMessage(action,data));return data;
  }
  async function headers(){
   if(!token)return {"X-WZOS-Session":"1","X-WZOS-Organization":organization||""};
@@ -88,7 +101,9 @@ window.wzosAccount = (() => {
     if(config.persistent_sessions)await api('/api/account/logout',{});
     const data=await provider(create?'signUp':'signInWithPassword',{email:email.value.trim(),password:password.value,returnSecureToken:true});
     token=data.idToken;refresh=data.refreshToken;expires=Date.now()+Number(data.expiresIn)*1000;
-    if(create){try{await provider('sendOobCode',{requestType:'VERIFY_EMAIL',idToken:token});message.textContent='Check your email to verify your account, then sign in.';}finally{token=null;refresh=null;expires=0;password.value='';}return;}
+    if(create){try{await provider('sendOobCode',{requestType:'VERIFY_EMAIL',idToken:token});message.textContent='Check your email to verify your account, then sign in.';}
+     catch(e){message.textContent='Your account was created, but the verification email could not be requested. Use Resend verification email or try again later.';}
+     finally{token=null;refresh=null;expires=0;password.value='';}return;}
     if(remember.checked&&config.persistent_sessions){await api("/api/account/session",{});token=null;refresh=null;expires=0;}
     await choose();
    }

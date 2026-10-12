@@ -69,3 +69,19 @@ existing lists; do not silently call those finished.
 - Ray selected admin@workzoneos.org for public admin login. Synthetic tester uses
   a shared weak test password; disable its admin access before public exposure.
   Real account credential creation/sign-in must be performed by Ray, not the agent.
+
+## Account-creation diagnostics repair
+
+Ray's real account creation returned only a generic failure. The client discarded
+all provider errors; the agent cannot establish the precise failure from that text.
+Read-only Google admin lookup returned403; do not treat that as account absence or
+as the sign-up cause. No IAM expansion or password/verification change performed.
+
+Client now maps approved provider codes to actionable messages without showing raw
+payloads, keys or identifiers. Missing-account/invalid-login remain generic. Network
+and malformed responses are handled. If sign-up succeeds but requesting verification
+email fails, report that the account was created and offer Resend verification email;
+clear tokens/password either way and retain the verified-email access requirement.
+Full Node74passed/zero failures/skips, including10new provider-error/token-clear tests.
+Next exact candidate PostgreSQL/build/deploy and user-operated retry; real failure
+cause and real admin setup remain open until observed.
