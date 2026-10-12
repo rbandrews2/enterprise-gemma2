@@ -33,3 +33,25 @@ record after expiry; retain any resulting organization audit.
 After approval: verify identity/membership, run existing operator workflow with
 bounded proxy lifetime and private output, complete setup, verify admin session;
 then deploy client repair under existing release gates. No password entry by agent.
+
+## Approved setup execution checkpoint
+
+Ray explicitly approved Enterprise organization/admin setup. Google identity lookup
+returned one admin@workzoneos.org account, verified true, disabled false. Existing
+WZOS account UID matched that provider identity. Database precheck found zero
+memberships and zero organizations named Molecular Project Development LLC.
+Existing Accounts.issue_activation issued Enterprise activation with24-hour expiry,
+saved only to0600 Cloud Shell admin-enterprise-activation.txt. SQL proxy5547 exited
+through trap. No activation value in Git/chat/log output.
+
+Cloud Shell editor opened that private file; activation copied directly into WZOS
+form without displaying it in tool output. Organization name filled. Mouse submit
+interrupted; observed form remained. Keyboard submission then timed out and browser
+connection disappeared. Creation outcome UNKNOWN; do not issue another activation
+or create duplicate organization. User asked to select company if already listed,
+otherwise click Create organization once, then reconnect. On resume inspect provider
+identity, membership, consumed activation and access audit before any repeat.
+Clipboard may still contain activation because connection loss prevented clearing;
+clear via browser clipboard API when reconnected, and clear editor selection.
+Latest client repair d44af92 remains local/Git only; private runtime00038 unchanged.
+No public routing, IAM, password, customer send or other-tenant change.

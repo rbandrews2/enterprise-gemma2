@@ -1,3 +1,13 @@
+## Latest approved admin setup checkpoint — October 12, 2026
+
+Ray approved Enterprise organization/admin setup. Provider identity verified/active;
+DB membership and same-name organization counts both0. Single-use24-hour activation
+saved0600 privately, copied through editor to WZOS form without token output. Name
+filled. Browser failed during submit; creation UNKNOWN. User asked to select company
+if present or click filled Create organization once, then reconnect. Do not issue
+another code/create duplicate: inspect memberships, activation and audit first.
+Clear activation clipboard when reconnected. See ORGANIZATION_SETUP_REPAIR_20261012.md.
+Repair d44af92 full Node78 passed, not deployed. V1/public routing unchanged.
 ## Latest organization setup checkpoint — October 12, 2026
 
 Firebase recovery repair applied under Ray's explicit approval; fresh SDK config
