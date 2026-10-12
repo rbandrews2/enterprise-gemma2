@@ -279,6 +279,10 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
     def road_work_background():
         return FileResponse(STATIC / "road-work-background.png", media_type="image/png")
 
+    @app.get("/time-tracker-logo.png")
+    def time_tracker_background():
+        return FileResponse(STATIC / "time-tracker-logo.png", media_type="image/png")
+
     @app.get("/workspace.css")
     def styles():
         return FileResponse(STATIC / "workspace.css", media_type="text/css")

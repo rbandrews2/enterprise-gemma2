@@ -30,7 +30,10 @@
 
 /* Live clock.superiorllc.org palette: near-black, zinc, orange/gold halos. */
 #clock-view{--muted:#a1a1aa;color:#fff;position:relative;isolation:isolate;background:radial-gradient(circle at 18% 18%,rgba(249,115,22,.18),transparent 28%),radial-gradient(circle at 82% 12%,rgba(234,179,8,.12),transparent 24%),radial-gradient(circle at 60% 88%,rgba(249,115,22,.10),transparent 30%),linear-gradient(145deg,rgba(0,0,0,.99),rgba(10,8,6,.98) 44%,rgba(0,0,0,.99)),#000;padding:clamp(1rem,3vw,2rem);border-radius:28px;min-width:0}
-#clock-view::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:-1;background:linear-gradient(115deg,transparent 20%,rgba(255,255,255,.08) 21%,transparent 28%);background-size:220% 220%;background-position:50% 50%}
+#clock-view{overflow:hidden}
+#clock-view::after{content:"";position:absolute;inset:0 0 auto;height:100vh;border-radius:inherit;pointer-events:none;z-index:-1;opacity:.28;background:linear-gradient(115deg,transparent 0 20%,rgba(255,255,255,.08) 21%,transparent 28% 100%),url('/time-tracker-logo.png');background-size:220% 220%,min(88vw,560px);background-position:0% 50%,center 18%;background-repeat:no-repeat;mix-blend-mode:screen;animation:tracker-layer-drift 18s ease-in-out infinite alternate}
+@keyframes tracker-layer-drift{from{transform:translate3d(-2%,-1%,0) scale(1.02);background-position:0% 50%,center 16%}to{transform:translate3d(2%,1%,0) scale(1.06);background-position:100% 50%,center 24%}}
+@media(prefers-reduced-motion:reduce){#clock-view::after{animation:none;transform:none}}
 #clock-view .page-heading{align-items:center;margin-bottom:1.5rem}
 #clock-view h1{font-size:clamp(1.6rem,4vw,2.2rem);letter-spacing:-.03em}
 #clock-view .eyebrow,.clock-brand{color:#fb923c}

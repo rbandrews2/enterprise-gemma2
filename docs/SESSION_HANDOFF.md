@@ -406,6 +406,9 @@ near-black base, zinc controls, orange/gold halos and subtle sheen instead of th
 earlier blue slate demo palette. Browser computed colors and local screenshot
 `.local-data/time-tracker-black-gold.png` verified; CSS/diff checks passed. Styling
 only; offline/location behavior and remaining deployment gates are unchanged.
+Ray additionally requested the subtly moving background image: original eagle
+artwork reused locally, with reference28% opacity/18-second alternating drift and
+reduced-motion support. A static PNG route adds no attendance/schema change.
 
 October 11 Time Tracker local increment: `codex/time-tracker-offline-location`
 matches the TIME_TRACKER slate/orange reference with lightning branding and circular

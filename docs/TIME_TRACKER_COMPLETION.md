@@ -14,6 +14,17 @@ paid resources, production changes or customer communications.
   those colors with neutral charcoal cards; browser computed styles and screenshot
   `.local-data/time-tracker-black-gold.png` verified. CSS/diff checks passed;
   no runtime, attendance, GPS or schema changes in this correction.
+- Follow-up background requirement: reuse the original eagle/Time Tracker artwork
+  from `TIME_TRACKER/public/time-tracker-logo.png` (repository blob
+  `5d55934e0922157a805825e29f393c043d018a8f`, 470,680 bytes). The module serves it
+  at `/time-tracker-logo.png` with its existing self-only asset policy. Reference
+  `src/index.css` specifies28% opacity, screen blending,18-second alternating drift,
+  translation -2%/-1% to2%/1%, scale1.02 to1.06, and background16% to24%. These
+  settings now apply behind Time Tracker content; reduced-motion disables animation.
+  Image positions are confined to the module rather than covering unrelated views.
+  Original asset size and Git blob hash verified locally. Subsequent Chrome and
+  in-app-browser inspections repeatedly timed out; visual animation acceptance is
+  OPEN. The earlier black/gold screenshot predates this image layer.
 - Matches the reference's near-black gradient, charcoal rounded cards, orange
   accents and green/red circular punch buttons. Prominent lightning bolt and
   Time Tracker label in title/navigation. Mobile layouts preserve touch controls,
