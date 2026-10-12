@@ -32,10 +32,20 @@ organization; members read only their own. Keep the evidence table on code rollb
 
 ## Gates
 
-Full Node62 passed before final location-memory warning adjustment. Includes25
+Full Node64 passed with zero failures/skips. Includes27
 clock tests covering original concurrent-tab protections plus offline task/break
 timeline, missing/reconnect GPS, denied permission and uncertain command reopening.
-Full Python and exact disposable PostgreSQL gate pending; no cloud update yet.
+Full Windows Python run did not complete: native process access violation during
+Pydantic schema generation, not an accepted test result. Isolated new location API
+suite6 tests passed/3 PostgreSQL skips. Full Linux/PostgreSQL gate remains required.
+Local HTTP: PNG200/hash matches470680-byte asset; anonymous401, member team403,
+admin team200, self missing-fix write200, cross-organization rows absent.
+GPS stops after clock-out even if attendance review is pending. Concurrent GPS
+outbox tests retain new evidence and forbid resurrecting acknowledged entries.
+Cloud gate was submitted for earlier c1c9be5, but browser detached; Ray reports a
+missing evidence path/log after Cloud Shell reconnect. Outcome unknown; do not
+claim it ran or passed. Fresh exact candidate gate must save its log under HOME.
+No cloud update yet.
 Main staging traffic verified100%00031-h5t; private Navigation tag00036-ray remains.
 Existing1CPU/512Mi identity/resources retained. No V1/DNS/IAM changes or Twilio sends.
 

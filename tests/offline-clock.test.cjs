@@ -298,3 +298,21 @@ test('uncertain clock command retains its original retry ID after reopening',asy
  const original=JSON.parse(first.posts('/api/time/commands')[0][1].body).request_id,second=await reopen(storage);await second.get('clock-retry').handlers.click();
  assert.equal(JSON.parse(second.posts('/api/time/commands')[0][1].body).request_id,original);
 });
+
+test('an offline clock-out stops further GPS even while attendance waits for admin review',async()=>{
+ const h=await offlineAfterLoad({storage:deviceStorage(),geo:true});await h.get('clock-out').handlers.click();await settle();
+ h.navigator.onLine=true;h.windowEvents.online();await settle();await settle();await h.byId('clock-draft-submit').onclick();
+ h.intervals.find(i=>i[1]===300000)[0]();await settle();await settle();
+ const items=h.posts('/api/time/locations').flatMap(c=>JSON.parse(c[1].body).items);assert.ok(items.some(p=>p.event==='clock_out'));assert.ok(items.every(p=>p.event!=='interval'&&p.event!=='reconnect'));
+});
+
+test('shared GPS outbox keeps concurrent evidence and stale tabs cannot resurrect acknowledged items',async()=>{
+ const storage=deviceStorage(),a=await offlineAfterLoad({storage}),b=await offlineAfterLoad({storage});
+ a.get('clock-task').value='setup';await a.get('clock-switch').handlers.click();await settle();
+ b.get('clock-task').value='travel';await b.get('clock-switch').handlers.click();await settle();
+ const key='wzos.time-tracker.v1:org-a:member:locations',old=JSON.parse(storage.data.get(key)).items;assert.equal(old.length,2);
+ a.navigator.onLine=true;a.windowEvents.online();await settle();await settle();await settle();
+ const sent=a.posts('/api/time/locations').flatMap(c=>JSON.parse(c[1].body).items);assert.ok(old.every(p=>sent.some(e=>e.request_id===p.request_id)));
+ b.get('clock-task').value='teardown';await b.get('clock-switch').handlers.click();await settle();
+ const fresh=JSON.parse(storage.data.get(key)).items;assert.ok(fresh.every(p=>!old.some(e=>e.request_id===p.request_id)));
+});

@@ -1,3 +1,13 @@
+## October 12 Time Tracker integration
+
+Time Tracker UI/offline/location changes combined with the current release candidate.
+Original source branch preserved. Full Node64 passed, local location HTTP/access and
+asset hash checks passed; isolated location Python6 passed/3 PostgreSQL skips.
+Windows full Python process crashed before completion; not a passing result.
+Next exact Linux/PostgreSQL gate with persistent HOME evidence, cleanup, UI and
+budget/schema/backup review, then private no-main-traffic staging deployment.
+Cloud gate result unknown following reconnect/missing log; V1/DNS unchanged.
+
 # WZOS V2 remaining tasks — proposed execution order
 
 ## Latest execution — October 11, 2026

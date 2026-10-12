@@ -47,16 +47,16 @@
  const local=value=>new Date(value).toLocaleString();
  const option=(value,label)=>{const o=text('option',label);o.value=value;return o;};
  const storageKey='wzos.time-tracker.v1:';
- let locations=[], locationBusy=false, flushing=false, snapshotAt=null, storageFailed=false, locationMemoryOnly=false;
+ let locations=[], locationBusy=false, flushing=false, snapshotAt=null, storageFailed=false, locationMemoryOnly=false, locationStopped=false;
  function persist(){
   if(!actorId)return false;
-  try{window.localStorage.setItem(storageKey+actorId,JSON.stringify({owner:actorId,active,lastVerified,snapshotAt,baseSeconds,pending}));storageFailed=false;return true;}
+  try{window.localStorage.setItem(storageKey+actorId,JSON.stringify({owner:actorId,active,lastVerified,snapshotAt,baseSeconds,pending,locationStopped}));storageFailed=false;return true;}
   catch{storageFailed=true;locationStatus.textContent='Device tracker storage unavailable. Keep this tab open and download device records before closing.';return false;}
  }
  function restore(owner){
   if(!owner)return;
   try{const saved=JSON.parse(window.localStorage.getItem(storageKey+owner)||'null');
-   if(saved?.owner===owner){active=saved.active;lastVerified=saved.lastVerified;snapshotAt=saved.snapshotAt;baseSeconds=saved.baseSeconds||0;pending=saved.pending;const evidence=JSON.parse(window.localStorage.getItem(storageKey+owner+':locations')||'null');locations=evidence?.owner===owner&&Array.isArray(evidence.items)?evidence.items.filter(p=>p&&typeof p.request_id==='string').slice(0,2000):[];observed=performance.now();node('clock-task').value=timeline().task;}
+   if(saved?.owner===owner){active=saved.active;lastVerified=saved.lastVerified;snapshotAt=saved.snapshotAt;baseSeconds=saved.baseSeconds||0;pending=saved.pending;locationStopped=saved.locationStopped===true;const evidence=JSON.parse(window.localStorage.getItem(storageKey+owner+':locations')||'null');locations=evidence?.owner===owner&&Array.isArray(evidence.items)?evidence.items.filter(p=>p&&typeof p.request_id==='string').slice(0,2000):[];observed=performance.now();node('clock-task').value=timeline().task;}
    else window.localStorage.removeItem(storageKey+owner);
   }catch{message('The saved clock could not be restored. Connect to verify your shift.');}
  }
@@ -84,7 +84,8 @@
    await navigator.locks.request(key,()=>{
     if(owner!==actorId)return;
     let saved=null;try{saved=JSON.parse(store.getItem(key)||'null');}catch{}
-    const list=saved?.owner===owner&&Array.isArray(saved.items)?saved.items.filter(p=>p&&typeof p.request_id==='string'):locations;
+    const list=saved?.owner===owner&&Array.isArray(saved.items)?saved.items.filter(p=>p&&typeof p.request_id==='string'):[];
+    if(locationMemoryOnly)for(const p of locations)if(!list.some(e=>e.request_id===p.request_id))list.push(p);
     const next=change(list);if(next.length)store.setItem(key,JSON.stringify({owner,items:next}));else store.removeItem(key);
     locations=next;locationMemoryOnly=false;
    });
@@ -102,7 +103,7 @@
   finally{flushing=false;controls();}
  }
  async function captureLocation(event,commandId=null,task=timeline().task,shiftId=active?.id||null){
-  const owner=actorId;if(!owner)return;
+  const owner=actorId;if(!owner||(locationStopped&&!['clock_in','clock_out'].includes(event)))return;
   if(locations.length>=2000){locationStatus.textContent='Location storage full. Connect to upload saved evidence.';return;}
   const item={request_id:crypto.randomUUID(),command_id:commandId,shift_id:shiftId,event,task,captured_at:new Date().toISOString()};
   const position=await new Promise(resolve=>{
@@ -221,7 +222,7 @@
   const session=window.wzosClock.getSession();if(!session)return;
   if(!retry)pending={actor:scope(session),body:{request_id:crypto.randomUUID(),action,shift_id:active?.id||null,expected_version:active?.version||0,task:node('clock-task').value,...(action==='clock_in'?{order_id:node('clock-order').value||null,note:node('clock-note').value}:{})}};
   if(pending.actor!==scope(session))return;
-  if(!retry)captureLocation(action,pending.body.request_id,pending.body.task);
+  if(!retry){if(action==='clock_out')locationStopped=true;if(action==='clock_in')locationStopped=false;captureLocation(action,pending.body.request_id,['clock_in','switch_task'].includes(action)?pending.body.task:timeline().task);}
   persist();busy=true;node('identity').disabled=true;controls();message('Saving clock action…');
   const owner=scope(session);
   try{await window.wzosClock.api('/api/time/commands',{method:'POST',body:JSON.stringify(pending.body)});if(owner!==actorId)return;pending=null;persist();message(session.restricted_staging?'Clock action saved in temporary cloud staging.':'Clock action saved locally.');document.dispatchEvent(new CustomEvent('wzos:time-context'));}
@@ -236,7 +237,7 @@
  for(const id of ['clock-from','clock-to'])node(id).onchange=()=>{offset=0;refresh();};
  node('clock-export').onclick=async()=>{const exportButton=node('clock-export');exportButton.disabled=true;try{const response=await fetch(`/api/time/export?detail=${exportDetail.value}${filters()}`,{headers:{'X-Preview-Actor':window.wzosClock.getSession().id,...await window.wzosAccount.headers()}});if(!response.ok){const error=await response.json();throw Error(typeof error.detail==='string'?error.detail:'Check export dates');}const name=(response.headers.get('content-disposition')||'').match(/filename="([^"]+)"/)?.[1]||'wzos-time.csv';const url=URL.createObjectURL(await response.blob());const a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}catch(error){message(error.message);}finally{exportButton.disabled=false;}};
  document.addEventListener('wzos:clock-open',refresh);
- document.addEventListener('wzos:session',()=>{const id=scope(window.wzosClock.getSession());if(id!==actorId){actorId=id;pending=null;active=null;lastVerified=null;drafts=loadDrafts(id);locations=[];snapshotAt=null;baseSeconds=0;restore(id);membersLoaded=null;employee.replaceChildren(option('','All team members'));submitted.replaceChildren();renderDrafts();offset=0;node('clock-note').value='';node('clock-team').checked=false;node('clock-history').replaceChildren();node('clock-state').textContent='Loading clock';setConnection('checking','Checking connection');tick();message('');}refresh();});
+ document.addEventListener('wzos:session',()=>{const id=scope(window.wzosClock.getSession());if(id!==actorId){actorId=id;pending=null;active=null;lastVerified=null;drafts=loadDrafts(id);locations=[];locationStopped=false;snapshotAt=null;baseSeconds=0;restore(id);membersLoaded=null;employee.replaceChildren(option('','All team members'));submitted.replaceChildren();renderDrafts();offset=0;node('clock-note').value='';node('clock-team').checked=false;node('clock-history').replaceChildren();node('clock-state').textContent='Loading clock';setConnection('checking','Checking connection');tick();message('');}refresh();});
   window.addEventListener('beforeunload',event=>{if(pending||submitting||draftWrites||(drafts.length&&persistence!=='device')||((storageFailed||locationMemoryOnly)&&locations.length)){event.preventDefault();event.returnValue='';}});
  // Another open tab for the same account changed the saved drafts.
  window.addEventListener('storage',event=>{if(actorId&&event.key===STORE+actorId&&persistence==='device'){drafts=loadDrafts(actorId);renderDrafts();tick();}});
@@ -292,7 +293,7 @@
    added=true;return [...list,draft];
   });
   if(owner!==actorId)return;
-  renderDrafts();tick();controls();if(added){persist();captureLocation(action,draft.request_id,draft.task||timeline().task);draftNote.value='';draftWhen.value='';message(`Draft ${persistence==='device'?'saved on this device':'kept in this tab only'}. It has not changed your shift. Submit it for review when you reconnect.`);}
+  renderDrafts();tick();controls();if(added){if(action==='clock_out')locationStopped=true;if(action==='clock_in')locationStopped=false;persist();captureLocation(action,draft.request_id,draft.task||timeline().task);draftNote.value='';draftWhen.value='';message(`Draft ${persistence==='device'?'saved on this device':'kept in this tab only'}. It has not changed your shift. Submit it for review when you reconnect.`);}
  };
  removeLast.onclick=async()=>{const owner=actorId,last=drafts.at(-1);if(!last)return;await mutate(owner,list=>list.filter(d=>d.request_id!==last.request_id));if(owner!==actorId)return;renderDrafts();tick();controls();message('Removed the last draft.');};
  discard.onclick=async()=>{if(!drafts.length||submitting||!window.confirm?.('Discard all unsubmitted offline drafts on this device? This cannot be undone.'))return;const owner=actorId,shown=new Set(drafts.map(d=>d.request_id));await mutate(owner,list=>list.filter(d=>!shown.has(d.request_id)));if(owner!==actorId)return;renderDrafts();message('Offline drafts discarded. Nothing was sent to your admin.');};

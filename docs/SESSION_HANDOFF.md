@@ -6,8 +6,11 @@ Navigation/report/provider behavior retained. Time Tracker timeline and location
 API integrated without replacing release cross-tab draft locking or uncertain
 submission protections. Separate per-account location outbox uses Web Locks;
 no locks/storage means tab-only evidence with download/unload warnings.
-Full Node62 passed before the final location-memory warning repair; full Python
-and exact PostgreSQL/restricted deployment gates in progress. No live deployment
+Full Node64 passed/no skips, including27 clock tests. Local HTTP location access/
+PNG checks passed. Full Windows Python run exited with native access violation;
+isolated location6 tests passed/3 PostgreSQL skips. Cloud gate evidence unavailable
+following Chrome disconnect/reconnect; Ray reports missing path/log. Prepare fresh
+exact gate with persistent HOME log, verify cleanup before build/deployment. No live deployment
 or production change yet. Cloud Shell connected; main remains00031, private00036.
 Read TIME_TRACKER_INTEGRATION_20261012.md for new evidence and next step.
 
