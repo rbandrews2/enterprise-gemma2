@@ -1,3 +1,18 @@
+## Latest release checkpoint — October 12, 2026
+
+Ray requests public V2 tonight. Exact1afe3d6 passed498native PostgreSQL tests
+with zero skips; buildf1a1b800 SUCCESS; private candidate00037-xot Ready,
+tracker-1afe3d6, no main traffic/IAM/DNS change. Current SQL compatible/additive
+location table only; today's backup successful. Live Google test admin, workspace,
+Time Tracker and location-history read passed. Twilio account/sender capability
+metadata verified; no sends or AIRA changes. Live Atlas still disabled and origins/
+passkey RP still Cloud Shell-specific. Ray selected admin@workzoneos.org for real
+admin; retire shared synthetic admin before public exposure. See
+RELEASE_ASSEMBLY_20261012.md for exact evidence, billing and remaining blockers.
+Next real admin sign-in/setup handoff, public routing/TLS/identity preparation,
+activate/test private Atlas and bind/accept Twilio, then concrete cutover/security
+confirmation. Current online request supersedes old staging-only product intent;
+never represent incomplete functionality or provider acceptance as finished.
 ## Latest integration checkpoint — October 12, 2026
 
 Resumed by Ray. Time Tracker commits5851dda/4351da1/66ccbe5 integrated into
