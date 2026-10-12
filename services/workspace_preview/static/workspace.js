@@ -10,7 +10,10 @@ function el(tag, text, className) {const node=document.createElement(tag); if(te
 function notify(message,error=false){$("notice").hidden=false;$("notice").textContent=message;$("notice").classList.toggle("error",error);}
 async function api(path, options={}) {
  const response=await fetch(path,{...options,headers:{"Content-Type":"application/json","X-Preview-Actor":session?.id || $("identity").value,...await window.wzosAccount.headers(),...options.headers}});
- const data=await response.json();
+ let data;try{data=await response.json();}catch(cause){
+  const error=new Error('WZOS received an unexpected service response. The preview or sign-in may need to reconnect. Nothing was confirmed saved; reload after the connection is restored.');
+  error.status=response.status;throw error;
+ }
  if(!response.ok){const error=new Error(typeof data.detail==="string"?data.detail:"Check the fields and try again. Nothing was confirmed saved.");error.status=response.status;throw error;}
  return data;
 }

@@ -1,3 +1,12 @@
+## Latest HTML-response repair checkpoint — October 12, 2026
+
+Ray reports HTML instead of API JSON after organization setup/selection. Local
+workspace startup JSON guard repaired; full Node82 passed, additional organization
+HTML regression included in focused26 passing checks. Live00038 lacks these local
+repairs. Chrome absent; reconnect requested. Preview expiry/reauth/routing unverified.
+Next restore exact protected preview, inspect existing membership/audit and select
+company; do not duplicate activation/organization. Prior company-list observation
+is not full workspace acceptance. V1/public routing unchanged.
 ## User-confirmed organization creation — October 12, 2026
 
 Ray reports Molecular Project Development LLC now appears for selection after the

@@ -179,3 +179,10 @@ for(const field of ['activation_code','token'])test('organization validation saf
  assert.match(ui.message.textContent,field==='token'?/invitation token supplied/:/activation code supplied/);
  assert.doesNotMatch(ui.message.textContent,/PRIVATE/);
 });
+test('organization HTML response is reported safely without claiming creation',async()=>{
+ const ui=await organizationFixture({ok:false,status:502,json:async()=>{throw new SyntaxError('PRIVATE_HTML');}});
+ const inputs=ui.choices.querySelectorAll('input');inputs[0].value='Synthetic company';inputs[1].value='x'.repeat(32);
+ await ui.choices.querySelectorAll('button').find(b=>b.textContent==='Create organization').onclick();
+ assert.match(ui.message.textContent,/unexpected response/);assert.doesNotMatch(ui.message.textContent,/PRIVATE_HTML/);
+ assert.equal(ui.requests.filter(r=>r.url==='/api/account').length,1);
+});

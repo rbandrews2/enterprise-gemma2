@@ -63,3 +63,20 @@ selection. Organization creation therefore succeeded from the user-visible list;
 prior UNKNOWN checkpoint is superseded by this observation. Ray instructed to
 select its admin/Enterprise entry. Workspace entry and independent live membership/
 audit readback remain open. Chrome is absent from connected browser inventory.
+
+## Unexpected HTML response — subsequent user report
+
+Ray reports Unexpected token '<', '<html lang' is not valid JSON after organization
+selection/setup. An API call received HTML, but origin and status are not yet verified.
+Do not treat this as proof that the database creation was undone. User-visible company
+listing remains the earlier observation; independently inspect membership next.
+Chrome absent from connected inventory; reconnect requested. Existing proxy uses
+45-minute instances; expiry/reauth/routing are candidates, not confirmed causes.
+
+Local workspace.js startup API parser now safely handles non-JSON service responses,
+preserves HTTP status and warns that no save was confirmed. Existing d44af92 account
+parser already guards this error but is not deployed. Full Node82 passed before the
+additional organization HTML case; focused auth/workspace26 passed afterward.
+No backend/schema/public change. Next restore protected preview to the exact tested
+candidate, verify organization/admin/Enterprise membership and access audit, select
+existing organization instead of creating another. Clear activation clipboard.
