@@ -6,7 +6,15 @@ paid resources, production changes or customer communications.
 
 ## Behavior
 
-- Matches the reference's slate 900/800 gradient, slate rounded cards, orange
+- October11 palette correction: Ray designated the open Chrome page at
+  https://clock.superiorllc.org/ as the color authority, superseding the slate
+  GitHub demo. Live computed styles verified near-black145-degree base,
+  orange/gold radial halos at18%/18%,82%/12%,60%/88%, a subtle white sheen,
+  zinc900/80 fields, zinc800 borders and orange400 accents. Local CSS now uses
+  those colors with neutral charcoal cards; browser computed styles and screenshot
+  `.local-data/time-tracker-black-gold.png` verified. CSS/diff checks passed;
+  no runtime, attendance, GPS or schema changes in this correction.
+- Matches the reference's near-black gradient, charcoal rounded cards, orange
   accents and green/red circular punch buttons. Prominent lightning bolt and
   Time Tracker label in title/navigation. Mobile layouts preserve touch controls,
   keyboard focus and reduced-motion behavior. Work-order/note selectors hide

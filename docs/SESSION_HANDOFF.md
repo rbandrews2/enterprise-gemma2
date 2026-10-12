@@ -400,6 +400,25 @@ as does full integrated Python acceptance. No cloud deployment/migration, extern
 message or production change. Next validate the candidate editor and PostgreSQL
 schema before merge; then add availability/evidence integration for dispatch and
 training. Claude may read this worktree contract; enterprise-v2 remains unchanged.
+October11 palette correction: Ray selected the existing Chrome page at
+clock.superiorllc.org as the color authority. Time Tracker now uses its measured
+near-black base, zinc controls, orange/gold halos and subtle sheen instead of the
+earlier blue slate demo palette. Browser computed colors and local screenshot
+`.local-data/time-tracker-black-gold.png` verified; CSS/diff checks passed. Styling
+only; offline/location behavior and remaining deployment gates are unchanged.
+
+October 11 Time Tracker local increment: `codex/time-tracker-offline-location`
+matches the TIME_TRACKER slate/orange reference with lightning branding and circular
+punch controls. Regular controls persist device shift/task/break timelines offline;
+reconnect resumes GPS with idempotent location uploads at punches/task changes and
+five-minute intervals. Attendance still uses audited admin reconciliation. Full
+Python343:273passed/70PostgreSQLskipped; final Node27passed. Desktop and320/390px
+browser checks passed; GPS timeout/missing-fix history verified, actual GPS/phone
+acceptance remains open. Additive location-table startup SQL requires PostgreSQL
+review before shared deployment. See TIME_TRACKER_COMPLETION.md. No cloud changes;
+Claude checkout untouched. Next location PostgreSQL gate and real-phone acceptance.
+Prior account/passkey release gates below remain open; this increment does not
+supersede their verified acceptance. Preview8083 is local/synthetic.
 
 October 8 desktop session recheck: Chrome fresh password sign-in with Stay signed in checked succeeded; full reload and a newly opened same-origin page restored the authenticated Enterprise admin organization selector without credentials. This resolves the previously observed desktop reload failure for these tested scenarios. Screenshot: .local-data/desktop-remembered-session-pass.png. Browser process restart was not tested. Android remembered-session logout across refresh/reopen passed per Ray. Next confirm Android re-enrollment after removal and all-device revocation; iOS and real-email recovery remain open.
 
