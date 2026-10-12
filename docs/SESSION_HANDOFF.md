@@ -1,3 +1,17 @@
+## Latest password-recovery checkpoint — October 12, 2026
+
+Ray confirms admin@workzoneos.org account already exists; reset email arrived but
+newest-link Firebase page reports invalid mode. Ray confirmed apiKey query blank.
+Provider template/client key metadata matches current runtime; no registered WebApp,
+default Hosting site not linked, init.json404. Auth key only allows local/CloudShell,
+not Firebase email-action origin. Narrow repair prepared in
+EMAIL_ACTION_REPAIR_20261012.md and approval requested: add only Firebase origin,
+register WZOS with existing key UID, link existing Hosting site. Not applied yet.
+No password/reset code in repository, no verification/IAM/public cutover change.
+Auto-review blocked private mailbox read and stored-key lookup egress; metadata-only
+alternative completed. Resume approved repair, then fresh user-operated password
+reset and sign-in; do not bypass identity checks. Candidate00038 remains private;
+Atlas/provider/public-release work still pending.
 ## Latest authentication UI checkpoint — October 12, 2026
 
 Ray's admin account creation returned a generic provider error; root cause not yet
