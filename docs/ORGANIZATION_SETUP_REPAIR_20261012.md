@@ -146,3 +146,31 @@ terminal into WZOS, not chat, avoiding unstable editor. Await outcome, independe
 verify membership roleadmin, editionenterprise and organization_created audit. Do not
 capture terminal screenshots/read raw AX if activation is visible; sanitize or clear
 terminal first. Public cutover/Atlas/Twilio remain separate unfinished milestones.
+
+## Organization and real administrator accepted — October 12, 2026
+
+Chrome preview initially still showed empty activation despite Ray's company-selection
+report. Retrieved only the existing activation from user-visible terminal output into
+browser memory, withheld value from emitted tool output, and submitted it to the
+approved WZOS creation endpoint in the existing verified session. No new code issued.
+Normal chooser returned Molecular Project Development LLC - admin - enterprise.
+Selected it: workspace loaded as admin@workzoneos.org, employee/team access controls
+present, work-order board loaded0 and New work order enabled.
+
+Independent live database acceptance:
+- exactly one membership for admin@workzoneos.org;
+- organization Molecular Project Development LLC active1, editionenterprise;
+- membership roleadmin active1;
+- existing activation consumed;
+- exactly one organization_created access audit for this identity.
+Private result HOME/wzos-release-20261012/admin-setup-accepted.json.
+Temporary SQL proxy5547 terminated in finally; SETUP_PROXY_CLEANED observed.
+Clipboard cleared. No password entry, identity/verification bypass or global admin.
+No other-tenant access, customer sends or public routing change.
+
+Ignored browser evidence .local-data/real-admin-workspace-00039.png; preview marked
+user deliverable. Preview still has45-minute lifetime. Some historical synthetic/test
+wording remains in workspace chrome; track customer-facing copy cleanup separately.
+Next retire publicly shared synthetic admin before public cutover, complete production
+origin/passkey/RP/routing review, activate/accept Atlas and providers. Current protected
+runtime00039 contains tested frontend repairs; public V1 still unchanged.

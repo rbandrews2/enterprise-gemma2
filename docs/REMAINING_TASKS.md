@@ -1,3 +1,14 @@
+## Latest accepted real admin organization — October 12, 2026
+
+Molecular Project Development LLC creation completed through approved normal endpoint;
+selected admin/Enterprise entry and workspace loaded as admin@workzoneos.org.
+Independent DB: exactly1 active admin membership, active Enterprise organization,
+activation consumed, exactly1 organization_created audit. Private acceptance JSON in
+Cloud Shell release folder; temporary SQL proxy cleaned, clipboard cleared.
+Protected00039 repair remains, preview45min. Browser evidence saved ignored and tab
+kept open. See ORGANIZATION_SETUP_REPAIR_20261012.md. No V1/public/IAM/customer change.
+Next retire shared synthetic admin before public release; finish production origin/RP/
+routing and Atlas/provider acceptance. Historical synthetic/test copy cleanup remains.
 ## Latest private repair release — October 12, 2026
 
 Exactbf77c91 Node83 and PostgreSQL498 passed/no skips; PGcleanup verified.
