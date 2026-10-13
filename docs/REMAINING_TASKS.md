@@ -1,3 +1,13 @@
+## Latest exact repair gate checkpoint — October 12, 2026
+
+Ray reports exactbf77c91 PostgreSQL498 PASS,195.552s,zero failures/errors/skips.
+Node83passed locally. Build-only helper scripts/build_auth_repair.sh prepared and
+Bashsyntax checked; reuses00038 immutable image, overlays only two tested JS files,
+checks frozen sources. Requires raw PASS log, exact checkout and no remaining PG
+processes. Chrome lists but cannot attach; user-run terminal fallback needed.
+Build/deploy not submitted yet. Organization still NOTcreated per independent DB;
+existing activationunused. Next build result/cleanup, private deployment, same
+approved activation setup and audited admin/Enterprise verification. V1 unchanged.
 ## Latest independently verified recovery checkpoint — October 12, 2026
 
 Preview port8080 was closed; restored private auth-2b42560 proxy, API200/verified_accounts.

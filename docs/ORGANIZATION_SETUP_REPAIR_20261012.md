@@ -104,3 +104,16 @@ existing private activation file, then Chrome disappeared from inventory. No bui
 or deploy submitted. Next reconnect Terminal, read gate/cleanup, finish same approved
 activation through real verified-user endpoint, verify membership/audit, and build/
 deploy tested frontend repairs privately. Runtime00038/main00031/V1 unchanged.
+
+## Exact repair gate accepted — October 12, 2026
+
+Ray supplied final PostgreSQL output for bf77c91:498 tests in195.552s, OK,
+failures0/errors0/skips0. This is user-reported gate evidence; raw persistent log
+and cleanup still need independent readback. Local exact frontend Node83 passed.
+Prepared scripts/build_auth_repair.sh: requires exact checkout and PASS log, stops
+if PostgreSQL remains, validates previous image digest, overlays only account.js/
+workspace.js, verifies preserved source library and submits build asynchronously.
+Bash -n passed using installed Git Bash outside sandbox after sandbox signal-pipe
+failure. No cloud build/deploy submitted by this helper yet. Chrome listed but two
+attempts to attach existing Cloud Shell tab failed; terminal-paste fallback requested.
+No additional activation, admin grant, IAM, public exposure or customer send.
