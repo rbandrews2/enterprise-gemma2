@@ -1,3 +1,14 @@
+## Latest independently verified recovery checkpoint — October 12, 2026
+
+Preview port8080 was closed; restored private auth-2b42560 proxy, API200/verified_accounts.
+Live DB: real admin memberships0, activationunused, creationaudit0. Organization
+creation NOT completed; prior success inference superseded. Do not issue another
+activation. Use existing approved24-hour activation via normal verified-user setup.
+Node83passed. Exactbf77c91 nativePG gate submitted, result unknown; inspect
+HOME/wzos-release-20261012/postgres-bf77c91.log and cleanup before build/deploy.
+Cloud editor stalled; Chrome disconnected. Reconnect in Terminal mode, finish setup,
+verify admin/Enterprise and deploy repairs. Clipboard cleared. No new deployment,
+main/V1/public routing unchanged. See ORGANIZATION_SETUP_REPAIR_20261012.md.
 ## Latest HTML-response repair checkpoint — October 12, 2026
 
 Ray reports HTML instead of API JSON after organization setup/selection. Local

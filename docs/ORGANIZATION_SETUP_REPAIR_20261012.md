@@ -80,3 +80,27 @@ additional organization HTML case; focused auth/workspace26 passed afterward.
 No backend/schema/public change. Next restore protected preview to the exact tested
 candidate, verify organization/admin/Enterprise membership and access audit, select
 existing organization instead of creating another. Clear activation clipboard.
+
+## Independent recovery verification — October 12, 2026
+
+Fresh Chrome3 connection succeeded. Existing Cloud Shell preview port8080 was closed;
+restored official cloud-run-proxy pointing to private auth-2b42560 candidate,45-minute
+lifetime. /api/identities HTTP200 modeverified_accounts. Opened preview; remembered
+identity reached organization chooser with no organization buttons.
+
+Read-only live PostgreSQL check contradicts prior company-list interpretation:
+admin@workzoneos.org memberships=[], existing activation present but unused,
+organization_created audit count0. Organization creation NOT complete. Prior
+user-confirmed-success wording was an inference and is superseded by this database
+result. No replacement activation or duplicate organization issued. Private readback
+saved HOME/wzos-release-20261012/admin-setup-readback.json; SQL proxy5547 trap cleaned.
+Browser clipboard cleared before preview recovery.
+
+Full exact local Node83 passed/no skips. Submitted clone/detach of
+bf77c91202f1b59245a56a07d734d74a51fae690 and native PostgreSQL gate to
+HOME/wzos-auth-repair-bf77c91; result not yet observed. Log intended path
+HOME/wzos-release-20261012/postgres-bf77c91.log. Cloud editor stalled while opening
+existing private activation file, then Chrome disappeared from inventory. No build
+or deploy submitted. Next reconnect Terminal, read gate/cleanup, finish same approved
+activation through real verified-user endpoint, verify membership/audit, and build/
+deploy tested frontend repairs privately. Runtime00038/main00031/V1 unchanged.
