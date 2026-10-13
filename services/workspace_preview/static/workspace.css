@@ -155,3 +155,6 @@ body::before{content:"";position:fixed;inset:-4%;z-index:-2;pointer-events:none;
 .sidebar .nav-item:not(.active){background:linear-gradient(125deg,#ffffff10,#0b0b0b80)}
 .sidebar .nav-item.active{background:linear-gradient(120deg,#b8752747,#14100bb8);box-shadow:inset 3px 0 #f6bd63,inset 0 1px #ffffff22,0 0 24px #df8c1415}
 .sidebar .nav-item:active{box-shadow:inset 0 0 16px #d990241c,0 0 20px #eba63440}
+.navigation-overview .navigation-map{height:clamp(320px,48vh,520px);min-height:320px}
+.navigation-overview p,.navigation-route p{overflow-wrap:anywhere}
+@media(max-width:640px){.navigation-overview{padding:16px}.navigation-overview h2{font-size:24px}.navigation-overview p{font-size:16px;line-height:1.6}.navigation-overview .navigation-map{height:360px}.navigation-route .secondary{min-height:48px}}

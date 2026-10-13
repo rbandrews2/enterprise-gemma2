@@ -1,3 +1,14 @@
+## Exact PostgreSQL gate accepted; Navigation map increment — October 12, 2026
+
+Ray reports exact db60b7ef9a4c57497ba60818dc34c4e42630ab6d native PostgreSQL:
+546 tests153.812s, PASS,0 failures/errors/skips. This resolves the Docker-download
+block and supersedes the local timeout as the current reported database gate.
+Raw Cloud log and cleanup still need independent readback before build.
+Navigation now adds a visible interactive Virginia overview (explicitly not device
+location), route endpoint symbols and Show full route after pan/zoom. Existing
+Google loader/Routes adapter and permitted-job lookup reused; no backend/DDL change.
+Client asks location only on click, and map errors/offline remain explicit.
+Live origin/credentials rendering and public release remain unverified, not deployed.
 ## Release gate follow-up — October 12, 2026
 
 Exact application candidate db60b7ef9a4c57497ba60818dc34c4e42630ab6d pushed and
@@ -336,3 +347,10 @@ remaining cloud/phone gates and the closed-app push requirement before launch.
 Messaging, Enterprise dispatch, versioned training/reassignment and offline drafts are assembled on codex/preproduction-modules. Combined local Python444 and Node37 passed; PostgreSQL/browser acceptance precede release. See CLAUDE_REPAIR_ACCEPTANCE_20261010.md.
 
 Combined PostgreSQL acceptance subsequently passed444 tests/118.086s, zero skips/failures/errors at9c331c4. Browser gates and explicit cleanup confirmation remain before release.
+
+Navigation frontend full Node90 PASS/no skips after overview/endpoint/recenter edits.
+No Python/backend/DDL changes since exact db60b7e PostgreSQL546 reported PASS.
+Live Google Maps rendering is not accepted by these mocked tests. Cloud browser
+inventory timed out again; raw gate log, cleanup and deployment remain unverified.
+Endpoint symbols follow Google Maps JavaScript documented Polyline icon sequences:
+https://developers.google.com/maps/documentation/javascript/symbols

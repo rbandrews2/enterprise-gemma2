@@ -10,6 +10,7 @@
   $('team-title').textContent={training:'Training study planner',messages:'Messaging',navigation:'Navigation'}[name];
   try{
    if(name==='navigation'){
+    window.WzosNavigationRoute?.overview?.(root);
     root.append(node('p','Loaded destinations remain available in this open app when offline. Save a destination sheet before travel for access after closing the app. Map imagery, live traffic and route guidance require connectivity or separately downloaded maps in your navigation app.'));
     const session=window.wzosClock.getSession(),scope=session?JSON.stringify([session.organization_id,session.id,session.edition]):null;
     let orders=destinationCache?.scope===scope?destinationCache.items:window.wzosClock.getOrders(),cached=!navigator.onLine,assignmentsUnavailable=false;

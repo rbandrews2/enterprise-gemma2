@@ -1,12 +1,26 @@
 "use strict";
 (() => {
- let epoch=0, current=null, request=null;
+ let epoch=0, current=null, request=null, mapGeneration=0;
  const node=(tag,text)=>{const n=document.createElement(tag);n.textContent=text||'';return n;};
  const scope=()=>{const s=window.wzosClock.getSession();return JSON.stringify([s?.organization_id,s?.id,s?.edition]);};
  function clear(){epoch++;if(request)request.abort();request=null;if(current)current.remove();current=null;}
- document.addEventListener('wzos:session',clear);
- document.addEventListener('wzos:view',clear);
- window.addEventListener('offline',clear);
+ function leave(){mapGeneration++;clear();}
+ document.addEventListener('wzos:session',leave);
+ document.addEventListener('wzos:view',leave);
+ window.addEventListener('offline',leave);
+ async function overview(container){
+  const generation=mapGeneration,identity=scope(),section=node('section');section.className='panel navigation-overview';
+  const status=node('p','Loading the interactive map…'),box=node('div');box.className='report-map navigation-map';box.hidden=true;
+  box.setAttribute('aria-label','Interactive Google map');status.setAttribute('role','status');
+  section.append(node('h2','Navigation map'),status,box);container.append(section);
+  const active=()=>generation===mapGeneration&&identity===scope()&&section.isConnected;
+  if(!navigator.onLine){status.textContent='Map unavailable offline. Saved destination sheets remain available.';return;}
+  try{
+   await window.WzosReportMap.ready();if(!active())return;
+   box.hidden=false;new google.maps.Map(box,{center:{lat:37.5,lng:-79},zoom:7,mapTypeId:'roadmap',streetViewControl:false,fullscreenControl:true});
+   status.textContent='Virginia overview — not your current location. Pan, zoom or switch to satellite. Select a job below to calculate its route.';
+  }catch(error){if(active()){box.hidden=true;status.textContent='Map unavailable: '+error.message;}}
+ }
  function attach(card,job,{autoOpen=false}={}){
   const open=node('button','Get directions');open.type='button';open.className='secondary';card.append(open);
   open.onclick=async()=>{
@@ -57,7 +71,12 @@
       const path=geometry.encoding.decodePath(route.encoded_polyline);
       if(!path.length||path.length>10000||path.some(p=>!Number.isFinite(p.lat())||!Number.isFinite(p.lng())||Math.abs(p.lat())>90||Math.abs(p.lng())>180))throw Error('Invalid route line');
       mapBox.hidden=false;const map=new google.maps.Map(mapBox,{center:path[0],zoom:12,mapTypeId:'roadmap',streetViewControl:false});
-      new google.maps.Polyline({map,path,strokeColor:'#efb956',strokeWeight:6});const bounds=new google.maps.LatLngBounds();path.forEach(p=>bounds.extend(p));map.fitBounds(bounds,40);
+      new google.maps.Polyline({map,path,strokeColor:'#efb956',strokeWeight:6,icons:[
+       {icon:{path:google.maps.SymbolPath.CIRCLE,scale:7,fillColor:'#75c7ff',fillOpacity:1,strokeColor:'#101820',strokeWeight:2},offset:'0%'},
+       {icon:{path:google.maps.SymbolPath.CIRCLE,scale:8,fillColor:'#efb956',fillOpacity:1,strokeColor:'#101820',strokeWeight:2},offset:'100%'}
+      ]});const bounds=new google.maps.LatLngBounds();path.forEach(p=>bounds.extend(p));map.fitBounds(bounds,40);
+      const fit=node('button','Show full route');fit.type='button';fit.className='secondary';fit.onclick=()=>{if(active())map.fitBounds(bounds,40);};
+      result.insertBefore(fit,mapBox);result.insertBefore(node('p','Blue: start · Amber: destination'),mapBox);
      }catch{if(active()){mapBox.hidden=true;status.textContent+=' Map display unavailable; directions remain below.';}}
     }catch(error){if(active())status.textContent=error.name==='AbortError'?'Route request cancelled.':error.message;}
     finally{if(request===controller)request=null;if(active()){calculate.disabled=!configured;locate.disabled=!navigator.geolocation;origin.disabled=false;}}
@@ -66,5 +85,5 @@
   };
   if(autoOpen)open.onclick();
  }
- window.WzosNavigationRoute={attach,clear};
+ window.WzosNavigationRoute={attach,clear,overview};
 })();
