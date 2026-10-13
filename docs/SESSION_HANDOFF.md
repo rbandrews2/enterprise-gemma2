@@ -1,3 +1,16 @@
+## Release gate follow-up — October 12, 2026
+
+Exact application candidate db60b7ef9a4c57497ba60818dc34c4e42630ab6d pushed and
+verified on origin/codex/preproduction-modules. Node87 passed. Local Python546 ran
+760.149s: one Atlas cancellation timeout,159 PostgreSQL skips; NOT a full pass.
+Focused cancellation rerun5 passed19.053s; do not erase full-run failure or infer
+resource causation. Exact Linux/native PostgreSQL gate remains required.
+Ray reports Docker image retrieval exceeded300 seconds before gate execution.
+Existing scripts/test_postgres_native.sh avoids Docker, uses private Unix socket,
+mode700 disposable cluster and cleanup trap. Exact-candidate command sent to Ray.
+Chrome absent initially, restored to inventory after reconnection but attaching to
+Cloud Shell still timed out. No native gate/build/deployment/traffic changes verified.
+Next use native runner, inspect actual outcome/cleanup, then live release checks.
 ## Release candidate saved — October 12, 2026
 
 Ray requests GitHub synchronization and public V2 release. Current candidate includes
