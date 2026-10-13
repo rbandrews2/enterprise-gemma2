@@ -90,6 +90,8 @@ class Accounts:
             # Compatibility migration: preserve existing membership IDs and activity.
             # Legacy CHECK constraints permit admin; fresh databases use two roles.
             db.execute("UPDATE memberships SET role='admin' WHERE role='owner'")
+        from .licensing import Licensing
+        self.licensing = Licensing(connect)
 
     def identity(self, request):
         cached = getattr(request.state, 'verified_identity', None)
@@ -135,12 +137,18 @@ class Accounts:
     def audit(self, db, org, actor, action, target):
         db.execute('INSERT INTO access_audit VALUES (?,?,?,?,?,?)', (str(uuid4()),org,actor,action,target,now()))
 
-    def issue_activation(self, edition, hours=168):
+    def issue_activation(self, edition, hours=168, *, seat_limit=None, purchaser_email=None):
         if edition not in ('core', 'enterprise') or not 1 <= hours <= 168:
             raise ValueError('Invalid activation settings')
+        if seat_limit is not None:
+            self.licensing.validate(seat_limit, purchaser_email)
+        elif purchaser_email is not None:
+            raise ValueError('Purchased activations require a seat allowance')
         token = secrets.token_urlsafe(32)
         with self.connect() as db:
             db.execute('INSERT INTO activation_codes VALUES (?,?,?,?,?)', (digest(token),edition,(datetime.now(timezone.utc)+timedelta(hours=hours)).isoformat(),None,None))
+            if seat_limit is not None:
+                self.licensing.attach_activation(db, digest(token), seat_limit, purchaser_email)
         return token
 
     def register(self, app):
@@ -150,6 +158,12 @@ class Accounts:
         register(app, self)
         from .passkeys import register as register_passkeys
         self.passkeys_enabled = register_passkeys(app, self)
+        @app.get('/api/account/license')
+        def license_status(request: Request):
+            selected=self.actor(request)
+            if selected['role']!='admin': raise HTTPException(403,'Administrator access required')
+            with self.connect() as db:
+                return {'edition':selected['edition'], **self.licensing.status(db, selected['organization_id'])}
         @app.get('/api/account/members')
         def members(request: Request):
             selected=self.actor(request)
@@ -178,6 +192,7 @@ class Accounts:
                         return {'id':code['organization_id']}
                     raise HTTPException(403, 'Activation code is unavailable')
                 org=str(uuid4())
+                self.licensing.redeem(db, digest(body.activation_code), org, user)
                 db.execute('INSERT INTO organizations VALUES (?,?,?,1)', (org,body.name,code['edition']))
                 db.execute("INSERT INTO memberships VALUES (?,?,'admin',1)", (org,user['id']))
                 db.execute('UPDATE activation_codes SET used_by=?,organization_id=? WHERE hash=?', (user['id'],org,digest(body.activation_code)))
@@ -204,6 +219,9 @@ class Accounts:
                 if not invitation or invitation['email'] != user['email'] or invitation['expires_at'] < now() or invitation['accepted_by'] not in (None,user['id']):
                     raise HTTPException(403,'Invitation is unavailable for this verified account')
                 # Existing membership is never reactivated or promoted by an invitation.
+                existing=db.execute('SELECT active FROM memberships WHERE organization_id=? AND user_id=?', (invitation['organization_id'],user['id'])).fetchone()
+                if not existing:
+                    self.licensing.require_capacity(db, invitation['organization_id'])
                 db.execute('INSERT INTO memberships VALUES (?,?,?,1) ON CONFLICT DO NOTHING', (invitation['organization_id'],user['id'],invitation['role']))
                 db.execute('UPDATE invitations SET accepted_by=? WHERE hash=?', (user['id'],digest(body.token)))
                 self.audit(db,invitation['organization_id'],user['id'],'invitation_accepted',user['id'])
@@ -222,6 +240,8 @@ class Accounts:
                 count=db.execute("SELECT COUNT(*) FROM memberships WHERE organization_id=? AND role='admin' AND active=1",(selected['organization_id'],)).fetchone()[0]
                 if target['role']=='admin' and target['active'] and count==1 and (body.role!='admin' or not body.active):
                     raise HTTPException(409,'Keep at least one active admin')
+                if body.active and not target['active']:
+                    self.licensing.require_capacity(db, selected['organization_id'])
                 db.execute('UPDATE memberships SET role=?,active=? WHERE organization_id=? AND user_id=?',(body.role,int(body.active),selected['organization_id'],user_id))
                 self.audit(db,selected['organization_id'],selected['id'],'membership_'+body.role+('_enabled' if body.active else '_disabled'),user_id)
             return {'updated':True}

@@ -245,6 +245,19 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
     def script():
         return FileResponse(STATIC / "workspace.js", media_type="text/javascript")
 
+    @app.get('/install.js')
+    def install_script():
+        return FileResponse(STATIC/'install.js', media_type='text/javascript')
+
+    @app.get('/manifest.webmanifest')
+    def install_manifest():
+        return FileResponse(STATIC/'manifest.webmanifest', media_type='application/manifest+json')
+
+    @app.get('/install-icon-{size}.png')
+    def install_icon(size: int):
+        if size not in (192,512): raise HTTPException(404,'Icon not found')
+        return FileResponse(STATIC/f'install-icon-{size}.png',media_type='image/png')
+
     @app.get("/api/maps/config")
     def maps_config(request: Request):
         actor(request)

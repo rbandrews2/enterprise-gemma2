@@ -105,6 +105,7 @@ window.wzosAccount = (() => {
   const message=element('p');message.setAttribute('role','status');
   form.append(emailLabel,passwordLabel,rememberLabel,privacy,signin,passkey,signup,reset,verify);panel.append(title,note,form,message);document.body.append(panel);panel.addEventListener('cancel',e=>e.preventDefault());panel.showModal();
   const session=await new Promise(resolve=>{
+   if(window.wzosInstall)window.wzosInstall.mount(panel);
    let working=false;
    async function run(task){if(working)return;working=true;for(const b of panel.querySelectorAll('button'))b.disabled=true;try{await task();}catch(e){message.textContent=e.message;}finally{working=false;for(const b of panel.querySelectorAll('button'))b.disabled=!key;}}
    async function choose(){
@@ -154,17 +155,28 @@ window.wzosAccount = (() => {
    });
   });
   const controls=document.querySelector('.preview-bar');
+  controls.className='preview-bar account-bar';
+  controls.setAttribute('aria-label','WZOS account');
+  const menu=element('details');menu.className='account-menu';
+  const menuToggle=element('summary','☰ Account');
+  const actions=element('div');actions.className='account-actions';
+  menu.append(menuToggle,actions);controls.append(menu);
+  const phoneLayout=window.matchMedia?window.matchMedia('(max-width:760px)'):null;
+  const resizeAccountMenu=()=>{menu.open=!phoneLayout?.matches;};
+  resizeAccountMenu();phoneLayout?.addEventListener('change',resizeAccountMenu);
   const employeeButton=element('button',session.can_manage_team?'Employees':'My employee record');
-  employeeButton.onclick=()=>window.wzosEmployees.open(api,session);controls.append(employeeButton);
+  employeeButton.onclick=()=>window.wzosEmployees.open(api,session);employeeButton.className='account-glass account-employees';actions.append(employeeButton);
   if(session.can_manage_team){const manage=element('button','Team access');manage.onclick=async()=>{
    const dialog=element('dialog');dialog.className='account-dialog';const status=element('p');status.setAttribute('role','status');const close=element('button','Close');close.onclick=()=>{dialog.close();dialog.remove();};dialog.append(element('h2','Organization access'),status,close);document.body.append(dialog);dialog.showModal();
    try{const data=await api('/api/account/members');
+    const license=await api('/api/account/license');
+    dialog.append(element('p',license.seat_limit===null?'Seat allowance awaiting configuration.':`${license.seats_used} of ${license.seat_limit} seats in use. Admins and members each use one seat.`));
     const email=element('input');email.type='email';email.placeholder='Member email';email.setAttribute('aria-label','Member email');
     const role=element('select');role.setAttribute('aria-label','Invitation role');for(const value of (data.can_change_access?['member','admin']:['member'])){const option=element('option',value);option.value=value;role.append(option);}
     const invite=element('button','Create invitation');invite.onclick=async()=>{invite.disabled=true;try{const result=await api('/api/account/invitations',{email:email.value,role:role.value});const output=element('textarea');output.readOnly=true;output.value=result.token;output.setAttribute('aria-label','Private invitation token');dialog.append(output);status.textContent='Invitation created for this email. Share privately. No message was sent.';}catch(e){status.textContent=e.message;}finally{invite.disabled=false;}};dialog.append(email,role,invite);
     for(const member of data.items){const row=element('section');row.append(element('p',`${member.name}   -   ${member.role}   -   ${member.active?'Active':'Disabled'}`));if(data.can_change_access){const select=element('select');select.setAttribute('aria-label','Role for '+member.name);for(const value of ['member','admin']){const option=element('option',value);option.value=value;select.append(option);}select.value=member.role;const active=element('input');active.type='checkbox';active.checked=Boolean(member.active);const label=element('label','Active membership');label.append(active);const save=element('button','Save access');save.onclick=async()=>{save.disabled=true;try{await api('/api/account/members/'+encodeURIComponent(member.id),{role:select.value,active:active.checked},'PUT');status.textContent='Access updated. Changes apply on the next request.';if(member.id===session.id)location.reload();}catch(e){status.textContent=e.message;}finally{save.disabled=false;}};row.append(select,label,save);}dialog.append(row);}
    }catch(e){status.textContent=e.message;}
-  };controls.append(manage);}
+  };manage.className='account-glass account-team';actions.append(manage);}
   controls.querySelector('strong').textContent='WZOS ACCOUNT';controls.querySelector('span').textContent=session.organization;
   if(passkeysAvailable){
    const manageKeys=element('button','Passkeys');manageKeys.onclick=async()=>{
@@ -179,10 +191,10 @@ window.wzosAccount = (() => {
      const row=element('section');row.append(element('p',item.label));const remove=element('button','Remove passkey');
      remove.onclick=async()=>{remove.disabled=true;try{await api('/api/account/passkeys/'+encodeURIComponent(item.id),null,'DELETE');token=null;refresh=null;expires=0;location.reload();}catch(e){status.textContent=e.message;remove.disabled=false;}};row.append(remove);dialog.append(row);
     }}catch(e){status.textContent=e.message;}
-   };controls.append(manageKeys);
+   };manageKeys.className='account-glass account-passkeys';actions.append(manageKeys);
   }
-  const logout=element('button','Sign out');logout.onclick=async()=>{logout.disabled=true;try{if(config.persistent_sessions)await api('/api/account/logout',{});token=null;refresh=null;expires=0;location.reload();}catch(e){logout.textContent='Sign out failed — retry';logout.disabled=false;}};controls.append(logout);
-  if(config.persistent_sessions){const all=element('button','Forget remembered devices');all.onclick=async()=>{all.disabled=true;try{await api('/api/account/logout-all',{});token=null;refresh=null;expires=0;location.reload();}catch(e){all.textContent='Could not forget devices — retry';all.disabled=false;}};controls.append(all);}
+  const logout=element('button','Sign out');logout.onclick=async()=>{logout.disabled=true;try{if(config.persistent_sessions)await api('/api/account/logout',{});token=null;refresh=null;expires=0;location.reload();}catch(e){logout.textContent='Sign out failed — retry';logout.disabled=false;}};logout.className='account-glass account-signout';actions.append(logout);
+  if(config.persistent_sessions){const all=element('button','Forget remembered devices');all.onclick=async()=>{all.disabled=true;try{await api('/api/account/logout-all',{});token=null;refresh=null;expires=0;location.reload();}catch(e){all.textContent='Could not forget devices — retry';all.disabled=false;}};all.className='account-glass account-devices';actions.append(all);}
   document.querySelector('.app-footer span:last-child').textContent='Private organization workspace';
   return session;
  }

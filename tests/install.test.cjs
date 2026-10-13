@@ -1,0 +1,32 @@
+const {test}=require('node:test');
+const assert=require('node:assert/strict');
+const vm=require('node:vm');
+const fs=require('node:fs');
+function fixture(standalone=false){
+ const events={},widgets=[];
+ const element=tag=>({tag,children:[],append(...n){this.children.push(...n);},setAttribute(){}});
+ const window={matchMedia:()=>({matches:standalone}),addEventListener:(name,fn)=>events[name]=fn};
+ vm.runInNewContext(fs.readFileSync('services/workspace_preview/static/install.js','utf8'),{window,navigator:{},document:{createElement:element}});
+ const root=element('div');window.wzosInstall.mount(root);
+ return {events,root,button:root.children[0].children[0],note:root.children[0].children[1]};
+}
+test('installation fallback explains browser option and keeps browser access available',async()=>{
+ const f=fixture();await f.button.onclick();assert.match(f.note.textContent,/Add to Home Screen/);assert.match(f.note.textContent,/optional/);
+});
+test('accepted prompt does not falsely claim completed installation',async()=>{
+ const f=fixture();let prompted=0,prevented=0;
+ f.events.beforeinstallprompt({preventDefault(){prevented++;},async prompt(){prompted++;},userChoice:Promise.resolve({outcome:'accepted'})});
+ await f.button.onclick();assert.equal(prompted,1);assert.equal(prevented,1);assert.match(f.note.textContent,/requested/);assert.equal(f.button.hidden,false);
+ f.events.appinstalled();assert.equal(f.button.hidden,true);assert.match(f.note.textContent,/installed app/);
+});
+test('already standalone hides install action and rejected prompt remains usable',async()=>{
+ assert.equal(fixture(true).button.hidden,true);
+ const f=fixture();f.events.beforeinstallprompt({preventDefault(){},async prompt(){throw Error('private');}});
+ await f.button.onclick();assert.equal(f.button.disabled,false);assert.doesNotMatch(f.note.textContent,/private/);
+});
+test('manifest has install icons and launches workspace without an activation in the URL',()=>{
+ const m=JSON.parse(fs.readFileSync('services/workspace_preview/static/manifest.webmanifest','utf8'));
+ assert.equal(m.start_url,'/');assert.equal(m.scope,'/');assert.equal(m.display,'standalone');
+ assert.deepEqual(m.icons.map(i=>i.sizes),['192x192','512x512']);
+ for(const icon of m.icons)assert.ok(fs.existsSync('services/workspace_preview/static'+icon.src));
+});

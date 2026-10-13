@@ -1,0 +1,9 @@
+{
+  "status": "proposal_for_review",
+  "currency": "usd",
+  "seat_policy": "all_active_logins_including_admins",
+  "offers": [
+    {"id": "core", "edition": "core", "included_seats": 15, "maximum_seats": 30, "setup_cents": 9900, "monthly_cents": 5900, "additional_seat_monthly_cents": 300, "setup_price_id": null, "monthly_price_id": null, "additional_seat_price_id": null},
+    {"id": "enterprise", "edition": "enterprise", "included_seats": 25, "maximum_seats": null, "setup_cents": 99900, "monthly_cents": 24900, "additional_seat_monthly_cents": 700, "setup_price_id": null, "monthly_price_id": null, "additional_seat_price_id": null}
+  ]
+}

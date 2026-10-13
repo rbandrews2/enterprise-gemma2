@@ -1,3 +1,19 @@
+## Release candidate saved — October 12, 2026
+
+Ray requests GitHub synchronization and public V2 release. Current candidate includes
+paid-seat grants, sandbox-only commerce foundation, install assets/guidance and the
+approved original module layout with translucent glass/icons and account menu.
+Full Node87 passed. Full local Python discovery running; initial -t discovery rejected
+non-package tests, corrected to -s tests. Exact native PostgreSQL gate remains open.
+Chrome Cloud Shell inventory/attachment timed out twice; no live schema, spending,
+backup, credential or traffic checks verified during this attempt. No new cloud deploy.
+Reviewable additive DDL: scripts/purchase_seats_schema_review.sql. Default runtime
+applies only seat tables; sandbox purchase ledger is not mounted in workspace.
+Resume: finish current test result, run exact native PostgreSQL candidate, check live
+backup/schema/budget, retire shared synthetic admin, set app.workzoneos.org auth
+origins/passkey RP and review existing IAP/backend routing, then deploy/verify/rollback.
+Public request is recorded, but fixture authentication must never be published.
+Live payment products/lifecycle, Atlas inference and Twilio acceptance remain open.
 ## Latest accepted real admin organization — October 12, 2026
 
 Molecular Project Development LLC creation completed through approved normal endpoint;

@@ -117,7 +117,7 @@ for(const mode of ['opt-in','opt-out','restore']) test('persistent sign-in '+mod
  const choices=panel.children.find(c=>c.className==='account-choices');assert.ok(choices);await choices.children[0].onclick();await started;
  const headers=await account.headers();assert.equal(headers['X-WZOS-Organization'],'org-1');assert.equal(headers['X-WZOS-Session'],'1');assert.equal(headers.Authorization,mode==='opt-out'?'Bearer first':undefined);
  assert.equal(exchanges,mode==='opt-in'?1:0);assert.equal(signins,mode==='restore'?0:1);
- await bar.children.find(c=>c.textContent==='Sign out').onclick();assert.equal(cookie,false);assert.equal(reloads,1);
+ await bar.querySelectorAll('button').find(c=>c.textContent==='Sign out').onclick();assert.equal(cookie,false);assert.equal(reloads,1);
 });
 for(const cancelled of [false,true]) test('passkey sign-in '+(cancelled?'cancellation retains password fallback':'uses Google exchange and organization checks'),async()=>{
  const body=new Element('body'),bar=new Element('bar');let exchanged=0,verified=0;
