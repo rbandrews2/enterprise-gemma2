@@ -1,3 +1,14 @@
+## Latest private repair release — October 12, 2026
+
+Exactbf77c91 Node83 and PostgreSQL498 passed/no skips; PGcleanup verified.
+Build2deb3159 SUCCESS; private00039-wum/repair-bf77c91 Ready, runtime config unchanged,
+main00031 still100%. Preview HTML/API200, bothJS byte matches, anonymousaccount401/
+publictag403. Live activation guidance accepted; company name filled. User asked to
+copy existing private activation directly to app and submit. Organization/admin/
+Enterprise audit acceptance pending. Do not read raw terminal if code visible.
+See ORGANIZATION_SETUP_REPAIR_20261012.md. Preview45min, no V1/public/IAM/schemachange.
+Next user outcome and independent membership/audit checks, then remaining release
+milestones. Atlas still disabled and Twilio runtime acceptance pending.
 ## Latest exact repair gate checkpoint — October 12, 2026
 
 Ray reports exactbf77c91 PostgreSQL498 PASS,195.552s,zero failures/errors/skips.

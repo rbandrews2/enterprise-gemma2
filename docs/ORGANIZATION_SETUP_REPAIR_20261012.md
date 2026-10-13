@@ -117,3 +117,32 @@ Bash -n passed using installed Git Bash outside sandbox after sandbox signal-pip
 failure. No cloud build/deploy submitted by this helper yet. Chrome listed but two
 attempts to attach existing Cloud Shell tab failed; terminal-paste fallback requested.
 No additional activation, admin grant, IAM, public exposure or customer send.
+
+## Private repair deployed and accepted — October 12, 2026
+
+Build2deb3159-bc20-4cbb-9b02-2b8ce787f853 SUCCESS independently read in Cloud Shell.
+Immutable image digest sha256:6f03d3ef4538d629021c0be919dd127d07596d21c9e946754986e396c4e5aa07.
+Only two frontend files overlaid onto existing00038 image; source-library verification
+ran in successful build. Cloud Shell PostgreSQL498 PASS/no skips visible; no postgres
+processes remain. Node83 passed locally on exactbf77c91.
+
+Private revision wzos-v2-accounts-00039-wum Ready, tag repair-bf77c91, zero main traffic.
+Runtime template spec compared before/after excluding image: identical. Main remains
+00031-h5t100%. No env/secret/IAM/resources/schema/V1/DNS change. Before/after metadata
+saved privately in Cloud Shell release folder. Code rollback: point protected proxy
+back to existing auth-2b42560 tag; keep main traffic unchanged.
+
+Protected preview restarted with refreshed operator token and45-minute lifetime.
+HTML200; served /account.js and /workspace.js byte-for-byte match exactbf77c91.
+An initial verification used nonexistent /assets routes and returned404; corrected to
+routes verified in app.py, then passed. Anonymous /api/account401, public private tag403.
+Live organization chooser now explains activation/invitation. Empty activation yields
+clear client guidance; no creation request sent. Company name filled for user.
+Evidence screenshot: ignored .local-data/organization-repair-live-00039.png.
+
+Organization creation remains pending. Existing activation still used only for the
+approved company/admin flow; user asked to copy it directly from their Cloud Shell
+terminal into WZOS, not chat, avoiding unstable editor. Await outcome, independently
+verify membership roleadmin, editionenterprise and organization_created audit. Do not
+capture terminal screenshots/read raw AX if activation is visible; sanitize or clear
+terminal first. Public cutover/Atlas/Twilio remain separate unfinished milestones.
