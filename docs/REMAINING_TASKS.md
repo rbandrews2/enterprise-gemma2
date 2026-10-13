@@ -1,3 +1,24 @@
+## Public V2 is live; next acceptance tasks — October 13, 2026
+
+Completed: exact Node90/native PostgreSQL546; frozen-source build; schema compatibility;
+fresh SQL backup; shared test admin retirement; public00041-pem deployment and
+app.workzoneos.org routing; production origin/RP; Twilio restricted test bindings;
+public root/assets200, protected401, cross-origin403 and direct run.app404 checks.
+
+Remaining in sequence:
+1. Real admin public-domain sign-in, organization selection and mobile/desktop module
+   acceptance; Maps rendering and Routes response under that authenticated origin.
+2. Controlled Twilio SMS delivery/status/webhook acceptance to approved recipient only;
+   decide customer messaging rollout after acceptance. AIRA voice hook unchanged.
+3. Restore cost-bounded self-hosted Atlas engine and run actual module/reference inference
+   scenarios. Live flag remains disabled until accepted; historical trial is not live AI.
+4. Finish payment activation/seat packages, real prices and recurring billing lifecycle;
+   default runtime does not expose sandbox checkout. Confirm email delivery provider.
+5. Resolve resulting functional/UI defects, tenant and role acceptance, monitoring,
+   restore exercise and production operations documentation.
+
+See PUBLIC_RELEASE_20261012.md, PUBLIC_ROLLBACK.md and latest SESSION_HANDOFF.md.
+
 ## Exact PostgreSQL gate accepted; Navigation map increment — October 12, 2026
 
 Ray reports exact db60b7ef9a4c57497ba60818dc34c4e42630ab6d native PostgreSQL:

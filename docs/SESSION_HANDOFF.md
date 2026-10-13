@@ -1,3 +1,31 @@
+## Public V2 cutover accepted — October 13, 2026
+
+Ray explicitly approved the public cutover and three-secret Twilio test setup.
+Application13f089edcbf767338ab01ee14b96f29418cf2927: Node90 and independently
+read native PostgreSQL546 PASS/zero skips; disposable database cleanup verified.
+Build77d268d6-eea8-4adc-bf80-644d5a4a56c6 SUCCESS. Immutable image503dd7649550
+(full digest in PUBLIC_RELEASE_20261012.md). Private00040 passed before cutover.
+Public00041-pem now serves100% at https://app.workzoneos.org through the separate
+wzos-v2-public-backend/NEG. Original V1 backend/default routing retained.
+Ingress internal-and-cloud-load-balancing; domain restriction rejected allUsers,
+so service-only Invoker IAM check disabled using Google's documented public option.
+No organization policy changes. App verified-account/admin/member/tenant checks remain.
+Public HTTP PASS: root/assets200, seven protected endpoints401, cross-origin403,
+direct run.app404. Browser visibly confirms WZOS sign-in. First probe timed out
+during propagation; corrected asset paths and repeated successfully, no app repair.
+Production origin/passkey RP app.workzoneos.org; re-enroll preview-domain passkeys.
+Twilio three secrets bound with secret-specific accessor grants, SMS test mode
+allowlisted only to Ray's approved recipient; no message sent or AIRA hook change.
+Fresh SQL backup1791863718996 SUCCESSFUL. Real admin verified/active Enterprise;
+shared tester@test.org disabled/revoked and membership retired with audit.
+Cloud evidence: $HOME/wzos-release-20261012/public-acceptance.json,
+public-service.json, cutover-before-*.json and public-verification-retry.log.
+Screenshot ignored: .local-data/public-v2-release-00041.png.
+Next: real admin public-domain sign-in/module/Maps acceptance; controlled Twilio
+delivery and webhook acceptance; restore and validate live Atlas inference;
+complete production checkout/recurring lifecycle and email provider acceptance.
+These unfinished integrations are not represented as complete. See PUBLIC_ROLLBACK.md.
+
 ## Exact PostgreSQL gate accepted; Navigation map increment — October 12, 2026
 
 Ray reports exact db60b7ef9a4c57497ba60818dc34c4e42630ab6d native PostgreSQL:
