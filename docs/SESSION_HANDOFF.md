@@ -1,3 +1,48 @@
+## Daily deployed; device acceptance deferred - October 14, 2026
+
+Ray resumed after laptop restart and requested deployment. Repaired runtime
+748f38253dc980fab60e99392bda63341f9a8591 is now live at app.workzoneos.org.
+Revision wzos-v2-accounts-daily-748f382 serves100%; build
+ d1086853-a56b-4a0b-9f76-0bcd808d0319 SUCCESS. Immutable image:
+us-central1-docker.pkg.dev/enterprise-gemma2/enterprise-gemma2/wzos-v2-accounts@sha256:648516f7dd97505a1c7f5d2feb40bc013b2aea572ca84fd589dd8c51914cd2fb
+
+Final focused Python22 passed/eight PG skips; Node96 passed/no skips.
+Exact native PostgreSQL576 passed/no failures/errors/skips; build guard confirmed
+no remaining PostgreSQL test processes. Real Daily private-room creation, token,
+near-future expiry update and synthetic-room cleanup PASS; no media joined.
+Past expiration was rejected by the actual API; close now requests a confirmed
++2-second expiry. This verifies provider configuration, not active-call ejection.
+
+Fresh SQL backup1791980651802 SUCCESSFUL. Existing runtime configuration compared:
+all prior environment variables/secrets, service account, resource capacity,
+concurrency/timeouts, ingress and Invoker setting preserved. Added only approved
+Daily domain/enabled flag and secret version1. Runtime secretAccessor granted
+only on wzos-v2-daily-api-key; no public secret-policy principals; key never printed.
+No AIRA webhook change, Twilio send, email, model call or customer invitation.
+Frozen agency source library verified in the immutable base during build.
+
+Public acceptance PASS: root/new meeting controls, exact four Git JS/CSS assets,
+Daily frame/media policy, anonymous config/prepare/join401, cross-origin403,
+direct run.app404. Authentication-origin six checksPASS (negative probes only,
+no accounts/emails/password changes). Browser visibly shows production sign-in.
+Synthetic browser also saved a Daily schedule and selected its glass meeting card.
+Proof images ignored: .local-data/daily-sdk/meeting-tv-final.png and
+public-login-deployed.png. Synthetic preview does not establish real calls.
+
+Ray explicitly deferred integration/device testing. Next session: real Android +
+laptop five-minute meeting, camera/microphone permissions, see/hear, Leave and
+cancellation/ejection; membership revocation policy remains an acceptance gap.
+Existing Maps, Twilio delivery, Atlas engine and checkout acceptance gaps remain
+on the list. Do not describe the whole app as production-accepted.
+
+Cloud evidence $HOME/wzos-daily-20261014: final-gate-and-provider.log,
+preflight.log/backup.json, build-result.json/image.txt, deploy.log,
+public-release.log/public-service.json; mode600 metadata snapshots contain
+configuration and must not be copied to Git or printed in full.
+Rollback: route traffic to wzos-v2-accounts-00044-xim; preserve additive
+ daily_meeting_rooms table and its metadata. Stop/verify active meetings before
+removing Daily secret access. No deployment work continues while testing is deferred.
+
 ## STOP FOR LAPTOP RESTART - Daily integration, October 14, 2026
 
 Ray requested saving progress and restarting the laptop after browser control and

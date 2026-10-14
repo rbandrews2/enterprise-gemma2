@@ -3,7 +3,8 @@
 ## Decision and implementation
 Ray selected Daily, created its account, provided public domain `wzos.daily.co`,
 and reports saving `wzos-v2-daily-api-key` in Google Secret Manager.
-Live calls are not accepted yet. Public app revision remains 00044-xim.
+Deployed revision wzos-v2-accounts-daily-748f382 serves100% at app.workzoneos.org.
+Live audio/video is not accepted yet; Ray deferred integration/device testing.
 
 The existing schedule editor now selects Schedule only, WZOS embedded meeting,
 or a legacy Google Meet link. Admins alone save schedules and prepare private
@@ -85,3 +86,12 @@ and define the immediate-revocation policy before marking this production ready.
 - https://docs.daily.co/reference/rest-api/meeting-tokens/create-meeting-token
 - https://docs.daily.co/reference/daily-js/factory-methods/create-frame
 - https://www.daily.co/pricing/video-sdk/
+
+## Deployment acceptance
+
+Exact748f382: native576/Node96 PASS. Real private room, token, +2-second expiry
+update and cleanup PASS. Buildd1086853 SUCCESS; SQL backup1791980651802 SUCCESS.
+Scoped secret access/configuration preservation verified. Public exact assets,
+meeting authentication/origin/ingress boundaries and six auth-origin checksPASS.
+Image648516f7dd97505a1c7f5d2feb40bc013b2aea572ca84fd589dd8c51914cd2fb.
+Active-media ejection/Android-laptop call remains deferred, explicitly not accepted.

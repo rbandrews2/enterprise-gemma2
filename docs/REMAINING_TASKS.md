@@ -1,3 +1,16 @@
+## Daily release checkpoint - October 14, 2026
+
+Daily meeting integration deployed at app.workzoneos.org, revision
+wzos-v2-accounts-daily-748f382,100%. Native576/Node96 PASS; real room/token/expiry
+and cleanup PASS; public asset/access checks and authentication-origin checksPASS.
+Ray deferred integration/device testing until a later session. Still to do:
+Android/laptop audio/video, denied permissions, Leave cleanup, cancellation of an
+already connected call and membership-revocation behavior. The provider API checks
+are complete; those device checks remain open. Do not infer media acceptance.
+See latest SESSION_HANDOFF.md and DAILY_MEETINGS_INTEGRATION_20261014.md.
+Prior pending-deployment checkpoints below are historical. Other acceptance tasks
+(Maps, Twilio delivery, Atlas, checkout/activation and operations) remain unchanged.
+
 ## Daily embedded meetings - local implementation, October 14, 2026
 
 Ray selected Daily and supplied wzos.daily.co; reports key saved in Secret Manager.
