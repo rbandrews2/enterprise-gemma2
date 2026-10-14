@@ -12,13 +12,13 @@
   const generation=mapGeneration,identity=scope(),section=node('section');section.className='panel navigation-overview';
   const status=node('p','Loading the interactive map…'),box=node('div');box.className='report-map navigation-map';box.hidden=true;
   box.setAttribute('aria-label','Interactive Google map');status.setAttribute('role','status');
-  section.append(node('h2','Navigation map'),status,box);container.append(section);
+  section.append(node('h2','Map'),status,box);container.append(section);
   const active=()=>generation===mapGeneration&&identity===scope()&&section.isConnected;
   if(!navigator.onLine){status.textContent='Map unavailable offline. Saved destination sheets remain available.';return;}
   try{
    await window.WzosReportMap.ready();if(!active())return;
    box.hidden=false;new google.maps.Map(box,{center:{lat:37.5,lng:-79},zoom:7,mapTypeId:'roadmap',streetViewControl:false,fullscreenControl:true});
-   status.textContent='Virginia overview — not your current location. Pan, zoom or switch to satellite. Select a job below to calculate its route.';
+   status.textContent='';status.hidden=true;
   }catch(error){if(active()){box.hidden=true;status.textContent='Map unavailable: '+error.message;}}
  }
  function attach(card,job,{autoOpen=false}={}){
@@ -27,12 +27,16 @@
    clear();const token=epoch, identity=scope(), panel=node('section');current=panel;
    panel.className='panel navigation-route';panel.setAttribute('aria-label','In-app route to '+job.title);
    const active=()=>epoch===token&&scope()===identity&&panel.isConnected;
-   const title=node('h3','Navigate to '+job.title),notice=node('p','Calculate sends your starting location and the saved job destination to Google. Location is read only when you request it; no background tracking.'),label=node('label','Starting address'),origin=node('input');
+   const title=node('h3',job.manual?'Plan your route':'Navigate to '+job.title),notice=node('p','Calculate sends the start and destination to Google. Your location is used only when you request it.'),label=node('label','Starting address'),origin=node('input');
    origin.type='text';origin.maxLength=250;origin.placeholder='Enter starting address';origin.setAttribute('aria-label','Starting address');label.append(origin);
+   const destinationLabel=node('label','Destination address'),destinationInput=node('input');
+   destinationInput.type='text';destinationInput.maxLength=250;destinationInput.placeholder='Enter destination address';destinationInput.setAttribute('aria-label','Destination address');
+   destinationInput.value=job.address||'';destinationInput.readOnly=!job.manual;destinationLabel.append(destinationInput);
    const locate=node('button','Use my current location'),calculate=node('button','Calculate route'),close=node('button','Close route');
    locate.type=close.type='button';calculate.type='submit';locate.className=close.className='secondary';calculate.className='primary';
    const form=node('form'),status=node('p','Checking routing availability…'),result=node('div');status.setAttribute('role','status');status.setAttribute('aria-live','polite');
-   form.append(label,locate,calculate);panel.append(title,notice,form,close,status,result);card.append(panel);
+   form.append(label,destinationLabel,locate,calculate);panel.append(title,notice,form,close,status,result);card.append(panel);
+   close.hidden=Boolean(job.manual);
    close.onclick=clear;let coordinates=null, configured=false, locating=false;
    origin.oninput=()=>{coordinates=null;};calculate.disabled=true;
    locate.onclick=()=>{
@@ -53,16 +57,17 @@
    form.onsubmit=async event=>{
     event.preventDefault();if(!configured||locating||request)return;
     const start=coordinates||{address:origin.value.trim()};if(!coordinates&&!start.address){status.textContent='Enter a starting address or request your location.';return;}
-    const controller=new AbortController();request=controller;calculate.disabled=true;locate.disabled=true;origin.disabled=true;result.replaceChildren();status.textContent='Calculating route…';
+    if(job.manual&&!destinationInput.value.trim()){status.textContent='Enter a destination address.';return;}
+    const controller=new AbortController();request=controller;calculate.disabled=true;locate.disabled=true;origin.disabled=true;destinationInput.disabled=true;result.replaceChildren();status.textContent='Calculating route…';
     try{
-     const target=job.assignment_id?{assignment_id:job.assignment_id}:{order_id:job.id};
+     const target=job.manual?{destination:destinationInput.value.trim()}:job.assignment_id?{assignment_id:job.assignment_id}:{order_id:job.id};
      const route=await window.wzosClock.api('/api/navigation/route',{method:'POST',signal:controller.signal,body:JSON.stringify({...target,origin:start})});if(!active())return;
      if(route.status!=='ready'){status.textContent=route.message||'No route returned.';return;}
      const summary=node('p',`${(route.distance_meters/1609.344).toFixed(1)} miles · about ${Math.ceil(route.duration_seconds/60)} minutes · calculated ${new Date(route.calculated_at).toLocaleTimeString()}`);
-     const destination=node('p',route.destination+' · '+(route.destination_basis==='dispatched_snapshot'?'Dispatched destination':'Saved work-order destination'));
+     const destination=node('p',route.destination+' · '+(route.destination_basis==='dispatched_snapshot'?'Dispatched destination':route.destination_basis==='entered_address'?'Entered destination':'Saved work-order destination'));
      const mapBox=node('div');mapBox.className='report-map navigation-map';mapBox.hidden=true;
      const list=node('ol');for(const step of route.directions)list.append(node('li',step.instruction||'Continue along the route'));
-     result.append(summary,destination,mapBox,node('h4','Directions'),list,node('p','Google Maps · route estimate, not a guarantee of site access. This view does not provide background or voice guidance.'));
+     result.append(summary,destination,mapBox,node('h4','Directions'),list);
      if(route.directions_truncated)result.append(node('p','Directions were shortened; open Google Maps for the full route.'));
      status.textContent=route.traffic_fallback?'Google returned a fallback estimate; live traffic may be unavailable.':'Route ready. Review before travelling. Recalculate manually if conditions change.';
      try{
@@ -79,11 +84,12 @@
       result.insertBefore(fit,mapBox);result.insertBefore(node('p','Blue: start · Amber: destination'),mapBox);
      }catch{if(active()){mapBox.hidden=true;status.textContent+=' Map display unavailable; directions remain below.';}}
     }catch(error){if(active())status.textContent=error.name==='AbortError'?'Route request cancelled.':error.message;}
-    finally{if(request===controller)request=null;if(active()){calculate.disabled=!configured;locate.disabled=!navigator.geolocation;origin.disabled=false;}}
+    finally{if(request===controller)request=null;if(active()){calculate.disabled=!configured;locate.disabled=!navigator.geolocation;origin.disabled=false;destinationInput.disabled=false;}}
    };
    if(active()){panel.scrollIntoView?.({block:'start'});origin.focus?.({preventScroll:true});}
   };
   if(autoOpen)open.onclick();
  }
- window.WzosNavigationRoute={attach,clear,overview};
+ function planner(container){const card=node('section');container.append(card);attach(card,{manual:true,title:'your destination'},{autoOpen:true});card.children[0].hidden=true;}
+ window.WzosNavigationRoute={attach,clear,overview,planner};
 })();

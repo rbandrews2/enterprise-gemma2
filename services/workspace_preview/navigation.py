@@ -42,12 +42,17 @@ class RouteRequest(BaseModel):
     model_config = ConfigDict(extra='forbid')
     order_id: UUID | None = None
     assignment_id: UUID | None = None
+    destination: str | None = Field(default=None, min_length=1, max_length=250)
     origin: Origin
 
     @model_validator(mode='after')
     def one_target(self):
-        if (self.order_id is None) == (self.assignment_id is None):
-            raise ValueError('Select exactly one job or assignment')
+        if sum(value is not None for value in (self.order_id, self.assignment_id, self.destination)) != 1:
+            raise ValueError('Select exactly one job, assignment or destination')
+        if self.destination is not None:
+            self.destination = self.destination.strip()
+            if not self.destination:
+                raise ValueError('Enter a destination address')
         return self
 
 
@@ -151,6 +156,8 @@ def register(app, connect, actor, permitted_row, *, accounts=False, provider=Non
     @app.post('/api/navigation/route')
     def route(body: RouteRequest, request: Request):
         user = actor(request)
+        if body.destination is not None:
+            return compute(user, body.origin, body.destination, 'entered_address')
         with connect() as db:
             if body.assignment_id:
                 if not accounts or user['edition'] != 'enterprise':
@@ -178,13 +185,16 @@ def register(app, connect, actor, permitted_row, *, accounts=False, provider=Non
             if not isinstance(destination, str) or not destination.strip() or len(destination) > 500:
                 raise HTTPException(409, 'Save or confirm the job destination before routing')
             destination = destination.strip()
+        return compute(user, body.origin, destination, basis)
+
+    def compute(user, origin, destination, basis):
         if not provider.enabled:
-            return provider.compute(body.origin, destination)
+            return provider.compute(origin, destination)
         limit(user)
         if not concurrent.acquire(blocking=False):
             raise HTTPException(429, 'Routing is busy. Try again shortly.')
         try:
-            return {**provider.compute(body.origin, destination), 'destination': destination,
+            return {**provider.compute(origin, destination), 'destination': destination,
                     'destination_basis': basis}
         finally:
             concurrent.release()

@@ -1,6 +1,6 @@
 /* Time clock module: connection state, record basis, offline drafts, review queue and correction editor.
    Reuses the workspace gloss-black surfaces; amber/gold only as accents. */
-.clock-connection{display:inline-flex;align-items:center;gap:.5rem;margin:.75rem 0 0;padding:.4rem .8rem;border-radius:999px;border:1px solid #3a3d3d;background:linear-gradient(#1b1d1e,#0b0c0d);font-size:.8rem;color:#e9ecea}
+.clock-connection{display:inline-flex;align-items:center;gap:.5rem;margin:.75rem 0 0;padding:.4rem .8rem;border-radius:999px;border:1px solid #3a3d3d;background:linear-gradient(#1b1d1e,#0b0c0d);--wzos-paragraph-font-size:.8rem;font-size:.8rem;color:#e9ecea}
 .clock-connection::before{content:"";width:.6rem;height:.6rem;border-radius:50%;background:#8a8f8d;flex-shrink:0}
 .clock-connection[data-state=online]::before{background:#5fbf86;box-shadow:0 0 6px #5fbf8688}
 .clock-connection[data-state=offline]::before{background:#ffb547;box-shadow:0 0 8px #ffb54788}
@@ -9,11 +9,11 @@
 .clock-connection[data-state=error]::before{background:#e5674f}
 .clock-connection[data-state=error]{border-color:#7d3a2e;color:#ffd6cc}
 @keyframes clock-pulse{from{opacity:.35}to{opacity:1}}
-.clock-basis{display:inline-block;margin-left:.6rem;padding:.1rem .5rem;border-radius:4px;font-size:.7rem;font-weight:650;letter-spacing:.02em;border:1px solid #3d4342;color:#cfd6d3;vertical-align:middle}
+.clock-basis{display:inline-block;margin-left:.6rem;padding:.1rem .5rem;border-radius:4px;--wzos-paragraph-font-size:.7rem;font-size:.7rem;font-weight:650;letter-spacing:.02em;border:1px solid #3d4342;color:#cfd6d3;vertical-align:middle}
 .clock-basis[data-basis=admin_corrected],.clock-basis[data-basis=admin_entered]{border-color:#8c5b32;color:#ffc982;background:#2a1a0c}
 .clock-entry>button{margin-top:.5rem}
-.clock-audit{margin-top:.4rem;font-size:.85rem}.clock-audit summary{cursor:pointer;color:#edcf79}
-.clock-audit h4{margin:.8rem 0 .3rem;font-size:.8rem;color:#d6bc9c}.clock-audit ul{margin:0;padding-left:1.1rem}.clock-audit small{display:block;color:var(--muted)}
+.clock-audit{margin-top:.4rem;--wzos-paragraph-font-size:.85rem;font-size:.85rem}.clock-audit summary{cursor:pointer;color:#edcf79}
+.clock-audit h4{margin:.8rem 0 .3rem;--wzos-paragraph-font-size:.8rem;font-size:.8rem;color:#d6bc9c}.clock-audit ul{margin:0;padding-left:1.1rem}.clock-audit small{display:block;color:var(--muted)}
 #clock-view .clock-drafts,#clock-view .clock-queue,#clock-view .clock-editor{margin-top:1.25rem}
 .clock-drafts label,.clock-editor label,.clock-queue label{display:block;margin-top:.6rem}
 .clock-drafts select,.clock-drafts input,.clock-drafts textarea,.clock-editor select,.clock-editor input,.clock-editor textarea,.clock-queue input{width:100%;box-sizing:border-box}
@@ -35,12 +35,12 @@
 @keyframes tracker-layer-drift{from{transform:translate3d(-2%,-1%,0) scale(1.02);background-position:0% 50%,center 16%}to{transform:translate3d(2%,1%,0) scale(1.06);background-position:100% 50%,center 24%}}
 @media(prefers-reduced-motion:reduce){#clock-view::after{animation:none;transform:none}}
 #clock-view .page-heading{align-items:center;margin-bottom:1.5rem}
-#clock-view h1{font-size:clamp(1.6rem,4vw,2.2rem);letter-spacing:-.03em}
+#clock-view h1{--wzos-paragraph-font-size:clamp(1.6rem,4vw,2.2rem);font-size:clamp(1.6rem,4vw,2.2rem);letter-spacing:-.03em}
 #clock-view .eyebrow,.clock-brand{color:#fb923c}
 #clock-view .panel{background:linear-gradient(145deg,#202022,#0c0c0d 30%,#080808);border:1px solid #27272a;border-radius:24px;box-shadow:inset 0 1px #ffffff12,0 12px 32px #0006}
 #clock-view .workspace-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:1.5rem}
 #clock-view .clock-face{max-width:560px;width:100%;justify-self:center;box-sizing:border-box}
-#clock-view .clock-timer{display:block;text-align:center;font-size:clamp(2.5rem,6vw,4.4rem);font-variant-numeric:tabular-nums;font-family:ui-monospace,monospace;font-weight:750;letter-spacing:.04em;color:#fff;margin:1.2rem 0}
+#clock-view .clock-timer{display:block;text-align:center;--wzos-paragraph-font-size:clamp(2.5rem,6vw,4.4rem);font-size:clamp(2.5rem,6vw,4.4rem);font-variant-numeric:tabular-nums;font-family:ui-monospace,monospace;font-weight:750;letter-spacing:.04em;color:#fff;margin:1.2rem 0}
 #clock-state,#clock-active-job{text-align:center}
 #clock-view label{color:#a1a1aa}
 #clock-view input:not([type=checkbox]),#clock-view select,#clock-view textarea{background:#18181bcc;border:1px solid #27272a;color:#fff;border-radius:14px;padding:.85rem;width:100%;box-sizing:border-box}
@@ -48,13 +48,13 @@
 #clock-view button:focus-visible,#clock-view select:focus-visible{outline:3px solid #fb923c;outline-offset:3px}
 #clock-view .clock-face>.clock-actions{display:grid;grid-template-columns:1fr 1fr;justify-content:center;gap:.8rem;margin:1.5rem 0}
 #clock-view .clock-face #clock-in,#clock-view .clock-face #clock-out{grid-column:1/-1;justify-self:center;order:-1}
-#clock-in,#clock-out{width:164px;height:164px;flex:0 0 164px!important;border-radius:50%!important;font-size:1.05rem;font-weight:750;text-transform:uppercase;border:0!important;box-shadow:0 8px 32px #10b98144}
+#clock-in,#clock-out{width:164px;height:164px;flex:0 0 164px!important;border-radius:50%!important;--wzos-paragraph-font-size:1.05rem;font-size:1.05rem;font-weight:750;text-transform:uppercase;border:0!important;box-shadow:0 8px 32px #10b98144}
 #clock-view #clock-in{background:linear-gradient(135deg,#10b981,#059669)}
 #clock-view #clock-out{background:linear-gradient(135deg,#ef4444,#dc2626);box-shadow:0 8px 32px #ef444444}
-#clock-in::before{content:'▶';display:block;font-size:2.5rem;margin-bottom:.5rem}
-#clock-out::before{content:'■';display:block;font-size:2.5rem;margin-bottom:.5rem}
+#clock-in::before{content:'▶';display:block;--wzos-paragraph-font-size:2.5rem;font-size:2.5rem;margin-bottom:.5rem}
+#clock-out::before{content:'■';display:block;--wzos-paragraph-font-size:2.5rem;font-size:2.5rem;margin-bottom:.5rem}
 #clock-view #clock-break{color:#fbbf24}
 #clock-view #clock-switch{color:#fb923c}
 #clock-view .clock-entry{background:#18181b80;border:1px solid #27272a;border-radius:18px;padding:1rem;margin:1rem 0}
 #clock-view .clock-connection{background:#09090b;border-color:#3f3f46}
-@media(max-width:850px){#clock-view .workspace-grid{grid-template-columns:minmax(0,1fr)}#clock-view .page-heading{flex-wrap:wrap;gap:1rem}#clock-view{padding:1rem}#clock-view .clock-timer{font-size:clamp(2rem,9vw,3.6rem)}}
+@media(max-width:850px){#clock-view .workspace-grid{grid-template-columns:minmax(0,1fr)}#clock-view .page-heading{flex-wrap:wrap;gap:1rem}#clock-view{padding:1rem}#clock-view .clock-timer{--wzos-paragraph-font-size:clamp(2rem,9vw,3.6rem);font-size:clamp(2rem,9vw,3.6rem)}}

@@ -117,6 +117,27 @@ class NavigationTests(unittest.TestCase):
         self.assertEqual(self.calls, [])
         self.assertIn(self.client.get('/api/navigation/config').status_code, (401, 403))
 
+    def test_manual_destinations_support_admin_member_and_core_without_job_access(self):
+        for user, org in [('admin', self.org), ('member', self.org), ('coreadmin', self.core)]:
+            result = self.route(user, org, order_id=None, destination='  Norfolk, VA  ')
+            self.assertEqual(result.status_code, 200, result.text)
+            self.assertEqual(result.json()['destination'], 'Norfolk, VA')
+            self.assertEqual(result.json()['destination_basis'], 'entered_address')
+        self.assertEqual(len(self.calls), 3)
+        unauthenticated = self.client.post('/api/navigation/route', json={
+            'origin': {'address': 'Norfolk'}, 'destination': 'Richmond'})
+        self.assertIn(unauthenticated.status_code, (401, 403))
+        self.assertEqual(len(self.calls), 3)
+
+    def test_manual_target_cannot_override_private_job_and_uses_existing_rate_limit(self):
+        for destination in ('', '   ', 'x' * 251):
+            self.assertEqual(self.route(order_id=None, destination=destination).status_code, 422)
+        self.assertEqual(self.route(destination='Norfolk').status_code, 422)
+        self.assertEqual(self.calls, [])
+        for _ in range(6):
+            self.assertEqual(self.route(order_id=None, destination='Norfolk').status_code, 200)
+        self.assertEqual(self.route(order_id=None, destination='Norfolk').status_code, 429)
+
     def test_own_assignment_uses_frozen_destination_and_revocation(self):
         self.requirements(); self.approve(self.propose())
         assignment = self.client.get('/api/dispatch/my-assignments', headers=self.h('member')).json()['items'][0]

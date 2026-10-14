@@ -1,5 +1,5 @@
 const test=require('node:test'),assert=require('node:assert/strict'),vm=require('node:vm'),fs=require('node:fs');
-function harness({enabled=true,mapFailure=true}={}){
+function harness({enabled=true,mapFailure=true,manual=false}={}){
  const events={},windowEvents={},calls=[],gps=[],maps=[];let session={id:'member',organization_id:'org1',edition:'enterprise'},hold=null;
  function element(tag){return{tag,textContent:'',value:'',children:[],isConnected:true,append(...nodes){this.children.push(...nodes);},insertBefore(node,before){this.children.splice(this.children.indexOf(before),0,node);},replaceChildren(...nodes){this.children=nodes;},setAttribute(){},remove(){this.isConnected=false;}};}
  const document={createElement:element,addEventListener:(name,fn)=>events[name]=fn};
@@ -10,10 +10,21 @@ function harness({enabled=true,mapFailure=true}={}){
  }},WzosReportMap:{ready:async()=>{if(mapFailure)throw Error('Maps unavailable');}}};
  const google={maps:{SymbolPath:{CIRCLE:0},importLibrary:async()=>({encoding:{decodePath:()=>[{lat:()=>36.8,lng:()=>-76.2},{lat:()=>36.9,lng:()=>-76.3}]}}),Map:class{constructor(node,options){this.record={node,options,fits:0};maps.push(this.record);}fitBounds(){this.record.fits++;}},Polyline:class{constructor(options){maps.push(options);}},LatLngBounds:class{extend(){}}}};
  vm.runInNewContext(fs.readFileSync('services/workspace_preview/static/navigation.js','utf8'),{window,document,navigator,AbortController,Date,google});
- const card=element('article');window.WzosNavigationRoute.attach(card,{id:'order',assignment_id:'assignment',title:'Assigned job'});
+ const card=element('article');window.WzosNavigationRoute.attach(card,manual?{manual:true,title:'your destination'}:{id:'order',assignment_id:'assignment',title:'Assigned job',address:'Saved destination'});
  const flatten=n=>[n,...n.children.flatMap(flatten)],find=text=>flatten(card).find(n=>n.textContent===text),text=()=>flatten(card).map(n=>n.textContent).join(' ');
- return{card,calls,gps,maps,events,windowEvents,navigator,find,text,response,overview:()=>window.WzosNavigationRoute.overview(card),open:()=>card.children[0].onclick(),submit:()=>find('Calculate route')&&flatten(card).find(n=>n.tag==='form').onsubmit({preventDefault(){}}),origin:()=>flatten(card).find(n=>n.tag==='input'),setSession:s=>session=s,setHold:p=>hold=p};
+ return{card,calls,gps,maps,events,windowEvents,navigator,find,text,response,overview:()=>window.WzosNavigationRoute.overview(card),open:()=>card.children[0].onclick(),submit:()=>find('Calculate route')&&flatten(card).find(n=>n.tag==='form').onsubmit({preventDefault(){}}),origin:()=>flatten(card).find(n=>n.tag==='input'),destination:()=>flatten(card).filter(n=>n.tag==='input')[1],setSession:s=>session=s,setHold:p=>hold=p};
 }
+
+test('Normal navigation accepts both addresses without a saved job and requires a destination',async()=>{
+ const h=harness({manual:true});await h.open();h.origin().value='Norfolk station';
+ await h.submit();assert.equal(h.calls.length,1);assert.match(h.text(),/Enter a destination/);
+ assert.equal(h.destination().readOnly,false);h.destination().value='Richmond, VA';await h.submit();
+ const body=JSON.parse(h.calls[1].options.body);assert.equal(body.destination,'Richmond, VA');assert.equal(body.origin.address,'Norfolk station');assert.equal(body.order_id,undefined);assert.equal(body.assignment_id,undefined);
+});
+
+test('Job navigation displays its destination without accepting an override',async()=>{
+ const h=harness();await h.open();assert.equal(h.destination().value,'Saved destination');assert.equal(h.destination().readOnly,true);
+});
 test('No automatic location or route calls; manual calculation uses assignment, retains directions on map failure',async()=>{
  const h=harness();await h.open();assert.equal(h.gps.length,0);assert.equal(h.calls.length,1);
  h.origin().value='Starting address';await h.submit();
@@ -50,7 +61,7 @@ test('View change and offline clear route panels',async()=>{
 test('Navigation overview is interactive without requesting GPS or calculating a route',async()=>{
  const h=harness({mapFailure:false});await h.overview();assert.equal(h.maps.length,1);
  assert.equal(h.maps[0].node.hidden,false);assert.equal(h.maps[0].options.fullscreenControl,true);
- assert.match(h.text(),/not your current location/);assert.equal(h.gps.length,0);assert.equal(h.calls.length,0);
+ assert.ok(h.find('Map'));assert.doesNotMatch(h.text(),/Virginia overview/);assert.equal(h.gps.length,0);assert.equal(h.calls.length,0);
 });
 test('Offline navigation overview reports unavailable without loading Google',async()=>{
  const h=harness({mapFailure:false});h.navigator.onLine=false;await h.overview();

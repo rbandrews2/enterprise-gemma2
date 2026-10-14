@@ -11,7 +11,7 @@
   try{
    if(name==='navigation'){
     window.WzosNavigationRoute?.overview?.(root);
-    root.append(node('p','Loaded destinations remain available in this open app when offline. Save a destination sheet before travel for access after closing the app. Map imagery, live traffic and route guidance require connectivity or separately downloaded maps in your navigation app.'));
+    window.WzosNavigationRoute?.planner?.(root);
     const session=window.wzosClock.getSession(),scope=session?JSON.stringify([session.organization_id,session.id,session.edition]):null;
     let orders=destinationCache?.scope===scope?destinationCache.items:window.wzosClock.getOrders(),cached=!navigator.onLine,assignmentsUnavailable=false;
     if(navigator.onLine){try{
@@ -31,8 +31,7 @@
     if(epoch!==generation||JSON.stringify([window.wzosClock.getSession()?.organization_id,window.wzosClock.getSession()?.id,window.wzosClock.getSession()?.edition])!==scope)return;
     if(assignmentsUnavailable)root.append(node('p','Assigned destinations are unavailable in this environment. Showing permitted work orders only.'));
     if(cached)root.append(node('p','Offline / connection unavailable — showing previously loaded destinations. Confirm addresses and site access before travel.'));
-    if(!orders.length)root.append(node('p','No destinations loaded. Connect and open your jobs before going offline.'));
-    else{const all=node('button','Save all destinations ('+orders.length+')');all.className='secondary';all.onclick=()=>saveSheet(orders,'wzos-destinations.txt');root.append(all);}
+    if(orders.length){const all=node('button','Save all destinations ('+orders.length+')');all.className='secondary';all.onclick=()=>saveSheet(orders,'wzos-destinations.txt');root.append(all);}
     const requested=window.WzosNavigation.take?.();let found=false;
     for(const order of orders){const card=node('section','');card.className='report-section panel';card.append(node('h2',order.title),node('p',order.address));if(order.assigned)card.append(node('p','Dispatched destination · confirm current site access in My jobs.'));
      const selected=!!requested&&(requested.assignment_id?order.assignment_id===requested.assignment_id:order.id===requested.id);found=found||selected;
