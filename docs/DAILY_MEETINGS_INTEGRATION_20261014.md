@@ -33,7 +33,8 @@ Limits are not a global usage quota across Cloud Run instances.
 Startup DDL in scripts/daily_meetings_schema_review.sql adds daily_meeting_rooms.
 No existing table columns or historical records are rewritten. Deploying this
 code applies the additive DDL. Existing PostgreSQL advisory writer lock serializes
-prepare and schedule edits. Provider close requests occur inside schedule saves:
+prepare and schedule edits. Prepare performs its network requests outside the shared writer lock and rechecks
+revision/access before publishing the room. Provider close requests occur inside schedule saves:
 provider failure rejects the edit rather than claiming successful cancellation.
 A remote close followed by local transaction failure cannot be atomically undone;
 retry or reload may be needed, and old-room re-entry fails closed.
@@ -41,7 +42,9 @@ retry or reload may be needed, and old-room re-entry fails closed.
 Rollback: disable WZOS_DAILY_ENABLED, route traffic to 00044-xim, retain the new
 table. Stop active calls and verify provider expiry before disabling key access.
 Do not drop this table during rollback. Remote rooms expire; media acceptance
-must verify that updating room expiry ejects already connected participants.
+must verify that updating room expiry ejects already connected participants. Live API
+rejects past expiration; repaired close requests a confirmed two-second future
+expiry. WZOS stops issuing new tokens immediately after confirmation.
 
 ## Secure activation proposal
 Use only domain wzos.daily.co. Grant the existing runtime service account
@@ -61,8 +64,12 @@ participant-minute; this is an estimate, not a spending cap. No paid subscriptio
 or customer calls are authorized by the local implementation.
 
 ## Validation and remaining gates
-Local focused Python: 20 passed, eight PostgreSQL cases skipped.
-Full Node: 96 passed, zero skips. Full local Python574 passed with169 PostgreSQL skips; exact PostgreSQL gate running.
+Final focused Python:22 passed, eight PostgreSQL cases skipped.
+Full Node: 96 passed, zero skips. Earlier candidate full local Python574 passed with169 PostgreSQL skips.
+Repaired exact candidate748f382 requires native576 gate and provider probe.
+Earlier native575 passed, but the real provider close failed with past expiry.
+Safe diagnostic accepted +2-second expiry; both synthetic rooms removed.
+Ray approved scoped secret access/origin activation and controlled five-minute test.
 Provider tests use httpx.MockTransport, UI tests use a mocked SDK; neither proves
 real audio/video, Android/fullscreen, denied camera permission, or cancellation.
 Verify the secret metadata only; never read the key into an agent output.
