@@ -1,3 +1,23 @@
+## Normal and job navigation deployed; Twilio version pins — October 14, 2026
+
+User requested direct start/end inputs, both normal/job route flow, Map second
+heading, removal of under-map prose, +1pt paragraphs and secured Twilio credentials.
+Exact9ef9ac4: Node92 and native PostgreSQL555 PASS/zero skips; cleanup verified.
+Buildc0544f8c SUCCESS; frozen sources preserved. Public00044-xim serves100%.
+Five live JS/CSS files match canonical Git bytes; Windows CRLF initially caused
+false mismatch, corrected probe passed with no app repair. Manual route anonymous401;
+auth-origin six checksPASS. Production origins/RP, ingress, account/tenant/edition
+settings unchanged. No DDL, IAM, load-balancer or AIRA changes.
+Normal navigation fields now available without jobs; saved/assigned destinations
+resolve via existing permission checks and cannot be overwritten in job route calls.
+Paragraph bases retained +1pt, mobile390px controls fit. Synthetic preview/Node
+validation does not establish actual live Google driving-route acceptance.
+Twilio secret references audited/no inline values/no public per-secret bindings;
+pinned enabled SID1/token1/sender2. SMS remains approved test-only, no sends.
+See NAVIGATION_INPUTS_20261014.md. Cloud evidence $HOME/wzos-navigation-20261014;
+rollback traffic to00041-pem. Next user refresh/live Maps and both route flows,
+then provider-delivery/Atlas/checkout acceptance milestones.
+
 ## Production authentication origin repaired — October 14, 2026
 
 Latest user acceptance: Ray successfully signed in with his real admin account,

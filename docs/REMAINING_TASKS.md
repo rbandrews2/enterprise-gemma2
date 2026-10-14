@@ -1,3 +1,13 @@
+## Navigation and credential release checkpoint — October 14, 2026
+
+Direct normal start/destination inputs and preserved job routing deployed00044-xim;
+Map heading/under-map text cleanup/+1pt paragraphs complete. Node92 and full
+PostgreSQL555 PASS/no skips; exact live assets and auth-origin/security checks pass.
+Twilio credentials remain Secret Manager-only runtime references, now pinned to
+audited enabled versions; test mode and voice webhook unchanged. No sends.
+Next acceptance: user refresh and actual authenticated Google manual/job route
+behavior, then remaining provider delivery, Atlas inference and checkout work.
+
 ## Authentication repair checkpoint — October 14, 2026
 
 Ray confirms successful real admin sign-in, organization selection and workspace

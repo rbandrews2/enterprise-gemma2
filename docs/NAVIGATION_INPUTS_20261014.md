@@ -30,3 +30,34 @@ Required before live release: final Node suite and exact-candidate native Postgr
 gate, preserving source library and existing production origins/IAM/secrets. Build
 only changed runtime files onto00041's immutable image. Verify new assets and auth
 origin gate; user confirms real authenticated map/route behavior afterward.
+
+## Accepted deployment
+
+Exact9ef9ac4bd2340d0ffc5ddb2932100bc899452ea3: final full Node92 PASS;
+native PostgreSQL555 PASS in173.602s, no skips/failures/errors. Test database
+cleanup verified before build. Buildc0544f8c-b6ac-4ec3-af1b-ba09c9ddd90f SUCCESS;
+seven build-context files91.4KiB including Dockerfile, frozen sources verified.
+Image sha256:37045d3a9076c38e76a1c900546517fffc3faac07d7778cff91757bf87a31111.
+Revision wzos-v2-accounts-00044-xim deployed and moved to100% after candidate
+configuration comparison. No schema, new key, IAM, load-balancer or AIRA changes.
+All existing environment/configuration preserved except Twilio version pinning below.
+
+Live five JS/CSS assets match exact committed Git bytes. First byte comparison
+against the Windows working copy found CRLF differences; canonical Git comparison
+passed without code/image change. Manual route endpoint returns401 without login;
+all six authentication-origin/security checks PASS after deployment. Browser preview
+shows both fields with empty job list;390px viewport fields stay within width.
+Actual authenticated Google manual-route response remains user acceptance, not
+established by unauthenticated checks or the synthetic preview.
+
+## Twilio credentials secured
+
+Live metadata audit confirms three Secret Manager references, no inline runtime
+credential values and no public individual-secret IAM bindings; runtime has
+secret-specific accessor grants. Pinned inspected enabled versions: account SID1,
+auth token1, sending-number2. No secret values read or printed. Existing SMS test
+mode/recipient restriction, public URL and AIRA voice webhook unchanged. Full suite
+includes signature/authorization tests; no message sent during this release.
+Private service/policy snapshots: Cloud Shell $HOME/wzos-navigation-20261014.
+Rollback: move application traffic back to00041-pem; its prior secret references
+remain part of that revision. Do not modify data or the auth-origin repair.
