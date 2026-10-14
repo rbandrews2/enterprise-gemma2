@@ -1,3 +1,12 @@
+## Embedded meeting engine decision — October 14, 2026
+
+Ray authorized investigating interactive calls inside the faux TV. Compared Daily
+Prebuilt, self-hosted Jitsi and LiveKit; recommend Daily for first implementation,
+or self-hosted Jitsi for Google Cloud media ownership. Exact proposed security,
+data flow, cost examples and tests in EMBEDDED_MEETINGS_OPTIONS_20261014.md.
+Provider selection/account setup/implementation remain pending. Existing admin-only
+Google Meet scheduling and external join behavior remain unchanged. No provisioning.
+
 ## Navigation and credential release checkpoint — October 14, 2026
 
 Direct normal start/destination inputs and preserved job routing deployed00044-xim;
