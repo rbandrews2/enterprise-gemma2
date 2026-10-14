@@ -1,3 +1,21 @@
+## Production authentication origin repaired — October 14, 2026
+
+Ray could not sign in/create account/reset password. Independent live probes all
+returned403 API_KEY_HTTP_REFERRER_BLOCKED before credentials were evaluated.
+Production origin was missing from the auth browser-key allowlist; the previous
+public release checked page/API boundaries but omitted provider-origin acceptance.
+Ray approved exact https://app.workzoneos.org/* expansion and reauthenticated.
+Fresh authorized Shell verified project/account and matched live key in memory.
+Applied etag-protected restriction patch; preserved all four old referrers and both
+authentication-only APIs. Read-back exact match. No new key, runtime image or DDL.
+Live scripts/check_auth_origin.py gate PASS: sign-in/signup/reset/refresh normal
+invalid-input400, unrelated-origin403 and protected-account401. Five unit testsPASS.
+No passwords changed, accounts created or emails sent by validation. Real-user
+password login/organization selection remains pending; user asked to refresh/retry.
+See AUTH_ORIGIN_REPAIR_20261014.md; before/after metadata mode600 in Cloud Shell home.
+Require provider-origin acceptance after future origin/key changes. Remaining
+Atlas/checkout/provider delivery/module acceptance tasks remain as recorded below.
+
 ## Public V2 cutover accepted — October 13, 2026
 
 Ray explicitly approved the public cutover and three-secret Twilio test setup.

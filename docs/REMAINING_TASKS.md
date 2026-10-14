@@ -1,3 +1,12 @@
+## Authentication repair checkpoint — October 14, 2026
+
+Fixed missing production authentication-key referrer after Ray's explicit approval.
+Live bounded provider-origin gate six checksPASS; five gate unit testsPASS.
+Real admin password login/organization selection is still the next user acceptance.
+Negative probes did not create accounts, reset passwords or send email. Require
+scripts/check_auth_origin.py acceptance for future origin/key release changes.
+See AUTH_ORIGIN_REPAIR_20261014.md. Other remaining tasks below are unchanged.
+
 ## Public V2 is live; next acceptance tasks — October 13, 2026
 
 Completed: exact Node90/native PostgreSQL546; frozen-source build; schema compatibility;
