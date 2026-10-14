@@ -1,3 +1,42 @@
+## STOP FOR LAPTOP RESTART - Daily integration, October 14, 2026
+
+Ray requested saving progress and restarting the laptop after browser control and
+local commands slowed down. Do not deploy until the following are reverified.
+
+- Daily chosen; domain wzos.daily.co. Secret wzos-v2-daily-api-key version1 enabled
+  independently verified without reading/displaying its value.
+- Ray approved scoped runtime secret access, exact Daily frame/media origin and
+  a two-device five-minute test, recording/transcription off. No grant/deploy applied.
+- Public application remains wzos-v2-accounts-00044-xim. Daily is not deployed.
+- Runtime candidate8720bbed00e91103e1dfa33ff7288ed153225473 pushed; full native
+  PostgreSQL575 PASS in186.941s, zero failures/errors/skips. Earlier af83922 full
+  local Python574 PASS with169 PostgreSQL skips; Node96 PASS. Do not call these
+  the final near-future cancellation repair's gate.
+- Real Daily private-room creation and server token PASS. Past-expiry cancellation
+  FAILED. Safe diagnostic confirmed future expiry +2 seconds accepted, matching
+  private room/name/expiration/ejection flag. Both synthetic rooms removed.
+- Local repair changes close() to +2-second expiry with exact confirmation and adds
+  regression test. A focused test/commit/push command was running when pause arrived;
+  inspect Git and process completion before assuming that command committed/pushed.
+- Build-only helper4a5fcf9 was committed; its old candidate8720bbe and575 count MUST
+  be updated to the repaired exact candidate and576 gate before use. Never bypass
+  its provider success check. No build was submitted during this Daily increment.
+- Cloud evidence: $HOME/wzos-daily-20261014/gate-path.txt, postgres.log,
+  final-gate-and-provider.log. Gate checkout is /tmp/wzos-daily-af83922.olFpkKpA;
+  it may disappear after restart. Verify fresh project/account and environment.
+- Synthetic loopback preview uses scripts/browser_session_fixture.py --port8083
+  --roleadmin, mock sign-in only. Browser-control timeout prevented saving its meeting
+  draft; do not claim real call/UI acceptance. Screenshot of selector is ignored at
+  .local-data/daily-sdk/schedule-preview.png. No real media, invitations or messages.
+
+Resume: inspect branch/status and pending process results; save/commit any uncommitted
+repair, rerun its focused tests; update guarded build helper; exact native database
+gate576 plus real provider probe (no media) and cleanup. Then apply approved secret-
+specific runtime grant, fresh schema/backup/rollback checks, guarded immutable build,
+config-preserving deployment and real Android/laptop acceptance. Already-connected
+participant revocation/ejection remains a device acceptance gap. See
+DAILY_MEETINGS_INTEGRATION_20261014.md and reviewed additive SQL.
+
 ## Daily embedded meetings - local implementation, October 14, 2026
 
 Ray selected Daily and supplied wzos.daily.co; reports key saved in Secret Manager.

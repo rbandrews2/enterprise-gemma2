@@ -162,3 +162,10 @@ class DailyProviderTests(unittest.TestCase):
         provider=self.provider(lambda r:httpx.Response(200,json={'name':'other-room','privacy':'private',
                             'config':{'exp':int(time.time())-1,'eject_at_room_exp':True}}))
         with self.assertRaises(HTTPException):provider.close('name')
+    def test_close_uses_confirmed_near_future_expiration(self):
+        def handler(request):
+            body=json.loads(request.content)
+            self.assertGreater(body['properties']['exp'],int(time.time()))
+            self.assertLessEqual(body['properties']['exp'],int(time.time())+2)
+            return httpx.Response(200,json={'name':'name','privacy':'private','config':body['properties']})
+        self.provider(handler).close('name')

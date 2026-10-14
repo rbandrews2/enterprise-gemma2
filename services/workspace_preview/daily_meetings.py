@@ -81,12 +81,14 @@ class DailyProvider:
         return token
 
     def close(self, name):
-        # Daily enforces room expiry for current participants and blocks re-entry.
+        # The live API rejects past expirations. Close at the nearest accepted
+        # future boundary; WZOS stops issuing tokens immediately after confirmation.
+        expires = int(time.time()) + 2
         result = self.call('POST', 'rooms/' + name, {'privacy': 'private', 'properties': {
-            'exp': int(time.time()) - 1, 'eject_at_room_exp': True}})
+            'exp': expires, 'eject_at_room_exp': True}})
         config = result.get('config') if isinstance(result.get('config'), dict) else {}
         if (result.get('name') != name or result.get('privacy') != 'private'
-                or not isinstance(config.get('exp'), int) or config['exp'] >= time.time()
+                or config.get('exp') != expires
                 or config.get('eject_at_room_exp') is not True):
             raise HTTPException(502, 'Ending the active meeting was not confirmed.')
 
