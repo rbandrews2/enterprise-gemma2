@@ -26,7 +26,8 @@ if [ "$ready" != 1 ]; then
 fi
 port=$(docker port "$container" 5432/tcp | cut -d: -f2)
 test -x .venv-accounts-test/bin/python || python3 -m venv .venv-accounts-test
-.venv-accounts-test/bin/pip -q install -r requirements-accounts.txt
+.venv-accounts-test/bin/python -m pip -q install --upgrade pip==26.2.1
+.venv-accounts-test/bin/python -m pip -q install -r requirements-accounts.txt
 export WZOS_TEST_DATABASE_URL="postgresql://postgres:${test_password}@127.0.0.1:${port}/wzos_test"
 .venv-accounts-test/bin/python scripts/run_postgres_gate.py
 unset WZOS_TEST_DATABASE_URL test_password

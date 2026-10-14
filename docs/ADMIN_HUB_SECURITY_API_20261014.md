@@ -1,4 +1,4 @@
-# Admin hub, security and integration API — October 14, 2026
+# Admin hub, security and integration API â€” October 14, 2026
 
 ## Scope and current state
 
@@ -36,12 +36,12 @@ Admin browser session endpoints:
 - POST /api/admin/dashboard/notes: request_id UUID, text
 - DELETE /api/admin/dashboard/notes/{id}
 - GET /api/admin/integrations
-- POST /api/admin/integrations: name, scopes, expires_in_days (1–90, default30)
+- POST /api/admin/integrations: name, scopes, expires_in_days (1â€“90, default30)
 - DELETE /api/admin/integrations/{id}
 
 Server-to-server endpoints use X-WZOS-API-Key over HTTPS:
-- GET /api/integrations/v1/orders?limit=25&offset=0 — orders:read
-- GET /api/integrations/v1/schedule?limit=25&offset=0 — schedule:read
+- GET /api/integrations/v1/orders?limit=25&offset=0 â€” orders:read
+- GET /api/integrations/v1/schedule?limit=25&offset=0 â€” schedule:read
 
 API credentials contain 256 random bits, are displayed once, stored SHA256-hashed,
 never in URLs or browser persistence, and cannot authenticate browser sessions.
@@ -51,7 +51,7 @@ organization. Creator demotion/removal disables their credentials. Another admin
 must issue a replacement after reviewing the connection; admin privileges are not
 transferred. Rate limit60 requests/minute/organization, shared across credentials;
 429 includes Retry-After60. POST notes/credentials additionally limited30/min/org.
-limit1–50, offset0–10000; invalid requests422, bad/expired credentials401, missing
+limit1â€“50, offset0â€“10000; invalid requests422, bad/expired credentials401, missing
 scope403. New admin/integration routes bound actual request bodies to16KiB even
 without Content-Length. No cross-origin browser access/CORS exception is added.
 
@@ -99,6 +99,20 @@ support, retain notes/preferences/audit records. Export keys must not be restore
 from backups without checking revocation intent. Audit retention/purge is an
 operator policy to define before broad customer integrations; the short-lived
 rate-counter table is automatically pruned. Do not drop tables during rollback.
+
+## Dependency audit and patch candidate
+
+Cloud pip-audit found26 raw advisory entries (including duplicates) across old pip
+and Starlette0.41.3. The first cloud candidate passed594 PostgreSQL tests/no skips
+and96 Node tests, but passing those does not resolve dependency vulnerabilities.
+Official PyPI metadata verified FastAPI0.143.1 supports Starlette>=0.46.0 and
+Starlette1.8.0 / pip26.2.1 are published. Candidate pins FastAPI0.143.1,
+Starlette1.8.0; accounts Docker/test runners bootstrap pip26.2.1. Exact patched
+cloud suite and repeat audit required. No local global Python install is changed.
+A source-only overlay build on the previous image would retain vulnerable packages:
+future deployment MUST reinstall the patched requirements and verify runtime versions,
+while preserving the frozen agency source library. Do not blindly reuse old overlay
+build helpers. Live public runtime is NOT patched by this source commit.
 
 ## Validation
 
