@@ -26,6 +26,7 @@ DDL = (
 
 MODULES = (
     ('orders', 'Work orders', '▤', 'jobs-nav', False),
+    ('assignments', 'My jobs', '▥', 'assignments-nav', True),
     ('report', 'Work Zone Report', '◈', 'report-nav', True),
     ('atlas', 'Atlas assistant', '✦', 'atlas-nav', False),
     ('forms', 'Forms hub', '▧', 'forms-nav', False),
@@ -72,7 +73,7 @@ class Note(BaseModel):
 class Preferences(BaseModel):
     model_config = ConfigDict(extra='forbid')
     expected_version: int = Field(ge=0, strict=True)
-    hidden_modules: list[str] = Field(max_length=10)
+    hidden_modules: list[str] = Field(max_length=20)
 
 
 class Credential(BaseModel):
@@ -134,7 +135,7 @@ def register(app, connect, actor, *, accounts=False, roster=None):
         people = roster(user) if roster else {}
         return {'organization': user['organization'], 'edition': user['edition'], 'status': status,
                 'checks': checks, 'preferences_version': pref['version'] if pref else 0,
-                'modules': [{'id': key, 'label': label, 'icon': icon, 'nav_id': nav, 'visible': key not in hidden}
+                'modules': [{'id': key, 'label': 'Messaging' if key == 'messages' and user['edition'] == 'core' else label, 'icon': icon, 'nav_id': nav, 'visible': key not in hidden}
                             for key, label, icon, nav, enterprise in MODULES if not enterprise or user['edition'] == 'enterprise'],
                 'notes': [{**dict(r), 'author_name': people.get(r['author_id'], {}).get('name', 'Organization admin')} for r in notes], 'notes_limit': 50}
 
