@@ -56,12 +56,13 @@ class DailyProvider:
                 'enable_dialout': False, 'enable_transcription_storage': False}})
         if room is None:
             raise HTTPException(409, 'An admin must start this meeting before members can join.')
+        config = room.get('config') if isinstance(room.get('config'), dict) else {}
         if (room.get('name') != name or room.get('privacy') != 'private'
                 or room.get('url') != self.origin + '/' + name
-                or room.get('config', {}).get('exp') != expires_at
-                or room.get('config', {}).get('enable_knocking') is not False
-                or room.get('config', {}).get('max_participants') != 10
-                or room.get('config', {}).get('eject_at_room_exp') is not True):
+                or config.get('exp') != expires_at
+                or config.get('enable_knocking') is not False
+                or config.get('max_participants') != 10
+                or config.get('eject_at_room_exp') is not True):
             raise HTTPException(502, 'Meeting privacy or expiration could not be confirmed.')
         return room
 
@@ -70,7 +71,7 @@ class DailyProvider:
             'room_name': name, 'exp': min(int(time.time()) + 300, end),
             'is_owner': user['role'] == 'admin', 'user_id': hashlib.sha256(
                 (user['organization_id'] + ':' + user['id']).encode()).hexdigest(),
-            'user_name': user.get('name', 'WZOS participant')[:100],
+            'user_name': str(user.get('name') or 'WZOS participant')[:100],
             'start_video_off': True, 'start_audio_off': True,
             'enable_recording_ui': False, 'enable_live_captions_ui': False,
             'start_cloud_recording': False, 'auto_start_transcription': False}})
@@ -83,8 +84,10 @@ class DailyProvider:
         # Daily enforces room expiry for current participants and blocks re-entry.
         result = self.call('POST', 'rooms/' + name, {'privacy': 'private', 'properties': {
             'exp': int(time.time()) - 1, 'eject_at_room_exp': True}})
-        if (result.get('config', {}).get('exp', int(time.time()) + 1) >= time.time()
-                or result.get('config', {}).get('eject_at_room_exp') is not True):
+        config = result.get('config') if isinstance(result.get('config'), dict) else {}
+        if (result.get('name') != name or result.get('privacy') != 'private'
+                or not isinstance(config.get('exp'), int) or config['exp'] >= time.time()
+                or config.get('eject_at_room_exp') is not True):
             raise HTTPException(502, 'Ending the active meeting was not confirmed.')
 
 
@@ -153,16 +156,19 @@ def register(app, connect, actor, provider=None):
         if user['role'] != 'admin':
             raise HTTPException(403, 'Only admins can start embedded meetings')
         limit(user)
-        # Both adapters serialize writers: PostgreSQL maps BEGIN IMMEDIATE to
-        # the existing application transaction advisory lock.
+        with connect() as db:
+            row, start, end = selected(db, user, record_id)
+            version = row['version']
+        name = 'wzos-' + hashlib.sha256((user['organization_id'] + ':' + str(record_id)
+                                       + ':' + str(version)).encode()).hexdigest()[:40]
+        # Network waits do not hold the shared writer lock or block time punches.
+        provider.room(name, end, create=True, starts_at=start - 900)
+        fresh = actor(request)
         with connect() as db:
             db.execute('BEGIN IMMEDIATE')
-            row, start, end = selected(db, user, record_id)
-            name = 'wzos-' + hashlib.sha256((user['organization_id'] + ':' + str(record_id)
-                                           + ':' + str(row['version'])).encode()).hexdigest()[:40]
-            provider.room(name, end, create=True, starts_at=start - 900)
-            fresh = actor(request)
-            if any(fresh[k] != user[k] for k in ('id', 'organization_id', 'role')):
+            current, _, _ = selected(db, fresh, record_id)
+            if (any(fresh[k] != user[k] for k in ('id', 'organization_id', 'role'))
+                    or current['version'] != version):
                 raise HTTPException(409, 'Meeting access changed. Reload before starting.')
             db.execute('''INSERT INTO daily_meeting_rooms VALUES (?,?,?,?,?,?)
               ON CONFLICT(organization_id,record_id) DO UPDATE SET record_version=excluded.record_version,

@@ -153,3 +153,12 @@ class DailyProviderTests(unittest.TestCase):
             p=DailyProvider();self.assertFalse(p.enabled)
             with self.assertRaises(HTTPException) as error:p.call('GET','rooms')
             self.assertEqual(error.exception.status_code,503)
+    def test_malformed_configuration_and_close_response_are_not_accepted(self):
+        provider=self.provider(lambda r:httpx.Response(200,json={'config':None}))
+        with self.assertRaises(HTTPException) as caught:provider.room('name',100)
+        self.assertEqual(caught.exception.status_code,502)
+        with self.assertRaises(HTTPException) as caught:provider.close('name')
+        self.assertEqual(caught.exception.status_code,502)
+        provider=self.provider(lambda r:httpx.Response(200,json={'name':'other-room','privacy':'private',
+                            'config':{'exp':int(time.time())-1,'eject_at_room_exp':True}}))
+        with self.assertRaises(HTTPException):provider.close('name')

@@ -62,7 +62,7 @@ or customer calls are authorized by the local implementation.
 
 ## Validation and remaining gates
 Local focused Python: 20 passed, eight PostgreSQL cases skipped.
-Full Node: 96 passed, zero skips. Full local Python and exact PostgreSQL gate pending.
+Full Node: 96 passed, zero skips. Full local Python574 passed with169 PostgreSQL skips; exact PostgreSQL gate running.
 Provider tests use httpx.MockTransport, UI tests use a mocked SDK; neither proves
 real audio/video, Android/fullscreen, denied camera permission, or cancellation.
 Verify the secret metadata only; never read the key into an agent output.

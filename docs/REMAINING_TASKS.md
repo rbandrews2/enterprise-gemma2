@@ -1,9 +1,13 @@
 ## Daily embedded meetings - local implementation, October 14, 2026
 
 Ray selected Daily and supplied wzos.daily.co; reports key saved in Secret Manager.
+Secret metadata independently verified: version1 enabled, no value read.
+Candidate af83922ca06c18eb9f752b4d6da33bdadc014b0f pushed to
+origin/codex/preproduction-modules. Exact disposable native database gate
+started in Cloud Shell; log $HOME/wzos-daily-20261014/postgres.log.
 Local implementation reuses schedule/admin/member boundaries, private server rooms
 and existing TV. Full Node96 passed; focused Python20 passed/eight PG skips.
-Full Python and exact PostgreSQL gates remain pending. No Daily runtime grant,
+Full local Python574 passed with169 PostgreSQL skips; exact PostgreSQL gate running. No Daily runtime grant,
 media acceptance or deployment yet; public00044-xim unchanged. See
 DAILY_MEETINGS_INTEGRATION_20261014.md for DDL, security activation and rollback.
 Next: exact database gate, scoped Daily secret/runtime activation approval, build,
