@@ -45,6 +45,7 @@ class ModuleRecord(BaseModel):
     safety: SafetyWorksheet | None = None
     assignees: list[str] = Field(default_factory=list, max_length=50)
     meeting_url: str = Field(default="", max_length=100)
+    meeting_provider: Literal['none', 'google', 'daily'] = 'none'
     title: str = Field(min_length=1, max_length=120)
     location: str = Field(default="", max_length=500)
     details: str = Field(default="", max_length=4000)
@@ -57,11 +58,18 @@ class ModuleRecord(BaseModel):
     def times(self):
         if self.meeting_url and not re.fullmatch(r"https://meet\.google\.com/[a-z]{3}-[a-z]{4}-[a-z]{3}", self.meeting_url):
             raise ValueError("Use a Google Meet link in https://meet.google.com/abc-defg-hij format")
+        if self.meeting_url and self.meeting_provider == 'none':
+            self.meeting_provider = 'google'
+        if self.meeting_provider == 'daily' and self.meeting_url:
+            raise ValueError('Embedded rooms are managed by WZOS; do not enter a meeting URL')
         for value in (self.start, self.end):
             if value and (value.tzinfo is None or value.utcoffset() is None):
                 raise ValueError("Schedule times require a timezone")
         if self.start and self.end and self.end <= self.start:
             raise ValueError("End must be after start")
+        if self.meeting_provider == 'daily' and (not self.start or not self.end
+                or not 0 < (self.end - self.start).total_seconds() <= 3600):
+            raise ValueError('Embedded meetings require start/end times and a maximum duration of 60 minutes')
         return self
 
 
@@ -109,7 +117,7 @@ def register(app, connect, actor, permitted_row, actors, synthetic=True, referen
         if meetings_only:
             if kind != "schedule":
                 raise HTTPException(422, "Meeting filtering is only available for schedules")
-            clause += " AND COALESCE(json_extract(payload, '$.meeting_url'), '') <> ''"
+            clause += " AND (COALESCE(json_extract(payload, '$.meeting_url'), '') <> '' OR json_extract(payload, '$.meeting_provider')='daily')"
         if day and kind == "schedule":
             clause += " AND substr(json_extract(payload, '$.start'),1,10)=?"
             params.append(day.isoformat())
@@ -138,7 +146,7 @@ def register(app, connect, actor, permitted_row, actors, synthetic=True, referen
             raise HTTPException(422, "Incident drafts cannot contain vehicle inspection fields")
         if kind == "schedule" and (payload.inspection is not None or payload.form_type != "incident"):
             raise HTTPException(422, "Vehicle inspections belong in Forms hub")
-        if kind == "forms" and payload.meeting_url:
+        if kind == "forms" and (payload.meeting_url or payload.meeting_provider != 'none'):
             raise HTTPException(422, "Meeting links belong in the team schedule")
         if kind == "forms" and (payload.start or payload.end):
             raise HTTPException(422, "Incident drafts do not use schedule times")
@@ -184,6 +192,8 @@ def register(app, connect, actor, permitted_row, actors, synthetic=True, referen
                         if datetime.fromisoformat(event['start']) < payload.end and datetime.fromisoformat(event['end']) > payload.start:
                             raise HTTPException(409,"An assigned member has an overlapping schedule draft")
             if row:
+                if kind == 'schedule' and row['payload'] != serialized and getattr(app.state, 'end_daily_meeting', None):
+                    app.state.end_daily_meeting(db, selected['organization_id'], record_id)
                 db.execute("INSERT INTO module_revisions VALUES (?,?,?,?,?,?,?) ON CONFLICT DO NOTHING",(selected["organization_id"],kind,str(record_id),row['version'],row['payload'],row['owner_id'],row['updated_at']))
             db.execute("INSERT INTO module_revisions VALUES (?,?,?,?,?,?,?)",(selected["organization_id"],kind,str(record_id),version+1,serialized,selected['id'],datetime.now(timezone.utc).isoformat()))
             db.execute("INSERT INTO module_records VALUES (?,?,?,?,?,?,?) ON CONFLICT(organization_id,kind,id) DO UPDATE SET version=excluded.version,payload=excluded.payload,updated_at=excluded.updated_at",

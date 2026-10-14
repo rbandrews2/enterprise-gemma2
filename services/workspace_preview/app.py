@@ -201,6 +201,16 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
             response.headers["Content-Security-Policy"] = response.headers["Content-Security-Policy"].replace("connect-src 'self'", "connect-src 'self' https://identitytoolkit.googleapis.com https://securetoken.googleapis.com")
             if auth_emulator:
                 response.headers["Content-Security-Policy"] = response.headers["Content-Security-Policy"].replace("connect-src 'self'", "connect-src 'self' " + auth_emulator)
+        daily = getattr(app.state, 'daily_meetings', None)
+        if daily and daily.enabled and request.url.path == '/':
+            csp = response.headers['Content-Security-Policy']
+            csp = csp.replace("connect-src 'self'", "connect-src 'self' https://api.daily.co " + daily.origin)
+            if 'frame-src ' in csp:
+                csp = csp.replace('frame-src ', 'frame-src ' + daily.origin + ' ')
+            else:
+                csp += '; frame-src ' + daily.origin
+            response.headers['Content-Security-Policy'] = csp
+            response.headers['Permissions-Policy'] = 'camera=(self "' + daily.origin + '"), microphone=(self "' + daily.origin + '")'
         response.headers["X-Content-Type-Options"] = "nosniff"
         return response
 
@@ -283,6 +293,14 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
     @app.get("/modules.js")
     def modules_script():
         return FileResponse(STATIC / "modules.js", media_type="text/javascript")
+
+    @app.get('/daily-meetings.js')
+    def daily_meetings_script():
+        return FileResponse(STATIC / 'daily-meetings.js', media_type='text/javascript')
+
+    @app.get('/daily-sdk.js')
+    def daily_sdk_script():
+        return FileResponse(STATIC / 'vendor' / 'daily-iframe.js', media_type='text/javascript')
 
     @app.get("/timeclock.js")
     def timeclock_script():
@@ -557,6 +575,8 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
     modules.register(app, connect, actor, permitted_row, roster, synthetic=not account_workspace,
                      reference_order=lambda db, oid, user: time_order(db, oid, user),
                      jobs=lambda db, user: time_jobs(db, user))
+    from . import daily_meetings
+    daily_meetings.register(app, connect, actor)
     forms_hub.register(app, connect, actor, roster, file_store=file_store)
     from . import form_submissions
     form_submissions.register(app, connect, actor)
