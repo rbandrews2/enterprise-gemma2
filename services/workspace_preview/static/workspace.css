@@ -169,3 +169,13 @@ p{font-size:calc(var(--wzos-paragraph-font-size,1em) + 1pt)!important}
 .meeting-call-controls:has(button:not([hidden])){border-top:1px solid #efcc8226}
 .meeting-call-controls button{min-height:48px}
 @media(max-width:640px){.meeting-video{height:65vh;min-height:400px}.meeting-screen-bottom{flex-wrap:wrap;gap:8px}.meeting-call-controls button{flex:1}}
+
+/* Admin landing page reuses the existing glass palette. */
+.hub-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin:24px 0}
+.hub-card{display:flex;gap:12px;align-items:center;text-align:left;min-height:100px;cursor:pointer}
+.hub-card:active,.hub-card:focus-visible{box-shadow:0 0 22px #edae4270;border-color:#e6b95c}
+.hub-icon{font-size:28px;color:#e6bc70}.hub-status{padding:16px;border:1px solid currentColor;border-radius:14px}
+.hub-green{color:#8cdda9}.hub-red{color:#ffaaa2}.hub-amber{color:#edcb89}.hub-checks{display:flex;gap:20px;flex-wrap:wrap}.hub-checks p{flex:1;min-width:200px}
+.hub-note{border-top:1px solid #dcb56b33;padding:14px 0}.hub-note p{white-space:pre-wrap;overflow-wrap:anywhere}
+#dashboard-view .panel{margin-bottom:16px}#dashboard-view summary{cursor:pointer;min-height:44px}#dashboard-view textarea{width:100%}
+@media(max-width:600px){.hub-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.hub-card{min-height:90px;padding:14px;flex-direction:column;align-items:flex-start}.hub-checks{gap:0}}

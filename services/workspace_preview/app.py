@@ -212,6 +212,11 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
             response.headers['Content-Security-Policy'] = csp
             response.headers['Permissions-Policy'] = 'camera=(self "' + daily.origin + '"), microphone=(self "' + daily.origin + '")'
         response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers['X-Frame-Options'] = 'DENY'
+        response.headers['Referrer-Policy'] = 'no-referrer'
+        response.headers['Cross-Origin-Resource-Policy'] = 'same-origin'
+        if hosted:
+            response.headers['Strict-Transport-Security'] = 'max-age=31536000'
         return response
 
     @app.exception_handler(sqlite3.DatabaseError)
@@ -569,6 +574,11 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
         return prepare_order(record, knowledge_store)
 
     roster = accounts.roster if accounts else lambda selected: ACTORS
+    from . import organization_hub
+    organization_hub.register(app, connect, actor, accounts=account_workspace)
+    @app.get('/organization-hub.js')
+    def organization_hub_script():
+        return FileResponse(STATIC / 'organization-hub.js', media_type='text/javascript')
     team_modules.register(app, connect, actor, roster, synthetic=not account_workspace)
     from services.workspace_preview import navigation
     navigation.register(app, connect, actor, permitted_row, accounts=account_workspace)
