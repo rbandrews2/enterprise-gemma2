@@ -1,5 +1,10 @@
 ## Production authentication origin repaired — October 14, 2026
 
+Latest user acceptance: Ray successfully signed in with his real admin account,
+selected the available organization and entered the workspace. Real admin login
+and organization selection are now accepted; pending wording below is historical.
+New-account lifecycle/reset-email delivery remain distinct from negative probes.
+
 Ray could not sign in/create account/reset password. Independent live probes all
 returned403 API_KEY_HTTP_REFERRER_BLOCKED before credentials were evaluated.
 Production origin was missing from the auth browser-key allowlist; the previous

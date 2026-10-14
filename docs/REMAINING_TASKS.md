@@ -1,5 +1,8 @@
 ## Authentication repair checkpoint — October 14, 2026
 
+Ray confirms successful real admin sign-in, organization selection and workspace
+entrance. This acceptance is complete; proceed to authenticated module/Maps checks.
+
 Fixed missing production authentication-key referrer after Ray's explicit approval.
 Live bounded provider-origin gate six checksPASS; five gate unit testsPASS.
 Real admin password login/organization selection is still the next user acceptance.

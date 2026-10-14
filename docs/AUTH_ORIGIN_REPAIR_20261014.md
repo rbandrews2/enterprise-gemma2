@@ -60,3 +60,11 @@ and before declaring authentication accepted. Never substitute a page200 check.
 
 References: [Firebase Auth REST API](https://firebase.google.com/docs/reference/rest/auth/),
 [Google API key restrictions](https://docs.cloud.google.com/api-keys/docs/add-restrictions-api-keys).
+
+## Real admin access accepted
+
+Ray reports successful real password sign-in on app.workzoneos.org, organization
+available for selection, and workspace entrance after selecting it. This resolves
+the pending real-admin login/organization acceptance above. Fresh account creation
+and reset-email delivery were not independently exercised; their shared referrer
+block is resolved by the provider-origin probes, not claimed as full lifecycle tests.
