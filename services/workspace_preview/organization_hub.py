@@ -86,7 +86,7 @@ def stamp():
     return datetime.now(timezone.utc).isoformat()
 
 
-def register(app, connect, actor, *, accounts=False):
+def register(app, connect, actor, *, accounts=False, roster=None):
     app.add_middleware(HubRequestLimit)
     with connect() as db:
         for sql in DDL:
@@ -131,11 +131,12 @@ def register(app, connect, actor, *, accounts=False):
                            'checked_at': check['checked_at'] if valid else None,
                            'source': check['source'] if valid else None})
         status = 'red' if any(c['status'] == 'problem' for c in checks) else 'green' if all(c['status'] == 'ok' for c in checks) else 'amber'
+        people = roster(user) if roster else {}
         return {'organization': user['organization'], 'edition': user['edition'], 'status': status,
                 'checks': checks, 'preferences_version': pref['version'] if pref else 0,
                 'modules': [{'id': key, 'label': label, 'icon': icon, 'nav_id': nav, 'visible': key not in hidden}
                             for key, label, icon, nav, enterprise in MODULES if not enterprise or user['edition'] == 'enterprise'],
-                'notes': [dict(r) for r in notes], 'notes_limit': 50}
+                'notes': [{**dict(r), 'author_name': people.get(r['author_id'], {}).get('name', 'Organization admin')} for r in notes], 'notes_limit': 50}
 
     @app.put('/api/admin/dashboard/preferences')
     def preferences(body: Preferences, request: Request):

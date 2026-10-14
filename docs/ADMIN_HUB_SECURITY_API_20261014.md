@@ -75,7 +75,7 @@ Implemented: organization/role checks on all hub management routes; fixed API sc
 and field projections; active membership checks; random hashed/revocable expiring
 credentials; parameterized SQL; bounded inputs/exports/rates; audit metadata without
 note content/token secrets; no public status-writing route; safe text rendering;
-no-store responses; CSP retained; X-Frame-Options DENY, Referrer-Policy no-referrer,
+no-store responses; CSP retained; X-Frame-Options DENY, Referrer-Policy strict-origin-when-cross-origin,
 Cross-Origin-Resource-Policy same-origin; hosted HTTPS HSTS max-age31536000.
 No includeSubDomains/preload change is made. Existing Daily iframe allowlist remains.
 

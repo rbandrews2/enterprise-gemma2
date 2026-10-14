@@ -136,7 +136,7 @@ class OrganizationHubTests(unittest.TestCase):
         self.assertEqual(response.status_code, 413)
         self.assertEqual(self.client.post('/api/admin/integrations', headers={**self.h(), 'Origin': 'https://untrusted.example'}, json={}).status_code, 403)
         self.assertEqual(self.client.get('/api/integrations/v1/orders?api_key=ignored').status_code, 401)
-        self.assertEqual(self.client.get('/').headers['referrer-policy'], 'no-referrer')
+        self.assertEqual(self.client.get('/').headers['referrer-policy'], 'strict-origin-when-cross-origin')
         self.assertEqual(self.client.get('/').headers['x-frame-options'], 'DENY')
 
 

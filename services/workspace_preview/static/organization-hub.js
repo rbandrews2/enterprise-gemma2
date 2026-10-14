@@ -12,6 +12,7 @@
  const button=(label,action)=>{const b=node('button',label,'secondary');b.type='button';b.onclick=action;return b;};
  function clear(){epoch++;root.replaceChildren();draft=false;}
  async function render(){
+  const retainedDraft=root.querySelector('textarea')?.value||'';
   clear();const generation=epoch;const state=window.wzosClock.getSession();if(state?.role!=='admin')return;
   root.append(node('h1','Organization dashboard'));const status=node('p','Checking organization status…');status.setAttribute('role','status');root.append(status);
   try{
@@ -31,9 +32,10 @@
    options.append(node('small','Shared dashboard shortcuts only. Hiding a card does not change access permissions.'));
    options.append(button('Save preferences',async()=>{try{await api('/api/admin/dashboard/preferences',{method:'PUT',body:JSON.stringify({expected_version:data.preferences_version,hidden_modules:selections.filter(([,c])=>!c.checked).map(([id])=>id)})});if(generation===epoch)render();}catch(e){if(generation===epoch)status.textContent=e.message;}}));root.append(options);
    const notes=node('section',undefined,'panel');notes.append(node('h2','Admin notes'));const form=node('form'),input=node('textarea');input.maxLength=500;input.required=true;input.rows=3;input.setAttribute('aria-label','Short message for organization admins');input.placeholder='Leave a short message for your fellow admins';input.oninput=()=>{draft=!!input.value;};
+   input.value=retainedDraft;draft=!!retainedDraft;
    const save=node('button','Post note','primary');save.type='submit';form.append(input,save);let requestId=crypto.randomUUID(),last='';
-   form.onsubmit=async e=>{e.preventDefault();if(last&&last!==input.value)requestId=crypto.randomUUID();last=input.value;save.disabled=true;try{await api('/api/admin/dashboard/notes',{method:'POST',body:JSON.stringify({request_id:requestId,text:input.value})});if(generation===epoch){draft=false;render();}}catch(err){if(generation===epoch){status.textContent=err.message;save.disabled=false;}}};notes.append(form);
-   for(const item of data.notes){const card=node('article',undefined,'hub-note');card.append(node('p',item.body),node('small',new Date(item.created_at).toLocaleString()),button('Remove',async()=>{if(!confirm('Remove this admin note?'))return;try{await api('/api/admin/dashboard/notes/'+encodeURIComponent(item.id),{method:'DELETE'});if(generation===epoch)render();}catch(e){if(generation===epoch)status.textContent=e.message;}}));notes.append(card);}if(!data.notes.length)notes.append(node('p','No admin notes yet.'));root.append(notes);
+   form.onsubmit=async e=>{e.preventDefault();if(last&&last!==input.value)requestId=crypto.randomUUID();last=input.value;save.disabled=true;try{await api('/api/admin/dashboard/notes',{method:'POST',body:JSON.stringify({request_id:requestId,text:input.value})});if(generation===epoch){input.value='';draft=false;render();}}catch(err){if(generation===epoch){status.textContent=err.message;save.disabled=false;}}};notes.append(form);
+   for(const item of data.notes){const card=node('article',undefined,'hub-note');card.append(node('p',item.body),node('small',item.author_name+' · '+new Date(item.created_at).toLocaleString()),button('Remove',async()=>{if(!confirm('Remove this admin note?'))return;try{await api('/api/admin/dashboard/notes/'+encodeURIComponent(item.id),{method:'DELETE'});if(generation===epoch)render();}catch(e){if(generation===epoch)status.textContent=e.message;}}));notes.append(card);}if(!data.notes.length)notes.append(node('p','No admin notes yet.'));root.append(notes);
    const integrations=node('details',undefined,'panel');integrations.append(node('summary','Integration API'));const tools=node('div');integrations.append(tools);root.append(integrations);
    integrations.addEventListener('toggle',()=>{if(integrations.open&&!tools.childNodes.length)credentials(tools,generation);});
   }catch(e){if(generation===epoch){status.textContent='Organization status unavailable. '+e.message;status.className='hub-status hub-amber';}}

@@ -213,7 +213,7 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
             response.headers['Permissions-Policy'] = 'camera=(self "' + daily.origin + '"), microphone=(self "' + daily.origin + '")'
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers['X-Frame-Options'] = 'DENY'
-        response.headers['Referrer-Policy'] = 'no-referrer'
+        response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
         response.headers['Cross-Origin-Resource-Policy'] = 'same-origin'
         if hosted:
             response.headers['Strict-Transport-Security'] = 'max-age=31536000'
@@ -575,7 +575,7 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
 
     roster = accounts.roster if accounts else lambda selected: ACTORS
     from . import organization_hub
-    organization_hub.register(app, connect, actor, accounts=account_workspace)
+    organization_hub.register(app, connect, actor, accounts=account_workspace, roster=roster)
     @app.get('/organization-hub.js')
     def organization_hub_script():
         return FileResponse(STATIC / 'organization-hub.js', media_type='text/javascript')
