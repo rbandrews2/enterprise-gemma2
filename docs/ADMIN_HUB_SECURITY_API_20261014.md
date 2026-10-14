@@ -120,3 +120,45 @@ Initial focused run exposed two test-fixture assumptions (status insert placehol
 and existing synthetic seed orders); fixtures repaired. Full cloud gates and browser
 review are pending. No real organization notes, keys, SMS or customer exports have
 been created. Existing Daily/Maps/Twilio/Atlas/checkout acceptance gaps remain.
+
+## Final source validation and next deployment gate
+
+Runtime source650aa5a: cloud Node96 PASS/no skips; full native PostgreSQL594
+PASS in218.710s, zero failures/errors/skips. This is the patched FastAPI0.143.1,
+Starlette1.8.0 and pip26.2.1 environment. pip-audit:57 packages, zero known
+findings, zero skipped packages. This is an advisory snapshot, not a guarantee
+against unknown vulnerabilities or a malware scan. Original raw26 findings
+included duplicate entries; reports are preserved in Cloud Shell.
+
+Real patched-framework loopback HTTP check:7 PASS (anonymous401, member403,
+admin200, API bad/missing key401, script200, untrusted origin403, actual dashboard
+amber state and Enterprise assignments shortcut). Test HTTP server stopped.
+Synthetic desktop browser: admin dashboard landing, notes save, Time Tracker
+shortcut, integration settings, preference card hiding and unsaved-note preservation
+verified. Temporary local fixture process stopped. Screenshot outside Git:
+.local-data/hub-evidence/admin-dashboard.png. Browser fixture used laptop's existing
+Python environment; patched-framework acceptance is the separate cloud HTTP/PG run.
+Mobile viewport/device acceptance remains open. Never use fixture identities publicly.
+
+Cloud evidence: $HOME/wzos-hub-20261014/gate.log (initial candidate),
+patched-gate.log (650aa5a), dependency-audit.json/log (before),
+patched-dependency-audit.json/log (after), http-check.log and gate-path.txt.
+No deployed runtime/traffic, DNS, secrets/IAM, customer data or third-party service
+configuration changed. No real SMS, emails, calls, exports or model requests sent.
+No new paid infrastructure provisioned. Messaging notifications remain the prior
+pending task; this increment does not activate unrestricted SMS sending.
+
+Next: verify fresh backup/schema/budget and build a dependency-reinstalling image
+that preserves the frozen agency library; rerun the advisory scan against that
+actual image, review browser permissions and deploy in a controlled release.
+Source-only overlay helpers MUST NOT be reused without updating their dependency
+step. Current live app still uses the previous framework; the patched source is
+not live protection until deployment. Rolling back the dependency update restores
+known advisory exposure: prefer a tested forward fix and record any emergency rollback.
+Add deployed-image dependency inventory/locking to the release evidence.
+
+Integration specification: WZOS_INTEGRATION_API_V1.openapi.json. Next connector
+work needs provider developer-app/tenant authorization, approved fields/scopes,
+server-side token storage and sandbox acceptance. Billing/monitoring status evidence,
+file malware quarantine/scanning, tamper-resistant audit retention, restore/incident
+exercises and SOC2 organizational evidence remain open, not implicitly completed.

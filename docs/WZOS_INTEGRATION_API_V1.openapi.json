@@ -1,0 +1,187 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "WZOS organization integration API",
+    "version": "1.0.0",
+    "description": "Read-only connection foundation. Does not implement QuickBooks or Workday OAuth/connectors."
+  },
+  "servers": [
+    {
+      "url": "https://app.workzoneos.org",
+      "description": "Endpoints require deployment of this source candidate before use."
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "WzosApiKey": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-WZOS-API-Key"
+      }
+    }
+  },
+  "paths": {
+    "/api/integrations/v1/orders": {
+      "get": {
+        "summary": "Read organization orders",
+        "description": "Requires orders:read. Current paginated reads; deduplicate by id/version. No write operations.",
+        "security": [
+          {
+            "WzosApiKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50,
+              "default": 25
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 10000,
+              "default": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Organization-scoped page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "items",
+                    "limit",
+                    "offset"
+                  ],
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "maxItems": 50,
+                      "items": {
+                        "type": "object",
+                        "description": "See field projection in ADMIN_HUB_SECURITY_API_20261014.md"
+                      }
+                    },
+                    "limit": {
+                      "type": "integer"
+                    },
+                    "offset": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, expired, revoked, or inactive administrator credential"
+          },
+          "403": {
+            "description": "Missing scope or forbidden browser origin"
+          },
+          "422": {
+            "description": "Invalid pagination"
+          },
+          "429": {
+            "description": "Organization limit exceeded; Retry-After: 60"
+          },
+          "503": {
+            "description": "Storage unavailable"
+          }
+        }
+      }
+    },
+    "/api/integrations/v1/schedule": {
+      "get": {
+        "summary": "Read organization schedule",
+        "description": "Requires schedule:read. Current paginated reads; deduplicate by id/version. No write operations.",
+        "security": [
+          {
+            "WzosApiKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50,
+              "default": 25
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 10000,
+              "default": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Organization-scoped page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "items",
+                    "limit",
+                    "offset"
+                  ],
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "maxItems": 50,
+                      "items": {
+                        "type": "object",
+                        "description": "See field projection in ADMIN_HUB_SECURITY_API_20261014.md"
+                      }
+                    },
+                    "limit": {
+                      "type": "integer"
+                    },
+                    "offset": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, expired, revoked, or inactive administrator credential"
+          },
+          "403": {
+            "description": "Missing scope or forbidden browser origin"
+          },
+          "422": {
+            "description": "Invalid pagination"
+          },
+          "429": {
+            "description": "Organization limit exceeded; Retry-After: 60"
+          },
+          "503": {
+            "description": "Storage unavailable"
+          }
+        }
+      }
+    }
+  }
+}

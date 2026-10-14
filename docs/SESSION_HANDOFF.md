@@ -1,3 +1,44 @@
+## Admin dashboard / security / API source increment — October 14, 2026
+
+Ray requested these tasks while maintaining the laptop. Runtime source650aa5a
+pushed to codex/preproduction-modules; source in Codex integration-release checkout,
+primary/Claude checkouts untouched. NO public deployment in this increment.
+
+Implemented: admin default dashboard with edition-aware module/account glass cards,
+shared organization notes, concurrency-checked shared shortcut preferences, status
+lights grounded in current operator evidence (default amber, not a fictitious green),
+revocable hashed/scoped/expiring read-only integration credentials and paginated
+work-order/schedule API exports. Reuses existing verified accounts, roles and tenancy.
+No vendor-specific QuickBooks/Workday connector is claimed. New startup DDL: six
+additive tables and one audit index; scripts/organization_hub_schema_review.sql.
+
+Security: bounded new-route bodies, rate bounds, scope/projection minimization,
+per-request credential/admin/organization revocation checks, audit metadata and
+browser headers. Preserve origin referrers needed by restricted Maps credentials.
+Cloud audit found raw26 advisory entries across old Starlette/pip (duplicates
+included); patched source pins FastAPI0.143.1/Starlette1.8.0 and accounts Docker/test
+bootstrap pip26.2.1. Actual patched cloud audit57 packages:0 findings,0 skipped.
+
+Exact650aa5a: Node96 PASS; native PostgreSQL594 PASS218.710s, zero fail/error/skip;
+real loopback HTTP7 PASS and HTTP server stopped. Browser synthetic desktop
+landing/notes/module shortcut/preferences/unsaved-note preservation verified;
+local fixture stopped. Mobile acceptance still open. Old local Python deps unchanged.
+Read ADMIN_HUB_SECURITY_API_20261014.md and WZOS_INTEGRATION_API_V1.openapi.json.
+
+Cloud logs $HOME/wzos-hub-20261014; patched-gate.log, patched-dependency-audit.json,
+http-check.log. Gate checkout path recorded in gate-path.txt; do not assume it survives
+Cloud Shell restart. Preserve original before-audit report. No customer sends, model
+calls, new paid resources, IAM/secrets/DNS changes or public traffic changes.
+
+NEXT: public app still serves prior Daily release and old framework. Prepare tested
+image with patched dependency reinstall AND frozen agency library; source-only old
+image overlays retain vulnerable packages. Scan actual image, fresh SQL backup/schema/
+budget review and controlled deployment before claiming live protection. Retain new
+tables on rollback; old dependency rollback reintroduces advisory exposure. Status
+billing/security/monitoring adapters, malware scanning/quarantine, immutable audit
+retention, SOC2 operating evidence and actual external connectors remain open.
+Previous pending one-way Twilio notification work is still pending; don't lose it.
+
 ## Daily deployed; device acceptance deferred - October 14, 2026
 
 Ray resumed after laptop restart and requested deployment. Repaired runtime

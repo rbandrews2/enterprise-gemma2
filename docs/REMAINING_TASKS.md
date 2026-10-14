@@ -1,3 +1,28 @@
+## Latest implementation queue — October 14, 2026
+
+Source650aa5a adds admin dashboard + security controls + scoped read-only API;
+Node96/native PostgreSQL594/HTTP7 PASS; patched audit57 packages/0 findings/no skips.
+No public deployment. Full evidence: ADMIN_HUB_SECURITY_API_20261014.md.
+
+Next in order:
+1. Deploy patched dependencies and new source after image-level audit, frozen-source
+   preservation, backup/schema/budget review and applicable public API activation
+   approval. Current public runtime still has old framework dependencies. Reusing an
+   old image with source-only COPY does NOT apply security dependency patches.
+2. Validate dashboard on actual admin/member devices, Core/Enterprise, account
+   controls, shared preferences/notes and status evidence expiry. Connect real billing,
+   monitoring and security observations before green operational-status claims.
+3. Complete pending one-way WZOS SMS notifications to consenting verified organization
+   members/admins; truthful verification/delivery UI and controlled carrier acceptance.
+4. Add file malware quarantine/scanning and clean-result release, dependency/image
+   inventory, audit retention, restore/incident/access-review evidence. Code controls
+   are not SOC2 certification; privacy/vendor/process work remains.
+5. Implement provider-specific integration connectors after customer/provider OAuth
+   setup, tenant authorization and approved field mappings. Current API exports only
+   work-order/schedule projections; it does not yet sync QuickBooks/Workday/payroll.
+6. Resume existing deferred Daily media, Maps, Atlas inference, checkout/activation
+   and production operations acceptance. Prior milestones below remain historical.
+
 ## Daily release checkpoint - October 14, 2026
 
 Daily meeting integration deployed at app.workzoneos.org, revision
