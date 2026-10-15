@@ -21,6 +21,8 @@ cleanup() {
   printf '%s\n' "$result" > "$evidence/image.exit"
 }
 trap cleanup EXIT
+trap 'exit 143' TERM
+trap 'exit 130' INT
 git rev-parse HEAD > "$evidence/source.txt"
 printf '%s\n' "$base" > "$evidence/base.txt"
 git archive HEAD Dockerfile.scanner requirements-scanner.txt services/__init__.py \

@@ -5,7 +5,8 @@ umask 077
 evidence=${1:?Private evidence directory required}
 base=${2:?Inspected official Python base digest required}
 [[ $base =~ ^python:3\.12-slim-trixie@sha256:[0-9a-f]{64}$ ]] || exit 2
-test -z "$(git status --porcelain)"
+# Explicit git archive allowlist excludes untracked test venvs and local data.
+test -z "$(git status --porcelain --untracked-files=no)"
 revision=$(git rev-parse HEAD)
 image="us-central1-docker.pkg.dev/enterprise-gemma2/enterprise-gemma2/wzos-v2-scanner:$revision"
 mkdir -p "$evidence"; evidence=$(realpath "$evidence")
