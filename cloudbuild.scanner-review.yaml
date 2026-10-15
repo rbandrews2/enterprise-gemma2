@@ -9,12 +9,14 @@ steps:
       - -c
       - |
         set -euo pipefail
+        python=$$(gcloud info --format="value(basic.python_location)")
+        test -x "$$python"
         timeout 480 gcloud artifacts docker images scan "${_IMAGE}" --remote --project=enterprise-gemma2 --location=us --format=json > /workspace/review.json
         cat /workspace/review.json
-        scan=$$(python3 -c 'import json; x=json.load(open("/workspace/review.json")); assert x.get("done") and not x.get("error"), x; print(x["response"]["scan"])')
+        scan=$$("$$python" -c 'import json; x=json.load(open("/workspace/review.json")); assert x.get("done") and not x.get("error"), x; print(x["response"]["scan"])')
         timeout 90 gcloud artifacts docker images list-vulnerabilities "$$scan" --project=enterprise-gemma2 --format=json > /workspace/findings.json
         cat /workspace/findings.json
-        python3 -c 'import json,collections; x=json.load(open("/workspace/findings.json")); print("SCANNER_IMAGE_REVIEW_COUNTS",dict(collections.Counter(i.get("vulnerability",{}).get("effectiveSeverity",i.get("vulnerability",{}).get("severity","UNKNOWN")) for i in x)))'
+        "$$python" -c 'import json,collections; x=json.load(open("/workspace/findings.json")); print("SCANNER_IMAGE_REVIEW_COUNTS",dict(collections.Counter(i.get("vulnerability",{}).get("effectiveSeverity",i.get("vulnerability",{}).get("severity","UNKNOWN")) for i in x)))'
 timeout: 900s
 queueTtl: 600s
 options:

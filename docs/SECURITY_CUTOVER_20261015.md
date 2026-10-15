@@ -1,3 +1,41 @@
+## HF_TOKEN verified; scanner vulnerability gate blocked - October 15, 2026
+
+Canonical secret HF_TOKEN version1 enabled. Live operator check: identity200,
+selected google/gemma-4-31B-it repository access200, fineGrained token. No secret
+value displayed or persisted. See HUGGINGFACE_GEMMA_ACCESS_20261015.md.
+Failed gemma-inference-00007-njh loaded old google/gemma-2-2b-it and failed
+GatedRepoError401 before listening8080; that model returned403 with this token.
+Do not broaden token or restart wrong model. Existing Atlas helper uses Google
+Storage weights, not HF. Live inference still unaccepted; bind HF_TOKEN only to
+an actual HF consumer after narrowly scoped access review.
+
+Completed analysis build27c1de4f-7011-45ff-b6b9-48c0fb3b90f4, scan
+projects/enterprise-gemma2/locations/us/scans/eb138154-f833-40b8-bb35-893d3f4b217a.
+Build FAILURE was formatting-only (python3 alias absent); findings retrieved
+using existing operator access without another scan. Counts:162 total, HIGH18,
+MEDIUM8, LOW84, MINIMAL52, CRITICAL0. Six fixAvailable, all pip25.0.1 with highest
+reported patched version26.2. High packages:clamav12, acl2, cyrus-sasl2/attr/zlib/
+perl one each. Debian trixie ClamAV1.4.3 has relevant parser vulnerabilities.
+Image99019f1 is NOT cleared for activation despite functional acceptance.
+
+Approved four-permission scan-only binding was removed automatically and absence
+independently verified (IAM result[]). Original expiry2026-10-15T22:24:39Z was
+not extended. Custom role remains unbound. No runtime grants/service/deploy made.
+Cloud evidence pointer:~/wzos-approved-image-review-retry-latest.txt includes
+findings.json,hf-check-result.json,access-removal/launch logs. Earlier pointer
+~/wzos-approved-image-review-latest.txt includes redacted Gemma startup diagnosis.
+
+Next: patched supported scanner engine/base and resolve/remove vulnerable build
+tooling; immutable rebuild,lifecycle tests,new vulnerability disposition. Do not
+mix unstable packages into stable or waive parser risks. New scan IAM window
+requires new approval. Then dedicated runtime/invoker approval, live identity/
+upload/hold tests,schema/current costs,security-capable rollback and cutover.
+Atlas next: selected immutable weights/serving path and real inference acceptance.
+CLI formatter now selects SDK bundled interpreter; new config not cloud-rerun.
+Existing app gate689/108 unchanged; earlier two focused HF helper tests passed.
+Local rerun unavailable:python command currently resolves Windows Store alias.
+LandingB remains prototype-only. Production traffic unchanged.
+
 # Atlas Security cutover preparation - October 15, 2026
 
 Status: image/lifecycle acceptance PASSED; live activation and public application
