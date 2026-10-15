@@ -3,8 +3,8 @@
 set -euo pipefail
 umask 077
 evidence=${1:?Private evidence directory required}
-base=${2:?Inspected official Python base digest required}
-[[ $base =~ ^python:3\.12-slim-trixie@sha256:[0-9a-f]{64}$ ]] || exit 2
+base=${2:?Inspected official Ubuntu base digest required}
+[[ $base =~ ^ubuntu:26\.04@sha256:[0-9a-f]{64}$ ]] || exit 2
 # Explicit git archive allowlist excludes untracked test venvs and local data.
 test -z "$(git status --porcelain --untracked-files=no)"
 revision=$(git rev-parse HEAD)
@@ -22,5 +22,5 @@ printf '%s\n' "$base" > "$evidence/base.txt"
 printf '%s\n' "$image" > "$evidence/image-tag.txt"
 gcloud builds submit "$context" --project=enterprise-gemma2 --region=us-central1 \
   --config="$context/cloudbuild.scanner.yaml" --async --quiet \
-  --substitutions="_PYTHON_IMAGE=$base,_IMAGE=$image" --format='value(id)' > "$evidence/build.id"
+  --substitutions="_BASE_IMAGE=$base,_IMAGE=$image" --format='value(id)' > "$evidence/build.id"
 printf 'SCANNER_BUILD_SUBMITTED %s\n' "$(cat "$evidence/build.id")"

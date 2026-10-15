@@ -3,8 +3,8 @@
 set -euo pipefail
 umask 077
 evidence=${1:?Private evidence directory required}
-base=${2:?Inspected official Python base digest required}
-[[ $base =~ ^python:3\.12-slim-trixie@sha256:[0-9a-f]{64}$ ]] || exit 2
+base=${2:?Inspected official Ubuntu base digest required}
+[[ $base =~ ^ubuntu:26\.04@sha256:[0-9a-f]{64}$ ]] || exit 2
 test "$(uname -s)" = Linux
 test "$(awk '/MemAvailable:/ {print $2}' /proc/meminfo)" -ge 4200000
 mkdir -p "$evidence"; evidence=$(realpath "$evidence")
@@ -41,7 +41,7 @@ git archive HEAD Dockerfile.scanner requirements-scanner.txt services/__init__.p
   services/workspace_preview/clamd_scanner.py services/workspace_preview/security.py \
   services/workspace_preview/scanner_transport.py services/workspace_preview/scanner_service.py \
   services/workspace_preview/scanner_runtime.py | tar -x -C "$context"
-  timeout 900 docker build --platform linux/amd64 --build-arg "PYTHON_IMAGE=$base" \
+  timeout 900 docker build --platform linux/amd64 --build-arg "BASE_IMAGE=$base" \
     --iidfile "$evidence/image.id" -f "$context/Dockerfile.scanner" "$context" > "$evidence/build.log" 2>&1
 fi
 image=$(cat "$evidence/image.id")

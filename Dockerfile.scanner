@@ -1,25 +1,33 @@
-# Supply an inspected official python:3.12-slim-trixie@sha256 digest, never latest.
-ARG PYTHON_IMAGE
-FROM ${PYTHON_IMAGE}
-ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 TZ=UTC
+# Supported Ubuntu security feed; no mixed-distribution repositories.
+ARG BASE_IMAGE
+FROM ${BASE_IMAGE}
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 TZ=UTC PATH=/opt/wzos-venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin WZOS_CLAM_CERTS_DIR=/etc/clamav/certs
 WORKDIR /app
 RUN printf '#!/bin/sh\nexit 101\n' > /usr/sbin/policy-rc.d \
     && chmod 755 /usr/sbin/policy-rc.d \
     && apt-get update \
-    && apt-get install -y --no-install-recommends clamav-daemon clamav-freshclam ca-certificates \
+    && DEBIAN_FRONTEND=noninteractive apt-get upgrade -y \
+    && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends clamav-daemon clamav-freshclam ca-certificates python3 python3-venv \
+    && dpkg --compare-versions "$(dpkg-query -W -f='${Version}' clamav-daemon)" ge 1.5.4 \
+    && test -d /etc/clamav/certs \
+    && python3 -m venv /opt/wzos-venv \
     && rm -rf /var/lib/apt/lists/* \
     && useradd --create-home --uid 10001 wzos \
     && mkdir -p /opt/wzos-signatures \
     && chown 10001:10001 /opt/wzos-signatures \
     && chmod 700 /opt/wzos-signatures
 COPY requirements-scanner.txt ./
-RUN python -m pip install --no-cache-dir --only-binary=:all: -r requirements-scanner.txt
+RUN python -m pip install --no-cache-dir --only-binary=:all: -r requirements-scanner.txt \
+    && python -m pip check \
+    && python -m pip uninstall -y pip \
+    && apt-get purge -y python3-venv python3-pip-whl \
+    && rm -rf /var/lib/apt/lists/* \
+    && python -c "import importlib.util; assert importlib.util.find_spec('pip') is None"
 # Explicit allowlist: no accounts, storage code, credentials or workspace data.
 COPY services/__init__.py ./services/__init__.py
 COPY services/workspace_preview/__init__.py ./services/workspace_preview/__init__.py
 COPY services/workspace_preview/archive_policy.py services/workspace_preview/clamd_scanner.py services/workspace_preview/security.py services/workspace_preview/scanner_transport.py services/workspace_preview/scanner_service.py services/workspace_preview/scanner_runtime.py ./services/workspace_preview/
-# Restricted source archives may carry mode600. Code is public/non-secret;
-# runtime may read/traverse it, but only root may modify it.
+# Public code readable by UID10001, writable only by root.
 RUN chmod -R a+rX /app/services
 USER 10001:10001
 RUN python -m services.workspace_preview.scanner_runtime --seed-only /opt/wzos-signatures
