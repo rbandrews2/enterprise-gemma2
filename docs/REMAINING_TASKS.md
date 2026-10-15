@@ -20,6 +20,10 @@ Reviewable startup SQL scripts/security_schema_review.sql; no destructive migrat
 Do NOT rollback to old hub after security holds exist: it predates enforcement.
 Preserve mandatory scan gate/holds/audit in any post-activation rollback.
 
+Vulnerability CLI stalled on local package extraction; verified owned PID27402
+and stopped it with TERM, terminal returned Failed/prompt; no findings obtained.
+Use a bounded cloud-native review job, not another slow local image extraction.
+
 Next: image vulnerability disposition/current billing; exact approval for new
 private scanner service/dedicated identity and service-scoped invoker grant;
 live Google identity/cold-start and synthetic upload-to-hold acceptance. Then

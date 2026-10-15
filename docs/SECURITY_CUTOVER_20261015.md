@@ -112,3 +112,16 @@ The user requested preparation, not a new scanner permission grant. New dedicate
 service identity and narrowly scoped invocation expand security-sensitive access;
 browser-control policy requires exact action-time confirmation before applying.
 The public site remains unchanged while these gates are open.
+
+### Image vulnerability review remains open
+
+The existing On-Demand Scanning API was verified enabled. One remote scan was
+attempted, but gcloud still needed local package extraction from the remote image
+and stalled in Cloud Shell. After observing its exact owned process PID27402 at
+222 seconds, stopped only that matching image-scan client with TERM; terminal
+confirmed Failed and returned to prompt. No findings/operation receipt obtained;
+do not report zero vulnerabilities or completed security review. Next use a
+bounded cloud-native extraction/review job with existing permissions; do not
+enable APIs or broaden build identity access automatically. The configured API's
+listed price is USD0.26 per scanned image (before any allowances):
+https://cloud.google.com/artifact-analysis/pricing (verified October15).
