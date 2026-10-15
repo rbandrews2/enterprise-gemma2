@@ -65,6 +65,8 @@ started=$SECONDS
 ready
 printf 'first_boot_seconds=%s\n' "$((SECONDS-started))" > "$evidence/timing.txt"
 docker exec "$container" sh -c 'id; clamd --version; dpkg-query -W clamav-daemon clamav-freshclam' > "$evidence/runtime-packages.txt"
+docker exec "$container" python -c 'import importlib.util,sys; assert importlib.util.find_spec("pip") is None; print(sys.version)' >> "$evidence/runtime-packages.txt"
+docker exec "$container" sh -ec 'test -d /etc/clamav/certs; dpkg --compare-versions "$(dpkg-query -W -f="\${Version}" clamav-daemon)" ge 1.5.4'
 docker stats --no-stream --format '{{.MemUsage}}' "$container" > "$evidence/steady-memory.txt"
 docker exec -i "$container" python - < scripts/check_scanner_container.py > "$evidence/engine-results.json"
 timeout 15 docker wait "$container" > "$evidence/recycle.exit"
