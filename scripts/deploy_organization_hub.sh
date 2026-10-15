@@ -3,7 +3,7 @@
 set -euo pipefail
 umask 077
 evidence="$HOME/wzos-hub-rollout-20261014"
-image='us-central1-docker.pkg.dev/enterprise-gemma2/enterprise-gemma2/wzos-v2-accounts@sha256:4cc2f391151e1aaf00d9ad29bc68c57779b808f75ed9034f23e3bcbb3af71bdd'
+image='us-central1-docker.pkg.dev/enterprise-gemma2/enterprise-gemma2/wzos-v2-accounts@sha256:fc87869680a0c6948d4116225ddf7ae22de6a659d0264e31351a251367465f06'
 python3 - "$evidence" <<'PY'
 import json,sys
 from pathlib import Path
@@ -17,6 +17,17 @@ hub={'hub_notes','hub_preferences','hub_status_checks','integration_credentials'
 assert hub <= set(s['missing_tables']) <= hub | {'purchase_events','purchase_requests'}
 b=json.loads((p/'backup.json').read_text())
 assert b['status']=='SUCCESSFUL' and b['description']=='pre-hub-5a3ac86'
+build=json.loads((p/'os-build-result.json').read_text())
+assert build['status']=='SUCCESS' and build['results']['images'][0]['digest']=='sha256:fc87869680a0c6948d4116225ddf7ae22de6a659d0264e31351a251367465f06'
+scan=json.loads((p/'os-scan.json').read_text())
+assert scan.get('done') and scan.get('response',{}).get('scan') and not scan.get('error')
+findings=json.loads((p/'os-vulnerabilities.json').read_text())
+reviewed={'CVE-2026-9538','CVE-2026-54371','CVE-2026-85091','CVE-2026-54369','CVE-2026-54370'}
+for finding in findings:
+    v=finding.get('vulnerability',{});severity=v.get('effectiveSeverity',v.get('severity'))
+    assert not v.get('fixAvailable'),'Available security update remains'
+    assert severity!='CRITICAL','Critical finding requires review'
+    if severity=='HIGH':assert finding['noteName'].rsplit('/',1)[-1] in reviewed,'New high finding requires review'
 PY
 gcloud run services describe wzos-v2-accounts --project enterprise-gemma2 --region us-central1 --format=json > "$evidence/at-deploy-service.json"
 python3 - "$evidence" <<'PY'
