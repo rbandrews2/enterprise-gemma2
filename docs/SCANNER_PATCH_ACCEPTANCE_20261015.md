@@ -50,3 +50,28 @@ https://packages.ubuntu.com/search?keywords=clamav&suite=resolute
 Existing Atlas subnet wzos-atlas-us-central1 has Private Google Access=true,
 10.83.0.0/26; dedicated inference identity exists. These read-only checks do not
 establish effective invocation permissions, current cost or live inference.
+
+## Private pilot deployed; identity acceptance pending
+
+Ray approved private synthetic pilot. Service wzos-v2-scanner-00002-sj2 is Ready,
+canonical URL https://wzos-v2-scanner-udtvm4rgca-uc.a.run.app. Dedicated identity
+wzos-v2-scanner-runtime@enterprise-gemma2.iam.gserviceaccount.com has no project
+roles (independent IAM lookup[]). Service policy grants only the existing WZOS
+app identity roles/run.invoker; no allUsers/allAuthenticatedUsers. Config min0/
+max1,1CPU/4GiB,request billing,concurrency1. Public app config unchanged.
+Anonymous real /scan request correctly rejected403. Authorized synthetic file
+requests remain BLOCKED before upload: existing operator cannot mint app-principal
+ID token (direct IAMCredentials403; sign-in is not expired). No extra access
+granted. Do not mark real caller/clean/detection/integrity checks passed.
+
+Proposed narrowly scoped next permission: grant user:admin@workzoneos.org only
+roles/iam.serviceAccountOpenIdTokenCreator on the single account
+wzos-v2-accounts@enterprise-gemma2.iam.gserviceaccount.com, conditional expiry15min,
+remove immediately after test. This permits Google ID tokens acting as the app
+for services accepting that identity; no access-token generation, signing,
+database/storage/secret roles. Requires action-time approval before granting.
+Use direct generateIdToken API in validator; do not replace with broad TokenCreator.
+
+User requested all security/scanning UI credit Atlas. Updated attachment states
+and admin security UI, preserving honest pending/unavailable/clean distinctions.
+Committed fc85382; not publicly deployed. Node108/108 pass; focused Python5/5.

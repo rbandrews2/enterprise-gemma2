@@ -1,3 +1,33 @@
+## Private scanner ready; Atlas security wording saved - October15
+
+Approved private synthetic pilot is deployed as wzos-v2-scanner-00002-sj2,
+Ready=True, origin https://wzos-v2-scanner-udtvm4rgca-uc.a.run.app.
+Dedicated scanner identity has no project roles; only WZOS app principal has
+service-scoped run.invoker. No public callers. min0/max1,1CPU/4GiB,concurrency1.
+Anonymous real /scan403 confirmed. Public app configuration remains unchanged.
+
+Authenticated pilot blocked before file transmission: Google IAMCredentials
+confirmed IAM_PERMISSION_DENIED for iam.serviceAccounts.getOpenIdToken on the
+app identity, not expired sign-in. Direct ID-token validator avoids broader
+access-token impersonation permission. Requested action-time approval for only
+roles/iam.serviceAccountOpenIdTokenCreator to user:admin@workzoneos.org on the
+single WZOS app service account, expiry15min and immediate removal after test.
+No grant yet. Do not claim app-principal detection/traceability accepted.
+
+User requests all user-facing security/scanning credit Atlas. Implemented in
+attachment and admin security messages, preserving truthful pending/unavailable/
+clean status. Sourcefc85382, not publicly deployed. Full Node108/108 PASS,
+focused Python5/5 PASS; no new app Python/schema changes. Full prior689 DB suite
+not rerun for text/helpers. Scanner engine/lifecycle/vulnerability gates and
+Atlas weight checks remain accepted as recorded below.
+
+Next: approved short-lived ID-token test if granted, clean/detection/integrity
+requests, remove/verify grant. Then remaining lower-severity applicability review,
+current cost/schema/backup, security-capable app candidate and held-file workflow.
+Atlas private inference remains absent; verified weights ready for its next trial.
+Cloud pointer~/wzos-scanner-patched-latest.txt; details in
+SCANNER_PATCH_ACCEPTANCE_20261015.md. Progress pushed to integration branch.
+
 ## Scanner repaired and cloud-tested; Atlas weights verified - October15
 
 Patched isolated scanner built from official pinned Ubuntu26.04, supported
