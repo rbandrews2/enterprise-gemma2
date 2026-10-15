@@ -6,11 +6,13 @@ evidence="$HOME/wzos-hub-build-20261014"
 gate="$HOME/wzos-hub-20261014"
 mkdir -p "$evidence"
 repo=$(git rev-parse --show-toplevel)
-revision=$(git rev-parse 650aa5a^{commit})
+revision=5a3ac868085685a5e71169ceac21fa618cc405e9
 base=us-central1-docker.pkg.dev/enterprise-gemma2/enterprise-gemma2/wzos-v2-accounts@sha256:648516f7dd97505a1c7f5d2feb40bc013b2aea572ca84fd589dd8c51914cd2fb
-image=us-central1-docker.pkg.dev/enterprise-gemma2/enterprise-gemma2/wzos-v2-accounts:650aa5a-hub
+image=us-central1-docker.pkg.dev/enterprise-gemma2/enterprise-gemma2/wzos-v2-accounts:5a3ac86-hub
 test "$(gcloud config get-value project 2>/dev/null)" = enterprise-gemma2
-grep -Fxq 'PostgreSQL gate: PASS; run=594, failures=0, errors=0, skipped=0' "$gate/patched-gate.log"
+test "$(tr -d '\r\n' < "$gate/final-gate-source.txt")" = "$revision"
+grep -Fxq 'PostgreSQL gate: PASS; run=596, failures=0, errors=0, skipped=0' "$gate/final-gate.log"
+git diff --quiet 650aa5a "$revision" -- requirements-v2.txt requirements-accounts.txt
 grep -Fxq 'HUB_REAL_HTTP_PASS checks=7; synthetic loopback only; no provider calls' "$gate/http-check.log"
 python3 - "$gate/patched-dependency-audit.json" <<'PY'
 import json,sys
@@ -43,6 +45,10 @@ COPY --chown=root:root services /app/services
 COPY --chown=root:root shared /app/shared
 COPY --chown=root:root knowledge /app/knowledge
 COPY --chown=root:root scripts/package_source_library.py scripts/check_hub_image.py /app/scripts/
+RUN chown -R root:root /app/services /app/shared /app/knowledge \\
+    && chmod -R u=rwX,go=rX /app/services /app/shared /app/knowledge \\
+    && chown root:root /app/scripts && chmod 755 /app/scripts \\
+    && chmod 644 /app/scripts/package_source_library.py /app/scripts/check_hub_image.py
 LABEL org.opencontainers.image.revision="$revision"
 USER wzos
 RUN python /app/scripts/package_source_library.py --verify /app/.local-data/knowledge
