@@ -1,3 +1,10 @@
+## Current status - October15
+
+Private transport, supervisor and immutable image are implemented; Cloud Build
+image gate PASSED. See SECURITY_CUTOVER_20261015.md for current artifacts and
+remaining live identity/IAM, schema, vulnerability and rollout gates. Older
+implementation-pending statements below are historical. No live scanner activated.
+
 # Next checkpoint: real scanner acceptance and activation
 
 Prepared only; no production engine activated or paid resources provisioned.

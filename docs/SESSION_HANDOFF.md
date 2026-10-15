@@ -1,3 +1,33 @@
+## Cloud scanner acceptance PASS; cutover plan prepared - October 15, 2026
+
+Cloud Build gatea3aac155-9a1f-433e-8c62-775f2aea21b6 SUCCESS, explicitly read
+SCANNER_IMAGE_GATE_PASS and image.exit0. Harness629f10b tested immutable scanner
+image99019f10204758114bc54cf987c4db1a7d881b693cd7d67083f4d346679adb8e, source2cd5485.
+Clean/EICAR/expanded-limit ZIP/missing-identity/expiry/recycle/shutdown passed;
+network/certificate failures prevented readiness. Boot24s/23s; steady1.108GiB,
+limit4GiB; non-root10001; no OOM. Actual Debian engine1.4.3/28154, not prior native1.5.4.
+Only3 harness files6.9KiB uploaded; no customer/private files or credentials.
+Cloud Shell Docker pull was blocked; cloud-native test resolved that blocker.
+
+Live app verified100% wzos-v2-accounts-hub-5a3ac86; immutable imagefc87869680a0c6948d4116225ddf7ae22de6a659d0264e31351a251367465f06.
+SQL RUNNABLE, backup1792044000000 SUCCESSFUL (2026-10-15T08:48:21.194Z).
+No runtime, traffic, DNS or IAM changes made. App source/tests identical to accepted
+503dfc3 (689 Python/PostgreSQL +108 Node, zero failures/errors/skips).
+
+Prepared docs/SECURITY_CUTOVER_20261015.md: exact artifacts, evidence, identity and
+resource proposal, startup DDL review, bounded rollout and rollback stop conditions.
+Reviewable startup SQL scripts/security_schema_review.sql; no destructive migration.
+Do NOT rollback to old hub after security holds exist: it predates enforcement.
+Preserve mandatory scan gate/holds/audit in any post-activation rollback.
+
+Next: image vulnerability disposition/current billing; exact approval for new
+private scanner service/dedicated identity and service-scoped invoker grant;
+live Google identity/cold-start and synthetic upload-to-hold acceptance. Then
+review actual live schema, build security-capable application image and validate
+no-traffic candidate through existing ingress before conditional public cutover.
+Selected landingB still needs actual functional integration, landing-scoped only;
+prototype is saved, OptionA archived, other module pages must remain unchanged.
+
 ## Scanner image built; Cloud Shell download gate blocked - October 15, 2026
 
 Repaired first Cloud Build failure05e320ee: non-root UID10001 could not read
