@@ -1,3 +1,20 @@
+## Billing verified; release preparation resumed - October15
+
+Google Billing Projects - this month report directly read for enterprise-gemma2:
+October1-15 usage$25.06, other savings-$1.55, net$23.51. Google forecast for
+October1-31 is$49.07, an estimate not an invoice or spending cap. Initial live-cost
+view excluded savings; do not confuse its approx$25.1 subtotal with net cost.
+Report grouped by Project explicitly showed enterprise-gemma2/910004733138.
+No current billing/auth blocker remains. No billing settings or payments changed.
+
+Cloud Shell showed lost connection; Reconnect is provisioning its machine.
+Verify active account/project/config before any commands in the resumed terminal.
+Preserved home evidence must be checked, not assumed to imply a process survived.
+Next verify source snapshot, build immutable security-capable app candidate,
+review migration/rollback and app-runtime upload/hold/rescan/release acceptance.
+Private scanner principal tests/schema/backup gates below remain historical
+accepted evidence; refresh release-relevant state before applying changes.
+
 ## Latest release blocker - October15 evening
 
 Authenticated private scanner pilot and read-only schema gate are accepted below.
