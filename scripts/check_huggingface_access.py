@@ -40,6 +40,8 @@ def main():
                 headers={'Authorization':'Bearer '+token, 'Accept':'application/json'})
             try:
                 with opener.open(request, timeout=15) as response:
+                    if path != '/api/whoami-v2':
+                        return response.status, {}  # auth-check may return plain text
                     payload = response.read(65537)
                     if len(payload)>65536:
                         return response.status, {}
