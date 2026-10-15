@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
-# Exact one-hour scan-only grant approved by Ray October15. No runtime deployment.
+# Each scan-only scope/window requires explicit approval. No runtime deployment.
 set -euo pipefail
 umask 077
 evidence=${1:?Private evidence directory required}
-image=${WZOS_SCANNER_REVIEW_IMAGE:?Set exact approved immutable scanner image}
-[[ $image =~ ^us-central1-docker\.pkg\.dev/enterprise-gemma2/enterprise-gemma2/wzos-v2-scanner@sha256:[0-9a-f]{64}$ ]] || exit 2
+image=${WZOS_IMAGE_REVIEW_IMAGE:-${WZOS_SCANNER_REVIEW_IMAGE:-}}
+[[ $image =~ ^us-central1-docker\.pkg\.dev/enterprise-gemma2/enterprise-gemma2/wzos-v2-(scanner|accounts)@sha256:[0-9a-f]{64}$ ]] || exit 2
 mkdir -p "$evidence"; evidence=$(realpath "$evidence")
+printf '%s\n' "$image" > "$evidence/image.txt"
 role=projects/enterprise-gemma2/roles/wzosImageReview
 member=serviceAccount:910004733138-compute@developer.gserviceaccount.com
 expires=$(date -u -d '+1 hour' +%Y-%m-%dT%H:%M:%SZ)
