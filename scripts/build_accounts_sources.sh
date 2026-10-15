@@ -31,7 +31,7 @@ fi
 printf "RUN python -c 'import hashlib; from pathlib import Path; assert hashlib.sha256(Path(\"/app/.local-data/knowledge/snapshot.json\").read_bytes()).hexdigest() == \"%s\"'\n" "$manifest_sha" >> "$context/Dockerfile"
 cat >> "$context/Dockerfile" <<'DOCKER'
 
-COPY scripts/package_source_library.py /app/scripts/package_source_library.py
+COPY --chown=wzos:wzos scripts/package_source_library.py /app/scripts/package_source_library.py
 RUN python /app/scripts/package_source_library.py --verify /app/.local-data/knowledge
 DOCKER
 timeout 300 gcloud builds submit "$context" --project enterprise-gemma2 --region=us-central1 --timeout=900s \
