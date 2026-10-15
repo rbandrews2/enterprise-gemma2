@@ -95,12 +95,19 @@ class Action(BaseModel):
     reason: str = Field(min_length=8, max_length=500)
 
 
+def configured_scanner():
+    if os.getenv('WZOS_CLAMD_SOCKET', '').strip() or os.getenv('WZOS_CLAMD_CONFIG', '').strip():
+        from .clamd_scanner import ClamdScanner
+        return ClamdScanner()
+    return ClamAVScanner()
+
+
 class Security:
     def __init__(self, app, connect, actor, accounts=None, file_store=None):
         self.app, self.connect, self.actor = app, connect, actor
         self.accounts, self.file_store = accounts, file_store
         self.required = os.getenv('WZOS_FILE_SCAN_REQUIRED', '0') == '1'
-        self.scanner = ClamAVScanner()
+        self.scanner = configured_scanner()
         with connect() as db:
             for statement in DDL:
                 db.execute(statement)

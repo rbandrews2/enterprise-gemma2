@@ -283,6 +283,20 @@ class SecurityTests(unittest.TestCase):
         with self.storage.connect() as db:
             self.assertEqual(db.execute('SELECT COUNT(*) FROM workspace_files WHERE id=?',(fid,)).fetchone()[0],0)
 
+    def test_daemon_verdict_uses_existing_incident_and_quarantine_contract(self):
+        from services.workspace_preview.clamd_scanner import ClamdScanner
+        fid,_,_,_=self.upload('unavailable')
+        incident=self.listing()['items'][0]['id']
+        with patch.dict(os.environ, {'WZOS_CLAMD_SOCKET':'/private/clamd.sock','WZOS_CLAMD_CONFIG':'/private/clamd.conf'}):
+            self.app.state.file_scanner=ClamdScanner()
+        version='ClamAV 1.4.3/12345/'+datetime.now().strftime('%a %b %d %H:%M:%S %Y')
+        with patch.object(ClamdScanner,'validate_policy'),patch.object(ClamdScanner,'exchange',side_effect=[version,'stream: Synthetic.Alert FOUND']):
+            self.assertEqual(self.act(incident,'rescan_file').status_code,200)
+        self.assertEqual(self.client.get('/api/files/'+fid,headers=self.headers()).status_code,423)
+        data=self.listing()
+        self.assertTrue(any(row['code']=='malware_detected' for row in data['items']))
+        self.assertEqual(self.act(incident,'release_file').status_code,409)
+
 
 class ScannerAdapterTests(unittest.TestCase):
     def test_missing_configuration_never_claims_clean(self):
