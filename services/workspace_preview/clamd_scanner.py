@@ -128,6 +128,9 @@ class ClamdScanner:
         if not isinstance(data, bytes) or not 0 < len(data) <= self.max_bytes or not self.slots.acquire(blocking=False):
             return ScanResult('error')
         try:
+            from .archive_policy import zip_complete
+            if not zip_complete(data):
+                return ScanResult('error')
             self.validate_policy()
             deadline = time.monotonic() + self.deadline_seconds
             version = self.exchange(b'VERSION', None, deadline)

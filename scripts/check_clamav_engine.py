@@ -68,7 +68,7 @@ def main():
                 with zipfile.ZipFile(packed,'w',zipfile.ZIP_DEFLATED) as archive:
                     archive.writestr('synthetic-limit.txt',b'0'*(11*1024*1024))
                 results['expanded_file_limit']=scanner.scan(packed.getvalue()).status
-                assert results['expanded_file_limit']=='infected','Expanded scan limit did not hold'
+                assert results['expanded_file_limit']=='error','Expanded scan limit did not hold for review'
                 # Malformed/inactive endpoint must never fall back to another scanner.
                 saved=scanner.path; scanner.path=str(root/'absent.sock')
                 results['missing_engine']=scanner.scan(benign).status

@@ -57,6 +57,9 @@ class ClamAVScanner:
         if not self.slots.acquire(blocking=False):
             return ScanResult('error')
         try:
+            from .archive_policy import zip_complete
+            if not zip_complete(data):
+                return ScanResult('error')
             version = subprocess.run([self.path, '--version'], capture_output=True, timeout=5, check=False)
             text = version.stdout.decode('ascii', errors='replace').strip()
             parts = text.split('/')
