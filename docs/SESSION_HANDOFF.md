@@ -1,3 +1,43 @@
+## Dependency-patched hub image prepared — October 14, 2026
+
+Ray resumed build preparation after Windows updates. Final application source
+5a3ac868085685a5e71169ceac21fa618cc405e9 supersedes650aa5a: unknown/expired API
+keys are rejected before the shared write lock; valid credentials are rechecked
+under lock for revocation safety. Exact cloud Node96/native PostgreSQL596 PASS
+in210.852s, zero failures/errors/skips. Both new lock-contention regressions pass.
+
+Cloud Build1685f954-4c4f-4f0a-9729-28c36871c0c1 SUCCESS. Immutable image:
+us-central1-docker.pkg.dev/enterprise-gemma2/enterprise-gemma2/wzos-v2-accounts@sha256:4cc2f391151e1aaf00d9ad29bc68c57779b808f75ed9034f23e3bcbb3af71bdd
+Actual image acceptance: FastAPI0.143.1/Starlette1.8.0/pip26.2.1; non-root UID10001;
+139 frozen-library files verified; isolated synthetic access/body/origin/asset
+checks PASS; actual installed image audit57 packages,0 findings,0 skipped.
+Package inventory/audit appear in Cloud Build logs. This is not an OS-image or
+malware scan. No scanning API was enabled; existing service query returned none.
+
+First build93fb2a80-da77-4260-8fd4-3f17b6fd7b53 failed before publication because
+private-context modes blocked non-root script reads. Build helpera782301 fixes
+root-owned read-only source permissions and pins final source/gate. No live app
+change occurred. Do not use the failed650aa5a image attempt as a release candidate.
+
+Live service spec and traffic compared before/after build: UNCHANGED. Still serves
+wzos-v2-accounts-daily-748f382 at100%; no deployment/startup DDL, credentials, IAM,
+DNS, customer exports/sends, real media or model requests occurred. Build-only job
+had20-minute timeout; no GPU or new persistent paid infrastructure provisioned.
+
+Cloud evidence $HOME/wzos-hub-build-20261014: build-result.json, image.txt,
+acceptance-summary.txt, build-final.log, before-service.json, after-build-service.json,
+repo-path.txt. Before/after service JSON is private configuration: keep mode600,
+never paste/copy to Git. Final source gate in $HOME/wzos-hub-20261014/final-gate.log
+and final-gate-source.txt. Fresh Cloud Shell project/account reverified; do not trust
+old /tmp paths after reconnect. Read HUB_BUILD_PREPARATION_20261014.md and
+HUB_ROLLOUT_REVIEW_20261014.md before any release action.
+
+NEXT: OS-image scan coverage; fresh live SQL schema/backup and actual budget review;
+applicable public integration-API activation approval; then config-preserving
+zero-traffic candidate and controlled public cutover/rollback. Do not claim deployed
+security protection from this built artifact. Existing Daily/Maps/Twilio/Atlas/
+checkout/device acceptance and billing/security status-feed gaps remain open.
+
 ## Admin dashboard / security / API source increment — October 14, 2026
 
 Ray requested these tasks while maintaining the laptop. Runtime source650aa5a

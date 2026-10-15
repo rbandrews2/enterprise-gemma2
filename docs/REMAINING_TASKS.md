@@ -1,3 +1,17 @@
+## Built release candidate — October 14, 2026
+
+Final runtime5a3ac868085685a5e71169ceac21fa618cc405e9; Node96/PostgreSQL596 PASS,
+actual image verification and package audit57/0 findings/no skips PASS. Build
+1685f954-4c4f-4f0a-9729-28c36871c0c1 SUCCESS. Digest4cc2f391151e1aaf00d9ad29bc68c57779b808f75ed9034f23e3bcbb3af71bdd.
+NOT DEPLOYED. Live Daily service/config/traffic verified unchanged.
+
+Next: OS-image scan coverage, fresh SQL schema/backup/budget review and applicable
+public API activation approval, then zero-traffic candidate and controlled rollout.
+See HUB_ROLLOUT_REVIEW_20261014.md for exact access scope, DDL and rollback.
+Do not rebuild with old650aa5a helper or deploy a source-only dependency overlay.
+All subsequent acceptance/feature tasks below still apply. The new invalid-key
+shared-lock hardening is covered by SQLite/PostgreSQL tests; no real keys issued.
+
 ## Latest implementation queue — October 14, 2026
 
 Source650aa5a adds admin dashboard + security controls + scoped read-only API;
