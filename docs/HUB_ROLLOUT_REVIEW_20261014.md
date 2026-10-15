@@ -1,4 +1,23 @@
-# Hub rollout review — prepared, not executed
+# Hub rollout review
+
+## Updated container and budget gates
+
+OS repair build76510b57-38b2-48fd-8bf8-9a990cd23df7 SUCCESS; use digest
+fc87869680a0c6948d4116225ddf7ae22de6a659d0264e31351a251367465f06,
+not the superseded4cc2f391 candidate. Runtime source remains5a3ac86. Read
+HUB_CONTAINER_REVIEW_20261014.md for available fixes and residual findings.
+Final repaired-image scan is required before rollout.
+
+Google Billing now independently viewed after reauthentication and browser
+recovery: Projects – this month shows enterprise-gemma2 subtotal USD21.79 for
+October1–14, gross USD23.34 and USD1.54 savings. This is reported month-to-date
+usage, subject to billing delay, not a real-time total or the remaining10-day
+allowance. It is within the authorized USD150 October8–17 development budget.
+Existing USD50 notification was inspected and left unchanged; it is not a cap.
+No new standing infrastructure/GPU, capacity expansion or customer sends.
+Private screenshot .local-data/hub-evidence/billing-project.png; Cloud Shell
+budget-review.txt retains the numeric checkpoint. Earlier billing-blocked note
+below is historical.
 
 ## October 14 rollout authorization and preflight
 
