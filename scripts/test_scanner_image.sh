@@ -23,19 +23,24 @@ cleanup() {
 trap cleanup EXIT
 trap 'exit 143' TERM
 trap 'exit 130' INT
-git rev-parse HEAD > "$evidence/source.txt"
+if [[ -n ${WZOS_SCANNER_TEST_SOURCE:-} ]]; then
+  [[ $WZOS_SCANNER_TEST_SOURCE =~ ^[0-9a-f]{40}$ ]] || exit 2
+  printf '%s\n' "$WZOS_SCANNER_TEST_SOURCE" > "$evidence/source.txt"
+else
+  git rev-parse HEAD > "$evidence/source.txt"
+fi
 printf '%s\n' "$base" > "$evidence/base.txt"
-git archive HEAD Dockerfile.scanner requirements-scanner.txt services/__init__.py \
-  services/workspace_preview/__init__.py services/workspace_preview/archive_policy.py \
-  services/workspace_preview/clamd_scanner.py services/workspace_preview/security.py \
-  services/workspace_preview/scanner_transport.py services/workspace_preview/scanner_service.py \
-  services/workspace_preview/scanner_runtime.py | tar -x -C "$context"
 if [[ -n ${WZOS_SCANNER_TEST_IMAGE:-} ]]; then
   [[ $WZOS_SCANNER_TEST_IMAGE =~ ^us-central1-docker.pkg.dev/enterprise-gemma2/enterprise-gemma2/wzos-v2-scanner@sha256:[0-9a-f]{64}$ ]] || exit 2
   printf '%s\n' "$WZOS_SCANNER_TEST_IMAGE" > "$evidence/prebuilt-image.txt"
   timeout 300 docker pull --platform linux/amd64 "$WZOS_SCANNER_TEST_IMAGE" > "$evidence/build.log" 2>&1
   docker image inspect --format '{{.Id}}' "$WZOS_SCANNER_TEST_IMAGE" > "$evidence/image.id"
 else
+git archive HEAD Dockerfile.scanner requirements-scanner.txt services/__init__.py \
+  services/workspace_preview/__init__.py services/workspace_preview/archive_policy.py \
+  services/workspace_preview/clamd_scanner.py services/workspace_preview/security.py \
+  services/workspace_preview/scanner_transport.py services/workspace_preview/scanner_service.py \
+  services/workspace_preview/scanner_runtime.py | tar -x -C "$context"
   timeout 900 docker build --platform linux/amd64 --build-arg "PYTHON_IMAGE=$base" \
     --iidfile "$evidence/image.id" -f "$context/Dockerfile.scanner" "$context" > "$evidence/build.log" 2>&1
 fi

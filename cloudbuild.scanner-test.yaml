@@ -1,0 +1,17 @@
+# Existing immutable image; synthetic engine/lifecycle tests, no deployment/IAM.
+steps:
+  - name: gcr.io/cloud-builders/docker
+    entrypoint: bash
+    env:
+      - WZOS_SCANNER_TEST_IMAGE=${_IMAGE}
+      - WZOS_SCANNER_TEST_SOURCE=${_SOURCE}
+    args:
+      - -c
+      - |
+        set -euo pipefail
+        trap 'test ! -f /workspace/evidence/image.exit || cat /workspace/evidence/image.exit; for f in /workspace/evidence/*.log /workspace/evidence/*.json /workspace/evidence/timing.txt /workspace/evidence/steady-memory.txt /workspace/evidence/runtime-packages.txt; do test ! -f "$$f" || { printf "EVIDENCE %s\n" "$$f"; tail -c 12000 "$$f"; }; done' EXIT
+        timeout 1000 bash scripts/test_scanner_image.sh /workspace/evidence "${_BASE}"
+timeout: 1200s
+queueTtl: 600s
+options:
+  machineType: E2_STANDARD_2
