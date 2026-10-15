@@ -24,6 +24,7 @@ def main():
         raise SystemExit('Invalid secret version')
     if not re.fullmatch(r'google/[A-Za-z0-9_.-]+', args.repo):
         raise SystemExit('Only an explicit Google model repository is allowed')
+    stage = "secret_read"
     try:
         result = subprocess.run(['gcloud', 'secrets', 'versions', 'access', args.version,
             '--secret='+args.secret, '--project=enterprise-gemma2', '--quiet'],
@@ -45,17 +46,20 @@ def main():
                     return response.status, json.loads(payload or '{}')
             except urllib.error.HTTPError as error:
                 return error.code, {}
+        stage = 'identity_check'
         status, identity = get('/api/whoami-v2')
         output = {'token_valid':status==200, 'identity_http_status':status}
         if status==200:
             role=identity.get('auth',{}).get('accessToken',{}).get('role')
             output['token_role']=role if role in ('read','write','fineGrained') else 'not_reported'
             output['model_repo']=args.repo
+            stage = 'model_access_check'
             output['model_access_http_status']=get('/api/models/'+args.repo+'/auth-check')[0]
         print(json.dumps(output,sort_keys=True))
         return 0 if output.get('model_access_http_status')==200 else 1
-    except (OSError, ValueError, subprocess.TimeoutExpired):
-        raise SystemExit('HF_CHECK: Verification unavailable; no token or provider response disclosed')
+    except (OSError, ValueError, subprocess.TimeoutExpired) as error:
+        print(json.dumps({'verification':'unavailable','stage':stage,'error_type':type(error).__name__}))
+        return 1
 
 
 if __name__=='__main__':
