@@ -197,6 +197,12 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
                 "connect-src 'self' https://*.googleapis.com https://*.google.com https://*.gstatic.com; "
                 "font-src 'self' https://fonts.gstatic.com; frame-src https://*.google.com; worker-src blob:; "
                 "frame-ancestors 'none'; base-uri 'none'; form-action 'self'")
+        if request.url.path == '/':
+            csp = response.headers['Content-Security-Policy']
+            training_frames = 'https://www.youtube-nocookie.com https://player.vimeo.com'
+            csp = (csp.replace('frame-src ', 'frame-src ' + training_frames + ' ')
+                   if 'frame-src ' in csp else csp + '; frame-src ' + training_frames)
+            response.headers['Content-Security-Policy'] = csp + "; media-src 'self' https:"
         if account_workspace:
             response.headers["Content-Security-Policy"] = response.headers["Content-Security-Policy"].replace("connect-src 'self'", "connect-src 'self' https://identitytoolkit.googleapis.com https://securetoken.googleapis.com")
             if auth_emulator:
@@ -610,6 +616,10 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
     @app.get("/training-content.js")
     def training_content_script():
         return FileResponse(STATIC / "training-content.js", media_type="text/javascript")
+
+    @app.get("/training-media.js")
+    def training_media_script():
+        return FileResponse(STATIC / "training-media.js", media_type="text/javascript")
 
     @app.get("/review-workflows.js")
     def review_workflows_script():

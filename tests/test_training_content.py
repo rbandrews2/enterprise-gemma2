@@ -51,6 +51,33 @@ class TrainingContentTests(unittest.TestCase):
         v1 = self.client.get('/api/training-modules/flagger/versions/1', headers=self.h()).json()
         self.assertEqual(v1['title'], 'Flagger refresher (organization)')
 
+    def test_video_links_can_be_replaced_removed_and_old_versions_retained(self):
+        self.ready()
+        replacement = {'title': 'Replacement video', 'url': 'https://media.example.test/new.mp4',
+                       'rights_confirmed': True, 'rights_note': 'Our licensed replacement video'}
+        self.assertEqual(self.save(expected_version=1, media=[replacement]).status_code, 200)
+        self.assertEqual(self.publish(2).status_code, 200)
+        version = self.client.get('/api/training-modules/flagger/versions/2', headers=self.h()).json()
+        self.assertEqual(version['media'], [replacement])
+        self.assertEqual(self.save(expected_version=2, media=[]).status_code, 200)
+        self.assertEqual(self.publish(3).status_code, 200)
+        current = self.client.get('/api/training-modules/flagger/versions/3', headers=self.h()).json()
+        self.assertEqual(current['media'], [])
+        old = self.client.get('/api/training-modules/flagger/versions/1', headers=self.h()).json()
+        self.assertEqual(old['media'][0]['url'], module()['media'][0]['url'])
+
+    def test_media_credentials_rejected_and_player_policy_is_separate_from_scripts(self):
+        media = module()['media'][0]
+        for url in ('https://user:password@example.test/clip.mp4', 'https://example.test:8443/clip.mp4'):
+            self.assertEqual(self.save(media=[{**media, 'url': url}]).status_code, 422)
+        page = self.client.get('/')
+        policy = page.headers['content-security-policy']
+        self.assertIn('https://www.youtube-nocookie.com https://player.vimeo.com', policy)
+        self.assertIn("media-src 'self' https:", policy)
+        self.assertIn("script-src 'self'", policy)
+        self.assertIn('/training-media.js', page.text)
+        self.assertEqual(self.client.get('/training-media.js').status_code, 200)
+
     def test_members_see_published_content_without_answers_or_other_organizations(self):
         self.save()
         self.assertEqual(self.client.get('/api/training-modules', headers=self.h()).json()['items'], [])

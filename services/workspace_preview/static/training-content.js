@@ -16,9 +16,10 @@
  async function run(control,work,done){if(busy)return;busy=true;control.disabled=true;try{const result=await work();dirty=false;await show();say(typeof done==='function'?done(result):done);}catch(e){say(e.message);}finally{busy=false;control.disabled=false;}}
 
  function takeModule(item,host,generation){
+  window.WzosTrainingMedia.stopAll();
   host.replaceChildren(el('h3',item.title),el('p',item.summary));
   for(const s of item.sections){host.append(el('h4',s.heading),el('p',s.body));}
-  for(const m of item.media){const a=el('a',m.title+' (opens the organization’s link)');a.href=m.url;a.target='_blank';a.rel='noopener noreferrer';host.append(el('p',''),a,el('p','Use confirmed by your organization: '+m.rights_note));}
+  for(const m of item.media)host.append(window.WzosTrainingMedia.render(m));
   const form=el('form');form.onsubmit=e=>e.preventDefault();
   item.questions.forEach((q,i)=>{const set=el('fieldset');set.append(el('legend',`${i+1}. ${q.prompt}`));q.options.forEach((o,j)=>{const lab=el('label'),r=el('input');r.type='radio';r.name='q'+i;r.value=String(j);Object.assign(r.style,{width:'auto',display:'inline-block',marginRight:'.5rem'});lab.append(r,o);set.append(lab);});form.append(set);});
   const submit=el('button',`Submit answers (pass mark ${item.passing_score}%)`);submit.className='primary';let retry=null;
@@ -52,14 +53,13 @@
   id.value=existing?.id||'';id.disabled=!!existing;id.pattern='[a-z0-9][a-z0-9_-]{0,59}';title.value=d.title;summary.value=d.summary;content.value=formatSections(d.sections);content.rows=8;questions.value=formatQuestions(d.questions);questions.rows=8;
   pass.type=tries.type='number';pass.min=50;pass.max=100;pass.value=d.passing_score;tries.min=1;tries.max=10;tries.value=d.max_attempts;
   content.placeholder='Heading on the first line, then the text. Separate sections with a blank line.';questions.placeholder='Q: Question text\n- Wrong option\n* Correct option';
-  const media=d.media[0]||{},mTitle=el('input'),mUrl=el('input'),mRights=el('input'),mNote=el('input');mTitle.value=media.title||'';mUrl.value=media.url||'';mUrl.type='url';mUrl.placeholder='https://…';mRights.type='checkbox';mRights.checked=!!media.rights_confirmed;Object.assign(mRights.style,{width:'auto',display:'inline-block',marginRight:'.5rem'});mNote.value=media.rights_note||'';
-  const rightsLabel=el('label');rightsLabel.append(mRights,'Our organization owns or is licensed to use this media for training');
+  const media=window.WzosTrainingMedia.editor(d.media,()=>{dirty=true;});
   const save=el('button','Save draft'),publish=el('button','Publish current draft');publish.className='primary';publish.disabled=!existing;
   form.append(labelled('Module identifier (lowercase, cannot change later)',id),labelled('Title',title),labelled('Summary',summary),labelled('Training content',content),
-   el('h4','Optional video or document link'),labelled('Link title',mTitle),labelled('Link (https)',mUrl),rightsLabel,labelled('Rights note (source, license or owner)',mNote),
+   media.element,
    labelled('Assessment questions',questions),labelled('Pass mark (%)',pass),labelled('Attempts allowed per version',tries),save,publish);
   save.onclick=()=>{let body;try{body={expected_version:existing?.draft_version||0,title:title.value,summary:summary.value,sections:parseSections(content.value),
-    media:mUrl.value?[{title:mTitle.value||'Training video',url:mUrl.value.trim(),rights_confirmed:mRights.checked,rights_note:mNote.value}]:[],questions:parseQuestions(questions.value),passing_score:Number(pass.value),max_attempts:Number(tries.value)};}catch(e){say(e.message);return;}
+    media:media.value(),questions:parseQuestions(questions.value),passing_score:Number(pass.value),max_attempts:Number(tries.value)};}catch(e){say(e.message);return;}
    run(save,()=>api('/api/training-modules/'+encodeURIComponent(id.value.trim()),{method:'PUT',body:JSON.stringify(body)}),'Draft saved. Members see it only after you publish.');};
   publish.onclick=()=>{if(dirty){say('Save the draft before publishing.');return;}run(publish,()=>api(`/api/training-modules/${existing.id}/publish`,{method:'POST',body:JSON.stringify({expected_version:existing.draft_version})}),'Published. Assign it to members below.');};
   host.replaceChildren(form);
@@ -75,6 +75,7 @@
  }
 
  async function show(){
+  window.WzosTrainingMedia.stopAll();
   const generation=++epoch;root.replaceChildren();root.hidden=view!=='training';if(root.hidden)return;
   const session=window.wzosClock.getSession(),admin=session?.role==='admin';
   root.append(el('h2','Organization training'),el('p','Three separate records: self-reported study (above, your own statement), assessment completion (here, scored by WZOS on a published module) and verified qualifications (reviewed by an admin in Employees). Passing an assessment is not a certificate and does not verify a qualification.'),notice);
@@ -88,7 +89,7 @@
    if(!published.length)learn.append(el('p','No published training yet.'));
    for(const m of published){const id=m.id,version=admin?m.published_version:m.version,title=admin?m.draft.title:m.title,a=due[id+':'+version];
     const row=el('p',`${title} · version ${version}${a?` · ${({completed:'Completed',cancelled:'Assignment cancelled',assigned:'Assigned'})[a.status]||a.status}${a.due_on&&a.status==='assigned'?' · due '+a.due_on:''}`:''}`);
-    const open=el('button','Open training');open.onclick=async()=>{try{takeModule(await api(`/api/training-modules/${id}/versions/${version}`),host,generation);host.scrollIntoView({block:'start'});}catch(e){say(e.message);}};
+    const open=el('button','Open training');open.onclick=async()=>{try{const item=await api(`/api/training-modules/${id}/versions/${version}`);if(generation!==epoch)return;takeModule(item,host,generation);host.scrollIntoView({block:'start'});}catch(e){if(generation===epoch)say(e.message);}};
     learn.append(row,open);}
    learn.append(host);root.append(learn);
    const mine=completions.items.filter(c=>c.user_id===session?.id);

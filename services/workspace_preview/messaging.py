@@ -57,6 +57,8 @@ REASONS = {
     'contact_changed': 'The recipient changed their number after this was queued.',
     'code_expired': 'The verification code expired before it could be sent.',
     'superseded': 'A newer verification code replaced this one.',
+    'recipient_inactive': 'The recipient no longer has active access to this organization.',
+    'sender_inactive': 'The sending administrator no longer has administrator access to this organization.',
 }
 CODE_PLACEHOLDER = '{code}'
 # A code counts only after its text reached the provider; holding the code is not enough.
@@ -155,6 +157,21 @@ class Messaging:
             return 'sms_disabled'
         if self.readiness()['missing']:
             return 'not_configured'
+        if self.live_permitted:
+            # Account access can change while a text waits for its first send or
+            # retry. Consent alone must not keep a former member eligible.
+            recipient = db.execute(
+                'SELECT 1 FROM memberships m JOIN organizations o ON o.id=m.organization_id '
+                'WHERE m.organization_id=? AND m.user_id=? AND m.active=1 AND o.active=1',
+                (row['organization_id'], row['recipient_id'])).fetchone()
+            if not recipient:
+                return 'recipient_inactive'
+            if row['purpose'] != 'verification':
+                sender = db.execute(
+                    "SELECT 1 FROM memberships WHERE organization_id=? AND user_id=? AND active=1 AND role='admin'",
+                    (row['organization_id'], row['created_by'])).fetchone()
+                if not sender:
+                    return 'sender_inactive'
         contact = db.execute('SELECT * FROM sms_contacts WHERE organization_id=? AND user_id=?',
                              (row['organization_id'], row['recipient_id'])).fetchone()
         if not contact:
@@ -180,7 +197,7 @@ class Messaging:
                                  (organization_id, recipient_id)).fetchone()
             phone = contact['phone'] if contact else ''
         row = {'id': str(uuid4()), 'organization_id': organization_id, 'purpose': purpose, 'reference_id': reference_id,
-               'recipient_id': recipient_id, 'phone': phone}
+               'recipient_id': recipient_id, 'phone': phone, 'created_by': actor_id}
         reason = self.blocker(db, row) or ''
         status, created = ('blocked' if reason else 'queued'), stamp()
         db.execute('INSERT INTO sms_outbox VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',

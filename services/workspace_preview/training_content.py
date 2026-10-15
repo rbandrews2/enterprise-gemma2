@@ -5,12 +5,14 @@ Three different things stay separate:
 - assessment completion (here): WZOS scored a passing attempt on a published version;
 - verified qualifications (Codex's employee contract): only an admin verifies those.
 Nothing here issues a certificate or a qualification. Media are links the organization
-attests it may use; WZOS does not host or embed third-party video.
+attests it may use; WZOS does not host third-party video. The browser can open
+supported media in an inline player after an explicit learner action.
 """
 import json
 from datetime import date, datetime, timezone
 from typing import Literal
 from uuid import UUID, uuid4
+from urllib.parse import urlsplit
 
 from fastapi import HTTPException, Query, Request
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -47,6 +49,10 @@ class Media(BaseModel):
     def rights(self):
         if not self.rights_confirmed:
             raise ValueError('Confirm your organization may use this media for training')
+        parsed = urlsplit(self.url)
+        if (not parsed.hostname or parsed.username or parsed.password
+                or parsed.port not in (None, 443)):
+            raise ValueError('Use a public HTTPS media link without embedded login credentials')
         return self
 
 

@@ -355,6 +355,109 @@ class PostgreSQLMessagingTests(MessagingTests):
     make_storage = fixtures.PostgreSQLFormSubmissionTests.make_storage
 
 
+class AccountSMSAccessTests(unittest.TestCase):
+    """Use actual organization memberships; never send to a real provider."""
+
+    def make_storage(self, root):
+        return SQLiteStorage(root / 'accounts.sqlite')
+
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory(); self.addCleanup(self.temp.cleanup)
+        root = Path(self.temp.name)
+        env = patch.dict(os.environ, {'WZOS_ACCOUNT_WORKSPACE': '1', 'WZOS_SMS_MODE': 'test', 'WZOS_TWILIO_AUTH_TOKEN': TOKEN,
+                                     'WZOS_PUBLIC_BASE_URL': BASE, 'WZOS_SMS_TEST_RECIPIENTS': MEMBER_PHONE})
+        env.start(); self.addCleanup(env.stop)
+        self.storage = self.make_storage(root)
+        from services.workspace_preview.files import LocalFiles
+        claims = {uid: {'uid': uid, 'email': uid + '@example.test', 'email_verified': True}
+                  for uid in ('admin', 'member')}
+        self.app = create_app(account_workspace=True, storage=self.storage,
+                              knowledge_store=Store(root / 'sources', {}),
+                              verifier=lambda token: claims[token], file_store=LocalFiles(root / 'files'))
+        self.provider = FakeProvider(); self.app.state.sms_provider = self.provider
+        self.client = TestClient(self.app); self.addCleanup(self.client.close)
+        code = self.app.state.accounts.issue_activation('enterprise')
+        response = self.client.post('/api/account/organizations', headers=self.headers('admin'),
+                                    json={'name': 'Synthetic SMS organization', 'activation_code': code})
+        self.assertEqual(response.status_code, 200, response.text)
+        self.org = response.json()['id']
+        invitation = self.client.post('/api/account/invitations', headers=self.headers('admin'),
+                                      json={'email': 'member@example.test', 'role': 'member'})
+        self.assertEqual(invitation.status_code, 200, invitation.text)
+        self.assertEqual(self.client.post('/api/account/join', headers=self.headers('member'),
+                                          json={'token': invitation.json()['token']}).status_code, 200)
+        self.service = self.app.state.messaging
+        self.verified_contact()
+
+    def headers(self, uid):
+        return {'Authorization': 'Bearer ' + uid, 'X-WZOS-Organization': getattr(self, 'org', '')}
+
+    def verified_contact(self):
+        response = self.client.put('/api/messaging/sms/contact', headers=self.headers('member'),
+                                   json={'request_id': str(uuid4()), 'expected_version': 0,
+                                         'phone': MEMBER_PHONE, 'consent': True, 'consent_version': '2026-10-09'})
+        self.assertEqual(response.status_code, 200, response.text)
+        code = re.search(r'code: (\d{6})', self.provider.sent[-1]['body']).group(1)
+        response = self.client.post('/api/messaging/sms/contact/verify', headers=self.headers('member'), json={'code': code})
+        self.assertEqual(response.status_code, 200, response.text)
+
+    def queue_retry(self):
+        self.provider.outcomes = [SendResult('retryable')]
+        response = self.client.post('/api/messages', headers=self.headers('admin'),
+                                    json={'request_id': str(uuid4()), 'recipient_id': 'member',
+                                          'text': 'Synthetic work notification', 'sms_copy': True})
+        self.assertEqual(response.status_code, 200, response.text)
+        outbox_id = response.json()['sms']['id']
+        with self.service.connect() as db:
+            db.execute("UPDATE sms_outbox SET next_attempt_at='2000-01-01T00:00:00+00:00' WHERE id=?", (outbox_id,))
+        return outbox_id
+
+    def test_queued_notification_rechecks_recipient_membership(self):
+        outbox_id = self.queue_retry(); sends = len(self.provider.sent)
+        with self.service.connect() as db:
+            db.execute('UPDATE memberships SET active=0 WHERE organization_id=? AND user_id=?', (self.org, 'member'))
+        self.service.process(self.org)
+        with self.service.connect() as db:
+            row = db.execute('SELECT status,reason FROM sms_outbox WHERE id=?', (outbox_id,)).fetchone()
+        self.assertEqual((row['status'], row['reason']), ('blocked', 'recipient_inactive'))
+        self.assertEqual(len(self.provider.sent), sends)
+
+    def test_queued_notification_rechecks_sender_admin_role(self):
+        outbox_id = self.queue_retry(); sends = len(self.provider.sent)
+        with self.service.connect() as db:
+            db.execute("UPDATE memberships SET role='member' WHERE organization_id=? AND user_id=?", (self.org, 'admin'))
+        self.service.process(self.org)
+        with self.service.connect() as db:
+            row = db.execute('SELECT status,reason FROM sms_outbox WHERE id=?', (outbox_id,)).fetchone()
+        self.assertEqual((row['status'], row['reason']), ('blocked', 'sender_inactive'))
+        self.assertEqual(len(self.provider.sent), sends)
+
+    def test_disabled_organization_blocks_queued_verification(self):
+        # A verification code waiting after a transport failure is subject to the
+        # same membership/organization check as an ordinary notification.
+        self.provider.outcomes = [SendResult('retryable')]
+        contact = self.client.get('/api/messaging/sms/contact', headers=self.headers('member')).json()
+        response = self.client.put('/api/messaging/sms/contact', headers=self.headers('member'),
+                                   json={'request_id': str(uuid4()), 'expected_version': contact['version'],
+                                         'phone': MEMBER_PHONE, 'consent': True, 'consent_version': '2026-10-09'})
+        self.assertEqual(response.status_code, 200, response.text)
+        outbox_id = response.json()['verification_delivery']['id']; sends = len(self.provider.sent)
+        with self.service.connect() as db:
+            db.execute('UPDATE organizations SET active=0 WHERE id=?', (self.org,))
+            db.execute("UPDATE sms_outbox SET next_attempt_at='2000-01-01T00:00:00+00:00' WHERE id=?", (outbox_id,))
+        self.service.process(self.org)
+        with self.service.connect() as db:
+            row = db.execute('SELECT status,reason FROM sms_outbox WHERE id=?', (outbox_id,)).fetchone()
+            self.assertIsNone(db.execute('SELECT 1 FROM sms_secrets WHERE outbox_id=?', (outbox_id,)).fetchone())
+        self.assertEqual((row['status'], row['reason']), ('blocked', 'recipient_inactive'))
+        self.assertEqual(len(self.provider.sent), sends)
+
+
+@unittest.skipUnless(os.getenv('WZOS_TEST_DATABASE_URL'), 'Dedicated PostgreSQL database not configured')
+class PostgreSQLAccountSMSAccessTests(AccountSMSAccessTests):
+    make_storage = fixtures.PostgreSQLFormSubmissionTests.make_storage
+
+
 class TwilioProviderTests(unittest.TestCase):
     def provider(self, handler):
         return TwilioProvider('ACtest', TOKEN, BASE, messaging_service_sid='MGtest', transport=httpx.MockTransport(handler))
