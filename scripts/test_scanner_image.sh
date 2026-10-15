@@ -12,7 +12,11 @@ context=$(mktemp -d /tmp/wzos-scanner-image.XXXXXXXX)
 container=''
 cleanup() {
   result=$?
-  if [[ -n $container ]]; then docker rm -f "$container" >/dev/null 2>&1 || true; fi
+  if [[ -n $container ]]; then
+    docker logs "$container" > "$evidence/last-container.log" 2>&1 || true
+    docker inspect --format '{{json .State}}' "$container" > "$evidence/last-container-state.json" 2>/dev/null || true
+    docker rm -f "$container" >/dev/null 2>&1 || true
+  fi
   case "$context" in /tmp/wzos-scanner-image.*) rm -rf -- "$context";; esac
   printf '%s\n' "$result" > "$evidence/image.exit"
 }
@@ -43,15 +47,20 @@ ready() {
   return 1
 }
 launch
+started=$SECONDS
 ready
+printf 'first_boot_seconds=%s\n' "$((SECONDS-started))" > "$evidence/timing.txt"
 docker exec "$container" sh -c 'id; clamd --version; dpkg-query -W clamav-daemon clamav-freshclam' > "$evidence/runtime-packages.txt"
+docker stats --no-stream --format '{{.MemUsage}}' "$container" > "$evidence/steady-memory.txt"
 docker exec -i "$container" python - < scripts/check_scanner_container.py > "$evidence/engine-results.json"
 timeout 15 docker wait "$container" > "$evidence/recycle.exit"
 test "$(cat "$evidence/recycle.exit")" = 0
 docker logs "$container" > "$evidence/recycle.log" 2>&1
 docker rm "$container" >/dev/null; container=''
 launch
+started=$SECONDS
 ready
+printf 'second_boot_seconds=%s\n' "$((SECONDS-started))" >> "$evidence/timing.txt"
 docker stop --time 9 "$container" >/dev/null
 test "$(docker inspect --format '{{.State.ExitCode}}' "$container")" = 0
 docker logs "$container" > "$evidence/shutdown.log" 2>&1
