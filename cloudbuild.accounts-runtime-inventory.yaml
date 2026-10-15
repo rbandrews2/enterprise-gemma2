@@ -1,0 +1,33 @@
+# Read-only offline inventory of the repaired immutable application image.
+# No deployment, credentials, customer files, network or IAM changes.
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - run
+      - --rm
+      - --network=none
+      - --read-only
+      - --cap-drop=ALL
+      - --security-opt=no-new-privileges
+      - --entrypoint=python
+      - us-central1-docker.pkg.dev/enterprise-gemma2/enterprise-gemma2/wzos-v2-accounts@sha256:ef31216bc772a0233b7c59a9e219dcd9b17f6c6f2c8ed058270a9a009676ab9d
+      - -c
+      - |
+        import importlib.metadata, importlib.util, json, os, shutil, subprocess, zlib
+        result = {'uid': os.getuid(), 'zlib_compile': zlib.ZLIB_VERSION,
+                  'zlib_runtime': zlib.ZLIB_RUNTIME_VERSION,
+                  'ensurepip_present': importlib.util.find_spec('ensurepip') is not None,
+                  'pip': importlib.metadata.version('pip'),
+                  'tools': {name: shutil.which(name) for name in ('getfattr', 'setfattr', 'getfacl', 'setfacl', 'perl')}}
+        result['zlib_linkage'] = subprocess.run(['ldd', zlib.__file__], capture_output=True, text=True, timeout=5, check=True).stdout
+        result['os_packages'] = subprocess.run(['dpkg-query', '-W', 'libacl1', 'libattr1', 'perl-base', 'zlib1g'], capture_output=True, text=True, timeout=5, check=True).stdout
+        if result['tools']['perl']:
+            probe = subprocess.run([result['tools']['perl'], '-MArchive::Tar', '-e', 'print $$Archive::Tar::VERSION'], capture_output=True, text=True, timeout=5)
+            result['perl_archive_tar_present'] = probe.returncode == 0
+            if probe.returncode == 0:
+                result['perl_archive_tar_version'] = probe.stdout
+        print('APP_RUNTIME_INVENTORY', json.dumps(result, sort_keys=True))
+timeout: 300s
+queueTtl: 300s
+options:
+  machineType: E2_MEDIUM
