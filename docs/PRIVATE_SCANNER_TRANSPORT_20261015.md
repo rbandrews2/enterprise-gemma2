@@ -61,7 +61,18 @@ incident. Explicit admin quarantine survives a later clean rescan and requires a
 separate reviewed release. This increment does not change the existing distinction
 between pending scans and explicit quarantine, nor implicitly approve old files.
 
-### Image and signature-supervisor acceptance specification (not implemented)
+### Image and signature-supervisor implementation and open acceptance
+
+Source now includes Dockerfile.scanner, requirements-scanner.txt, scanner_runtime.py
+and scripts/test_scanner_image.sh. Not deployed; image acceptance is separate
+from unit/regression tests. The runtime refreshes official definitions at boot
+within 75 seconds, shares a 210-second boot allowance, validates a benign scan
+before starting HTTP, and reserves one hour before the 24-hour signature limit.
+It caps instance scan lifetime at20 hours. The next authenticated scan after
+expiry returns error-held and requests worker recycling; a subsequent cold start
+refreshes definitions. No timer-based idle updater or silent fallback is assumed.
+This design can produce a transient scan failure during recycling/cold starts;
+live cold-start latency and operational behavior still require acceptance.
 
 - Use an immutable reviewed image, non-root foreground processes and a private
   mode700 working directory/socket. Keep the raw engine off TCP. Start HTTP only

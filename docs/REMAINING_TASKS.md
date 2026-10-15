@@ -1,3 +1,89 @@
+## Landing B selected; supervisor regression passed; image diagnosis pending - October 15, 2026
+
+Ray chose Option B (Guided Workspace) and explicitly limited the design change to
+LANDING ONLY. Removed comparison/study header and A/B selector, preserved original
+workspace size, two-tone surfaces, icons, background/blur/motion and module cards.
+Other module pages/shared live styles were NOT changed. Local preview8185/index.html
+shows only B; Option A and original comparison preserved in primary ignored
+.local-data/landing-concepts/option-a.html and comparison-before-selection.html.
+Tracked designs/landing/index.html, option-a.html, background.css, README.txt reuse
+existing static assets. Actual app dashboard integration remains to do: prototype
+buttons are visual only, not functional navigation. Do not imply live UI update.
+
+Ray authorized updating app.workzoneos.org AFTER remaining applicable tests pass.
+Keep rollback and migration review; no unaccepted scanner activation/new IAM grant
+is authorized by that conditional release request. Preserve all module UI/behavior.
+
+Application source503dfc32aadeaaa501b88e396b0e6d77884df0d3 full gate PASS:
+Python/PostgreSQL689 (304.061s), Node108 (2.565s), failures0/errors0/skipped0,
+gate.exit0 directly inspected. Evidence /home/admin_/wzos-security-20261015.rFzHkKcJ.
+No /tmp/wzos-pg-gate.* or owned scanner-build temp dirs/containers remain.
+Latest sourceec8f9daf68d3a4386dab49a1d280b84119756c0f only adds build helpers,
+scoped landing prototype and docs; git diff confirms services/tests/Dockerfile/
+requirements-scanner unchanged from accepted503dfc3.16 focused tests PASS.
+
+First local Docker build was stopped after a stalled official Docker Hub layer
+(2MiB/29.84MiB after300s). Verified owned timeoutPID13503 before TERM; no container
+had started. Switched to one bounded Cloud Build in existing project/registry,
+within approved development budget; no new runtime service, IAM or public exposure.
+Cloud Build05e320ee-b7c1-4eaa-b9f6-ce173f0211a0 (us-central1), sourceec8f9da,
+status FAILURE, USER_BUILD_STEP step0 exited1. Image NOT ACCEPTED. Do not retry
+until precise log failure is read. Source archive only11 allowlisted files/56.3KiB,
+no private data/credentials. Default pool e2-medium timeout900s: maximum build
+compute illustration0.045USD before allowances, excluding artifact/source/log cost.
+Official pricing inspected October15: https://cloud.google.com/build/pricing.
+
+Cloud Shell has $HOME/wzos-scanner-cloud-latest-path.txt pointing to build evidence
+(build.id/source.txt/base.txt/image-tag.txt). Requested gcloud builds log into that
+folder/build.log, then tail24; browser control timed out and reset. Reconnect/read
+first, do not assume log command ran. Read-only question to Ray is pending.
+Active gcloud principal was admin@workzoneos.org/project enterprise-gemma2,
+config cloudshell-1052, verified this session. No production/DNS/customer send.
+
+Next: read build.log or gcloud builds log05e320ee..., repair actual packaging error,
+finish hardened image lifecycle/engine acceptance, then live-identity/cold-start/
+resource/cost review. Separately integrate selected B into actual dashboard with
+scoped CSS and real existing navigation/entitlement controls; test home-to-module
+roundtrips without styling changes elsewhere. Prepare exact release and rollback
+before the user-authorized conditional live rollout. Do not provision scanner
+service/invoker IAM until its concrete activation review/confirmation is complete.
+
+## Scanner image/supervisor implementation, acceptance running - October 15, 2026
+
+Browser cleanup requested by Ray: closed old in-app landing concept preview;
+kept Cloud Shell tab9, left personal Chrome service tabs unchanged. Re-read Git,
+contract/checkpoint/tasks; owned codex/preproduction-modules clean at48f81c1.
+Fresh check: project enterprise-gemma2/config cloudshell-1052; Docker available,
+~5.4GiB available memory. No credentials, IAM, cloud service or production change.
+
+Runtime/image sourceb846dbf3d85a02fabd9eef5baded5a909c24e6c8 pushed; latest helper
+503dfc32aadeaaa501b88e396b0e6d77884df0d3 only adds image-test diagnostics/timings;
+application/tests/Dockerfile/dependency pins unchanged between those commits.
+Prepared non-root read-only image, minimal pinned dependencies without DB/storage
+SDKs, verified signature seed + bounded boot refresh, private engine socket,
+readiness scan before HTTP, crash/shutdown supervision and request-driven aging
+recycle. No idle background CPU assumption.16 local focused tests PASS.
+Signature reserve one hour; max instance scan lifetime20h. Recycling may cause a
+transient scan failure/hold; live Cloud Run cold-start/identity remain open.
+
+Cloud Shell local Docker image build/acceptance RUNNING (not cloud provisioning).
+Base official python3.12-slim-trixie manifest index sha256:
+a6e34c598f2467ed0e9a8d349809fcd8b5c603269512df273a0bb1784edc11b1,
+amd64 manifest2b4f19dae3a777dfc3b76730bda1e82e1f66ab2a2686fa93ca78edbfb4f04ffe.
+Read $HOME/wzos-scanner-image-latest-path.txt, build.log/launch.log/image.exit.
+Do not start duplicate while active. Helper timeout1200, build timeout900;
+only harmless synthetic engine checks, no customer files or cloud credentials.
+Full exact503dfc3 Python/PostgreSQL689 PASS (304.061s), zero failures/errors/skips,
+gate.exit0 directly inspected. Node count/result still to read from node.log.
+Evidence /home/admin_/wzos-security-20261015.rFzHkKcJ;
+$HOME/wzos-supervisor-regression.log; $HOME/wzos-security-latest-path.txt.
+Latest helpers f359a90/ec8f9da do not change runtime/tests/dependency pins.
+
+Next: finish image and full gates; repair concrete failures, verify owned Docker
+containers/temp/database cleanup, save exact image ID/package versions/latency.
+Then image vulnerability/identity/cold-start/resources/billing review before any
+new private service and service-scoped invoker grant. No production activation.
+
 ## Private scanner connection regression accepted - October 15, 2026
 
 Owned codex/preproduction-modules source2b47a750cbe4e01fd01ef9fbe19ae6776b638fa0
