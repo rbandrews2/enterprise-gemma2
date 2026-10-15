@@ -1,3 +1,18 @@
+## Repaired application scan completed - October15
+
+Exact imageef31216bc772a0233b7c59a9e219dcd9b17f6c6f2c8ed058270a9a009676ab9d:
+review7c7076f5-e5a9-4443-a502-40e633b3ad7d SUCCESS/review.exit0. Findings67:
+critical0/high5/medium1/low36/minimal25; fixAvailable0, pip findings[]. All six
+bundled-installer findings removed. Not a blanket security clearance.
+Approved original-expiry grant removed immediately; independent IAM binding query[].
+No grant extension. Offline exact-image inventory4b7b05b3 SUCCESS: uid10001,
+ensurepip absent, activepip26.2.1, Perl Archive::Tar absent, ACL/attr commands absent,
+ACL/attr libraries remain, linked zlib1.3.1. High applicability review remains open.
+Detailed evidence and next gates: docs/APPLICATION_IMAGE_REVIEW_20261015.md.
+No live app/schema/traffic/DNS change or customer sends. Next finish OS-finding
+assessment, then actual app metadata-token/upload-hold-recovery acceptance before
+cutover. Existing694 PostgreSQL/108 Node results preserved, not redundantly rerun.
+
 ## Bundled-installer repair image built - October15
 
 Builded80918c-ca2d-48d1-921f-8dafab07ab29 SUCCESS, sourceab30279.
