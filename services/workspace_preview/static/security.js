@@ -8,7 +8,7 @@
  banner.setAttribute('aria-label','Organization security notifications');
  document.getElementById('main').prepend(banner);
  const dialog=node('dialog');dialog.className='account-dialog security-dialog';document.body.append(dialog);
- let epoch=0,busy=false;
+ let epoch=0,busy=false,listState='open';
  const button=(text,click)=>{const b=node('button',text);b.type='button';b.className='secondary';b.onclick=click;return b;};
  const reset=()=>{epoch++;busy=false;banner.replaceChildren();banner.hidden=true;if(dialog.open)dialog.close();dialog.replaceChildren();};
  async function refresh(){
@@ -22,22 +22,26 @@
   const generation=++epoch;if(!isAdmin())return;
   dialog.replaceChildren(button('Close',()=>dialog.close()),node('h2','Atlas Security'));
   const notice=node('p','Loading security incidents…');notice.setAttribute('role','status');dialog.append(notice);
-  try{const data=await api('/api/admin/security?offset='+offset);if(generation!==epoch||!isAdmin())return;
+  try{const data=await api('/api/admin/security?offset='+offset+'&state='+listState);if(generation!==epoch||!isAdmin())return;
    notice.textContent=data.open_incidents?`${data.open_incidents} incident(s) require review.`:'No unresolved application incidents recorded. This is not an all-clear security assessment.';
    dialog.append(node('p',data.file_scan_required?'Unscanned files are held until a clean scan.':'Scan enforcement is not activated. Existing unscanned files are not protected by malware scanning.'),node('small',data.coverage));
+   dialog.append(button(listState==='open'?'Include closed incidents':'Show unresolved incidents',()=>{listState=listState==='open'?'all':'open';render();}));
    const protocol=node('details');protocol.append(node('summary','Response protocol'),node('p','Notify admins → acknowledge → contain with a reason → investigate → verify recovery → resolve. Keep evidence. Atlas cannot suspend users or release files through conversation.'));dialog.append(protocol);
    for(const item of data.items){
     const card=node('article');card.className='security-incident';card.append(node('h3',item.title),node('p',`${item.severity.toUpperCase()} · ${item.status} · ${item.target_type}: ${item.target_id}`));
     if(item.file_security)card.append(node('p',`File: ${item.file_security.status}${item.file_security.quarantined?' · quarantined':''}`));
     const audit=node('details');audit.append(node('summary','Evidence and actions'));for(const event of item.actions)audit.append(node('p',`${event.action} · ${new Date(event.occurred_at).toLocaleString()} — ${event.reason}`));card.append(audit);
     const form=node('form'),reason=node('textarea');reason.required=true;reason.minLength=8;reason.maxLength=500;reason.rows=2;reason.placeholder='Record your review and reason';reason.setAttribute('aria-label','Reason for security action');
-    const select=node('select');select.setAttribute('aria-label','Security action');const choices=[['acknowledge','Acknowledge'],['resolve','Resolve after recovery']];
-    if(item.target_type==='file')choices.push(['quarantine_file','Quarantine file'],['rescan_file','Rescan preserved file'],['release_file','Release after clean scan']);
-    if(item.target_type==='user')choices.push(['suspend_user','Suspend organization access'],['restore_user','Restore reviewed access']);
-    if(item.target_type==='credential')choices.push(['revoke_credential','Revoke integration credential']);
+    const select=node('select');select.setAttribute('aria-label','Security action');const choices=item.status==='resolved'?[['reopen','Reopen for reviewed recovery']]:[['acknowledge','Acknowledge'],['resolve','Resolve after recovery'],['resolve_contained','Close incident; keep containment']];
+    if(item.status!=='resolved'){
+     if(item.target_type==='file')choices.push(['quarantine_file','Quarantine file'],['rescan_file','Rescan preserved file'],['release_file','Release after clean scan']);
+     if(item.target_type==='user')choices.push(['suspend_user','Suspend organization access'],['restore_user','Restore reviewed access']);
+     if(item.target_type==='credential')choices.push(['revoke_credential','Revoke integration credential']);
+    }
     for(const [value,label]of choices){const option=node('option',label);option.value=value;select.append(option);}
-    const submit=node('button','Apply reviewed action');submit.type='submit';submit.className='primary';form.append(reason,select,submit);
-    form.onsubmit=async e=>{e.preventDefault();if(busy)return;if(!confirm('Apply this security action to this organization?'))return;busy=true;submit.disabled=true;
+    const approved=node('input');approved.type='checkbox';approved.required=true;const review=node('label');review.append(approved,document.createTextNode(' I reviewed this action and its organization scope.'));
+    const submit=node('button','Apply reviewed action');submit.type='submit';submit.className='primary';form.append(reason,select,review,submit);
+    form.onsubmit=async e=>{e.preventDefault();if(busy||!approved.checked)return;busy=true;submit.disabled=true;
      try{await api('/api/admin/security/incidents/'+encodeURIComponent(item.id)+'/actions',{method:'POST',body:JSON.stringify({expected_version:item.version,action:select.value,reason:reason.value})});if(generation===epoch){await render(offset);await refresh();}}
      catch(err){if(generation===epoch){notice.textContent=err.message;submit.disabled=false;}}finally{busy=false;}
     };card.append(form);dialog.append(card);

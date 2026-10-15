@@ -28,6 +28,9 @@ server facts; model text cannot authorize containment or mark a file clean.
    become clean results. User restoration requires explicit review and available
    licensed capacity. Resolving an incident does not silently undo containment.
 5. Keep an append-only action trail, verify recovery, and resolve the incident.
+   Confirmed harmful resources may be closed as contained while remaining blocked;
+   never require restoring a compromised user or malware file just to close a case.
+   Reopen a closed incident before any reviewed recovery or release.
    Notify the platform operator separately for app-wide incidents or last-admin
    compromise. No destructive deletion, firewall changes or account-wide Google
    revocation is automated here.

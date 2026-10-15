@@ -43,7 +43,7 @@ class ScanResult:
 
 class ClamAVScanner:
     """Optional operator-installed engine; never execute submitted file names."""
-    slots = threading.BoundedSemaphore(2)
+    slots = threading.BoundedSemaphore(1)
 
     def __init__(self):
         self.path = os.getenv('WZOS_CLAMSCAN_PATH', '').strip()
@@ -66,7 +66,10 @@ class ClamAVScanner:
             age = datetime.now() - signature_date
             if not timedelta(0) <= age <= timedelta(hours=24):
                 return ScanResult('error')
-            result = subprocess.run([self.path, '--no-summary', '--stdout', '-'], input=data,
+            result = subprocess.run([self.path, '--no-summary', '--stdout', '--alert-exceeds-max=yes',
+                                     '--alert-encrypted=yes', '--alert-macros=yes', '--max-scantime=15000',
+                                     '--max-filesize=10M', '--max-scansize=50M', '--max-files=1000',
+                                     '--max-recursion=10', '-'], input=data,
                                     capture_output=True, timeout=20, check=False)
             engine = '/'.join(parts[:2])[:100]
             return ScanResult({0: 'clean', 1: 'infected'}.get(result.returncode, 'error'), engine)
@@ -87,7 +90,7 @@ class Report(BaseModel):
 class Action(BaseModel):
     model_config = ConfigDict(extra='forbid', str_strip_whitespace=True)
     expected_version: int = Field(ge=1, strict=True)
-    action: Literal['acknowledge', 'resolve', 'quarantine_file', 'rescan_file', 'release_file',
+    action: Literal['acknowledge', 'resolve', 'resolve_contained', 'reopen', 'quarantine_file', 'rescan_file', 'release_file',
                     'suspend_user', 'restore_user', 'revoke_credential']
     reason: str = Field(min_length=8, max_length=500)
 
@@ -126,9 +129,9 @@ class Security:
         db.execute('INSERT INTO security_actions VALUES (?,?,?,?,?,?,?)',
                    (str(uuid4()), org, incident_id, actor_id, action, reason, now()))
 
-    def limit(self, db, org):
+    def limit(self, db, org, actor_id):
         since = (datetime.now(timezone.utc) - timedelta(minutes=1)).isoformat()
-        if db.execute('SELECT COUNT(*) FROM security_actions WHERE organization_id=? AND occurred_at>?', (org, since)).fetchone()[0] >= 30:
+        if db.execute("SELECT COUNT(*) FROM security_actions WHERE organization_id=? AND actor_id=? AND action!='request.denied' AND occurred_at>?", (org, actor_id, since)).fetchone()[0] >= 30:
             raise HTTPException(429, 'Too many security changes. Retry in one minute.')
 
     def incident(self, db, org, code, target_type, target_id, fingerprint='', containment='none', actor_id='atlas-security', reason='Server evidence recorded', identifier=None):
@@ -206,7 +209,7 @@ class Security:
 
     @staticmethod
     def suspended(db, org, user_id):
-        return bool(db.execute("SELECT id FROM security_incidents WHERE organization_id=? AND target_type='user' AND target_id=? AND containment='user_suspended' AND status!='resolved'", (org, user_id)).fetchone())
+        return bool(db.execute("SELECT id FROM security_incidents WHERE organization_id=? AND target_type='user' AND target_id=? AND containment='user_suspended'", (org, user_id)).fetchone())
 
     def register(self):
         app = self.app
@@ -235,7 +238,7 @@ class Security:
         def report(body: Report, request: Request):
             user = self.admin(request)
             with self.connect() as db:
-                db.execute('BEGIN IMMEDIATE'); self.admin(request, db); self.limit(db, user['organization_id'])
+                db.execute('BEGIN IMMEDIATE'); self.admin(request, db); self.limit(db, user['organization_id'], user['id'])
                 org = user['organization_id']
                 table, column = {'file': ('workspace_files', 'id'), 'user': ('memberships', 'user_id'), 'credential': ('integration_credentials', 'id')}.get(body.target_type, (None, None))
                 if body.target_type == 'file' and self.file_store is None:
@@ -261,7 +264,7 @@ class Security:
             user = self.admin(request); org = user['organization_id']; scan_result = None
             if body.action in ('rescan_file', 'release_file'):
                 with self.connect() as db:
-                    self.limit(db, org)
+                    self.limit(db, org, user['id'])
                     original = db.execute('SELECT * FROM security_incidents WHERE id=? AND organization_id=?', (str(incident_id), org)).fetchone()
                     file_row = db.execute('SELECT * FROM workspace_files WHERE id=? AND organization_id=?', (original['target_id'], org)).fetchone() if original and original['target_type'] == 'file' and self.file_store else None
                 if not file_row:
@@ -278,11 +281,11 @@ class Security:
                 if body.action == 'rescan_file':
                     scan_result = self.scan(data)
             with self.connect() as db:
-                db.execute('BEGIN IMMEDIATE'); self.admin(request, db); self.limit(db, org)
+                db.execute('BEGIN IMMEDIATE'); self.admin(request, db); self.limit(db, org, user['id'])
                 row = db.execute('SELECT * FROM security_incidents WHERE id=? AND organization_id=?', (str(incident_id), org)).fetchone()
                 if not row:
                     raise HTTPException(404, 'Security incident not found')
-                if row['version'] != body.expected_version or row['status'] == 'resolved':
+                if row['version'] != body.expected_version or (row['status'] == 'resolved' and body.action != 'reopen'):
                     raise HTTPException(409, 'Incident changed or is resolved. Refresh before acting.')
                 status, containment = row['status'], row['containment']
                 if body.action in ('quarantine_file', 'rescan_file', 'release_file'):
@@ -333,6 +336,21 @@ class Security:
                     if row['target_type'] == 'file' and not self.file_status(db, org, row['target_id'])['download_allowed']:
                         raise HTTPException(409, 'File remains held; investigate and release after a clean scan')
                     status = 'resolved'
+                elif body.action == 'resolve_contained':
+                    if row['target_type'] == 'file':
+                        if self.file_status(db, org, row['target_id'])['download_allowed']:
+                            raise HTTPException(409, 'The file is not contained')
+                    elif row['target_type'] == 'user':
+                        member = db.execute('SELECT active FROM memberships WHERE organization_id=? AND user_id=?', (org, row['target_id'])).fetchone() if self.accounts else None
+                        if containment != 'user_suspended' or not member or member['active']:
+                            raise HTTPException(409, 'The user is not contained by this incident')
+                    elif containment != 'credential_revoked':
+                        raise HTTPException(409, 'Contain the affected resource before closing it as contained')
+                    status = 'resolved'
+                elif body.action == 'reopen':
+                    if row['status'] != 'resolved':
+                        raise HTTPException(409, 'Only a closed incident can be reopened')
+                    status = 'open'
                 elif body.action == 'acknowledge':
                     status = 'acknowledged'
                 version = row['version'] + 1

@@ -156,6 +156,7 @@ def register(app, connect, actor, permitted_order, store, *, security=None):
         with connect() as db:
             existing = db.execute('SELECT id FROM workspace_files WHERE id=?', (str(file_id),)).fetchone()
         scan_result = await run_in_threadpool(security.scan, data) if security and not existing else None
+        user = actor(request)
         with connect() as db:
             db.execute('BEGIN IMMEDIATE')
             parent(db,user,entity_kind,entity_id,write=True)

@@ -236,6 +236,53 @@ class SecurityTests(unittest.TestCase):
         self.assertEqual(self.client.post(url+'/delete',headers=self.headers(),json={'expected_version':1}).status_code,409)
         self.assertEqual(len(list(self.files.root.rglob(fid))),1)
 
+    def test_close_contained_never_releases_a_harmful_file(self):
+        fid,_,_,_=self.upload('infected')
+        incident=self.listing()['items'][0]['id']
+        self.assertEqual(self.act(incident,'resolve_contained').status_code,200)
+        self.assertEqual(self.listing()['open_incidents'],0)
+        self.assertEqual(self.client.get('/api/files/'+fid,headers=self.headers()).status_code,423)
+        self.assertEqual(self.act(incident,'release_file').status_code,409)
+        self.assertEqual(self.act(incident,'reopen').status_code,200)
+        self.app.state.file_scanner=FakeScanner('clean')
+        self.assertEqual(self.act(incident,'rescan_file').status_code,200)
+        self.assertEqual(self.act(incident,'release_file').status_code,200)
+
+    def test_closed_user_suspension_requires_reopening_before_restoration(self):
+        self.add('member')
+        incident,_=self.report('user','member')
+        self.assertEqual(self.act(incident,'suspend_user').status_code,200)
+        self.assertEqual(self.act(incident,'resolve_contained').status_code,200)
+        self.assertEqual(self.client.get('/api/orders',headers=self.headers('member')).status_code,403)
+        self.assertEqual(self.client.put('/api/account/members/member',headers=self.headers(),json={'role':'member','active':True}).status_code,409)
+        self.assertEqual(self.act(incident,'restore_user').status_code,409)
+        self.assertEqual(self.act(incident,'reopen').status_code,200)
+        self.assertEqual(self.act(incident,'restore_user').status_code,200)
+        self.assertEqual(self.client.get('/api/orders',headers=self.headers('member')).status_code,200)
+
+    def test_denied_member_requests_cannot_exhaust_an_admin_response_limit(self):
+        self.add('member')
+        with self.storage.connect() as db:
+            for _ in range(35):
+                self.app.state.security.audit(db,self.org,'','member','request.denied','Synthetic denied request')
+        incident,_=self.report()
+        self.assertEqual(self.act(incident,'acknowledge').status_code,200)
+
+    def test_membership_revoked_while_scanning_prevents_file_persistence(self):
+        self.add('member');order=self.order('member');fixture=self
+        class RevokingScanner:
+            configured=True
+            def scan(self,data):
+                with fixture.storage.connect() as db:
+                    db.execute('UPDATE memberships SET active=0 WHERE organization_id=? AND user_id=?',(fixture.org,'member'))
+                return ScanResult('clean','synthetic-engine')
+        self.app.state.file_scanner=RevokingScanner()
+        fid=str(uuid4())
+        response=self.client.put('/api/files/'+fid+'?entity_kind=order&entity_id='+order+'&filename=test.pdf',headers={**self.headers('member'),'Content-Type':'application/pdf'},content=b'%PDF-1.7\nSynthetic content')
+        self.assertEqual(response.status_code,403)
+        with self.storage.connect() as db:
+            self.assertEqual(db.execute('SELECT COUNT(*) FROM workspace_files WHERE id=?',(fid,)).fetchone()[0],0)
+
 
 class ScannerAdapterTests(unittest.TestCase):
     def test_missing_configuration_never_claims_clean(self):
@@ -250,6 +297,8 @@ class ScannerAdapterTests(unittest.TestCase):
                     result=ClamAVScanner().scan(b'fixture')
                     self.assertEqual(result.status, expected)
                     self.assertEqual(run.call_args.kwargs['input'], b'fixture')
+                    self.assertIn('--alert-exceeds-max=yes',run.call_args.args[0])
+                    self.assertIn('--alert-encrypted=yes',run.call_args.args[0])
                     self.assertNotIn('shell',run.call_args.kwargs)
                     self.assertNotIn('private engine output',result.engine)
 
