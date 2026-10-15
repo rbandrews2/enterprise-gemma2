@@ -1,3 +1,52 @@
+## Admin hub / security / API deployed — October 14, 2026
+
+Public https://app.workzoneos.org now serves wzos-v2-accounts-hub-5a3ac86 at100%.
+Runtime source5a3ac868085685a5e71169ceac21fa618cc405e9. Final OS-repaired image:
+us-central1-docker.pkg.dev/enterprise-gemma2/enterprise-gemma2/wzos-v2-accounts@sha256:fc87869680a0c6948d4116225ddf7ae22de6a659d0264e31351a251367465f06
+Ray authorized the documented rollout/API activation with "all approved let's go".
+
+Live: admin default dashboard, edition-aware module/account cards, shared admin
+notes/preferences, evidence-based status lights (default amber), revocable hashed
+scoped read-only work-order/schedule integration keys. No vendor-specific connector,
+real status feed, malware scanner or SOC2 certification is implied.
+
+Validation: existing exact-source PostgreSQL596/Node96 PASS; final image synthetic
+acceptance/source139-file hashes/non-root UID10001/pip check PASS. Active57-package
+inventory identical to prior audited57/0 findings/no skips. OS repair build
+76510b57-38b2-48fd-8bf8-9a990cd23df7 SUCCESS; updated PCRE2 and removed obsolete
+ensurepip bootstrap. Final Google scan67 findings:5 high/1 medium/36 low/25 minimal,
+no critical, no available fixes. Residual highs reviewed in HUB_CONTAINER_REVIEW_20261014.md;
+do not describe image as vulnerability-free. Inactive checkout remains disabled.
+
+Fresh live schema: no conflicts; six hub tables and audit index verified after
+startup. Backup1792027808755 SUCCESSFUL. Google Billing project month-to-date
+October1–14 subtotal USD21.79 (gross23.34/savings1.54), reporting delay applies;
+within approved USD150 October8–17. Existing USD50 alert is not a spending cap.
+
+Initial untagged zero-traffic candidate was retired by Cloud Run; readiness gate
+stopped as intended. Added hub-5a3ac86 revision tag, verified healthy/active and
+all previous tags/config/env/secrets/resources/identity/ingress preserved before
+cutover. Tagged direct access remains blocked by existing ingress. Public gate
+PASS: exact assets, protected APIs401, untrusted origin403, direct run.app404,
+headers/Daily policies retained. Authentication-origin gate6 checks PASS.
+Public traffic confirmed100%; rollback was not needed. Previous Daily revision
+wzos-v2-accounts-daily-748f382 remains rollback target. Additive tables retained.
+
+Temporary private SQL proxy stopped; no customer messages, media/model requests,
+real integration keys or exports generated. No DNS, IAM grants or capacity/GPU
+changes. Enabled only On-Demand Scanning for two explicit image scans, not automatic
+registry scanning. Private cloud evidence $HOME/wzos-hub-rollout-20261014; do not
+copy full service JSON/credentials into Git. Local ignored evidence screenshots:
+.local-data/hub-evidence/billing-project.png and live-login.png. Login page rendered;
+real admin/member mobile dashboard interaction acceptance remains for Ray.
+
+NEXT: actual dashboard/notes/preferences/edition/device acceptance, connect real
+billing/monitoring/security evidence, finish controlled one-way SMS, file malware
+quarantine, provider-specific connectors and deferred Daily/Maps/Atlas/checkout
+acceptance. Signed-out shell still shows historical preview labels behind the
+sign-in modal; remove these in a focused UI polish change, not an auth bypass.
+Earlier "not deployed" checkpoints below are historical. See HUB_ROLLOUT_REVIEW_20261014.md.
+
 ## Dependency-patched hub image prepared â€” October 14, 2026
 
 Ray resumed build preparation after Windows updates. Final application source

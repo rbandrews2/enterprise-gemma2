@@ -1,3 +1,25 @@
+## Public hub release completed — October 14, 2026
+
+app.workzoneos.org serves hub-5a3ac86 at100%, OS-repaired digestfc878696.
+Exact source5a3ac86: PostgreSQL596/Node96 PASS; live public/auth gates PASS.
+Six tables/audit index verified; fresh successful backup. Budget report USD21.79
+October1–14, delayed usage may post later. Five reviewed high Debian advisories
+remain without stable fixes; full disposition HUB_CONTAINER_REVIEW_20261014.md.
+Deployment item below is complete; earlier not-deployed statements are historical.
+
+Next in order:
+1. Real admin/member/Core/Enterprise/mobile dashboard and shared notes/preferences
+   acceptance; verify status expiry. Connect actual billing/monitoring/security
+   evidence before green status claims. Remove preview-only labels behind public
+   sign-in modal in focused UI polish.
+2. Finish controlled one-way organization SMS and truthful verification/delivery UI.
+3. File malware quarantine/scanning; audit/restore/incident/access-review evidence;
+   monitor residual container advisories for stable fixes. No SOC2 certification claim.
+4. Provider-specific connectors using approved OAuth/tenant/field mappings; existing
+   integration API exports only scoped work-order/schedule projections.
+5. Deferred Daily device media, Maps/navigation, Atlas inference, checkout/activation
+   and operational acceptance. Preserve current provider restrictions until tested.
+
 ## Built release candidate â€” October 14, 2026
 
 Final runtime5a3ac868085685a5e71169ceac21fa618cc405e9; Node96/PostgreSQL596 PASS,
