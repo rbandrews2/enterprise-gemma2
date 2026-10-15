@@ -1,3 +1,38 @@
+## Scanner image built; isolated acceptance in progress - October 15, 2026
+
+Repaired first Cloud Build failure05e320ee: non-root UID10001 could not read
+root-owned mode600 Python files from the restrictive source archive. Commit
+2cd54853fc1abd320f3f52145493865c9e2a2304 adds read/traverse permission to the
+explicitly allowlisted public scanner code only; runtime remains non-root and
+cannot modify root-owned code. No secret/IAM permissions changed.
+
+Second Cloud Build32e7be44-f0f1-4ddf-9fab-187c15de5aad (us-central1) SUCCESS,
+verified directly. Immutable image:
+us-central1-docker.pkg.dev/enterprise-gemma2/enterprise-gemma2/wzos-v2-scanner@sha256:99019f10204758114bc54cf987c4db1a7d881b693cd7d67083f4d346679adb8e
+Source2cd5485. Base remains pinned official Python3.12-slim-trixie. Build success
+is packaging evidence only, not service/engine acceptance or live deployment.
+
+Cloud Shell source checkout /home/admin_/wzos-security-20261015.5LohuDMf/repo.
+Image acceptance evidence /home/admin_/wzos-scanner-image-acceptance.LqMlyPDJ;
+pointer $HOME/wzos-scanner-image-acceptance-latest.txt. First background attempt
+exited before evidence setup; foreground traced retry passed preflight with
+~5.6GB available RAM and reached immutable Artifact Registry image pull. Gate
+is IN PROGRESS, not accepted. Read its output/image.exit and verify owned
+container/temp-directory cleanup. Browser tab12 was reconnected after session
+transfer; user tail command had an unmatched quote, safely completed/restored.
+
+Full application regression remains PASS at503dfc3:689 Python/PostgreSQL and108
+Node, zero failures/errors/skips. Later change is Docker packaging, helpers,
+prototype and documentation only. Avoid repeating full suite without a new cause.
+Landing Option B remains a saved prototype; actual functional dashboard integration
+is pending and must affect LANDING ONLY. Other module pages/styles unchanged.
+
+Next: finish actual container clean/EICAR/archive and lifecycle/failure checks;
+review live identity, resources/cost and exact scanner service/IAM activation.
+New scanner service/IAM still requires concrete approval. Then integrate selected
+landing with real entitled navigation, validate, and prepare conditional public
+site release/rollback. No live-site, DNS, IAM or customer communications changed.
+
 ## Landing B selected; supervisor regression passed; image diagnosis pending - October 15, 2026
 
 Ray chose Option B (Guided Workspace) and explicitly limited the design change to
