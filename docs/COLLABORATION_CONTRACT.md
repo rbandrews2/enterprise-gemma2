@@ -29,6 +29,7 @@ Codex's checkout uses enterprise-v2. Claude uses the separate `Enterprise Gemma 
 - Preserve Core/Enterprise entitlements; automated dispatch is Enterprise-only and requires admin review before sending assignments.
 - Reuse existing Google-backed storage/auth interfaces and version/concurrency protection. Supabase is historical recovery material, not the replacement runtime.
 - Document proposed API/schema changes before broad shared-file edits. Keep routing/storage changes narrow; no unrelated rewrites or competing auth/storage layers.
+- Customer-facing security and file-scanning messages credit Atlas. Preserve accurate pending, unavailable and completed statuses; a clean scan is not a guarantee of safety. Keep engine/provider details in technical diagnostics.
 - Customer branding: WZOS powered by Atlas AI Assistant. Keep the established gloss-black, subtle amber/gold, road-work imagery and accessible/reduced-motion behavior.
 - Offline estimates/notes must remain visibly unverified until an explicit, audited reconciliation; never silently fabricate server-verified attendance.
 - Atlas source retrieval and suggested placements do not establish applicability or approval. Preserve edition, revision and review status.

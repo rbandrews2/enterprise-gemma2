@@ -1,3 +1,34 @@
+## Authenticated scanner pilot PASS; live schema compatible - October15
+
+Ray explicitly approved the temporary ID-token test. Narrow SA-scoped
+roles/iam.serviceAccountOpenIdTokenCreator grant to admin@workzoneos.org was
+conditional until2026-10-15T22:33:15Z. Single synthetic run PASS, test.exit0:
+anonymous403; app-principal clean200/clean; EICAR200/infected; altered hash400.
+UUID/hash/byte-count response traceability validated. Identity token remained
+in process memory only. Grant removed immediately; independent SA IAM read[].
+This validates an operator-minted app-principal token, NOT the production app's
+metadata-token path or complete browser upload/hold/rescan/release workflow.
+
+Read-only live schema check: compatible_existing_columns=True, conflicts[].
+Missing:security_incidents/security_actions/security_file_states/security_alert_reads
+(additive reviewed startup migration). Also purchase_requests/purchase_events,
+which belong to explicitly instantiated sandbox commerce; not automatic checkout
+activation. Owned temporary localhost5544 SQL proxy stopped; process check empty.
+Latest backup1792044000000 SUCCESSFUL,2026-10-15T08:48:21.194Z. No schema writes.
+
+Next gate: current billing report. Opened Google Billing; Google requires account
+verification for admin@workzoneos.org. User sign-in request pending; no password
+requested in chat. Do not claim current spend verified from historic estimates.
+Then finish lower-severity disposition, prepare security-capable app candidate,
+verify retained source library/config, and test authenticated upload/hold/recovery
+through existing ingress before production cutover. Public app still unchanged.
+Atlas security UI wording is committed and Node108/108 passed, not live yet.
+
+Cloud evidence:~/wzos-scanner-patched-latest.txt/identity-test/{acceptance.json,
+launch.log,condition.txt,removal.log,test.exit}; live-schema.json/schema.log,
+schema-proxy.log. Private scanner remains Ready min0/max1, app-only invocation.
+Atlas model service remains absent; retained31B weights integrity already verified.
+
 ## Scanner repaired and cloud-tested; Atlas weights verified - October15
 
 Patched isolated scanner built from official pinned Ubuntu26.04, supported
