@@ -1,3 +1,24 @@
+## Bundled-installer repair image built - October15
+
+Builded80918c-ca2d-48d1-921f-8dafab07ab29 SUCCESS, sourceab30279.
+Repaired immutable image:
+`us-central1-docker.pkg.dev/enterprise-gemma2/enterprise-gemma2/wzos-v2-accounts@sha256:ef31216bc772a0233b7c59a9e219dcd9b17f6c6f2c8ed058270a9a009676ab9d`
+Build required3.6KB context; parent73e47d4d preserved. Build assertions passed:
+active pip26.2.1/dependency consistency, ensurepip absent, source-library verification,
+uid10001 and existing synthetic HTTP/admin/member/origin checks. Application source
+still4380849;694 PostgreSQL and108 Node regression evidence unchanged/applicable.
+This does NOT establish vulnerability removal until the repaired image is scanned.
+
+Prior review grant independently removed. Proposed re-review: SAME four-permission
+role/Cloud Build identity and original condition ending2026-10-16T00:26:17Z,
+not a fresh one-hour extension. Scan only repaired digestef31216b, same estimated
+0.35USD review before allowances/storage; remove exact binding immediately afterward.
+Changing the reviewed target requires action-time confirmation before reapplying
+access. Use existing condition.txt as helper second argument; never silently extend
+expiry if fewer than20minutes remain. High-five OS applicability dispositions,
+actual runtime-token/full upload/hold/release acceptance and deployment stay open.
+No public app/schema/traffic/DNS change. All evidence under existing app-release pointer.
+
 ## Application review completed; bundled-installer repair - October15
 
 Ray approved the new one-hour application review window. Build7547db29-2ba3-40eb-
