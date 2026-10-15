@@ -11,6 +11,7 @@ import json
 import os
 import resource
 import shutil
+import signal
 import subprocess
 import sys
 import tempfile
@@ -24,6 +25,9 @@ from services.workspace_preview.clamd_scanner import ClamdScanner, daemon_config
 
 
 def main():
+    def interrupted(_signal, _frame):
+        raise SystemExit('ENGINE_GATE_BLOCKED: interrupted; stopping owned daemon')
+    signal.signal(signal.SIGTERM, interrupted)
     parser=argparse.ArgumentParser()
     parser.add_argument('--database-dir',required=True)
     parser.add_argument('--evidence-dir',required=True)
