@@ -3,6 +3,8 @@
 set -euo pipefail
 umask 077
 evidence=${1:?Private evidence directory required}
+image=${WZOS_SCANNER_REVIEW_IMAGE:?Set exact approved immutable scanner image}
+[[ $image =~ ^us-central1-docker\.pkg\.dev/enterprise-gemma2/enterprise-gemma2/wzos-v2-scanner@sha256:[0-9a-f]{64}$ ]] || exit 2
 mkdir -p "$evidence"; evidence=$(realpath "$evidence")
 role=projects/enterprise-gemma2/roles/wzosImageReview
 member=serviceAccount:910004733138-compute@developer.gserviceaccount.com
@@ -63,7 +65,7 @@ printf 'TEMPORARY_SCAN_ACCESS_GRANTED expires=%s\n' "$expires"
 sleep 90
 context=$(mktemp -d /tmp/wzos-scanner-review.XXXXXXXX)
 git archive HEAD cloudbuild.scanner-review.yaml | tar -x -C "$context"
-timeout 90 gcloud builds submit "$context" --project=enterprise-gemma2 --region=us-central1 --config="$context/cloudbuild.scanner-review.yaml" --substitutions='_IMAGE=us-central1-docker.pkg.dev/enterprise-gemma2/enterprise-gemma2/wzos-v2-scanner@sha256:99019f10204758114bc54cf987c4db1a7d881b693cd7d67083f4d346679adb8e' --async --quiet --format='value(id)' > "$evidence/build.id"
+timeout 90 gcloud builds submit "$context" --project=enterprise-gemma2 --region=us-central1 --config="$context/cloudbuild.scanner-review.yaml" --substitutions="_IMAGE=$image" --async --quiet --format='value(id)' > "$evidence/build.id"
 build=$(cat "$evidence/build.id")
 printf 'SCANNER_REVIEW_BUILD %s\n' "$build"
 for ((i=0;i<36;i++)); do
