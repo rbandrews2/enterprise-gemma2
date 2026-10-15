@@ -1,9 +1,9 @@
-## Public hub release completed — October 14, 2026
+## Public hub release completed - October 14, 2026
 
 app.workzoneos.org serves hub-5a3ac86 at100%, OS-repaired digestfc878696.
 Exact source5a3ac86: PostgreSQL596/Node96 PASS; live public/auth gates PASS.
 Six tables/audit index verified; fresh successful backup. Budget report USD21.79
-October1–14, delayed usage may post later. Five reviewed high Debian advisories
+October1-14, delayed usage may post later. Five reviewed high Debian advisories
 remain without stable fixes; full disposition HUB_CONTAINER_REVIEW_20261014.md.
 Deployment item below is complete; earlier not-deployed statements are historical.
 

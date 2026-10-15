@@ -1,5 +1,16 @@
 # Hub rollout review
 
+## Public completion
+
+October14: hub-5a3ac86 is live at100%. Public/auth gates PASS, six startup tables
+and audit index verified, owned SQL proxy stopped, initial new-revision ERROR
+query returned0 entries. Final scan67 findings/no critical/no available fixes;
+residual five highs documented. Untagged candidate readiness gate stopped because
+Cloud Run retired the inactive revision; adding the restricted hub revision tag
+activated startup with previous public traffic intact. Configuration and readiness
+then passed before cutover. Below preparation/pending wording is historical; see
+latest SESSION_HANDOFF.md for exact evidence and remaining acceptance.
+
 ## Updated container and budget gates
 
 OS repair build76510b57-38b2-48fd-8bf8-9a990cd23df7 SUCCESS; use digest

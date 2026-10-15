@@ -1,4 +1,4 @@
-## Admin hub / security / API deployed — October 14, 2026
+## Admin hub / security / API deployed - October 14, 2026
 
 Public https://app.workzoneos.org now serves wzos-v2-accounts-hub-5a3ac86 at100%.
 Runtime source5a3ac868085685a5e71169ceac21fa618cc405e9. Final OS-repaired image:
@@ -20,8 +20,8 @@ do not describe image as vulnerability-free. Inactive checkout remains disabled.
 
 Fresh live schema: no conflicts; six hub tables and audit index verified after
 startup. Backup1792027808755 SUCCESSFUL. Google Billing project month-to-date
-October1–14 subtotal USD21.79 (gross23.34/savings1.54), reporting delay applies;
-within approved USD150 October8–17. Existing USD50 alert is not a spending cap.
+October1-14 subtotal USD21.79 (gross23.34/savings1.54), reporting delay applies;
+within approved USD150 October8-17. Existing USD50 alert is not a spending cap.
 
 Initial untagged zero-traffic candidate was retired by Cloud Run; readiness gate
 stopped as intended. Added hub-5a3ac86 revision tag, verified healthy/active and
@@ -29,11 +29,11 @@ all previous tags/config/env/secrets/resources/identity/ingress preserved before
 cutover. Tagged direct access remains blocked by existing ingress. Public gate
 PASS: exact assets, protected APIs401, untrusted origin403, direct run.app404,
 headers/Daily policies retained. Authentication-origin gate6 checks PASS.
-Public traffic confirmed100%; rollback was not needed. Previous Daily revision
+Public traffic confirmed100%; rollback was not needed. New-revision ERROR log query returned0 entries at release verification; this is not ongoing monitoring. Previous Daily revision
 wzos-v2-accounts-daily-748f382 remains rollback target. Additive tables retained.
 
 Temporary private SQL proxy stopped; no customer messages, media/model requests,
-real integration keys or exports generated. No DNS, IAM grants or capacity/GPU
+real integration keys or exports generated. No DNS, manual IAM grants or capacity/GPU
 changes. Enabled only On-Demand Scanning for two explicit image scans, not automatic
 registry scanning. Private cloud evidence $HOME/wzos-hub-rollout-20261014; do not
 copy full service JSON/credentials into Git. Local ignored evidence screenshots:
