@@ -222,9 +222,15 @@ def register(app, connect, actor, *, accounts=False, roster=None):
         token = request.headers.get('X-WZOS-API-Key', '')
         if not token.startswith('wzos_') or not 40 <= len(token) <= 128:
             raise HTTPException(401, 'Valid integration credential required')
+        token_hash = hashlib.sha256(token.encode()).hexdigest()
         with connect() as db:
+            # Reject unknown credentials before taking the shared write lock used
+            # for revocation/rate counters. Recheck under that lock to avoid races.
+            lookup = 'SELECT * FROM integration_credentials WHERE token_hash=? AND revoked_at IS NULL AND expires_at>?'
+            if not db.execute(lookup, (token_hash, stamp())).fetchone():
+                raise HTTPException(401, 'Credential expired or revoked')
             db.execute('BEGIN IMMEDIATE')
-            row = db.execute('SELECT * FROM integration_credentials WHERE token_hash=? AND revoked_at IS NULL AND expires_at>?', (hashlib.sha256(token.encode()).hexdigest(), stamp())).fetchone()
+            row = db.execute(lookup, (token_hash, stamp())).fetchone()
             if not row:
                 raise HTTPException(401, 'Credential expired or revoked')
             if accounts:

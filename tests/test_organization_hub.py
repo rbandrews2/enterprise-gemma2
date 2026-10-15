@@ -1,6 +1,7 @@
 import os
 import tempfile
 import unittest
+from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from unittest.mock import patch
@@ -138,6 +139,31 @@ class OrganizationHubTests(unittest.TestCase):
         self.assertEqual(self.client.get('/api/integrations/v1/orders?api_key=ignored').status_code, 401)
         self.assertEqual(self.client.get('/').headers['referrer-policy'], 'strict-origin-when-cross-origin')
         self.assertEqual(self.client.get('/').headers['x-frame-options'], 'DENY')
+
+    def test_invalid_key_does_not_take_shared_write_lock(self):
+        statements = []
+        storage = self.storage
+        class ObservedConnection:
+            def __init__(self, db): self.db = db
+            def execute(self, sql, values=()):
+                statements.append(sql)
+                return self.db.execute(sql, values)
+        @contextmanager
+        def observed():
+            with storage.connect() as db:
+                yield ObservedConnection(db)
+        guarded = FastAPI()
+        register(guarded, observed, lambda request: ACTORS['enterprise-admin'])
+        with TestClient(guarded) as client:
+            statements.clear()
+            response = client.get('/api/integrations/v1/orders', headers={'X-WZOS-API-Key': 'wzos_'+'x'*43})
+            self.assertEqual(response.status_code, 401)
+            self.assertNotIn('BEGIN IMMEDIATE', statements)
+            valid = self.credential()
+            statements.clear()
+            response = client.get('/api/integrations/v1/orders', headers={'X-WZOS-API-Key': valid['token']})
+            self.assertEqual(response.status_code, 200)
+            self.assertIn('BEGIN IMMEDIATE', statements)
 
 
 @unittest.skipUnless(os.getenv('WZOS_TEST_DATABASE_URL'), 'Dedicated PostgreSQL database not configured')
