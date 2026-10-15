@@ -27,7 +27,12 @@ def create_app(*, audience=None, caller=None, verifier=verify_identity, scanner=
     caller = caller or os.environ['WZOS_SCANNER_CALLER']
     if not re.fullmatch(r'[a-z0-9-]+@[a-z0-9-]+\.iam\.gserviceaccount\.com', caller):
         raise ValueError('One explicit Google service-account caller required')
-    scanner = scanner if scanner is not None else ClamdScanner()
+    if scanner is None:
+        if os.getenv('WZOS_SCANNER_INSTANCE_DEADLINE'):
+            from .scanner_runtime import SupervisedScanner
+            scanner = SupervisedScanner()
+        else:
+            scanner = ClamdScanner()
     slots = threading.BoundedSemaphore(1)
     app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None, redirect_slashes=False)
 

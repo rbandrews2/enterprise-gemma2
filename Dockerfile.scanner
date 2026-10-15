@@ -1,0 +1,25 @@
+# Supply an inspected official python:3.12-slim-trixie@sha256 digest, never latest.
+ARG PYTHON_IMAGE
+FROM ${PYTHON_IMAGE}
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 TZ=UTC
+WORKDIR /app
+RUN printf '#!/bin/sh\nexit 101\n' > /usr/sbin/policy-rc.d \
+    && chmod 755 /usr/sbin/policy-rc.d \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends clamav-daemon clamav-freshclam ca-certificates \
+    && rm -rf /var/lib/apt/lists/* \
+    && useradd --create-home --uid 10001 wzos \
+    && mkdir -p /opt/wzos-signatures \
+    && chown 10001:10001 /opt/wzos-signatures \
+    && chmod 700 /opt/wzos-signatures
+COPY requirements-scanner.txt ./
+RUN python -m pip install --no-cache-dir --only-binary=:all: -r requirements-scanner.txt
+# Explicit allowlist: no accounts, storage code, credentials or workspace data.
+COPY services/__init__.py ./services/__init__.py
+COPY services/workspace_preview/__init__.py ./services/workspace_preview/__init__.py
+COPY services/workspace_preview/archive_policy.py services/workspace_preview/clamd_scanner.py services/workspace_preview/security.py services/workspace_preview/scanner_transport.py services/workspace_preview/scanner_service.py services/workspace_preview/scanner_runtime.py ./services/workspace_preview/
+USER 10001:10001
+RUN python -m services.workspace_preview.scanner_runtime --seed-only /opt/wzos-signatures
+ENV WZOS_CLAM_SEED=/opt/wzos-signatures
+EXPOSE 8080
+CMD ["python", "-m", "services.workspace_preview.scanner_runtime"]
