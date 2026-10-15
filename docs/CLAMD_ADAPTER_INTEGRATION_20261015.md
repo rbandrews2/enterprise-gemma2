@@ -34,6 +34,11 @@ Operator must use `daemon_config(socket_path, database_directory)` and launch
 non-group/world-writable file; socket parent must not be group/world writable;
 socket must be trusted-owner and mode600. Policy rejects duplicate/extra options,
 TCP listeners, weakened alerts/limits and symlinks at the checked locations.
+For versions requiring detached CVD code-signature certificates, the optional
+third `daemon_config` argument supplies `CVDCertsDirectory`. This must be a trusted,
+non-group/world-writable directory of vendor certificates. The acceptance helper
+uses the certificate bundle extracted from the same signed distro packages and
+passes it to both Freshclam and clamd. It never disables signature verification.
 The config includes official-database-only, bounded unpacking, one worker and
 alerts for exceeded limits, encrypted content and Office macros.
 
@@ -71,6 +76,7 @@ Official references:
 - https://docs.clamav.net/manual/Usage/ClamdProtocol.html
 - https://docs.clamav.net/manual/Usage/Scanning.html
 - https://docs.clamav.net/manual/Usage/SignatureManagement.html
+- https://github.com/Cisco-Talos/clamav/blob/main/docs/man/freshclam.conf.5.in
 
 Provenance: local `security-kit.zip`, SHA256
 `da19cb8a022bdc4807922c22df52658876aef3481d3177680ebae1e24b8b0bd5`.

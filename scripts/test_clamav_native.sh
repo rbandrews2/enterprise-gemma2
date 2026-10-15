@@ -39,6 +39,8 @@ if freshclam --help | grep -q -- '--cvdcertsdir'; then
   test -d "$certs" || { echo 'ENGINE_GATE_BLOCKED: official code-signature certificates missing'; exit 2; }
   cert_args=("--cvdcertsdir=$certs")
   engine_cert_args=(--certs-dir "$certs")
+  # The database-testing child also needs the vendor's documented certificate path.
+  export CVD_CERTS_DIR="$certs"
 fi
 database="$HOME/.cache/wzos-clamav/official-db"
 mkdir -p "$database"; chmod 700 "$database"
