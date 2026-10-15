@@ -8,6 +8,19 @@ role=projects/enterprise-gemma2/roles/wzosImageReview
 member=serviceAccount:910004733138-compute@developer.gserviceaccount.com
 expires=$(date -u -d '+1 hour' +%Y-%m-%dT%H:%M:%SZ)
 condition="expression=request.time < timestamp('$expires'),title=wzos-image-review-$(date -u +%Y%m%dT%H%M%SZ)"
+if [[ -n ${2:-} ]]; then
+  condition=$(cat "$2")
+  expires=$(python3 - "$condition" <<'CHECK'
+import re,sys
+from datetime import datetime,timezone,timedelta
+m=re.fullmatch(r"expression=request.time < timestamp\('([0-9T:Z-]+)'\),title=wzos-image-review-[0-9]{8}T[0-9]{6}Z",sys.argv[1])
+assert m
+expires=datetime.fromisoformat(m[1].replace('Z','+00:00'))
+assert timedelta(minutes=20)<expires-datetime.now(timezone.utc)<=timedelta(hours=1)
+print(m[1])
+CHECK
+)
+fi
 printf '%s\n' "$condition" > "$evidence/condition.txt"
 printf '%s\n' "$expires" > "$evidence/expires.txt"
 bound=0
@@ -46,6 +59,8 @@ PYCODE
 bound=1
 timeout 90 gcloud projects add-iam-policy-binding enterprise-gemma2 --member="$member" --role="$role" --condition="$condition" --quiet --format=none > "$evidence/access-grant.log" 2>&1
 printf 'TEMPORARY_SCAN_ACCESS_GRANTED expires=%s\n' "$expires"
+# Give IAM policy propagation time; never extend the approved expiry.
+sleep 90
 context=$(mktemp -d /tmp/wzos-scanner-review.XXXXXXXX)
 git archive HEAD cloudbuild.scanner-review.yaml | tar -x -C "$context"
 timeout 90 gcloud builds submit "$context" --project=enterprise-gemma2 --region=us-central1 --config="$context/cloudbuild.scanner-review.yaml" --substitutions='_IMAGE=us-central1-docker.pkg.dev/enterprise-gemma2/enterprise-gemma2/wzos-v2-scanner@sha256:99019f10204758114bc54cf987c4db1a7d881b693cd7d67083f4d346679adb8e' --async --quiet --format='value(id)' > "$evidence/build.id"
