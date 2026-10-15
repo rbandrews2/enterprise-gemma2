@@ -1,4 +1,4 @@
-## Scanner image built; isolated acceptance in progress - October 15, 2026
+## Scanner image built; Cloud Shell download gate blocked - October 15, 2026
 
 Repaired first Cloud Build failure05e320ee: non-root UID10001 could not read
 root-owned mode600 Python files from the restrictive source archive. Commit
@@ -17,8 +17,13 @@ Image acceptance evidence /home/admin_/wzos-scanner-image-acceptance.LqMlyPDJ;
 pointer $HOME/wzos-scanner-image-acceptance-latest.txt. First background attempt
 exited before evidence setup; foreground traced retry passed preflight with
 ~5.6GB available RAM and reached immutable Artifact Registry image pull. Gate
-is IN PROGRESS, not accepted. Read its output/image.exit and verify owned
-container/temp-directory cleanup. Browser tab12 was reconnected after session
+exited124 at the five-minute Artifact Registry download timeout, before any
+container started. Directly observed image.exit124, empty docker ps and cleanup
+of owned /tmp/wzos-scanner-image.BMYxusG6. This is blocked download evidence,
+NOT an engine/runtime test failure or acceptance. Do not repeat the same slow
+Cloud Shell image pull. Next fallback: run bounded image acceptance within
+Google Cloud Build, using the existing immutable image and synthetic fixtures
+only; prepare its minimal source context and explicit timeout/resources first. Browser tab12 was reconnected after session
 transfer; user tail command had an unmatched quote, safely completed/restored.
 
 Full application regression remains PASS at503dfc3:689 Python/PostgreSQL and108
