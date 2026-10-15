@@ -1,3 +1,21 @@
+## Vulnerability extraction repaired; temporary scan permission approval needed - October15
+
+Requested local retry timed out180s/exit124. Cloud job missing-component and
+package-repository issues repaired with Google's COMPONENTS installer/default
+entrypoint and pinned official CLI digest. Buildca2222cf-59ba-4cf2-8084-71544fa84f93
+COMPLETED package extraction, then failed only on IAM
+ondemandscanning.scans.analyzePackages for existing build identity
+910004733138-compute@developer.gserviceaccount.com. No findings/scan acceptance.
+
+Prepared scanner-image-review-role.yaml (four scan-only permissions) and exact
+one-hour conditional grant/rollback in docs/SECURITY_CUTOVER_20261015.md.
+User approval required before applying; no grant made. Cloud scanner runtime still
+not activated. Local review clients stopped; uploaded contexts cleaned by verified
+/tmp/wzos-scanner-review.* prefix. Gate689/108 and real scanner container gatePASS
+are unchanged. Next: approve/apply temporary custom scan role, rerun exact-image
+review and remove matching binding; then resolve findings before scanner/live
+identity/schema/cost/cutover gates. No production traffic or data changes.
+
 ## Cloud scanner acceptance PASS; cutover plan prepared - October 15, 2026
 
 Cloud Build gatea3aac155-9a1f-433e-8c62-775f2aea21b6 SUCCESS, explicitly read

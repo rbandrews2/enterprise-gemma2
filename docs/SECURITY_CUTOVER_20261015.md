@@ -125,3 +125,47 @@ bounded cloud-native extraction/review job with existing permissions; do not
 enable APIs or broaden build identity access automatically. The configured API's
 listed price is USD0.26 per scanned image (before any allowances):
 https://cloud.google.com/artifact-analysis/pricing (verified October15).
+
+### October15 retry and cloud-native review
+
+Requested Cloud Shell retry timed out180s (exit124, no operation/findings).
+Prepared cloudbuild.scanner-review.yaml; source archive is only that one public
+configuration file, no customer data. Build6b537955-f56b-4abf-900f-343dbe988660
+failed because local-extract was absent from the official minimal CLI image.
+Buildaa2da117-b1b1-4121-8ff5-0caac6e043e1 showed apt could not locate the
+component without the image's runtime package-repository installer.
+
+Repaired using Google's documented COMPONENTS runtime installer, preserving the
+image's default entrypoint; pinned actual official CLI image digestee211536...
+Sourcea219cec submitted as buildca2222cf-59ba-4cf2-8084-71544fa84f93. Limit900s
+E2_STANDARD_2; no IAM/API/service changes. Outcome pending; inspect final log in
+$HOME/wzos-security-cutover-20261015/scanner-review-final-build.log. Build compute
+capUSD0.09 before allowances plus scanning/storage; no zero-vulnerability claim.
+Official guidance: https://github.com/GoogleCloudPlatform/cloud-sdk-docker/blob/master/docs/user_guide.md#installing-additional-packages-or-components-at-runtime
+
+### Confirmed IAM blocker and proposed temporary repair
+
+Buildca2222cf-59ba-4cf2-8084-71544fa84f93 installed official local-extract589.0.0
+and COMPLETED package extraction. The service refused analyzePackages for existing
+build identity910004733138-compute@developer.gserviceaccount.com. No scan operation
+was started and no vulnerability findings exist. Scanner container gate remainsPASS.
+No runtime/scanner service exists or IAM was changed.
+
+Prepared scanner-image-review-role.yaml: four scanning-only permissions (analyze
+packages, read findings, get/wait operation). Proposed project custom role
+projects/enterprise-gemma2/roles/wzosImageReview, bound ONLY to existing build
+identity above with request.time < UTC activation-time plus1hour. Remove the exact
+conditional binding immediately after review, even if it fails; expiry is a backstop.
+Do not grant Editor, Owner, service-agent or project-wide security admin roles.
+Do not alter an existing custom role with different permissions; stop for review.
+
+IAM scope is project-level scanning, not one image/job: other workloads using this
+same identity could also analyze package inventories/read scan findings during the
+one-hour window. The harness submits only the pinned WZOS scanner image. This
+does not grant database, bucket, Secret Manager, customer-file or app-user access.
+Action-time user approval is REQUIRED before creating/binding this role.
+Rollback: remove only the matching role/member/condition binding; retain findings
+and evidence. Any subsequent role deletion requires separate review and is not
+necessary for removing access. Do not apply an unconditional grant if IAM Conditions
+are unsupported. Primary permissions reference:
+https://docs.cloud.google.com/iam/docs/roles-permissions/ondemandscanning

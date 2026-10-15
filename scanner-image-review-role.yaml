@@ -1,0 +1,8 @@
+title: WZOS Temporary Image Review
+description: Analyze container package inventories and read their vulnerability results only.
+stage: GA
+includedPermissions:
+  - ondemandscanning.scans.analyzePackages
+  - ondemandscanning.scans.listVulnerabilities
+  - ondemandscanning.operations.get
+  - ondemandscanning.operations.wait
