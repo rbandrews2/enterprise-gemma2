@@ -1,3 +1,15 @@
+## Training/SMS candidate - October 14, 2026
+
+Source bf33fd6 pushed, not deployed. Collapsible admin video links and compact
+click-to-load players implemented; queued SMS access revocation repaired in
+parallel. Node102 cloud PASS directly inspected. Ray reported PostgreSQL606 PASS,
+no failures/skips. Direct cloud exit/cleanup inspection and browser
+visual/admin/member/mobile/playback checks remain pending controller recovery.
+Read $HOME/wzos-training-20261014 saved logs before rerunning tests. Next: finish
+those gates, then prepare code-only release inheriting the current OS-patched
+image. No new schema/dependency/secret; preserve SMS test mode. See latest
+SESSION_HANDOFF.md and TRAINING_PLAYER_UPDATE_20261014.md.
+
 ## Public hub release completed - October 14, 2026
 
 app.workzoneos.org serves hub-5a3ac86 at100%, OS-repaired digestfc878696.

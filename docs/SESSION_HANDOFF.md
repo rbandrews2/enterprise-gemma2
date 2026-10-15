@@ -1,3 +1,52 @@
+## Training player and parallel SMS repair - October 14, 2026
+
+Ray requested the compact in-app training player and collapsible admin link
+editing demonstrated by his screenshot/written flow, plus parallel integration
+work. Source bf33fd6 pushed to codex/preproduction-modules; NOT DEPLOYED. Public
+app still serves hub-5a3ac86 described below. Owned integration-release checkout
+only; primary and Claude checkouts untouched. No new DDL/dependencies/credentials.
+
+Implemented native details/summary Video links editor: collapsed initially,
+add/replace/remove up to10 links, retain all existing links, save draft then
+publish with existing version checks. Learners get click-to-load compact players
+for YouTube/Vimeo/direct HTTPS video and original-link fallback. Close/navigation/
+session switch unloads players. No autoplay or automatic training completion.
+URL credentials/nonstandard ports rejected server-side; fixed iframe origins and
+HTTPS native media allowed on root only; existing script/auth/Daily/Maps policies
+retained. Details and remaining acceptance: TRAINING_PLAYER_UPDATE_20261014.md.
+
+User explicitly requested multitasking. A parallel agent repaired queued SMS
+access checks in messaging.py: original admin, recipient and organization must
+still have access when a notification is claimed/retried. No provider send or
+mode/secret/IAM change. Review: SMS_READINESS_HANDOFF_20261014.md. Agent reported
+24 focused SQLite/mock PASS; root reviewed the diff. Root focused Node6 PASS;
+full exact-source cloud Node102 PASS/no skips. Ray reported the final native
+PostgreSQL result:606 passed, no failures or skips. Direct log/exit and temporary
+database cleanup inspection remain pending because browser control times out.
+
+Cloud evidence $HOME/wzos-training-20261014: run-gate.sh, source.txt, node.log,
+postgres.log, gate.log and gate.exit; repo-path.txt points to isolated checkout.
+Cloud Shell fresh account/project verified admin@workzoneos.org/enterprise-gemma2
+before test job. Job is nohup; read saved result rather than rerunning blindly.
+No public deployment, customer messages, paid provisioning or media provider
+playback happened. API fixture uses only synthetic preview data.
+
+Local synthetic preview runs127.0.0.1:8083 via start_integration_preview.py,
+process15388 (exec session90563). A synthetic published module
+video-editor-demo-20261014 is seeded. Its media.example.org URL is a placeholder,
+not a working video. User opened permitted HTTP tab6 after old data:error tab1
+was blocked by browser policy. Actual DOM showed Video training/admin/demo/Edit;
+Edit click/visual capture timed out, then controller reset repeatedly. No actual
+visual expand/collapse/phone-size or real playback acceptance claim. User was
+asked to read only final cloud gate lines. Do not bypass the blocked error tab.
+
+NEXT: inspect saved cloud exit/verify disposable PG cleanup without rerunning;
+finish actual browser admin
+collapse/replace/remove/save/publish and member/player/mobile checks; save UI
+evidence. Then prepare a config-preserving code-only image release inheriting
+current OS-patched image and exact tested source. Keep SMS test restrictions.
+Earlier live hub checkpoint below remains current production state.
+
 ## Admin hub / security / API deployed - October 14, 2026
 
 Public https://app.workzoneos.org now serves wzos-v2-accounts-hub-5a3ac86 at100%.

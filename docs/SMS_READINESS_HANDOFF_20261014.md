@@ -39,8 +39,10 @@ All tests use synthetic identities/phones and a fake provider; no real sends.
 Existing messaging/Twilio mock-transport regressions: **21 passed**, 24.221 seconds.
 `git diff --check` passed for this increment.
 
-Run the full integrated Python/Node suites and native PostgreSQL gate before
-release. PostgreSQL-specific cases have not been run locally. Apply existing
+Integrated source bf33fd6: cloud Node102 passed, no failures/skips (directly
+inspected); Ray reported native PostgreSQL606 passed, no failures/skips. Direct
+final cloud log/exit and cleanup inspection remain pending after controller
+timeouts. PostgreSQL-specific cases were not run locally. Apply existing
 config-preserving build/deploy gates; no activation of live customer texting is
 included. Rollback is code-only and retains existing outbox/audit records.
 

@@ -39,8 +39,11 @@ No real messages, provider credentials or new runtime permissions are involved.
 Six focused Node tests PASS: provider parsing, unsafe URL rejection, lazy load,
 close/session/view cleanup, native stop behavior, all-link preservation and
 bounded admin replacement/removal. New Python cases cover versioned removal,
-credential-bearing links, policy and static route; full integrated cloud suites
-and browser rendering are pending at this checkpoint. No DDL/dependency change.
+credential-bearing links, policy and static route. Exact-source cloud Node suite:
+102 passed, no failures/skips, directly inspected. Ray reported the PostgreSQL
+gate:606 passed, no failures/skips. Direct final log/exit and disposable database
+cleanup inspection remain pending; browser control repeatedly times out.
+Browser rendering and real media acceptance remain pending. No DDL/dependency change.
 This source is not yet deployed. Live remains hub-5a3ac86 until a tested release.
 
 Real permitted-media playback on Android and desktop remains acceptance work;
