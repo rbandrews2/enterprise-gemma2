@@ -1,15 +1,21 @@
 # Next checkpoint: real scanner acceptance and activation
 
-Prepared only; no engine installed or paid resources provisioned by this review.
+Prepared only; no production engine activated or paid resources provisioned.
+Disposable Cloud Shell acceptance now passed; see the latest SESSION_HANDOFF.md.
 
 ## Why activation is separate
 
 The application now enforces file holds and records incidents, but it cannot
 identify malware without a configured, validated engine. The current adapter
-supports an operator-installed local ClamAV CLI, not a remote scanner service.
+supports an operator-installed local ClamAV CLI or private Unix-socket daemon,
+not an authenticated remote scanner service.
 ClamAV recommends 3–4 GiB RAM with standard signatures. Do not add it blindly to
 the small web container or the user's laptop. Verify measured peak memory and
-cold-start/scan durations before selecting a deployment profile.
+cold-start/scan durations before selecting a deployment profile. The accepted
+ClamAV1.5.4/28154 test measured child peak RSS995716KiB (~973MiB). This is one
+synthetic run, not production capacity evidence or a reason to ignore headroom.
+Oversized ZIP content was initially reported clean by the engine; the independent
+adapter completeness guard now holds it. Other container formats still need review.
 
 ## Recommended next work
 

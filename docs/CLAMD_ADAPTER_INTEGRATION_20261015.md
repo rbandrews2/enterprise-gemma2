@@ -51,6 +51,21 @@ without sizing. No public raw clamd TCP endpoint is supported.
 
 ## Validation and operation
 
+### Archive completeness guard
+
+Real ClamAV 1.5.4/28154 returned clean for a ZIP containing an 11MiB member
+despite the configured 10MiB file limit and AlertExceedsMax. Both adapters now
+apply an independent ZIP completeness guard before contacting the engine.
+This returns an error/hold, not a malware diagnosis: no clean release is allowed.
+The guard bounds central-directory parsing before allocation, checks member CRCs
+in memory without filesystem extraction, and enforces 1000 entries, 10MiB per
+member, 50MiB total expansion and a five-second checking deadline. Malformed,
+encrypted, nested and unsupported-compression ZIPs remain held for review.
+Ordinary stored/deflated ZIPs still require a fresh engine clean verdict.
+This is not proof of complete inspection for every archive/document format;
+other container formats, real encrypted/macro fixtures and production isolation
+remain separate acceptance work. No heuristic or engine guarantee is universal.
+
 - `tests/test_clamd_scanner.py`: protocol framing, fragmented replies, strict
   verdicts, stale/future signatures, missing engine, bounded work and Linux policy.
 - `tests/test_security.py`: daemon verdict persists the existing incident/hold;

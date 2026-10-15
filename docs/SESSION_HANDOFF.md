@@ -1,3 +1,37 @@
+## Scanner engine and full regression accepted - October 15, 2026
+
+Owned codex/preproduction-modules runtime source7521b265253ca4252cdac7a71374661522378348,
+pushed; NOT DEPLOYED. Fresh Cloud Shell project enterprise-gemma2 verified,
+config cloudshell-26890. No production, IAM, credentials, customer messages or
+paid resources changed. Reused official distro binaries without package installs.
+
+Repaired CVD certificate paths for Freshclam, its database-test subprocess and
+clamd while preserving vendor code-signature verification. Real-engine acceptance
+then exposed clean on an over-limit ZIP member. Both CLI and daemon now enforce
+an independent bounded ZIP completeness gate; incomplete/unsupported/encrypted/
+nested archives stay error-held rather than being diagnosed as infected.
+See CLAMD_ADAPTER_INTEGRATION_20261015.md for precise limits and remaining formats.
+
+Cloud engine acceptance at exact7521b26 PASS, engine.exit0:
+ClamAV1.5.4/28154, benign clean, harmless detection fixture infected,
+expanded-file-limit error-held, missing engine error-held, daemon_stopped true.
+Child peak RSS995716KiB (~973MiB); not a production sizing guarantee.
+Evidence /home/admin_/wzos-security-20261015.Jzsfaok3/clamav-engine-archivefix/;
+engine-archivefix-source.txt records candidate. Prior failed runs retained there.
+Local focused14 PASS. Previous source3b7507e full665/108 PASS remains historical.
+Final exact7521b26 Python/PostgreSQL671 PASS (288.582s), Node108 PASS
+(2.350s), failures0/errors0/skipped0; gate.exit0 directly inspected.
+Evidence /home/admin_/wzos-security-20261015.wh8UI1RX; launcher
+/home/admin_/wzos-scanner-final-regression.log. source.txt confirms candidate.
+No /tmp/wzos-pg-gate.* or /tmp/wzos-clam* directories remain; no clamd/freshclam
+process remains. Latest-path pointer references final regression, not engine evidence.
+
+Next: production scanner activation review, not another regression rerun.
+Before activation: review isolated deployment, signature updater/health/restart
+supervision, memory/cost, existing-file inventory/backfill and rollback holds.
+Other container formats and real encrypted/macro fixture acceptance remain open.
+No endpoint-device protection, infrastructure feed or SOC2 certification claim.
+
 ## Claude scanner approach integrated - October 15, 2026
 
 Runtime source3b7507efbd69ed01608e3e248770f27d2fc00ae3 pushed on the owned
