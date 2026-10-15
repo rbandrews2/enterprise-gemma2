@@ -9,6 +9,9 @@ FROM us-central1-docker.pkg.dev/enterprise-gemma2/enterprise-gemma2/wzos-v2-acco
 USER root
 RUN apt-get update && apt-get -y upgrade && rm -rf /var/lib/apt/lists/* \
     && dpkg --compare-versions "$(dpkg-query -W -f='${Version}' libpcre2-8-0)" ge '10.46-1~deb13u3'
+# This immutable runtime does not bootstrap pip or create pip-equipped venvs.
+# Remove Python's obsolete bundled pip wheel; active pip remains the audited26.2.1.
+RUN python -c 'import ensurepip, pathlib, shutil, importlib.metadata; assert importlib.metadata.version("pip")=="26.2.1"; shutil.rmtree(pathlib.Path(ensurepip.__file__).parent)'
 USER wzos
 RUN python /app/scripts/package_source_library.py --verify /app/.local-data/knowledge
 DOCKER
