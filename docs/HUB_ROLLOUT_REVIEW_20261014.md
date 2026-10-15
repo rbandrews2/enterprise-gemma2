@@ -1,5 +1,28 @@
 # Hub rollout review — prepared, not executed
 
+## October 14 rollout authorization and preflight
+
+Ray replied "all approved let's go" to the remaining scan/schema/backup/budget
+and public API activation review. This authorizes the bounded on-demand image
+scan and this documented rollout, including admin-issued scoped read-only keys.
+No real key issuance, customer export, SMS, media call or model call is needed.
+Google On-Demand Scanning was enabled for one explicit image scan; automatic
+registry scanning was not enabled. Record actual findings before deployment.
+
+Fresh read-only live schema comparison: no incompatible existing columns.
+Six hub tables are absent as expected. Static extraction also reports two
+inactive purchase tables; app.py does not import/mount Purchases, so they are
+not part of this migration. Fresh SQL backup1792027808755 is SUCCESSFUL.
+Billing report requires Google account verification; current spending is not
+independently verified yet. Existing budget notification remains USD50; it is
+an alert threshold, not a spend cap. User-authorized development limit remains
+USD150 for October8–17. Do not silently relabel the notification as that limit.
+
+Release-only helpers: deploy_organization_hub.sh preserves full runtime spec
+except image and verifies the zero-traffic candidate. cutover_organization_hub.sh
+checks exact static hashes, access/origin/Google auth boundaries and restores
+the prior Daily revision if a public gate fails. Runtime image/source unchanged.
+
 ## Application change
 
 Release source5a3ac868085685a5e71169ceac21fa618cc405e9 adds the organization admin
