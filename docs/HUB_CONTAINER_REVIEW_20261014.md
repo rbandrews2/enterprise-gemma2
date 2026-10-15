@@ -17,7 +17,13 @@ creation of pip-equipped virtual environments is intentionally unsupported;
 application operation does not require it. No application code or database
 contract changed. In-image synthetic acceptance, active package version checks,
 pip check, non-root UID10001 and139 frozen-file hashes PASS after the OS update.
-Final image rescan must be recorded before release; do not call this zero-CVE.
+Final Google rescan completed successfully:67 occurrences (five HIGH, one MEDIUM,
+36 LOW,25 MINIMAL), no CRITICAL and no finding with an available fix. Seven
+fixable occurrences were removed. All five remaining high findings match the
+review below. This is not zero-CVE. Private evidence: Cloud Shell
+$HOME/wzos-hub-rollout-20261014/os-scan.json and os-vulnerabilities.json.
+The57 active Python packages exactly match the previous clean pip-audit inventory;
+this comparison is not a second independent Python audit.
 
 ## Residual high findings: no Debian13 stable fixes currently available
 
