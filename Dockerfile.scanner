@@ -18,6 +18,9 @@ RUN python -m pip install --no-cache-dir --only-binary=:all: -r requirements-sca
 COPY services/__init__.py ./services/__init__.py
 COPY services/workspace_preview/__init__.py ./services/workspace_preview/__init__.py
 COPY services/workspace_preview/archive_policy.py services/workspace_preview/clamd_scanner.py services/workspace_preview/security.py services/workspace_preview/scanner_transport.py services/workspace_preview/scanner_service.py services/workspace_preview/scanner_runtime.py ./services/workspace_preview/
+# Restricted source archives may carry mode600. Code is public/non-secret;
+# runtime may read/traverse it, but only root may modify it.
+RUN chmod -R a+rX /app/services
 USER 10001:10001
 RUN python -m services.workspace_preview.scanner_runtime --seed-only /opt/wzos-signatures
 ENV WZOS_CLAM_SEED=/opt/wzos-signatures
