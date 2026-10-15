@@ -29,8 +29,11 @@ adapter completeness guard now holds it. Other container formats still need revi
    Preserve the original private bytes/hash; closing a case never requires release.
 3. Prefer an isolated, private, scale-to-zero scanner for production isolation;
    that requires a reviewed transport adapter, authenticated result contract,
-   signature-update mechanism and narrowly scoped invocation identity. These do
-   not exist yet. The scanner should not inherit database/secret access merely
+   signature-update mechanism and narrowly scoped invocation identity. The private
+   transport and identity-bound result contract are now prepared in source; see
+   PRIVATE_SCANNER_TRANSPORT_20261015.md. They are disabled, not live IAM acceptance.
+   Signature supervision and isolated image/deployment still need implementation
+   and acceptance. The scanner should not inherit database/secret access merely
    because it analyzes an upload. Never send documents to a public scan service.
 4. After those tests and deployment review, enable mandatory scanning and backfill
    the existing-file inventory. Publish scanner-coverage status, alert delivery

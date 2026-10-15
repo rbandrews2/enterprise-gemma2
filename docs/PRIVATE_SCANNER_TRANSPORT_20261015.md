@@ -30,6 +30,60 @@ Partial/invalid remote configuration never falls back to a local engine.
 Health endpoint is liveness only; each scan still verifies engine/signature freshness.
 No schema changes. All existing tenant/admin/member/release checks remain in WZOS.
 
+Entrypoint for the future isolated image (not the workspace account app):
+`uvicorn services.workspace_preview.scanner_service:create_app --factory --host 0.0.0.0 --port 8080`.
+This factory does not launch/download the engine or definitions: starting it alone
+is not a complete scanner deployment. Reuse the repository's pinned dependencies;
+Google identity helpers import only when used. Do not include account credentials,
+the workspace data directory, source-document originals or recovery artifacts in
+the scanner image/build context. Access logs must never include authorization
+headers or request/response bodies.
+
+Focused command: `python -m unittest tests.test_scanner_transport -v`.
+These tests use synthetic Google claims and HTTP transports; they establish
+contract behavior, not live certificate/metadata/IAM verification. The inherited
+security integration test runs against SQLite and the full PostgreSQL gate.
+
+### Bounds and failure semantics
+
+The caller permits one active scan per web process. Identity HTTP operations use
+five-second timeouts; scanner HTTP connect timeout is five seconds and other I/O
+timeouts are thirty seconds. A verdict arriving after the 35-second acceptance
+window is discarded. That window is not hard cancellation of an in-progress
+blocking socket operation: an I/O timeout may finish later. There are no automatic
+retries. The receiving service admits one request at a time, bounds upload reading
+to five seconds and delegates engine work to the existing bounded adapter.
+Cloud deployment must additionally cap instance count/concurrency and request
+timeout; per-process admission is not a distributed rate limit.
+
+An engine error retains the existing pending/hold behavior and durable admin
+incident. Explicit admin quarantine survives a later clean rescan and requires a
+separate reviewed release. This increment does not change the existing distinction
+between pending scans and explicit quarantine, nor implicitly approve old files.
+
+### Image and signature-supervisor acceptance specification (not implemented)
+
+- Use an immutable reviewed image, non-root foreground processes and a private
+  mode700 working directory/socket. Keep the raw engine off TCP. Start HTTP only
+  after the engine has loaded verified, current official signatures.
+- Provide a verified signature seed and a bounded refresh step. Do not disable
+  CVD certificate verification or persist unsigned definitions. Any network,
+  certificate, database-test or signature-age failure must prevent readiness.
+- Do not depend on idle background CPU for updates in a request-billed service.
+  Select and test an explicit refresh/restart strategy before enabling traffic.
+  Reject stale signatures on every scan even if an updater misses its deadline.
+- Bound startup to the platform startup allowance, and size peak RSS for loading,
+  refresh and scanning together. The prior ~973MiB sample did not measure all
+  update/reload peaks; the web container's 512MiB configuration is unsuitable.
+- Supervise engine exit and updater failure, stop the owned process on SIGTERM,
+  and leave no orphan listener, original upload or file-derived temporary path.
+  Engine failure must not trigger a clean/optional-scanner fallback.
+- Test stale seed, broken certificates, network failure, interrupted refresh,
+  engine crash, concurrent scans, shutdown, restart and max memory before rollout.
+- Retain last accepted security-capable image/config for rollback. Keep holds and
+  incident data intact, keep scanning mandatory where activated, and return scan
+  errors if the prior scanner is unavailable. Never silently disable the gate.
+
 ## Activation still required
 
 1. Accept contract and caller/service account isolation tests, including real

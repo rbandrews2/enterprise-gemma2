@@ -1,3 +1,36 @@
+## Private scanner connection regression accepted - October 15, 2026
+
+Owned codex/preproduction-modules source2b47a750cbe4e01fd01ef9fbe19ae6776b638fa0
+pushed; NOT DEPLOYED. Separate private scanner HTTP service/client prepared, with
+Google audience/caller verification, pinned HTTPS run.app destination, raw bytes,
+request UUID/hash/size-bound replies, bounded input/output, single-flight admission,
+no redirects/retries, no token/error detail leakage, and existing quarantine/release
+contracts. Disabled unless WZOS_SCANNER_URL is explicitly set. No DDL or UI changes.
+No database/bucket credentials are supplied to the scanner wrapper. Actual separate
+service account/IAM isolation is a deployment gate, not established by source code.
+
+Focused local transport10 PASS; transport + SQLite quarantine11 PASS. Initial
+fixture incorrectly expected explicit-quarantine behavior for an implicit pending
+scan; corrected test to apply reviewed quarantine first, preserving existing policy.
+Windows temporary-storage sandbox restriction required the synthetic SQLite test
+outside the sandbox. No protections disabled or production settings changed.
+Fresh Cloud Shell config cloudshell-1052/project enterprise-gemma2 verified;
+pg_config and Node available, ~5GiB memory available. No cloud resource mutations.
+Full exact2b47a75 gate PASS: Node108 (3.647s), Python/PostgreSQL683
+(307.212s), failures0/errors0/skipped0, gate.exit0 directly inspected.
+No /tmp/wzos-pg-gate.* directories remain after helper cleanup.
+Evidence /home/admin_/wzos-security-20261015.5LohuDMf, source.txt/node.log/
+postgres.log/gate.exit; launcher $HOME/wzos-private-scanner-regression.log.
+Run finished; latest-path pointer references this gate. No reason to rerun
+until source changes or a concrete new concern requires it.
+
+Next: implement/accept the isolated image and signature/process supervisor described in
+PRIVATE_SCANNER_TRANSPORT_20261015.md. Live Google identity, bounded boot/refresh,
+stale signature behavior, engine crash/shutdown, memory/cost and rollback acceptance
+remain open. New service/invoker IAM requires explicit activation approval after
+concrete image/resource review. No public service, production deploy, paid resource,
+secret grant, customer file transfer or messaging occurred in this increment.
+
 ## Scanner engine and full regression accepted - October 15, 2026
 
 Owned codex/preproduction-modules runtime source7521b265253ca4252cdac7a71374661522378348,
