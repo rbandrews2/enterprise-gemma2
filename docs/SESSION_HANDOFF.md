@@ -1,3 +1,46 @@
+## Application image ready for review - October15, 2026
+
+Application source4380849471d813c3d093efdb0ad7949b2e62058c passed694 PostgreSQL
+ tests in256.275s: failures0/errors0/skipped0; postgres.exit0. Existing108 Node
+passes remain applicable: subsequent changes are packaging/docs only.
+Fresh Cloud SQL backup1792105746846 on wzos-v2-staging-db is SUCCESSFUL,
+ended2026-10-15T23:10:17.968Z. No schema writes or public deployment performed.
+
+Build3737a11b-ccb0-4415-b506-1851fa8c6e7b SUCCESS, us-central1:
+`us-central1-docker.pkg.dev/enterprise-gemma2/enterprise-gemma2/wzos-v2-accounts@sha256:73e47d4d7318aac95b3d0f6eb65687e512bbadbee63777719b322b2ae435622d`
+Reused completed GCS archive1792105532.316336-0c4a493bf6c8412a839b0176cbd494ae.tgz;
+no duplicate149MiB upload. First buildf658e24c failed because snapshot verifier
+was root-owned mode600. Config543ddc8 repairs only COPY ownership for that helper;
+final image source-library verification succeeded. Optional source-image reuse
+path is committed but not cloud-tested or used by this build.
+Cloud evidence: $HOME/wzos-security-app-release-latest.txt points to
+/home/admin_/wzos-security-app-release.P6EZHXKM (postgres.log/exit,
+repaired-build.json, backup-operation.json). Cloud Shell identity/project verified
+admin@workzoneos.org / enterprise-gemma2. Billing October1-15 net23.51USD;
+October forecast49.07USD is an estimate, not a cap.
+
+### Proposed application-image review permission window
+
+Approval pending: bind existing four-permission wzosImageReview role to existing
+Cloud Build identity910004733138-compute@developer.gserviceaccount.com for at most
+one hour, using scripts/review_scanner_with_temporary_access.sh with
+WZOS_IMAGE_REVIEW_IMAGE set to the exact application digest above. Previous
+scanner-review grants were removed; those approvals do not authorize this window.
+Permissions: ondemandscanning.scans.analyzePackages, listVulnerabilities,
+ondemandscanning.operations.get and wait. No database/storage/secret/app-user
+permissions. Project-level scope also applies to other workloads using that
+identity during the window. Expected scan0.26USD plus at most0.09USD build compute
+before allowances/storage. Remove exact conditional binding immediately after
+review (including failure); expiry is a backstop. Independently verify removal.
+No public cutover is included in this permission request.
+
+Next: obtain action-time approval, scan exact application image and review findings;
+then validate app-runtime metadata-token authentication and complete synthetic
+upload/hold/admin-alert/rescan/release with tenant/member boundaries. Startup DDL
+is additive but deployment applies it. Preserve security holds/audits on rollback;
+old public hub is unsafe as rollback after held files exist. Atlas31B inference,
+Daily two-device media acceptance and production purchase flow remain unfinished.
+
 ## Billing verified; release preparation resumed - October15
 
 Google Billing Projects - this month report directly read for enterprise-gemma2:
