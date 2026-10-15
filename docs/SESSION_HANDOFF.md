@@ -1,3 +1,31 @@
+## Claude scanner approach integrated - October 15, 2026
+
+Runtime source3b7507efbd69ed01608e3e248770f27d2fc00ae3 pushed on the owned
+codex/preproduction-modules checkout; NOT DEPLOYED. User approved adapting Claude's
+scanner. Added bounded private Unix-socket INSTREAM transport, strict framing and
+engine identity/freshness, reviewed daemon policy and existing Atlas incident/hold
+integration. No new API/schema/Python dependency or account/storage authority.
+Malformed daemon configuration never falls back to the CLI. See
+CLAMD_ADAPTER_INTEGRATION_20261015.md for configuration, attribution and boundaries.
+
+Focused local13 tests PASS (6.197s); prior9 transport checks PASS. Linux-only policy
+tests are intentionally run in Cloud Shell, not counted as passed locally.
+Full exact3b7507e cloud gate submitted and confirmed; Node108 PASS, Python/PostgreSQL
+still running at checkpoint. Read $HOME/wzos-security-latest-path.txt and source.txt,
+node.log, postgres.log, gate.exit; launcher wzos-clamd-regression-20261015.log.
+Cloud Shell refreshed/re-authorized, config cloudshell-17994/project enterprise-gemma2,
+~7.1GiB available memory. Active gcloud account query returned no active account;
+no Google resource APIs, provisioning, IAM or production changes attempted.
+
+Real-engine helper scripts/check_clamav_engine.py stops its owned foreground daemon
+on failure/interrupt; only benign/standard harmless detection/expanded-limit test
+bytes. scripts/test_clamav_native.sh prepares official distro binaries by extracting
+downloaded packages, NOT installing services or executing package hooks. Requires
+memory/disk headroom, existing test venv, fresh official signatures; evidence/exit
+files are explicit. No engine acceptance or production scanning claim yet.
+Next: finish full gate/cleanup, run bounded real-engine acceptance, record measured
+memory and results, then assess deployment isolation and signature supervision.
+
 ## Downloaded security kit review - October 15, 2026
 
 Reviewed security-kit.zip from Downloads, SHA256 da19cb8a022bdc4807922c22df52658876aef3481d3177680ebae1e24b8b0bd5.

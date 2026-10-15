@@ -5,8 +5,11 @@ set -euo pipefail
 umask 077
 evidence=${1:?Pass a private evidence directory}
 test "$(uname -s)" = Linux || { echo 'ENGINE_GATE_BLOCKED: Linux required'; exit 2; }
+export PATH="/usr/sbin:/sbin:$PATH"
 available=$(awk '/MemAvailable:/ {print $2}' /proc/meminfo)
 test "$available" -ge 4200000 || { echo 'ENGINE_GATE_BLOCKED: less than 4GiB available'; exit 2; }
+home_available=$(df --output=avail -k "$HOME" | tail -n 1 | tr -d ' ')
+test "$home_available" -ge 1000000 || { echo 'ENGINE_GATE_BLOCKED: insufficient signature-cache disk'; exit 2; }
 test -x .venv-accounts-test/bin/python || { echo 'ENGINE_GATE_BLOCKED: run regression gate first'; exit 2; }
 mkdir -p "$evidence"
 evidence=$(realpath "$evidence")

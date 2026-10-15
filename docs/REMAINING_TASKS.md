@@ -1,3 +1,12 @@
+## Streamed scanner integration - October 15, 2026
+
+Claude's INSTREAM approach now integrates with Google-backed Atlas Security at
+runtime3b7507e, not deployed. Private Unix socket only; no Supabase/Render runtime,
+new API/schema or credential. Focused13 PASS; cloud Node108 PASS; full PostgreSQL
+result pending. Read current gate before rerunning. Acceptance helpers prepared;
+next real ClamAV/fresh-signature/limit/memory/cleanup checks, then deployment review.
+See CLAMD_ADAPTER_INTEGRATION_20261015.md and current SESSION_HANDOFF.md.
+
 ## Downloaded security kit review - October 15, 2026
 
 Reviewed security-kit.zip from Downloads, SHA256 da19cb8a022bdc4807922c22df52658876aef3481d3177680ebae1e24b8b0bd5.
