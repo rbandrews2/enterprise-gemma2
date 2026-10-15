@@ -28,8 +28,15 @@ git archive HEAD Dockerfile.scanner requirements-scanner.txt services/__init__.p
   services/workspace_preview/clamd_scanner.py services/workspace_preview/security.py \
   services/workspace_preview/scanner_transport.py services/workspace_preview/scanner_service.py \
   services/workspace_preview/scanner_runtime.py | tar -x -C "$context"
-timeout 900 docker build --platform linux/amd64 --build-arg "PYTHON_IMAGE=$base" \
-  --iidfile "$evidence/image.id" -f "$context/Dockerfile.scanner" "$context" > "$evidence/build.log" 2>&1
+if [[ -n ${WZOS_SCANNER_TEST_IMAGE:-} ]]; then
+  [[ $WZOS_SCANNER_TEST_IMAGE =~ ^us-central1-docker.pkg.dev/enterprise-gemma2/enterprise-gemma2/wzos-v2-scanner@sha256:[0-9a-f]{64}$ ]] || exit 2
+  printf '%s\n' "$WZOS_SCANNER_TEST_IMAGE" > "$evidence/prebuilt-image.txt"
+  timeout 300 docker pull --platform linux/amd64 "$WZOS_SCANNER_TEST_IMAGE" > "$evidence/build.log" 2>&1
+  docker image inspect --format '{{.Id}}' "$WZOS_SCANNER_TEST_IMAGE" > "$evidence/image.id"
+else
+  timeout 900 docker build --platform linux/amd64 --build-arg "PYTHON_IMAGE=$base" \
+    --iidfile "$evidence/image.id" -f "$context/Dockerfile.scanner" "$context" > "$evidence/build.log" 2>&1
+fi
 image=$(cat "$evidence/image.id")
 launch() {
   container=$(docker run -d --memory=4g --cpus=1 --pids-limit=96 --read-only \
