@@ -1,3 +1,35 @@
+## Scanner repaired and cloud-tested; Atlas weights verified - October15
+
+Patched isolated scanner built from official pinned Ubuntu26.04, supported
+security updates, ClamAV>=1.5.4, mandatory vendor certificates and removed pip.
+Build40db26b2-9f1b-4f98-8742-348accc66b22 SUCCESS; immutable digest
+6190d698438aff6ab92ea9e8de8acce9f9149cd1e94c7e374ab5e0a95903da16.
+Container gate33a26700-bbaa-4460-adea-8db133da5e23 SUCCESS. ClamAV1.5.4/28154,
+Python3.14.4, nonroot10001, no pip, clean/EICAR/ZIP limit/identity/expiry/
+recycle/shutdown/network/certificate tests PASS. Both starts24s, steady1.116GiB.
+
+Vulnerability reviewfd9f372c-a40b-43ea-86ac-7330efba06e9 SUCCESS, exit0:
+HIGH0/CRITICAL0/MEDIUM92/LOW3/MINIMAL1; available fixes0. Old18HIGH and six
+pip fixes resolved. Remaining medium/low applicability review still OPEN;
+zero HIGH does not mean malware-proof or production accepted. The newly approved
+scan-only IAM window was removed and independently verified absent ([]).
+
+Atlas read-only inventory: all10 retained objects/62,578,670,545 bytes match
+Google source CRC32C and size. Generations preserved in cloud evidence. No
+weight redownload/GPU wakeup. Existing dedicated identity/subnet present,PGAtrue.
+Live model service still absent. HF_TOKEN valid for31B; no runtime access granted.
+Five focused local verifier/HF tests PASS using bundled Python. No app source
+changes; accepted application regression689/108 unchanged, not rerun for packaging.
+
+Detailed evidence:docs/SCANNER_PATCH_ACCEPTANCE_20261015.md;
+Cloud Shell pointer:~/wzos-scanner-patched-latest.txt (gate/review logs,findings,
+atlas-artifacts.json). Next: lower-severity disposition and narrowly scoped private
+scanner pilot approval (dedicated identity with no project data roles, app-only
+service invoker, min0/max1,synthetic files). Then app identity/upload holds,
+schema/backup/current-cost gates and security-capable app cutover. Atlas next:
+reuse verified weights for bounded private live inference under cleanup guard.
+LandingB integration remains separate. Production unchanged throughout repair.
+
 ## HF_TOKEN verified; scanner vulnerability gate blocked - October 15, 2026
 
 Canonical secret HF_TOKEN version1 enabled. Live operator check: identity200,
