@@ -56,6 +56,7 @@ python -m venv /tmp/audit-tool
 /tmp/audit-tool/bin/python -m pip -q install --upgrade pip==26.2.1
 /tmp/audit-tool/bin/pip -q install pip-audit
 /tmp/audit-tool/bin/pip-audit --path "$site_dir" --format json --output /evidence/image-audit.json
+python -c 'import json; a=json.load(open("/evidence/image-audit.json")); assert a["dependencies"]; assert not any(d.get("vulns") or d.get("skip_reason") for d in a["dependencies"]); print("IMAGE_AUDITED_PACKAGES",len(a["dependencies"]))'
 '''
 audit = audit.replace('$', '$$')  # Cloud Build must pass shell dollars literally.
 steps=[
