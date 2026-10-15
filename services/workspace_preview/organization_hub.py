@@ -132,12 +132,18 @@ def register(app, connect, actor, *, accounts=False, roster=None):
                            'checked_at': check['checked_at'] if valid else None,
                            'source': check['source'] if valid else None})
         status = 'red' if any(c['status'] == 'problem' for c in checks) else 'green' if all(c['status'] == 'ok' for c in checks) else 'amber'
+        security = getattr(app.state, 'security', None)
+        security_summary = security.summary(user) if security else None
+        if security_summary and security_summary['open_incidents']:
+            status = 'red'
+            checks = [c for c in checks if c['kind'] != 'security'] + [{'kind': 'security', 'label': 'Security signals', 'status': 'problem', 'explanation': str(security_summary['open_incidents']) + ' unresolved security incident(s). Open Atlas Security for evidence and next steps.', 'source': 'WZOS application security incidents', 'checked_at': stamp()}]
         people = roster(user) if roster else {}
         return {'organization': user['organization'], 'edition': user['edition'], 'status': status,
                 'checks': checks, 'preferences_version': pref['version'] if pref else 0,
                 'modules': [{'id': key, 'label': 'Messaging' if key == 'messages' and user['edition'] == 'core' else label, 'icon': icon, 'nav_id': nav, 'visible': key not in hidden}
                             for key, label, icon, nav, enterprise in MODULES if not enterprise or user['edition'] == 'enterprise'],
-                'notes': [{**dict(r), 'author_name': people.get(r['author_id'], {}).get('name', 'Organization admin')} for r in notes], 'notes_limit': 50}
+                'notes': [{**dict(r), 'author_name': people.get(r['author_id'], {}).get('name', 'Organization admin')} for r in notes], 'notes_limit': 50,
+                'security': security_summary}
 
     @app.put('/api/admin/dashboard/preferences')
     def preferences(body: Preferences, request: Request):

@@ -186,6 +186,14 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
             return JSONResponse({"error": "same_origin_only"}, status_code=403)
         request.state.maps_nonce = secrets.token_urlsafe(24) if os.getenv("WZOS_GOOGLE_MAPS_BROWSER_KEY", "").strip() else None
         response = await call_next(request)
+        known_actor = getattr(request.state, 'workspace_actor', None)
+        security = getattr(app.state, 'security', None)
+        if security and known_actor and response.status_code in (403, 429):
+            from starlette.concurrency import run_in_threadpool
+            try:
+                await run_in_threadpool(security.record_denial, known_actor, response.status_code)
+            except Exception:
+                logging.getLogger(__name__).warning('Application security observation could not be persisted')
         response.headers["Cache-Control"] = "no-store"
         response.headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self' data:; frame-ancestors 'none'; base-uri 'none'; form-action 'self'"
         if request.state.maps_nonce and request.url.path == "/":
@@ -231,14 +239,16 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
 
     def actor(request):
         if accounts:
-            return accounts.actor(request)
-        if private_staging:
+            selected = accounts.actor(request)
+        elif private_staging:
             # Cloud Run IAM is the outer access boundary. One shared synthetic reviewer,
             # never a customer identity; client-supplied role headers are ignored.
-            return ACTORS["enterprise-admin"]
-        selected = ACTORS.get(request.headers.get("X-Preview-Actor"))
+            selected = ACTORS["enterprise-admin"]
+        else:
+            selected = ACTORS.get(request.headers.get("X-Preview-Actor"))
         if not selected:
             raise HTTPException(401, "Select a valid synthetic preview identity")
+        request.state.workspace_actor = selected
         return selected
 
     def serialize(row):
@@ -380,6 +390,9 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
                    "module_help": module_context(payload.page, selected['role'])}
         from services.workspace_preview.atlas_context import operational_context
         context['operational_facts'] = operational_context(connect, selected, payload.page, payload.question, account_workspace)
+        if selected['role'] == 'admin' and re.search(r'security|malware|quarantin|suspicious|hack|threat', payload.question, re.I):
+            context['security_facts'] = app.state.security.summary(selected)
+            context['security_protocol'] = 'Open Organization dashboard > Atlas Security. Review alerts, acknowledge, contain with a recorded reason, investigate, verify recovery and resolve. Atlas cannot mutate access or claim an unconfigured scanner is active.'
         if payload.page == 'time_clock' or re.search(r'\b(clock(?:ed)?|shift|break|timesheet|payroll)\b', payload.question, re.I):
             context["time_clock"] = timeclock.summary(connect, selected)
         citations = []
@@ -580,6 +593,10 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
         return prepare_order(record, knowledge_store)
 
     roster = accounts.roster if accounts else lambda selected: ACTORS
+    from .security import Security
+    security = Security(app, connect, actor, accounts=accounts, file_store=file_store)
+    app.state.security = security
+    security.register()
     from . import organization_hub
     organization_hub.register(app, connect, actor, accounts=account_workspace, roster=roster)
     @app.get('/organization-hub.js')
@@ -608,7 +625,10 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
         dispatch.register(app, connect, actor, permitted_row, roster)
     if file_store is not None:
         from services.workspace_preview.files import register as register_files
-        register_files(app, connect, actor, permitted_row, file_store)
+        register_files(app, connect, actor, permitted_row, file_store, security=security)
+    @app.get('/security.js')
+    def security_script():
+        return FileResponse(STATIC / 'security.js', media_type='text/javascript')
     @app.get("/files.js")
     def files_script():
         return FileResponse(STATIC / "files.js", media_type="text/javascript")

@@ -8,6 +8,7 @@ from typing import Literal
 from uuid import UUID
 from fastapi import HTTPException, Query, Request
 from fastapi.responses import Response
+from starlette.concurrency import run_in_threadpool
 from services.workspace_preview.forms_hub import file_access as form_library_access, file_id_retired as form_library_retired
 
 MAX_BYTES = 10 * 1024 * 1024
@@ -104,7 +105,7 @@ class GoogleFiles:
             pass
 
 
-def register(app, connect, actor, permitted_order, store):
+def register(app, connect, actor, permitted_order, store, *, security=None):
     with connect() as db:
         db.execute('CREATE TABLE IF NOT EXISTS workspace_files (id TEXT PRIMARY KEY,organization_id TEXT NOT NULL,owner_id TEXT NOT NULL,entity_kind TEXT NOT NULL,entity_id TEXT NOT NULL,filename TEXT NOT NULL,content_type TEXT NOT NULL,size_bytes INTEGER NOT NULL,sha256 TEXT NOT NULL,object_key TEXT NOT NULL)')
 
@@ -126,8 +127,11 @@ def register(app, connect, actor, permitted_order, store):
         except HTTPException:
             return False
 
-    def metadata(row):
-        return {k:row[k] for k in ('id','entity_kind','entity_id','filename','content_type','size_bytes','sha256')}
+    def metadata(row, db):
+        result = {k:row[k] for k in ('id','entity_kind','entity_id','filename','content_type','size_bytes','sha256')}
+        if security:
+            result['security'] = security.file_status(db, row['organization_id'], row['id'])
+        return result
 
     @app.put('/api/files/{file_id}')
     async def upload(file_id: UUID, request: Request, entity_kind: Literal['order','form','form_library'], entity_id: str=Query(min_length=1,max_length=128), filename: str=Query(min_length=1,max_length=200)):
@@ -150,6 +154,9 @@ def register(app, connect, actor, permitted_order, store):
         key=hashlib.sha256(user['organization_id'].encode()).hexdigest()+'/'+str(file_id)
         values=(str(file_id),user['organization_id'],user['id'],entity_kind,entity_id,filename,content_type,len(data),sha,key)
         with connect() as db:
+            existing = db.execute('SELECT id FROM workspace_files WHERE id=?', (str(file_id),)).fetchone()
+        scan_result = await run_in_threadpool(security.scan, data) if security and not existing else None
+        with connect() as db:
             db.execute('BEGIN IMMEDIATE')
             parent(db,user,entity_kind,entity_id,write=True)
             # All entity kinds share organization/UUID object keys. Enforce retirement across
@@ -160,11 +167,14 @@ def register(app, connect, actor, permitted_order, store):
             if prior:
                 if tuple(prior[k] for k in ('id','organization_id','owner_id','entity_kind','entity_id','filename','content_type','size_bytes','sha256','object_key'))!=values:
                     raise HTTPException(409,'File identifier already used')
-                return metadata(prior)
+                return metadata(prior, db)
             try: store.put(key,data,content_type)
             except Exception: raise HTTPException(503,'File storage unavailable; retry with the same file identifier') from None
             db.execute('INSERT INTO workspace_files VALUES (?,?,?,?,?,?,?,?,?,?)',values)
-            return metadata(db.execute('SELECT * FROM workspace_files WHERE id=?',(str(file_id),)).fetchone())
+            saved = db.execute('SELECT * FROM workspace_files WHERE id=?',(str(file_id),)).fetchone()
+            if security:
+                security.record_scan(db, saved, scan_result)
+            return metadata(saved, db)
 
     @app.get('/api/files')
     def listing(request: Request, entity_kind: Literal['order','form','form_library'], entity_id: str, offset: int=Query(0,ge=0)):
@@ -174,7 +184,7 @@ def register(app, connect, actor, permitted_order, store):
             rows=db.execute('SELECT * FROM workspace_files WHERE organization_id=? AND entity_kind=? AND entity_id=? ORDER BY id LIMIT 50 OFFSET ?',(user['organization_id'],entity_kind,entity_id,offset)).fetchall()
             if entity_kind=='form_library':
                 rows=[r for r in rows if visible(db,user,entity_kind,entity_id,r['id'])]
-        return {'items':[metadata(r) for r in rows]}
+            return {'items':[metadata(r, db) for r in rows]}
 
     @app.get('/api/files/{file_id}')
     def download(file_id: UUID, request: Request):
@@ -183,9 +193,20 @@ def register(app, connect, actor, permitted_order, store):
             row=db.execute('SELECT * FROM workspace_files WHERE id=? AND organization_id=?',(str(file_id),user['organization_id'])).fetchone()
             if not row: raise HTTPException(404,'File not found')
             parent(db,user,row['entity_kind'],row['entity_id'],file_id=row['id'])
+            if security and not security.file_status(db, user['organization_id'], row['id'])['download_allowed']:
+                raise HTTPException(423, 'File held for security review. Contact your organization admin.')
         try:
             data=store.get(row['object_key'])
-            if hashlib.sha256(data).hexdigest()!=row['sha256']: raise ValueError('Integrity mismatch')
         except Exception: raise HTTPException(503,'File unavailable or integrity check failed') from None
-        # Files are downloads, never inline executable content. Scanning remains a launch gate.
+        if hashlib.sha256(data).hexdigest()!=row['sha256']:
+            if security:
+                security.integrity_failure(row)
+            raise HTTPException(503, 'File unavailable or integrity check failed')
+        # Recheck after reading storage so a hold imposed during the read takes effect.
+        user = actor(request)
+        with connect() as db:
+            parent(db,user,row['entity_kind'],row['entity_id'],file_id=row['id'])
+            if security and not security.file_status(db, user['organization_id'], row['id'])['download_allowed']:
+                raise HTTPException(423, 'File held for security review. Contact your organization admin.')
+        # Files are downloads, never inline executable content.
         return Response(data,media_type=row['content_type'],headers={'Content-Disposition':'attachment; filename="download"','X-Content-Type-Options':'nosniff'})

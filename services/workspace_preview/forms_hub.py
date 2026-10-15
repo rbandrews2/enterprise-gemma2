@@ -135,13 +135,15 @@ def file_access(db, user, item_id, file_id=None, write=False):
         raise HTTPException(404, "File not found")
 
 
-def queue_files(db, organization_id, item_id, keep=None):
+def queue_files(db, organization_id, item_id, keep=None, security=None):
     """Queue every stored file of a team form except `keep` for erasure. Call inside the caller's transaction."""
     rows = db.execute("SELECT id,object_key FROM workspace_files WHERE organization_id=? AND entity_kind='form_library' AND entity_id=?",
                       (organization_id, str(item_id))).fetchall()
     stamp = datetime.now(timezone.utc).isoformat()
     for row in rows:
         if row["id"] != keep:
+            if security and not security.file_status(db, organization_id, row['id'])['download_allowed']:
+                raise HTTPException(409, 'A file is held for security review. Resolve its incident before replacing or deleting it.')
             db.execute("INSERT INTO module_records VALUES (?,?,?,?,?,?,?) ON CONFLICT DO NOTHING",
                        (row["id"], CLEANUP_KIND, organization_id, "system", 1,
                         json.dumps({"entity_id": str(item_id), "object_key": row["object_key"]}, sort_keys=True), stamp))
@@ -219,6 +221,11 @@ def register(app, connect, actor, actors, file_store=None, catalog_path=None):
                                (organization_id, CLEANUP_KIND, limit)).fetchall()
         for entry in queue if file_store is not None else []:
             try:
+                security = getattr(app.state, 'security', None)
+                if security:
+                    with connect() as db:
+                        if not security.file_status(db, organization_id, entry['id'])['download_allowed']:
+                            continue
                 file_store.delete(json.loads(entry["payload"])["object_key"])  # idempotent: a missing object is fine
             except Exception:
                 continue  # stays queued; the file is already unreachable
@@ -305,6 +312,9 @@ def register(app, connect, actor, actors, file_store=None, catalog_path=None):
                 raise HTTPException(404, "Team form not found")
             if body.file_id and not current_file(db, selected, str(item_id), str(body.file_id)):
                 raise HTTPException(422, "Upload the file to this team form before attaching it")
+            security = getattr(app.state, 'security', None)
+            if body.file_id and security and not security.file_status(db, selected['organization_id'], str(body.file_id))['download_allowed']:
+                raise HTTPException(409, 'File is held for security review and cannot be published')
             version = row["version"] if row else 0
             if row and row["payload"] == serialized and body.expected_version == version - 1:
                 result = present(row, current_file(db, selected, row["id"], record["file_id"]), names(selected))  # identical retry
@@ -315,7 +325,7 @@ def register(app, connect, actor, actors, file_store=None, catalog_path=None):
             if row and (previous.get("file_id"), previous.get("link")) != (record["file_id"], record["link"]):
                 # Replaced or switched source: the earlier file and any unattached uploads are queued for erasure,
                 # becoming unreachable in this same commit. The new file is published either way.
-                queue_files(db, selected["organization_id"], item_id, keep=record["file_id"])
+                queue_files(db, selected["organization_id"], item_id, keep=record["file_id"], security=security)
                 queued = True
             stamp = datetime.now(timezone.utc).isoformat()
             if row:
@@ -349,7 +359,7 @@ def register(app, connect, actor, actors, file_store=None, catalog_path=None):
             if not payload.get("deleting"):
                 if body.expected_version != row["version"]:
                     raise HTTPException(409, "This team form changed. Reload before deleting it.")
-                queue_files(db, selected["organization_id"], item_id)
+                queue_files(db, selected["organization_id"], item_id, security=getattr(app.state, 'security', None))
                 db.execute("UPDATE module_records SET version=?,payload=?,updated_at=? WHERE organization_id=? AND kind='form_library' AND id=?",
                            (row["version"] + 1, json.dumps({**payload, "deleting": True}, sort_keys=True), datetime.now(timezone.utc).isoformat(),
                             selected["organization_id"], str(item_id)))

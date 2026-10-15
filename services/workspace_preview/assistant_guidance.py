@@ -17,6 +17,16 @@ class Guidance:
 
 def workspace_guidance(payload, context):
     question = ' '.join(payload.question.casefold().split())
+    if re.search(r'\b(security|malware|quarantine|quarantined|hackers?|cybersecurity)\b', question):
+        facts = context.get('security_facts')
+        if context['role'] != 'admin' or facts is None:
+            return Guidance('Report suspicious files or app activity to your organization admin. '
+                            'Only admins can review Atlas Security incidents and contain or restore access. '
+                            'Atlas has not changed any access or file.', 'security', None)
+        return Guidance(f"Atlas Security has {facts['open_incidents']} unresolved incident(s), including {facts['high_priority']} high-priority. "
+                        'Open Organization dashboard → Atlas Security to review notifications and record containment or recovery actions. '
+                        + ('Scan enforcement is enabled. ' if facts['file_scan_required'] else 'Scan enforcement is not enabled. ')
+                        + 'Device and network monitoring are not connected; no incidents is not an all-clear. Atlas has not changed access or files.', 'security', None)
     # Do not summarize a long project description with a generic help paragraph.
     if len(question) > 400:
         return None

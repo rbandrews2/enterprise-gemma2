@@ -27,6 +27,7 @@
    for(const [label,selector,icon] of [['Employees','.account-employees','♙'],['Team access','.account-team','♧'],['Passkeys','.account-passkeys','⚿']]){
     if(document.querySelector(selector)){const b=button('',()=>document.querySelector(selector)?.click());b.className='panel hub-card';b.append(node('span',icon,'hub-icon'),node('strong',label));grid.append(b);}
    }root.append(grid);
+   if(window.wzosSecurity){const security=button('Atlas Security',()=>window.wzosSecurity.open());security.className='panel hub-card';root.append(security);}
    const options=node('details',undefined,'panel');options.append(node('summary','Dashboard preferences'));const selections=[];
    for(const item of data.modules){const label=node('label'),check=node('input');check.type='checkbox';check.checked=item.visible;label.append(check,document.createTextNode(item.label));options.append(label);selections.push([item.id,check]);}
    options.append(node('small','Shared dashboard shortcuts only. Hiding a card does not change access permissions.'));

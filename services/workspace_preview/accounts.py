@@ -237,6 +237,9 @@ class Accounts:
                     raise HTTPException(403,'Only an active organization admin can change access')
                 target=db.execute('SELECT * FROM memberships WHERE organization_id=? AND user_id=?',(selected['organization_id'],user_id)).fetchone()
                 if not target: raise HTTPException(404,'Member not found')
+                security = getattr(app.state, 'security', None)
+                if body.active and security and security.suspended(db, selected['organization_id'], user_id):
+                    raise HTTPException(409, 'Restore this user through the Atlas Security incident review')
                 count=db.execute("SELECT COUNT(*) FROM memberships WHERE organization_id=? AND role='admin' AND active=1",(selected['organization_id'],)).fetchone()[0]
                 if target['role']=='admin' and target['active'] and count==1 and (body.role!='admin' or not body.active):
                     raise HTTPException(409,'Keep at least one active admin')
