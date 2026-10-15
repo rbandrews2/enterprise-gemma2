@@ -10,8 +10,10 @@ CLAMD_ADAPTER_INTEGRATION_20261015.md for configuration, attribution and boundar
 
 Focused local13 tests PASS (6.197s); prior9 transport checks PASS. Linux-only policy
 tests are intentionally run in Cloud Shell, not counted as passed locally.
-Full exact3b7507e cloud gate submitted and confirmed; Node108 PASS, Python/PostgreSQL
-still running at checkpoint. Read $HOME/wzos-security-latest-path.txt and source.txt,
+Full exact3b7507e cloud gate directly inspected: Node108 PASS (2.583s),
+Python/PostgreSQL665 PASS (298.465s), failures0/errors0/skipped0, gate.exit0.
+Disposable /tmp/wzos-pg-gate.* directory inventory empty after completion.
+Read $HOME/wzos-security-latest-path.txt and source.txt,
 node.log, postgres.log, gate.exit; launcher wzos-clamd-regression-20261015.log.
 Cloud Shell refreshed/re-authorized, config cloudshell-17994/project enterprise-gemma2,
 ~7.1GiB available memory. Active gcloud account query returned no active account;
@@ -23,8 +25,17 @@ bytes. scripts/test_clamav_native.sh prepares official distro binaries by extrac
 downloaded packages, NOT installing services or executing package hooks. Requires
 memory/disk headroom, existing test venv, fresh official signatures; evidence/exit
 files are explicit. No engine acceptance or production scanning claim yet.
-Next: finish full gate/cleanup, run bounded real-engine acceptance, record measured
-memory and results, then assess deployment isolation and signature supervision.
+Latest pushed helper/docs commit3e4342d5a6557f7c6766b964a0da1691ba7b5cc8;
+local Git comparison confirms application/tests unchanged from accepted3b7507e.
+Real-engine launch command was sent but browser control timed out before its
+submission/result could be verified; a second read attempt timed out as well.
+Do NOT launch a duplicate. Request to reconnect the Cloud Shell tab is pending.
+Inspect current run/engine-source.txt, engine-launch.log, clamav-engine/engine.exit,
+engine.log, freshclam.log, package-download.log and engine-results.json first.
+If submitted, outer timeout900s and nested operation deadlines bound the job.
+No paid resources or public service requested; distro binaries are extracted only.
+Next: verify engine status and owned-daemon/temp cleanup, record measured memory
+and results, then assess deployment isolation and signature supervision.
 
 ## Downloaded security kit review - October 15, 2026
 

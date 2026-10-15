@@ -2,9 +2,11 @@
 
 Claude's INSTREAM approach now integrates with Google-backed Atlas Security at
 runtime3b7507e, not deployed. Private Unix socket only; no Supabase/Render runtime,
-new API/schema or credential. Focused13 PASS; cloud Node108 PASS; full PostgreSQL
-result pending. Read current gate before rerunning. Acceptance helpers prepared;
-next real ClamAV/fresh-signature/limit/memory/cleanup checks, then deployment review.
+new API/schema or credential. Focused13 PASS; cloud Node108 and PostgreSQL665 PASS,
+zero failures/skips; database cleanup verified. Real-engine command status unknown
+after two browser-control timeouts: reconnect requested; read saved engine-launch
+and clamav-engine evidence before any retry. Helpers at3e4342d; runtime remains3b7507e.
+Next verify actual ClamAV/fresh-signature/limit/memory/cleanup, then deployment review.
 See CLAMD_ADAPTER_INTEGRATION_20261015.md and current SESSION_HANDOFF.md.
 
 ## Downloaded security kit review - October 15, 2026
