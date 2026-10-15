@@ -16,15 +16,15 @@
   try{const data=await api('/api/admin/security/summary');if(generation!==epoch||!isAdmin())return;
    banner.replaceChildren();banner.hidden=!data.open_incidents;
    if(data.open_incidents){const message=node('strong',`Atlas Security: ${data.open_incidents} unresolved incident${data.open_incidents===1?'':'s'}`);message.setAttribute('role','status');banner.append(message,button('Review alerts',open));}
-  }catch(e){if(generation===epoch&&isAdmin()){banner.hidden=false;banner.replaceChildren(node('span','Security status unavailable.'),button('Retry',refresh));}}
+  }catch(e){if(generation===epoch&&isAdmin()){banner.hidden=false;banner.replaceChildren(node('span','Atlas security status unavailable.'),button('Retry',refresh));}}
  }
  async function render(offset=0){
   const generation=++epoch;if(!isAdmin())return;
   dialog.replaceChildren(button('Close',()=>dialog.close()),node('h2','Atlas Security'));
-  const notice=node('p','Loading security incidents…');notice.setAttribute('role','status');dialog.append(notice);
+  const notice=node('p','Loading Atlas security incidents…');notice.setAttribute('role','status');dialog.append(notice);
   try{const data=await api('/api/admin/security?offset='+offset+'&state='+listState);if(generation!==epoch||!isAdmin())return;
    notice.textContent=data.open_incidents?`${data.open_incidents} incident(s) require review.`:'No unresolved application incidents recorded. This is not an all-clear security assessment.';
-   dialog.append(node('p',data.file_scan_required?'Unscanned files are held until a clean scan.':'Scan enforcement is not activated. Existing unscanned files are not protected by malware scanning.'),node('small',data.coverage));
+   dialog.append(node('p',data.file_scan_required?'Atlas holds unscanned files until a clean scan is completed.':'Atlas file scanning is not activated. Existing unscanned files have not been checked for malware.'),node('small','Atlas coverage: '+data.coverage));
    dialog.append(button(listState==='open'?'Include closed incidents':'Show unresolved incidents',()=>{listState=listState==='open'?'all':'open';render();}));
    const protocol=node('details');protocol.append(node('summary','Response protocol'),node('p','Notify admins → acknowledge → contain with a reason → investigate → verify recovery → resolve. Keep evidence. Atlas cannot suspend users or release files through conversation.'));dialog.append(protocol);
    for(const item of data.items){
@@ -34,7 +34,7 @@
     const form=node('form'),reason=node('textarea');reason.required=true;reason.minLength=8;reason.maxLength=500;reason.rows=2;reason.placeholder='Record your review and reason';reason.setAttribute('aria-label','Reason for security action');
     const select=node('select');select.setAttribute('aria-label','Security action');const choices=item.status==='resolved'?[['reopen','Reopen for reviewed recovery']]:[['acknowledge','Acknowledge'],['resolve','Resolve after recovery'],['resolve_contained','Close incident; keep containment']];
     if(item.status!=='resolved'){
-     if(item.target_type==='file')choices.push(['quarantine_file','Quarantine file'],['rescan_file','Rescan preserved file'],['release_file','Release after clean scan']);
+     if(item.target_type==='file')choices.push(['quarantine_file','Quarantine file'],['rescan_file','Ask Atlas to rescan file'],['release_file','Release after Atlas scan']);
      if(item.target_type==='user')choices.push(['suspend_user','Suspend organization access'],['restore_user','Restore reviewed access']);
      if(item.target_type==='credential')choices.push(['revoke_credential','Revoke integration credential']);
     }

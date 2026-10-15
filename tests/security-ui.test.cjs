@@ -24,7 +24,7 @@ test('untrusted incident titles and reasons remain text, with explicit review ac
  const s=setup('admin',()=>Promise.resolve(payload));s.window.wzosSecurity.open();await flush();assert.equal(s.all(s.body,'img').length,0);assert.equal(s.all(s.body,'script').length,0);assert.ok(s.all(s.body,'h3').some(n=>n.textContent===payload.items[0].title));assert.ok(s.all(s.body,'select').length>=1);assert.equal(s.all(s.body,'textarea')[0].minLength,8);
 });
 test('missing security observations show unavailable rather than an all-clear claim',async()=>{
- const s=setup('admin',()=>Promise.reject(Error('Unavailable')));s.events['wzos:session']();await flush();assert.equal(s.main.children[0].hidden,false);assert.equal(s.all(s.main,'span')[0].textContent,'Security status unavailable.');
+ const s=setup('admin',()=>Promise.reject(Error('Unavailable')));s.events['wzos:session']();await flush();assert.equal(s.main.children[0].hidden,false);assert.equal(s.all(s.main,'span')[0].textContent,'Atlas security status unavailable.');
 });
 test('containment cannot submit before the admin explicitly confirms scope',async()=>{
  const payload={open_incidents:1,coverage:'Synthetic coverage',items:[{id:'fixture',title:'Synthetic report',severity:'medium',status:'open',target_type:'activity',target_id:'fixture',version:1,actions:[]}]};
