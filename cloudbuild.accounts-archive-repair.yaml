@@ -1,0 +1,18 @@
+# Reuse the immutable source4380849 archive already uploaded by this release.
+# Only repair the generated snapshot-verifier ownership. No application code edit.
+steps:
+  - name: gcr.io/cloud-builders/docker
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        set -euo pipefail
+        grep -Fx 'COPY scripts/package_source_library.py /app/scripts/package_source_library.py' Dockerfile
+        sed -i 's|^COPY scripts/package_source_library.py /app/scripts/package_source_library.py$|COPY --chown=wzos:wzos scripts/package_source_library.py /app/scripts/package_source_library.py|' Dockerfile
+        grep -Fx 'COPY --chown=wzos:wzos scripts/package_source_library.py /app/scripts/package_source_library.py' Dockerfile
+        docker build --platform linux/amd64 --label org.opencontainers.image.revision=4380849471d8 --tag '${_IMAGE}' .
+images: ['${_IMAGE}']
+timeout: 900s
+queueTtl: 600s
+options:
+  machineType: E2_MEDIUM
