@@ -4,6 +4,9 @@ WORKDIR /app
 COPY requirements-v2.txt requirements-accounts.txt ./
 RUN python -m pip install --no-cache-dir --upgrade pip==26.2.1 \
     && python -m pip install --no-cache-dir -r requirements-accounts.txt
+# Runtime never bootstraps pip/venvs. Remove the base image's obsolete pip wheel;
+# preserve the audited active installer for dependency inventory/checks.
+RUN python -c 'import ensurepip, pathlib, shutil, importlib.metadata; assert importlib.metadata.version("pip")=="26.2.1"; shutil.rmtree(pathlib.Path(ensurepip.__file__).parent)'
 COPY services ./services
 COPY shared ./shared
 COPY knowledge ./knowledge

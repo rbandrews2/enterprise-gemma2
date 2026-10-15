@@ -1,3 +1,37 @@
+## Application review completed; bundled-installer repair - October15
+
+Ray approved the new one-hour application review window. Build7547db29-2ba3-40eb-
+a792-c067752aff5e SUCCESS/review.exit0 on image73e47d4d. Findings73: HIGH5,
+CRITICAL0, MEDIUM6, LOW37, MINIMAL25. Six fixAvailable findings all identify
+bundled pip25.0.1: CVE-2026-1703/8643/6357/3219/13346 and CVE-2025-8869.
+Temporary conditional grant expired no later than2026-10-16T00:26:17Z; harness
+removed it immediately. Independent project IAM query returned
+REMAINING_SCAN_BINDINGS[]. No grant remains for another review.
+
+High findings: CVE-2026-54369/54370 acl2.3.2-2; CVE-2026-54371
+attr1:2.5.2-3; CVE-2026-9538 perl5.40.1-6+deb13u1; CVE-2026-85091
+zlib1:1.3.dfsg+really1.3.1-1. None has fixAvailable in Google's report.
+Debian tracker pages for all five were read October15. ACL/attr relate to local
+pathname/symlink operations, Perl to Archive::Tar allocation, zlib to gz* stalled
+writes. These are NOT blanket false-positive dispositions: actual installed
+commands/modules, linked versions and app call paths still require evidence.
+References: https://security-tracker.debian.org/tracker/CVE-2026-54369
+https://security-tracker.debian.org/tracker/CVE-2026-54370
+https://security-tracker.debian.org/tracker/CVE-2026-54371
+https://security-tracker.debian.org/tracker/CVE-2026-9538
+https://security-tracker.debian.org/tracker/CVE-2026-85091
+
+Reuse the prior hub repair approach: remove only ensurepip's obsolete bundled
+installer while preserving active audited pip26.2.1. Source Dockerfile.accounts
+now does so for fresh builds. Dockerfile.accounts-runtime-repair pins exact
+image73e47d4d, preserves app/dependencies/source snapshot, and runs pip consistency,
+ensurepip absence, full source verification and synthetic HTTP/role/origin checks
+via existing check_hub_image.py as unprivileged uid10001. Tiny build context avoids
+re-uploading sources. Repaired image/build outcome and re-scan remain pending;
+old image is blocked by six fixAvailable findings. No production deployment.
+Live configuration privately saved in release evidence/live-app-before-review.json:
+hub-5a3ac86 still100%; internal-and-cloud-load-balancing ingress retained.
+
 ## Application image ready for review - October15, 2026
 
 Application source4380849471d813c3d093efdb0ad7949b2e62058c passed694 PostgreSQL

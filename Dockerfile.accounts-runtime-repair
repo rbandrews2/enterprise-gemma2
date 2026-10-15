@@ -1,0 +1,10 @@
+# Preserve the tested app, installed dependencies and verified source snapshot.
+FROM us-central1-docker.pkg.dev/enterprise-gemma2/enterprise-gemma2/wzos-v2-accounts@sha256:73e47d4d7318aac95b3d0f6eb65687e512bbadbee63777719b322b2ae435622d
+USER root
+RUN python -c 'import ensurepip, pathlib, shutil, importlib.metadata; assert importlib.metadata.version("pip")=="26.2.1"; shutil.rmtree(pathlib.Path(ensurepip.__file__).parent)'
+COPY --chown=wzos:wzos scripts/check_hub_image.py /app/scripts/check_hub_image.py
+RUN chmod 444 /app/scripts/check_hub_image.py
+USER wzos
+RUN python -m pip check \
+    && python -c 'import importlib.util; assert importlib.util.find_spec("ensurepip") is None' \
+    && python /app/scripts/check_hub_image.py
