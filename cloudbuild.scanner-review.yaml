@@ -1,13 +1,14 @@
 # Read existing immutable image only. No deployment, credentials or IAM mutation.
 steps:
-  - name: gcr.io/google.com/cloudsdktool/google-cloud-cli:stable
-    entrypoint: bash
+  # Official runtime installer configures the Google package repository.
+  # https://github.com/GoogleCloudPlatform/cloud-sdk-docker/blob/master/docs/user_guide.md
+  - name: gcr.io/google.com/cloudsdktool/google-cloud-cli@sha256:ee2115362cc5e05064ace2398593dc2489444fda581db3f61410a84c318f3066
+    env: ['COMPONENTS=google-cloud-cli-local-extract']
     args:
+      - bash
       - -c
       - |
         set -euo pipefail
-        timeout 60 apt-get update -qq
-        timeout 120 apt-get install -y --no-install-recommends google-cloud-cli-local-extract
         timeout 480 gcloud artifacts docker images scan "${_IMAGE}" --remote --project=enterprise-gemma2 --location=us --format=json > /workspace/review.json
         cat /workspace/review.json
         scan=$$(python3 -c 'import json; x=json.load(open("/workspace/review.json")); assert x.get("done") and not x.get("error"), x; print(x["response"]["scan"])')
