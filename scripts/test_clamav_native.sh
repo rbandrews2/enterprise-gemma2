@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+# Disposable Cloud Shell acceptance; downloads official distro packages WITHOUT
+# installing packages, running package hooks, or registering background services.
+set -euo pipefail
+umask 077
+evidence=${1:?Pass a private evidence directory}
+test "$(uname -s)" = Linux || { echo 'ENGINE_GATE_BLOCKED: Linux required'; exit 2; }
+available=$(awk '/MemAvailable:/ {print $2}' /proc/meminfo)
+test "$available" -ge 4200000 || { echo 'ENGINE_GATE_BLOCKED: less than 4GiB available'; exit 2; }
+test -x .venv-accounts-test/bin/python || { echo 'ENGINE_GATE_BLOCKED: run regression gate first'; exit 2; }
+mkdir -p "$evidence"
+evidence=$(realpath "$evidence")
+work=$(mktemp -d /tmp/wzos-clamav-native.XXXXXXXX)
+cleanup() {
+  case "$work" in /tmp/wzos-clamav-native.*) rm -rf -- "$work";; esac
+}
+trap 'result=$?; printf "%s\n" "$result" > "$evidence/engine.exit"; cleanup' EXIT
+mkdir "$work/debs" "$work/tools"
+if ! command -v clamd >/dev/null || ! command -v freshclam >/dev/null; then
+  timeout 180 sudo -n apt-get -qq update > "$evidence/package-download.log" 2>&1
+  timeout 360 sudo -n apt-get -qq -y --download-only --no-install-recommends \
+    -o "Dir::Cache::archives=$work/debs" install clamav-daemon clamav-freshclam >> "$evidence/package-download.log" 2>&1
+  for package in "$work/debs/"*.deb; do
+    test -f "$package"
+    dpkg-deb -x "$package" "$work/tools"
+  done
+  export PATH="$work/tools/usr/bin:$work/tools/usr/sbin:$PATH"
+  export LD_LIBRARY_PATH="$work/tools/usr/lib/$(dpkg-architecture -qDEB_HOST_MULTIARCH):${LD_LIBRARY_PATH:-}"
+fi
+command -v clamd >/dev/null; command -v freshclam >/dev/null
+database="$HOME/.cache/wzos-clamav/official-db"
+mkdir -p "$database"; chmod 700 "$database"
+cat > "$work/freshclam.conf" <<EOF
+DatabaseDirectory $database
+DatabaseOwner $(id -un)
+DatabaseMirror database.clamav.net
+ConnectTimeout 10
+ReceiveTimeout 30
+MaxAttempts 1
+TestDatabases yes
+EOF
+timeout 360 freshclam --config-file="$work/freshclam.conf" --stdout > "$evidence/freshclam.log" 2>&1
+TZ=UTC timeout 240 .venv-accounts-test/bin/python scripts/check_clamav_engine.py \
+  --database-dir "$database" --evidence-dir "$evidence" > "$evidence/engine.log" 2>&1
+tail -n 3 "$evidence/engine.log"
