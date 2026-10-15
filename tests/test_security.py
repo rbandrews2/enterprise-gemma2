@@ -1,4 +1,5 @@
 import os
+import json
 import subprocess
 import tempfile
 import unittest
@@ -282,6 +283,30 @@ class SecurityTests(unittest.TestCase):
         self.assertEqual(response.status_code,403)
         with self.storage.connect() as db:
             self.assertEqual(db.execute('SELECT COUNT(*) FROM workspace_files WHERE id=?',(fid,)).fetchone()[0],0)
+
+    def test_private_scanner_failure_preserves_hold_and_clean_requires_separate_release(self):
+        import httpx
+        from services.workspace_preview.scanner_transport import RemoteScanner
+        fid,_,_,_=self.upload('unavailable')
+        incident=self.listing()['items'][0]['id']
+        self.assertEqual(self.act(incident,'quarantine_file').status_code,200)
+        with patch.dict(os.environ, {'WZOS_SCANNER_URL':'https://wzos-synthetic.run.app'}):
+            self.app.state.file_scanner=RemoteScanner(token_provider=lambda _: 'synthetic.google.token',
+                transport=httpx.MockTransport(lambda _: httpx.Response(503)))
+        self.assertEqual(self.act(incident,'rescan_file').status_code,200)
+        self.assertEqual(self.client.get('/api/files/'+fid,headers=self.headers()).status_code,423)
+        self.assertEqual(self.act(incident,'release_file').status_code,409)
+        def clean(request):
+            result={'version':1,'request_id':request.headers['x-scan-request'],
+                'sha256':request.headers['x-content-sha256'],'byte_count':len(request.content),
+                'status':'clean','engine':'ClamAV 1.5.4/28154'}
+            return httpx.Response(200,stream=httpx.ByteStream(json.dumps(result).encode()),
+                                  headers={'content-type':'application/json'})
+        self.app.state.file_scanner.transport=httpx.MockTransport(clean)
+        self.assertEqual(self.act(incident,'rescan_file').status_code,200)
+        self.assertEqual(self.client.get('/api/files/'+fid,headers=self.headers()).status_code,423)
+        self.assertEqual(self.act(incident,'release_file').status_code,200)
+        self.assertEqual(self.client.get('/api/files/'+fid,headers=self.headers()).status_code,200)
 
     def test_daemon_verdict_uses_existing_incident_and_quarantine_contract(self):
         from services.workspace_preview.clamd_scanner import ClamdScanner

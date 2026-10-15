@@ -99,6 +99,9 @@ class Action(BaseModel):
 
 
 def configured_scanner():
+    if os.getenv('WZOS_SCANNER_URL', '').strip():
+        from .scanner_transport import RemoteScanner
+        return RemoteScanner()
     if os.getenv('WZOS_CLAMD_SOCKET', '').strip() or os.getenv('WZOS_CLAMD_CONFIG', '').strip():
         from .clamd_scanner import ClamdScanner
         return ClamdScanner()
