@@ -28,14 +28,19 @@ PROFILE = {
 }
 
 
-def daemon_config(socket_path, database_directory):
+def daemon_config(socket_path, database_directory, certs_directory=None):
     """Trusted operator paths only; never construct config from upload metadata."""
     paths = [str(socket_path), str(database_directory)]
+    if certs_directory is not None:
+        paths.append(str(certs_directory))
     if any(not PurePosixPath(p).is_absolute() or re.search(r'[\s#\x00]', p) for p in paths):
         raise ValueError('Absolute, whitespace-free operator paths required')
-    return ''.join(f'{key} {value}\n' for key, value in {
+    values = {
         **PROFILE, 'LocalSocket': paths[0], 'DatabaseDirectory': paths[1],
-    }.items())
+    }
+    if certs_directory is not None:
+        values['CVDCertsDirectory'] = paths[2]
+    return ''.join(f'{key} {value}\n' for key, value in values.items())
 
 
 class ClamdScanner:
@@ -69,9 +74,15 @@ class ClamdScanner:
             values[key] = value
         expected = {**PROFILE, 'LocalSocket': self.path,
                     'DatabaseDirectory': values.get('DatabaseDirectory', '')}
+        certs = values.get('CVDCertsDirectory')
+        if certs is not None:
+            expected['CVDCertsDirectory'] = certs
+            info = Path(certs).lstat()
+            if not stat.S_ISDIR(info.st_mode) or info.st_uid not in (0, os.geteuid()) or info.st_mode & 0o022:
+                raise ValueError('Unsafe signature-verification certificate directory')
         if values != expected or not values['DatabaseDirectory']:
             raise ValueError('Daemon configuration differs from reviewed scan policy')
-        daemon_config(self.path, values['DatabaseDirectory'])
+        daemon_config(self.path, values['DatabaseDirectory'], certs)
         endpoint = Path(self.path).lstat()
         if not stat.S_ISSOCK(endpoint.st_mode) or endpoint.st_uid not in (0, os.geteuid()) or endpoint.st_mode & 0o077:
             raise ValueError('Unsafe daemon socket')

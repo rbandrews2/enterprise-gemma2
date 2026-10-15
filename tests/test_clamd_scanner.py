@@ -104,6 +104,7 @@ class ClamdScannerTests(unittest.TestCase):
         for option in ['LocalSocketMode 600','MaxThreads 1','AlertExceedsMax yes','AlertEncrypted yes','AlertOLE2Macros yes','OfficialDatabaseOnly yes']:
             self.assertIn(option,text)
         self.assertNotIn('TCPSocket',text)
+        self.assertIn('CVDCertsDirectory /private/certs',daemon_config('/private/clamd.sock','/private/db','/private/certs'))
         for path in ['relative','/tmp/has space','/tmp/x\nTCPSocket 3310','/tmp/x#comment']:
             with self.assertRaises(ValueError): daemon_config(path,'/private/db')
 
@@ -143,6 +144,13 @@ class LinuxPolicyTests(unittest.TestCase):
             with self.assertRaises(ValueError): self.scanner.validate_policy()
         self.config.write_text(self.original,encoding='utf-8')
         target=self.config.with_suffix('.real'); self.config.rename(target); self.config.symlink_to(target)
+        with self.assertRaises(ValueError): self.scanner.validate_policy()
+
+    def test_optional_certificate_bundle_requires_private_trusted_directory(self):
+        certs=Path(self.temp.name)/'certs'; certs.mkdir(mode=0o700)
+        self.config.write_text(daemon_config(self.endpoint,Path(self.temp.name)/'db',certs),encoding='utf-8')
+        self.scanner.validate_policy()
+        certs.chmod(0o777)
         with self.assertRaises(ValueError): self.scanner.validate_policy()
 
 

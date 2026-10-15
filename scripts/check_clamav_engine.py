@@ -31,6 +31,7 @@ def main():
     parser=argparse.ArgumentParser()
     parser.add_argument('--database-dir',required=True)
     parser.add_argument('--evidence-dir',required=True)
+    parser.add_argument('--certs-dir')
     args=parser.parse_args()
     binary=shutil.which('clamd')
     if os.name!='posix' or not binary:
@@ -41,7 +42,8 @@ def main():
     evidence=Path(args.evidence_dir).resolve(); evidence.mkdir(parents=True,exist_ok=True)
     with tempfile.TemporaryDirectory(prefix='wzos-clamd-',dir='/tmp') as work:
         root=Path(work); endpoint=root/'clamd.sock'; config=root/'clamd.conf'
-        config.write_text(daemon_config(endpoint,database),encoding='utf-8'); config.chmod(0o600)
+        certs=Path(args.certs_dir).resolve() if args.certs_dir else None
+        config.write_text(daemon_config(endpoint,database,certs),encoding='utf-8'); config.chmod(0o600)
         env={**os.environ,'TZ':'UTC','WZOS_CLAMD_SOCKET':str(endpoint),'WZOS_CLAMD_CONFIG':str(config)}
         os.environ.update({key:env[key] for key in ['TZ','WZOS_CLAMD_SOCKET','WZOS_CLAMD_CONFIG']})
         time.tzset()

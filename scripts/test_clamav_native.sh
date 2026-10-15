@@ -31,6 +31,15 @@ if ! command -v clamd >/dev/null || ! command -v freshclam >/dev/null; then
   export LD_LIBRARY_PATH="$work/tools/usr/lib/$(dpkg-architecture -qDEB_HOST_MULTIARCH):${LD_LIBRARY_PATH:-}"
 fi
 command -v clamd >/dev/null; command -v freshclam >/dev/null
+cert_args=()
+engine_cert_args=()
+if freshclam --help | grep -q -- '--cvdcertsdir'; then
+  certs="$work/tools/etc/clamav/certs"
+  if ! test -d "$certs"; then certs=/etc/clamav/certs; fi
+  test -d "$certs" || { echo 'ENGINE_GATE_BLOCKED: official code-signature certificates missing'; exit 2; }
+  cert_args=("--cvdcertsdir=$certs")
+  engine_cert_args=(--certs-dir "$certs")
+fi
 database="$HOME/.cache/wzos-clamav/official-db"
 mkdir -p "$database"; chmod 700 "$database"
 cat > "$work/freshclam.conf" <<EOF
@@ -42,7 +51,7 @@ ReceiveTimeout 30
 MaxAttempts 1
 TestDatabases yes
 EOF
-timeout 360 freshclam --config-file="$work/freshclam.conf" --stdout > "$evidence/freshclam.log" 2>&1
+timeout 360 freshclam --config-file="$work/freshclam.conf" "${cert_args[@]}" --stdout > "$evidence/freshclam.log" 2>&1
 TZ=UTC timeout 240 .venv-accounts-test/bin/python scripts/check_clamav_engine.py \
-  --database-dir "$database" --evidence-dir "$evidence" > "$evidence/engine.log" 2>&1
+  --database-dir "$database" --evidence-dir "$evidence" "${engine_cert_args[@]}" > "$evidence/engine.log" 2>&1
 tail -n 3 "$evidence/engine.log"
