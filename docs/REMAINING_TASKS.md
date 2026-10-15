@@ -1,3 +1,16 @@
+## Latest release blocker - October15 evening
+
+Authenticated private scanner pilot and read-only schema gate are accepted below.
+Google Billing sign-in completed, but Reports showed Failed to load; one Retry
+started loading, then browser control timed out and reset. No current cost figure
+was obtained. Do not ask for another password or treat historical spend as current.
+Next recover the existing billing report/Cloud Shell browser session and read
+project-filtered current spending, then continue the security-capable app candidate
+and full upload/hold/recovery integration checks. Temporary identity grant already
+removed/verified; no SQL proxy remains. Private scanner min0/max1 remains ready;
+public application/DNS/schema unchanged. No new approval needed to repeat these
+read-only checks; any new identity-token grant window needs its own approval.
+
 ## Authenticated scanner pilot PASS; live schema compatible - October15
 
 Ray explicitly approved the temporary ID-token test. Narrow SA-scoped
