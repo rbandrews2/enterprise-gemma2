@@ -1,3 +1,76 @@
+## Atlas Security working model - October 15, 2026
+
+Owned integration-release checkout, codex/preproduction-modules. Runtime source
+c4a8b5fbcac3121ac14bf1e8f3ef7a2cee22f19e pushed; NOT DEPLOYED. No production,
+credentials, IAM, paid infrastructure, external messages or real files changed.
+User selected Guided Workspace for the separate landing design; its files remain
+in the primary workspace .local-data/landing-concepts, not in the live app.
+
+Atlas Security now records tenant-scoped incidents and durable admin notifications,
+provides an admin-only review panel/banner, records audit reasons and optimistic
+versions, holds files, supports reviewed organization user suspension/restoration,
+and revokes actual integration credentials. Five known active-user HTTP403/429
+responses within one minute create a bounded review signal, not proof of attack.
+Forged org headers/unauthenticated failures are not attributed to a guessed tenant.
+Security questions use trusted incident counts and protocol without a model call.
+
+Quarantine blocks downloads and held Forms Hub publication/deletion. Integrity
+failure persists a high-priority alert before the request returns an error.
+Infected files require a recent clean scan AND explicit release. Cases may close
+while resources remain contained; reopening precedes restoration. Keep another
+active admin and licensed capacity; ordinary Team access cannot bypass suspension.
+Scan/user restore actions are never authorized by generated model text.
+
+Scanner adapter is prepared, NOT ACTIVATED/engine-accepted. Default preserves
+legacy unscanned behavior with visible status. WZOS_FILE_SCAN_REQUIRED=1 holds
+unscanned files; configured ClamAV uses fresh signatures, bounded stdin scanning,
+one worker per process, encrypted/limit/macro alerts and timeout/error holds.
+No endpoint/device antivirus, network/WAF feed or closed-app push/email/SMS
+notification is connected. Open admin tabs refresh every minute/on visibility.
+Four additive tables and three indexes: review DDL and rollback constraints in
+ATLAS_SECURITY_PROTOCOL_20261015.md before deployment.
+
+Validation: initial integrated SQLite regressions59 PASS (security/accounts/files/
+Forms Hub/dashboard); expanded focused security/scanner22 PASS, final denial-flood
+and upload-revocation2 PASS. Node security UI6 PASS. Those are distinct test runs,
+not a claim of a new full-suite PASS. Windows sandbox denied temp-directory access;
+focused tests ran with permitted escalation using disposable synthetic data.
+
+Actual browser: report creation/evidence panel; user confirmed sample resolution;
+new in-page review checkbox, reopen and resolution all succeeded. Sample activity
+synthetic-security-check is resolved, with history retained. At390px viewport,
+dialog355px/page375px fit; viewport reset. Member switch removed admin dashboard/
+security controls and cleared state; admin restored. Real engine/device/platform
+threat detection remains untested. Training link expand/collapse was separately
+confirmed by Ray; real media playback remains open.
+
+Cloud Shell refreshed twice; final verified configuration cloudshell-32586,
+enterprise-gemma2/admin@workzoneos.org. Old606 PASS/exit0 independently read (the
+prior training candidate, NOT the security source). Old /tmp checkout was absent.
+Final exact-source c4a8b5f gate directly inspected: Node108 PASS (2.426s),
+PostgreSQL/Python651 PASS (270.389s), failures0/errors0/skipped0, gate.exit0.
+The previous1eb6fac run had one prompt-budget failure; repaired GUIDE is1572
+characters and its targeted test passed before the complete rerun. No test limit
+was relaxed. The /tmp/wzos-pg-gate.* inventory was empty after completion.
+Read $HOME/wzos-security-latest-path.txt for preserved node.log, postgres.log,
+source.txt and gate.exit; final launcher wzos-security-launch-final-20261015.log.
+No paid cloud resources were created.
+
+Actual loopback HTTP acceptance passed: member/admin boundary, harmless PDF
+upload, durable incident, admin/member held-download423, red dashboard, tenant
+isolation and closed-but-contained hold. Synthetic security-review-demo.pdf
+remains held in the local demo; no real malware or customer file was involved.
+Scanner resource/cost and acceptance preparation is saved in
+SECURITY_ENGINE_ACTIVATION_REVIEW_20261015.md; this does not activate a scanner.
+
+Local preview restarted from candidate, PID21252/session15341,127.0.0.1:8083.
+Next: activate/test a real
+scanner only after resource/fresh-signature deployment review; backfill legacy
+file scan inventory; then controlled code/schema deployment with existing release
+gates. Add perimeter/auth/provider security feeds and out-of-app admin notification
+acceptance separately. Current production release remains the earlier checkpoint;
+no public cutover performed in this increment.
+
 ## Training player and parallel SMS repair - October 14, 2026
 
 Ray requested the compact in-app training player and collapsible admin link

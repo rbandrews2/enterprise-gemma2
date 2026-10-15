@@ -1,3 +1,31 @@
+## Atlas Security checkpoint - October 15, 2026
+
+Sourcec4a8b5f pushed; implemented in local working model, NOT DEPLOYED. Admin
+alerts/review, file holds, trusted-count Atlas guidance, known-user denied-request
+signals, audited containment/recovery and integration-key revocation now exist.
+Actual scanner is not installed/activated; legacy unscanned behavior remains until
+the explicit scan gate is enabled. No device/network protection claim.
+
+Next in order:
+1. Exact-source release validation COMPLETE: PostgreSQL/Python651 and Node108
+   PASS, zero failures/errors/skips, exit0; disposable PostgreSQL directory absent.
+   Prior prompt-size failure repaired at1572 characters; full rerun passed.
+   Ray confirmed training editor collapse/expand. Real media remains open.
+2. Size and validate real ClamAV scanning with fresh signatures, quarantined-file
+   retention and legacy inventory backfill. Review four-table/three-index DDL and
+   safe rollback before controlled deployment. Never release malware to close a case.
+3. Connect approved perimeter/auth/service security signals and out-of-app admin
+   alert delivery; app observations are not endpoint/device compromise detection.
+4. Resume prior controlled SMS, Daily/media, Maps/navigation, Atlas inference,
+   checkout/activation and connector acceptance/integration tasks below. Guided
+   Workspace is the selected standalone design, not a deployed dashboard redesign.
+
+Local tests: initial59 regressions, expanded22+final2 focused security/scanner, UI6
+PASS; actual browser admin incident/reopen/resolve, member redaction and390px fit
+verified. Loopback HTTP containment/tenant checks PASS. Full cloud651/108 PASS.
+SESSION_HANDOFF.md has exact evidence. Scanner activation review is saved in
+SECURITY_ENGINE_ACTIVATION_REVIEW_20261015.md.
+
 ## Training/SMS candidate - October 14, 2026
 
 Source bf33fd6 pushed, not deployed. Collapsible admin video links and compact
