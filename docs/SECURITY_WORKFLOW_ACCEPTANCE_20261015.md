@@ -81,3 +81,19 @@ It does not replace the694 PostgreSQL regression evidence or actual cloud-storag
 Firebase/browser and full deployed-app acceptance. Preserve these distinctions.
 Retain held files/audits during any later rollout/rollback and never disable scanning
 or expose direct ingress to make a candidate easier to test.
+
+## Test-only image ready; live job not created
+
+Build09622ebb-2e0e-4b48-9a85-204b14e8c177 SUCCESS, source2cbb7b4.
+Immutable test-only image (never a public web-service release):
+`us-central1-docker.pkg.dev/enterprise-gemma2/enterprise-gemma2/wzos-v2-security-workflow@sha256:53b5189b78f9d766c42b83bdc6025a72159a727fa0f9295292e2165231bab0ec`
+Mocked26-check workflow passed both existing Cloud Shell dependencies and inside
+this exact derivative of reviewed appimageef31216b. Shell identity/project freshly
+verified admin@workzoneos.org / enterprise-gemma2, configcloudshell-2562.
+Full unfiltered jobs list returned[]; proposed job name currently unused.
+Helper bash syntax passed. Source application4380849 remains unchanged.
+No live job/new workload identity, IAM grant, schema or public traffic change.
+Next action requires approval for one300-second job using existing app identity,
+with immediate job removal and independent absence verification. No new IAM roles
+or secret bindings. The runtime identity retains all of its existing effective
+permissions, so this is not described as a scanner-only identity.

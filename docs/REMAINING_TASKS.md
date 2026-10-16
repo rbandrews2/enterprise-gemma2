@@ -1,3 +1,19 @@
+## Findings assessment and workflow harness prepared - October15
+
+Remaining five HIGH findings assessed and retained with bounded applicability
+statements; unresolved zlib vendor classification is NOT suppressed. See
+ docs/SECURITY_WORKFLOW_ACCEPTANCE_20261015.md for exact evidence and limitations.
+Synthetic account workflow26 checks PASS in Cloud Shell and immutable test image
+53b5189b78f9d766c42b83bdc6025a72159a727fa0f9295292e2165231bab0ec;
+build09622ebb-2e0e-4b48-9a85-204b14e8c177 SUCCESS. Mock scanner and injected
+identities mean this is NOT live scanner/metadata-token or deployed-app acceptance.
+No product application edits. Next approve/create one disposable wzos-security-workflow
+Cloud Run job (300s,1CPU/512MiB,retries0) using existing app service account;
+no secrets, SQL/bucket configuration or public endpoint. Remove job immediately.
+Attaching existing app identity to a new workload requires action-time approval.
+Full jobs list empty at preparation; no job, new grant or deployment made.
+Public site/schema remain unchanged. Current working branch codex/preproduction-modules.
+
 ## Repaired application scan completed - October15
 
 Exact imageef31216bc772a0233b7c59a9e219dcd9b17f6c6f2c8ed058270a9a009676ab9d:
