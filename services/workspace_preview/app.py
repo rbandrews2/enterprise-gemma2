@@ -264,13 +264,23 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
 
     @app.get("/")
     def index(request: Request):
+        from .app_updates import release_version
         nonce = request.state.maps_nonce
-        if not nonce:
-            return FileResponse(STATIC / "index.html")
         html = (STATIC / "index.html").read_text(encoding="utf-8")
-        html = html.replace("<script ", f'<script nonce="{nonce}" ')
-        html = html.replace("</head>", f'<style nonce="{nonce}"></style></head>')
+        html = html.replace('</head>', f'<meta name="wzos-release" content="{release_version()}"></head>')
+        if nonce:
+            html = html.replace("<script ", f'<script nonce="{nonce}" ')
+            html = html.replace("</head>", f'<style nonce="{nonce}"></style></head>')
         return HTMLResponse(html)
+
+    @app.get('/api/app/version')
+    def app_version():
+        from .app_updates import release_version
+        return {'version': release_version()}
+
+    @app.get('/app-updates.js')
+    def update_script():
+        return FileResponse(STATIC/'app-updates.js', media_type='text/javascript')
 
     @app.get("/workspace.js")
     def script():

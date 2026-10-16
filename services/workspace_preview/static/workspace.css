@@ -194,3 +194,5 @@ p{font-size:calc(var(--wzos-paragraph-font-size,1em) + 1pt)!important}
 .training-video-screen iframe,.training-video-screen video{display:block;width:100%;height:100%;border:0;object-fit:contain}
 .training-video a{display:inline-block;margin:.6rem 0;overflow-wrap:anywhere}
 @media(max-width:600px){.training-video,.training-media-editor{padding:.75rem}.training-video-screen{min-height:200px}.training-media-row input{max-width:100%}}
+
+.app-update{position:fixed;z-index:1200;top:12px;right:12px;max-width:420px;padding:16px;display:flex;flex-wrap:wrap;gap:10px;background:rgba(10,12,13,.92);border:1px solid rgba(225,174,71,.55);border-radius:16px;backdrop-filter:blur(18px);box-shadow:0 8px 28px #0008;color:#f4f1e8}.app-update[hidden]{display:none}.app-update p{flex-basis:100%;margin:0;font-size:1rem}.app-update button{min-height:44px;border-radius:10px}.app-update button:active{box-shadow:0 0 16px #dba64280}@media(max-width:480px){.app-update{left:12px;max-width:none}}

@@ -1,0 +1,6 @@
+# Preserve the reviewed dependencies and official-source snapshot; code overlay only.
+FROM us-central1-docker.pkg.dev/enterprise-gemma2/enterprise-gemma2/wzos-v2-accounts@sha256:ef31216bc772a0233b7c59a9e219dcd9b17f6c6f2c8ed058270a9a009676ab9d
+COPY services /app/services
+COPY shared /app/shared
+USER wzos
+RUN python -c "import ast; from pathlib import Path; [ast.parse(p.read_text(encoding='utf-8')) for root in ('/app/services','/app/shared') for p in Path(root).rglob('*.py')]"

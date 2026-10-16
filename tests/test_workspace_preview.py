@@ -26,6 +26,18 @@ class WorkspacePreviewTests(unittest.TestCase):
     def headers(self, actor="enterprise-admin"):
         return {"X-Preview-Actor": actor}
 
+    def test_app_update_version_matches_loaded_page_and_is_not_cached(self):
+        version = self.client.get('/api/app/version')
+        self.assertEqual(version.status_code, 200)
+        self.assertRegex(version.json()['version'], r'^[a-f0-9]{24}$')
+        self.assertEqual(set(version.json()), {'version'})
+        self.assertEqual(version.headers['Cache-Control'], 'no-store')
+        html = self.client.get('/').text
+        self.assertIn(f'name="wzos-release" content="{version.json()["version"]}"', html)
+        self.assertIn('/app-updates.js', html)
+        self.assertEqual(self.client.get('/app-updates.js').status_code, 200)
+        self.assertEqual(self.client.get('/api/app/version', headers={'Origin': 'https://other.example'}).status_code, 403)
+
     def payload(self, **changes):
         return {"request_id": str(uuid4()), "title": "Synthetic utility job", "work_type": "underground_utility",
                 "address": "Example road segment, Norfolk, VA", "locality": "Norfolk", "notes": "Synthetic", **changes}

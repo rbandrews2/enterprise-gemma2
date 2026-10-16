@@ -42,5 +42,5 @@
  document.addEventListener('wzos:view',e=>{if(e.detail!=='meetings')stop();});
  document.addEventListener('wzos:session',stop);
  window.addEventListener('pagehide',stop);window.addEventListener('offline',()=>{stop();status('Meeting disconnected. Rejoin when online.');});
- window.WzosDailyMeetings={start,stop};
+ window.WzosDailyMeetings={start,stop,isActive:()=>active};
 })();
