@@ -22,7 +22,9 @@ for finding in findings:
  v=finding.get('vulnerability',{});severity=v.get('effectiveSeverity',v.get('severity','UNKNOWN'))
  assert severity!='CRITICAL'
  if severity=='HIGH':
-  assert v.get('shortDescription') in known and v.get('fixAvailable') is False
+  assert v.get('shortDescription') in known
+  issues=v.get('packageIssue',[])
+  assert issues and all(i.get('packageType')=='OS' and i.get('fixedVersion',{}).get('kind')=='MAXIMUM' for i in issues)
 bucket=load('bucket.json');assert bucket['public_access_prevention']=='enforced' and bucket['uniform_bucket_level_access'] is True
 assert not any(m in ('allUsers','allAuthenticatedUsers') for b in load('bucket-iam.json').get('bindings',[]) for m in b.get('members',[]))
 PY
