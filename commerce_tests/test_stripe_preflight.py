@@ -30,8 +30,11 @@ class PreflightTests(unittest.TestCase):
                            applies_to={'products':[credit['applies_to_product_id']]})
         self.registrations=Result(has_more=False,data=[{'country':'US','status':'active','country_options':{'us':{'state':'VA'}}}])
         def price(id_,options):self.reads.append(id_);return self.prices[id_]
+        def coupon(id_,options):
+            self.assertEqual(options,{'expand':['applies_to']})
+            return self.coupon
         self.client=SimpleNamespace(v1=SimpleNamespace(prices=SimpleNamespace(retrieve=price),
-            coupons=SimpleNamespace(retrieve=lambda id_:self.coupon),
+            coupons=SimpleNamespace(retrieve=coupon),
             tax=SimpleNamespace(registrations=SimpleNamespace(list=lambda options:self.registrations))))
 
     def test_valid_preflight_is_read_only_and_does_not_claim_a_tax_calculation(self):

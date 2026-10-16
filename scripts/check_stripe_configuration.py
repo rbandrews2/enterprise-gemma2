@@ -42,7 +42,7 @@ def inspect_catalog(client, catalog, approved_tax_code):
                 raise ValueError('Price tax behavior requires explicit review')
             count+=1
     credit=catalog['core_upgrade_credit']
-    coupon=client.v1.coupons.retrieve(credit['coupon_id']).to_dict()
+    coupon=client.v1.coupons.retrieve(credit['coupon_id'],{'expand':['applies_to']}).to_dict()
     if (coupon.get('id')!=credit['coupon_id'] or coupon.get('valid') is not True
             or coupon.get('livemode') is not catalog['livemode']
             or coupon.get('currency')!='usd' or coupon.get('amount_off')!=2000
