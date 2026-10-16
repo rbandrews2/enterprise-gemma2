@@ -1,3 +1,18 @@
+## Approved repaired retest waiting on CLI sign-in - October16
+
+Ray explicitly approved one repaired-image live retest (fb0ef792) with the same
+300s/task1/1CPU/512MiB/retries0 limits and immediate cleanup. Approval is UNUSED:
+no job launched. Fresh Cloud Shell reconnected/provisioned configcloudshell-298;
+projectenterprise-gemma2, but account unset/auth list empty. Read-only projects
+describe rejected no active account. Started standard gcloud auth login refresh;
+complete Google sign-in before any mutation. Do not ask for another job permission
+unless scope changes. Never request passwords/tokens in chat.
+Preserved home pointer, repaired helper, exact build metadata and695-test exit0
+were verified present. No live-workflow-cold-retest-launch.log exists; don't infer
+an execution from submitting the guarded command. Next finish CLI authentication,
+verify admin@workzoneos.org/project, then use the already-approved exact fb0ef792
+retest once and verify cleanup. No public app/schema/IAM changes made.
+
 ## Live workflow failure repaired; retest ready - October15
 
 Approved actual live workflow failed real_clean_upload; job removed and independent
