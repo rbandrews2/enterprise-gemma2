@@ -65,7 +65,7 @@ lines=[x.get('textPayload','') for x in entries]
 passed=[line for line in lines if line.startswith('SECURITY_WORKFLOW_PASS ')]
 assert len(passed)==1,'Missing live workflow result; inspect preserved evidence'
 result=json.loads(passed[0].split(' ',1)[1])
-assert result['mode']=='live' and result['identity']=='Google metadata' and result['passed']==26
+assert result['mode']=='live' and result['identity']=='Google metadata' and result['passed']==29
 assert execution['status'].get('succeededCount')==1 and not execution['status'].get('failedCount')
 print(passed[0])
 PY

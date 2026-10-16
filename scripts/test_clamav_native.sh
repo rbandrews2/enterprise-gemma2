@@ -4,6 +4,9 @@
 set -euo pipefail
 umask 077
 evidence=${1:?Pass a private evidence directory}
+workflow_args=()
+if [[ ${2:-} == --workflow ]]; then workflow_args=(--workflow)
+elif [[ $# -gt 1 ]]; then echo 'ENGINE_GATE_BLOCKED: unknown option'; exit 2; fi
 test "$(uname -s)" = Linux || { echo 'ENGINE_GATE_BLOCKED: Linux required'; exit 2; }
 export PATH="/usr/sbin:/sbin:$PATH"
 available=$(awk '/MemAvailable:/ {print $2}' /proc/meminfo)
@@ -55,5 +58,5 @@ TestDatabases yes
 EOF
 timeout 360 freshclam --config-file="$work/freshclam.conf" "${cert_args[@]}" --stdout > "$evidence/freshclam.log" 2>&1
 TZ=UTC timeout 240 .venv-accounts-test/bin/python scripts/check_clamav_engine.py \
-  --database-dir "$database" --evidence-dir "$evidence" "${engine_cert_args[@]}" > "$evidence/engine.log" 2>&1
+  --database-dir "$database" --evidence-dir "$evidence" "${engine_cert_args[@]}" "${workflow_args[@]}" > "$evidence/engine.log" 2>&1
 tail -n 3 "$evidence/engine.log"

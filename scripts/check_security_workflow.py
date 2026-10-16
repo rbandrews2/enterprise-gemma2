@@ -6,11 +6,13 @@ is temporary SQLite/local files, not acceptance of Cloud SQL or Google Storage.
 """
 import argparse
 import hashlib
+import io
 import json
 import os
 from pathlib import Path
 import sys
 import tempfile
+import zipfile
 from unittest.mock import patch
 from uuid import uuid4
 
@@ -22,6 +24,19 @@ SCANNER = 'https://wzos-v2-scanner-udtvm4rgca-uc.a.run.app'
 JOB = 'wzos-security-workflow'
 EICAR = (b'X5O!P%@AP[4' + b'\\PZX54(P^)7CC)7}' +
          b'$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*')
+DOCUMENT_TYPE = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+
+
+def detection_document():
+    """Keep the standard 68-byte fixture intact in a supported ZIP container."""
+    document = io.BytesIO()
+    with zipfile.ZipFile(document, 'w', zipfile.ZIP_DEFLATED) as archive:
+        archive.writestr('[Content_Types].xml',
+            '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"/>')
+        archive.writestr('word/document.xml',
+            '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"/>')
+        archive.writestr('synthetic-antivirus-test.txt', EICAR)
+    return document.getvalue()
 
 
 class WorkflowFailure(RuntimeError):
@@ -38,8 +53,8 @@ def run(mode):
             'Refuse a serving application environment')
     require(mode != 'live' or os.getenv('CLOUD_RUN_JOB') == JOB,
             'Live mode requires the reviewed dedicated job')
-    require(mode != 'mocked' or not os.getenv('CLOUD_RUN_JOB'),
-            'Mocked verdicts must not be used for cloud-job acceptance')
+    require(mode == 'live' or not os.getenv('CLOUD_RUN_JOB'),
+            'Only live mode may be used for cloud-job acceptance')
     require(not any(os.getenv(k) for k in ('WZOS_DATABASE_URL', 'WZOS_FILES_BUCKET')),
             'Refuse live persistence configuration')
     import httpx
@@ -58,15 +73,24 @@ def run(mode):
 
     def verdict(request):
         data = request.content
+        # Model only this fixture, not arbitrary substring-based detection.
+        detected = False
+        if data.startswith(b'PK\x03\x04'):
+            with zipfile.ZipFile(io.BytesIO(data)) as archive:
+                detected = archive.read('synthetic-antivirus-test.txt') == EICAR
         return httpx.Response(200, headers={'content-type': 'application/json'},
             stream=httpx.ByteStream(json.dumps({'version': 1,
                 'request_id': request.headers['x-scan-request'],
                 'sha256': hashlib.sha256(data).hexdigest(), 'byte_count': len(data),
-                'status': 'infected' if EICAR in data else 'clean',
+                'status': 'infected' if detected else 'clean',
                 'engine': 'ClamAV 1.5.4/28154'}).encode()))
 
     scanner = RemoteScanner() if mode == 'live' else RemoteScanner(
         token_provider=lambda _: 'synthetic.google.token', transport=httpx.MockTransport(verdict))
+    if mode == 'engine':
+        from services.workspace_preview.clamd_scanner import ClamdScanner
+        scanner = ClamdScanner()
+        require(scanner.configured, 'Explicit local engine configuration required')
     outage = RemoteScanner(token_provider=lambda _: 'synthetic.outage.token',
         transport=httpx.MockTransport(lambda _: httpx.Response(503)))
     with tempfile.TemporaryDirectory(prefix='wzos-security-workflow-') as directory:
@@ -136,7 +160,7 @@ def run(mode):
                   'member_admin_access_rejected')
             clean = b'%PDF-1.7\nSynthetic clean workflow only\n%%EOF\n'
             fid, meta = upload(clean)
-            check(meta['security']['status'] == 'clean', 'real_clean_upload' if mode == 'live' else 'mock_clean_upload')
+            check(meta['security']['status'] == 'clean', 'mock_clean_upload' if mode == 'mocked' else 'real_clean_upload')
             check(client.get('/api/files/'+fid, headers=headers('member')).content == clean,
                   'member_clean_download')
             report = client.post('/api/admin/security/reports', headers=headers(), json={
@@ -163,7 +187,7 @@ def run(mode):
             check(summary['unread'] > 0 and summary['open_incidents'] > 0, 'durable_admin_notification')
             check(client.get('/api/admin/dashboard', headers=headers()).json()['status'] == 'red',
                   'admin_dashboard_red')
-            check(act(incident, 'rescan_file').status_code == 200, 'real_clean_rescan' if mode == 'live' else 'mock_clean_rescan')
+            check(act(incident, 'rescan_file').status_code == 200, 'mock_clean_rescan' if mode == 'mocked' else 'real_clean_rescan')
             check(client.get('/api/files/'+fid, headers=headers('member')).status_code == 423,
                   'clean_rescan_does_not_release_quarantine')
             check(act(incident, 'release_file', expected=1).status_code == 409, 'stale_action_rejected')
@@ -176,10 +200,31 @@ def run(mode):
                     'SELECT action FROM security_actions WHERE incident_id=?', (incident,)).fetchall()}
             check({'quarantine_file', 'rescan_file', 'release_file', 'resolve'} <= actions,
                   'recovery_action_audit')
-            infected, meta = upload(b'%PDF-1.7\n'+EICAR+b'\n%%EOF\n')
-            check(meta['security']['status'] == 'infected', 'real_eicar_upload_detected' if mode == 'live' else 'mock_eicar_upload_detected')
-            check(client.get('/api/files/'+infected, headers=headers('member')).status_code == 423,
+            library = str(uuid4())
+            body = {'expected_version': 0, 'title': 'Synthetic security test document',
+                    'category': 'company_form', 'description': 'Synthetic antivirus fixture only'}
+            require(client.put('/api/forms/library/'+library, headers=headers(), json=body).status_code == 200,
+                    'detection_library_setup')
+            infected = str(uuid4())
+            response = client.put('/api/files/'+infected+
+                '?entity_kind=form_library&entity_id='+library+'&filename=synthetic.docx',
+                headers={**headers(), 'Content-Type': DOCUMENT_TYPE}, content=detection_document())
+            require(response.status_code == 200, 'detection_document_upload')
+            meta = response.json()
+            status = meta.get('security', {}).get('status')
+            # Allowlisted diagnostics only: never bytes, credentials or provider bodies.
+            require(status == 'infected', 'eicar_upload_detected_status_' +
+                    (status if status in ('clean', 'infected', 'error', 'unavailable', 'pending') else 'unknown'))
+            check(True, 'mock_eicar_upload_detected' if mode == 'mocked' else 'real_eicar_upload_detected')
+            check(client.get('/api/files/'+infected, headers=headers()).status_code == 423,
                   'detected_file_download_rejected')
+            check(client.put('/api/forms/library/'+library, headers=headers(),
+                json={**body, 'expected_version': 1, 'file_id': infected}).status_code == 409,
+                'detected_file_publication_rejected')
+            check(client.get('/api/files/'+infected, headers=headers('member')).status_code == 404,
+                  'member_cannot_access_unpublished_detection_fixture')
+            check(client.get('/api/files/'+infected, headers=headers('other', other)).status_code == 404,
+                  'other_organization_cannot_access_detection_fixture')
             malware = next(i for i in incidents() if i['target_id'] == infected)
             check(act(malware['id'], 'release_file').status_code == 409, 'infected_release_rejected')
             check(client.get('/api/admin/security', headers=headers('other', other)).json()['items'] == [],
@@ -189,14 +234,14 @@ def run(mode):
                 client.close()
     return {'mode': mode, 'passed': len(checks), 'checks': checks,
             'persistence': 'temporary SQLite and local files',
-            'identity': 'Google metadata' if mode == 'live' else 'mocked',
+            'identity': 'Google metadata' if mode == 'live' else ('local engine; injected app identities' if mode == 'engine' else 'mocked'),
             'notifications': 'durable in-app only; no external sends',
             'injected_failure': 'scanner HTTP503; explicitly synthetic'}
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--mode', choices=('mocked', 'live'), required=True)
+    parser.add_argument('--mode', choices=('mocked', 'engine', 'live'), required=True)
     args = parser.parse_args()
     environment = {'WZOS_ACCOUNT_WORKSPACE': '1', 'WZOS_ACCOUNT_AUTH_HEADER': 'Authorization',
         'WZOS_FILE_SCAN_REQUIRED': '1', 'WZOS_SCANNER_URL': SCANNER,

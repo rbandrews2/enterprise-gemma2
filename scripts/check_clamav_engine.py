@@ -32,6 +32,7 @@ def main():
     parser.add_argument('--database-dir',required=True)
     parser.add_argument('--evidence-dir',required=True)
     parser.add_argument('--certs-dir')
+    parser.add_argument('--workflow', action='store_true', help='Also exercise the app with this real local engine')
     args=parser.parse_args()
     binary=shutil.which('clamd')
     if os.name!='posix' or not binary:
@@ -88,6 +89,17 @@ def main():
                 results['missing_engine']=scanner.scan(benign).status
                 scanner.path=saved
                 assert results['missing_engine']=='error'
+                if args.workflow:
+                    workflow=subprocess.run([sys.executable, str(ROOT/'scripts/check_security_workflow.py'),
+                        '--mode', 'engine'], env=env, capture_output=True, text=True, timeout=150)
+                    (evidence/'workflow.log').write_text(workflow.stdout+workflow.stderr, encoding='utf-8')
+                    assert workflow.returncode==0, 'Real-engine app workflow failed; inspect workflow.log'
+                    lines=[line for line in workflow.stdout.splitlines() if line.startswith('SECURITY_WORKFLOW_PASS ')]
+                    assert len(lines)==1
+                    outcome=json.loads(lines[0].split(' ',1)[1])
+                    assert outcome['mode']=='engine' and outcome['passed']==29
+                    results['workflow_checks']=outcome['passed']
+                    results['workflow_identity']=outcome['identity']
             finally:
                 if process.poll() is None:
                     process.terminate()
