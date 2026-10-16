@@ -34,6 +34,9 @@ def main():
             expected.pop(name,None)
         assert env==expected,'Unapproved environment or secret change'
         container['env']=prior.get('env',[])
+        # gcloud adds this display name to the previously unnamed single container.
+        if 'name' not in prior:
+            assert container.pop('name',None)=='wzos-v2-accounts-1'
         assert spec==original,'Unapproved identity/resources/runtime configuration'
     for key in ('run.googleapis.com/ingress','run.googleapis.com/invoker-iam-disabled'):
         assert before['metadata'].get('annotations',{}).get(key)==after['metadata'].get('annotations',{}).get(key)
