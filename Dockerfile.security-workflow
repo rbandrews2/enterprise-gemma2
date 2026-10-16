@@ -1,0 +1,7 @@
+# Test-only derivative. Never deploy this image as a web service.
+FROM us-central1-docker.pkg.dev/enterprise-gemma2/enterprise-gemma2/wzos-v2-accounts@sha256:ef31216bc772a0233b7c59a9e219dcd9b17f6c6f2c8ed058270a9a009676ab9d
+COPY --chown=wzos:wzos scripts/check_security_workflow.py /opt/wzos-test/check_security_workflow.py
+USER wzos
+RUN python /opt/wzos-test/check_security_workflow.py --mode mocked
+ENTRYPOINT ["python", "/opt/wzos-test/check_security_workflow.py"]
+CMD ["--mode", "live"]
