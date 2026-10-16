@@ -33,6 +33,7 @@ def main():
     parser.add_argument('--evidence-dir',required=True)
     parser.add_argument('--certs-dir')
     parser.add_argument('--workflow', action='store_true', help='Also exercise the app with this real local engine')
+    parser.add_argument('--persistent-workflow', action='store_true', help='Operator-only isolated Cloud SQL/GCS workflow')
     args=parser.parse_args()
     binary=shutil.which('clamd')
     if os.name!='posix' or not binary:
@@ -100,6 +101,14 @@ def main():
                     assert outcome['mode']=='engine' and outcome['passed']==29
                     results['workflow_checks']=outcome['passed']
                     results['workflow_identity']=outcome['identity']
+                if args.persistent_workflow:
+                    persistent=subprocess.run([sys.executable, str(ROOT/'scripts/check_persistent_security.py')],
+                        env=env, capture_output=True, text=True, timeout=150)
+                    (evidence/'persistent-workflow.log').write_text(persistent.stdout+persistent.stderr, encoding='utf-8')
+                    assert persistent.returncode==0, 'Persistent workflow failed; inspect bounded diagnostic log'
+                    assert 'PERSISTENT_SECURITY_PASS ' in persistent.stdout
+                    assert 'PERSISTENT_SECURITY_CLEANUP_PASS' in persistent.stdout
+                    results['persistent_workflow_checks']=29
             finally:
                 if process.poll() is None:
                     process.terminate()

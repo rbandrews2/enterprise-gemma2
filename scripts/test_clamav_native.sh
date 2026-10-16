@@ -6,6 +6,7 @@ umask 077
 evidence=${1:?Pass a private evidence directory}
 workflow_args=()
 if [[ ${2:-} == --workflow ]]; then workflow_args=(--workflow)
+elif [[ ${2:-} == --persistent-workflow ]]; then workflow_args=(--persistent-workflow)
 elif [[ $# -gt 1 ]]; then echo 'ENGINE_GATE_BLOCKED: unknown option'; exit 2; fi
 test "$(uname -s)" = Linux || { echo 'ENGINE_GATE_BLOCKED: Linux required'; exit 2; }
 export PATH="/usr/sbin:/sbin:$PATH"
