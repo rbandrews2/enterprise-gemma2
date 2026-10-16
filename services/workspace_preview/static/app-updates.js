@@ -14,6 +14,9 @@
    install.onclick=()=>{
     if(navigator.onLine===false){message.textContent='Reconnect to install this update.';return;}
     if(window.WzosDailyMeetings?.isActive?.()){message.textContent='Leave your meeting before installing updates.';return;}
+    if(Array.from(document.querySelectorAll('input[type="file"]')).some(input=>input.files?.length)){
+     message.textContent='Finish uploading or clear your selected file before installing updates.';return;
+    }
     // Reuse the existing module guards, including unsaved forms and pending punches.
     // This synthetic event does not invoke a browser confirmation dialog.
     const guard=new Event('beforeunload',{cancelable:true});window.dispatchEvent(guard);

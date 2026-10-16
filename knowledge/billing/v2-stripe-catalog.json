@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "stripe_account": "acct_1RVoyBCTCYI3n5kZ",
+  "livemode": true,
+  "currency": "usd",
+  "approved_on": "2026-10-16",
+  "checkout_enabled": false,
+  "offers": {
+    "core": {
+      "product_id": "prod_VS8NPXcRzhnRq4",
+      "setup_cents": 9900,
+      "monthly_cents": 5900,
+      "included_seats": 15,
+      "maximum_seats": 30,
+      "additional_seat_monthly_cents": 300,
+      "setup_price_id": "price_1UREAZCTCYI3n5kZMp4p4xKi",
+      "monthly_price_id": "price_1URE6GCTCYI3n5kZNnpAVdVw",
+      "additional_seat_price_id": "price_1UREB9CTCYI3n5kZXZ9HwzUj"
+    },
+    "enterprise": {
+      "product_id": "prod_VS8NpLjO1KtlTl",
+      "setup_cents": 99900,
+      "monthly_cents": 24900,
+      "included_seats": 25,
+      "maximum_seats": null,
+      "additional_seat_monthly_cents": 700,
+      "setup_price_id": "price_1URE86CTCYI3n5kZghQ7IOIU",
+      "monthly_price_id": "price_1URE6yCTCYI3n5kZrHaJaAv8",
+      "additional_seat_price_id": "price_1URE8gCTCYI3n5kZQIvNi5fb"
+    }
+  },
+  "core_upgrade_credit": {
+    "coupon_id": "wzos_v2_core_upgrade_20_once_20261016",
+    "applies_to_product_id": "prod_VS8NpLjO1KtlTl",
+    "amount_cents": 2000,
+    "duration": "once",
+    "source_edition": "core",
+    "target_edition": "enterprise",
+    "requires_admin": true,
+    "requires_verified_billing_eligibility": true
+  }
+}

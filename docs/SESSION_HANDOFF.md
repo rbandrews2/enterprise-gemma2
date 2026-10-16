@@ -1,3 +1,35 @@
+## V2 live Stripe catalog prepared; release candidate pending - October16
+
+Ray approved USD Core99setup/59monthly/15included/3extra/max30 and Enterprise
+999setup/249monthly/25included/7extra; all active logins count, admins included.
+Existing Core upgrade credit is USD20 once. Nudges are Core-admin-only; members
+must not see them. Authenticated Chrome created two new V2 products, six prices
+and an Enterprise-restricted once coupon; older products/subscriptions unchanged.
+See docs/V2_PRICING_ACTIVATION_20261016.md and knowledge/billing/v2-stripe-catalog.json
+for exact public IDs. Three price-contract checks PASS; no checkout enabled,
+charges/customer sends or live application update. Stripe connector is test-only;
+Chrome shows the live catalog. No public promotion code created.
+
+Own pending UI candidate: Guided Workspace B using authorized dashboard data,
+Enterprise desktop-only Time Tracker review sections, installed-related-app
+detection, combined wrong-credential wording, and Google Maps active-guidance
+link for manual/job destinations. User chose internal PWA route planning plus
+external Google Maps active guidance.119 Node checks PASS; desktop/mobile visual
+checks partially complete. New candidate still needs integrated PostgreSQL,
+build, rollback/configuration and deployed browser gates before public cutover.
+
+Prior release evidence $HOME/wzos-release-20261016-latest.txt: source9a74d19 passed
+696 PostgreSQL checks; managed-persistence29 checks and fixture cleanup PASS.
+Packaging repair21d7395 built successfully, image09c39cc6983d76dcf1cd7b53e45323f271ceed01bb528128dfd620fa3aea2147.
+That image predates these UI additions and is not the final candidate. No new app
+revision or traffic change has occurred. See docs/RELEASE_20261016.md. Owned SQL
+proxy4018 was observed on127.0.0.1:5544; verify current ownership before cleanup.
+
+Atlas31B service wzos-atlas-inference is absent; legacy gemma-inference is not
+Ready. App private_vllm is disabled. Existing model bucket, dedicated identity
+and private-access subnet remain. Actual inference availability is still OPEN;
+do not label quick guides or security scanning as successful model conversation.
+
 ## Corrected live security workflow29 PASS - October16
 
 Ray approved corrected-image single live retest. Image4d90f2dde45188afddc4cec5256fcb3a8c16bbcd53c5466073127b616c18927d

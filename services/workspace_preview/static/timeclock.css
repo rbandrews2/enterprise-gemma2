@@ -58,3 +58,7 @@
 #clock-view .clock-entry{background:#18181b80;border:1px solid #27272a;border-radius:18px;padding:1rem;margin:1rem 0}
 #clock-view .clock-connection{background:#09090b;border-color:#3f3f46}
 @media(max-width:850px){#clock-view .workspace-grid{grid-template-columns:minmax(0,1fr)}#clock-view .page-heading{flex-wrap:wrap;gap:1rem}#clock-view{padding:1rem}#clock-view .clock-timer{--wzos-paragraph-font-size:clamp(2rem,9vw,3.6rem);font-size:clamp(2rem,9vw,3.6rem)}}
+
+/* Review tools stay on Enterprise desktop layouts; offline capture remains intact. */
+#clock-view:not([data-edition=enterprise]) #clock-drafts,#clock-view:not([data-edition=enterprise]) #clock-drafts~*{display:none!important}
+@media(max-width:1023px){#clock-drafts,#clock-drafts~*{display:none!important}}

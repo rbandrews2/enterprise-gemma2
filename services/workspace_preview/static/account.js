@@ -31,6 +31,7 @@ window.wzosAccount = (() => {
   // Never display provider payloads: they may contain identifiers or configuration.
   const code=typeof data?.error?.message==='string'?data.error.message.split(' : ')[0].split(':')[0].trim():'';
   if(code==='INVALID_EMAIL')return 'Enter a valid email address.';
+  if(action==='signInWithPassword'&&['INVALID_LOGIN_CREDENTIALS','INVALID_PASSWORD','EMAIL_NOT_FOUND'].includes(code))return 'Incorrect password or username.';
   if(action==='signUp'&&code==='WEAK_PASSWORD')return 'Choose a stronger password that meets the account password requirements.';
   if(action==='signUp'&&code==='EMAIL_EXISTS')return 'An account may already exist for this email. Use Sign in or Reset password.';
   if(code==='TOO_MANY_ATTEMPTS_TRY_LATER'||code==='QUOTA_EXCEEDED')return 'Too many account requests. Wait a few minutes before trying again.';

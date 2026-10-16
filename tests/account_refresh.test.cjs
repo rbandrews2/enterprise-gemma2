@@ -63,7 +63,7 @@ test('created account with failed verification request clears tokens and permits
 test('failed sign-in does not distinguish missing account from invalid credentials',async()=>{
  const ui=accountFailureFixture(async()=>({ok:false,json:async()=>({error:{message:'EMAIL_NOT_FOUND'}})}));
  ui.form.onsubmit({preventDefault(){}});await settle();
- assert.match(ui.message.textContent,/Check your details or try again/);
+ assert.equal(ui.message.textContent,'Incorrect password or username.');
  assert.doesNotMatch(ui.message.textContent,/EMAIL_NOT_FOUND|does not exist/);
 });
 

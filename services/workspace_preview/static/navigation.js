@@ -35,7 +35,11 @@
    const locate=node('button','Use my current location'),calculate=node('button','Calculate route'),close=node('button','Close route');
    locate.type=close.type='button';calculate.type='submit';locate.className=close.className='secondary';calculate.className='primary';
    const form=node('form'),status=node('p','Checking routing availability…'),result=node('div');status.setAttribute('role','status');status.setAttribute('aria-live','polite');
-   form.append(label,destinationLabel,locate,calculate);panel.append(title,notice,form,close,status,result);card.append(panel);
+   const guidance=node('a','Start turn-by-turn in Google Maps');guidance.className='primary navigation-guidance';guidance.target='_blank';guidance.rel='noopener noreferrer';
+   const syncGuidance=()=>{const address=destinationInput.value.trim();guidance.hidden=!address||address.length>250;
+    if(guidance.hidden)guidance.removeAttribute('href');else guidance.href='https://www.google.com/maps/dir/?api=1&travelmode=driving&dir_action=navigate&destination='+encodeURIComponent(address);};
+   destinationInput.oninput=syncGuidance;syncGuidance();
+   form.append(label,destinationLabel,locate,calculate);panel.append(title,notice,form,guidance,close,status,result);card.append(panel);
    close.hidden=Boolean(job.manual);
    close.onclick=clear;let coordinates=null, configured=false, locating=false;
    origin.oninput=()=>{coordinates=null;};calculate.disabled=true;

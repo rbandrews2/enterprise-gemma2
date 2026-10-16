@@ -181,6 +181,7 @@
  }
  async function refresh(){
   const session=window.wzosClock.getSession();if(!session)return;
+  node('clock-view').dataset.edition=session.edition;
   if(!navigator.onLine){showOffline();return;}
   const epoch=++generation;loaded=false;controls();
   const admin=session.role==='admin';node('clock-team-label').hidden=!admin;employeeLabel.hidden=!admin;if(!admin){node('clock-team').checked=false;employee.value='';}

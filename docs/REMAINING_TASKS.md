@@ -1,3 +1,23 @@
+## Current next gates - October16
+
+- Complete candidate UI browser checks for both roles/editions and phone/desktop;
+  Node119 passed. Keep Guided Workspace B scoped to landing. Review tools appear
+  only on Enterprise desktop. Core upgrade nudges are admin-only.
+- V2 live Stripe catalog CREATED: two products, six prices, USD20 once upgrade
+  coupon restricted to Enterprise. Three price-contract checks PASS. Details:
+  docs/V2_PRICING_ACTIVATION_20261016.md. Production checkout is NOT enabled.
+- Connect secure Stripe runtime/webhook credentials, verify subscription lifecycle,
+  server-owned organization mapping, once-only Core credit eligibility, paid
+  activation and seat synchronization before enabling customer payment buttons.
+  Review tax obligations/registrations; do not infer tax setup from price previews.
+- Re-run exact final candidate PostgreSQL/build gates; retain cloud persistence29
+  and696-test old-source evidence as scoped evidence, not new-candidate acceptance.
+- Stage a security-capable fallback and candidate without traffic, verify identity,
+  secrets/ingress/config preservation and backup/schema compatibility; only then
+  cut over and validate deployed browser flows. No deployment made in pricing pass.
+- Restore and evaluate actual private31B Atlas inference with bounded runtime and
+  existing dedicated resources; app currently disabled and legacy model not Ready.
+
 ## Corrected live security workflow29 PASS - October16
 
 Ray approved corrected-image single live retest. Image4d90f2dde45188afddc4cec5256fcb3a8c16bbcd53c5466073127b616c18927d

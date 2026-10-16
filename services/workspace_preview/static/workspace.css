@@ -196,3 +196,18 @@ p{font-size:calc(var(--wzos-paragraph-font-size,1em) + 1pt)!important}
 @media(max-width:600px){.training-video,.training-media-editor{padding:.75rem}.training-video-screen{min-height:200px}.training-media-row input{max-width:100%}}
 
 .app-update{position:fixed;z-index:1200;top:12px;right:12px;max-width:420px;padding:16px;display:flex;flex-wrap:wrap;gap:10px;background:rgba(10,12,13,.92);border:1px solid rgba(225,174,71,.55);border-radius:16px;backdrop-filter:blur(18px);box-shadow:0 8px 28px #0008;color:#f4f1e8}.app-update[hidden]{display:none}.app-update p{flex-basis:100%;margin:0;font-size:1rem}.app-update button{min-height:44px;border-radius:10px}.app-update button:active{box-shadow:0 0 16px #dba64280}@media(max-width:480px){.app-update{left:12px;max-width:none}}
+
+.wzos-install[hidden]{display:none!important}
+/* Guided Workspace B applies only to the dashboard, preserving module layouts. */
+#dashboard-view .guided-layout{display:grid;grid-template-columns:minmax(240px,.8fr) minmax(0,1.6fr);gap:24px;margin:24px 0}
+#dashboard-view .guided-story{display:flex;flex-direction:column;align-items:flex-start;padding:30px;overflow:hidden;background:linear-gradient(145deg,#24242680,#060708b0);backdrop-filter:blur(22px)}
+#dashboard-view .guided-story h2{font-size:clamp(30px,3vw,43px);line-height:1.15;color:#e9dcc3;letter-spacing:-.03em}
+#dashboard-view .guided-story img{object-fit:contain;align-self:center;max-width:100%;height:auto;margin-top:auto;mask-image:linear-gradient(#000 75%,transparent)}
+#dashboard-view .guided-kicker{color:#d5ad6d;text-transform:uppercase;letter-spacing:.12em;font-size:12px}
+#dashboard-view .guided-content{min-width:0}#dashboard-view .guided-content>.hub-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:16px 0}
+#dashboard-view .hub-card{background:linear-gradient(130deg,#24242675,#050607b3);backdrop-filter:blur(20px);border:1px solid #ffffff20;border-radius:16px;color:inherit}
+#dashboard-view .guided-feature{width:100%;min-height:120px;border-color:#d2a25455;background:linear-gradient(110deg,#91651d26,#0b0b0b9c);font-size:20px}
+#dashboard-view .guided-footer{color:#b2a894;font-size:13px}#dashboard-view .hub-card:active{border-color:#e7b666;box-shadow:0 0 26px #d18d3247,inset 0 0 22px #b9822519}
+.core-upgrade{color:#edcb89!important}.core-upgrade[hidden]{display:none!important}.upgrade-dialog{max-width:560px;width:calc(100% - 32px);max-height:85vh;overflow:auto;color:#eee}.upgrade-dialog::backdrop{background:#000b;backdrop-filter:blur(5px)}
+.navigation-guidance{display:inline-flex;align-items:center;min-height:44px;margin:12px 12px 12px 0;text-decoration:none}.navigation-guidance[hidden]{display:none}
+@media(max-width:900px){#dashboard-view .guided-layout{grid-template-columns:1fr}#dashboard-view .guided-story img{max-height:180px;width:auto}#dashboard-view .guided-story{padding:24px}}

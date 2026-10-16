@@ -8,7 +8,8 @@ async function fixture(){
  const events={},documentEvents={},body={children:[],append(node){this.children.push(node);}};
  let now=100000,version=A,reloads=0,requests=0,poll;
  const element=tag=>({tag,children:[],hidden:false,setAttribute(){},append(...nodes){this.children.push(...nodes);}});
- const document={body,visibilityState:'visible',querySelector:()=>({content:A}),createElement:element,
+ const document={body,visibilityState:'visible',selectedFiles:[],querySelector:()=>({content:A}),
+  querySelectorAll:()=>document.selectedFiles,createElement:element,
   addEventListener:(name,fn)=>documentEvents[name]=fn};
  const navigator={onLine:true};
  const window={location:{reload(){reloads++;}},addEventListener(name,fn){(events[name]??=[]).push(fn);},
@@ -38,6 +39,11 @@ test('offline state and an active meeting block installation',async()=>{
  const f=await fixture();await f.tick(B);f.navigator.onLine=false;f.install.onclick();assert.equal(f.reloads,0);
  f.navigator.onLine=true;f.window.WzosDailyMeetings={isActive:()=>true};f.install.onclick();assert.equal(f.reloads,0);
  assert.match(f.banner.children[0].textContent,/Leave your meeting/);
+});
+test('selected or uploading files block reload until cleared',async()=>{
+ const f=await fixture();await f.tick(B);f.document.selectedFiles=[{files:[{name:'synthetic.pdf'}]}];
+ f.install.onclick();assert.equal(f.reloads,0);assert.match(f.banner.children[0].textContent,/Finish uploading/);
+ f.document.selectedFiles=[];f.install.onclick();assert.equal(f.reloads,1);
 });
 test('Later dismisses only that release and rollback to the loaded release hides the prompt',async()=>{
  const f=await fixture();await f.tick(B);f.banner.children[2].onclick();await f.tick(B);assert.equal(f.banner.hidden,true);

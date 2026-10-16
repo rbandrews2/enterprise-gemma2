@@ -4,8 +4,8 @@
  const node=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
  const nav=node('button','◈ Dashboard','nav-item');nav.id='dashboard-nav';nav.hidden=true;
  document.querySelector('nav[aria-label="Workspace navigation"]').prepend(nav);
- const root=node('section',undefined,'report-section');root.id='dashboard-view';root.hidden=true;document.getElementById('main').prepend(root);
- let epoch=0,draft=false,active=false;
+ const root=node('section',undefined,'report-section guided-dashboard');root.id='dashboard-view';root.hidden=true;document.getElementById('main').prepend(root);
+ let epoch=0,draft=false,active=false,upgradeDialog=null;
  const previous=window.wzosModulesCanLeave;
  window.wzosModulesCanLeave=()=>{if(draft&&!confirm('Discard your unsaved dashboard note?'))return false;return !previous||previous();};
  const api=(...args)=>window.wzosClock.api(...args);
@@ -21,13 +21,19 @@
    status.className='hub-status hub-'+data.status;
    status.textContent=({green:'● Operational · account in good standing',red:'● Attention required',amber:'● Status checks incomplete'})[data.status];
    const checks=node('div',undefined,'hub-checks');for(const check of data.checks)checks.append(node('p',`${check.label}: ${check.explanation}`));root.append(checks);
+   const layout=node('div',undefined,'guided-layout'),story=node('section',undefined,'panel guided-story'),content=node('section',undefined,'guided-content');
+   story.append(node('p','Built for the work ahead','guided-kicker'),node('h2','Your operation. In clear view.'),node('p','From the first assignment to the final report, keep every crew connected to the work that matters.'));
+   const atlas=node('img');atlas.src='/atlas-assistant.png';atlas.alt='Atlas, your WZOS AI assistant';atlas.width=220;atlas.height=220;
+   story.append(atlas,button('Ask Atlas',()=>document.getElementById('assistant-open')?.click()));
+   content.append(node('h2','Where would you like to begin?'));layout.append(story,content);root.append(layout);
    const grid=node('div',undefined,'hub-grid');for(const item of data.modules.filter(m=>m.visible)){
-    const b=button('',()=>document.getElementById(item.nav_id)?.click());b.className='panel hub-card';b.append(node('span',item.icon,'hub-icon'),node('strong',item.label));grid.append(b);
+    const b=button('',()=>document.getElementById(item.nav_id)?.click());b.className=item.id==='report'?'panel hub-card guided-feature':'panel hub-card';b.append(node('span',item.icon,'hub-icon'),node('strong',item.label));if(item.id==='report')content.append(b);else grid.append(b);
    }
    for(const [label,selector,icon] of [['Employees','.account-employees','♙'],['Team access','.account-team','♧'],['Passkeys','.account-passkeys','⚿']]){
     if(document.querySelector(selector)){const b=button('',()=>document.querySelector(selector)?.click());b.className='panel hub-card';b.append(node('span',icon,'hub-icon'),node('strong',label));grid.append(b);}
-   }root.append(grid);
-   if(window.wzosSecurity){const security=button('Atlas Security',()=>window.wzosSecurity.open());security.className='panel hub-card';root.append(security);}
+   }content.append(grid);
+   content.append(node('p','WZOS powered by Atlas AI Assistant','guided-footer'));
+   if(window.wzosSecurity){const security=button('Atlas Security',()=>window.wzosSecurity.open());security.className='panel hub-card';content.append(security);}
    const options=node('details',undefined,'panel');options.append(node('summary','Dashboard preferences'));const selections=[];
    for(const item of data.modules){const label=node('label'),check=node('input');check.type='checkbox';check.checked=item.visible;label.append(check,document.createTextNode(item.label));options.append(label);selections.push([item.id,check]);}
    options.append(node('small','Shared dashboard shortcuts only. Hiding a card does not change access permissions.'));
@@ -53,6 +59,14 @@
   }catch(e){if(generation===epoch)status.textContent=e.message;}
  }
  nav.onclick=()=>window.showWzosView('dashboard');
+ const upgrade=button('✦ Explore Enterprise',()=>{
+  const session=window.wzosClock.getSession();if(session?.edition!=='core'||session.role!=='admin'||upgradeDialog?.open)return;
+  const dialog=node('dialog',undefined,'panel upgrade-dialog');dialog.setAttribute('aria-label','Explore WZOS Enterprise');
+  dialog.append(node('h2','Bring your operation together with Enterprise'),node('p','Add Work Zone Reports, employee job assignments and reviewed automated dispatch to your Core workspace.'));
+  dialog.append(node('p','Enterprise: $999 setup and $249 per month, including 25 active logins. Additional active logins: $7 per month each.'),node('p','Established Core customers receive a one-time $20 upgrade credit. Online upgrade checkout is not yet available; no payment or edition change is made here.'));
+  const close=button('Continue with Core',()=>{dialog.close();upgrade.focus?.();});dialog.append(close);dialog.addEventListener('close',()=>{dialog.remove();if(upgradeDialog===dialog)upgradeDialog=null;},{once:true});document.body.append(dialog);upgradeDialog=dialog;dialog.showModal();
+ });upgrade.hidden=true;upgrade.className='nav-item core-upgrade';upgrade.id='core-upgrade';document.querySelector('nav[aria-label="Workspace navigation"]').append(upgrade);
+ document.addEventListener('wzos:session',()=>{const session=window.wzosClock.getSession();upgrade.hidden=session?.edition!=='core'||session.role!=='admin';if(upgradeDialog){upgradeDialog.close();upgradeDialog.remove();upgradeDialog=null;}});
  document.addEventListener('wzos:view',e=>{active=e.detail==='dashboard';if(active)render();else{root.hidden=true;clear();}});
  document.addEventListener('wzos:session',()=>{const admin=window.wzosClock.getSession()?.role==='admin';nav.hidden=!admin;clear();if(admin)window.showWzosView('dashboard');else if(active)window.showWzosView('orders');});
  window.addEventListener('beforeunload',e=>{if(draft){e.preventDefault();e.returnValue='';}});
