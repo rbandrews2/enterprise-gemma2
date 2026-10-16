@@ -103,7 +103,8 @@ def main():
                     results['workflow_identity']=outcome['identity']
                 if args.persistent_workflow:
                     persistent=subprocess.run([sys.executable, str(ROOT/'scripts/check_persistent_security.py')],
-                        env=env, capture_output=True, text=True, timeout=150)
+                        env={**env, 'WZOS_RELEASE_PERSISTENCE_RECEIPT': str(evidence/'persistent-fixtures.json')},
+                        capture_output=True, text=True, timeout=150)
                     (evidence/'persistent-workflow.log').write_text(persistent.stdout+persistent.stderr, encoding='utf-8')
                     assert persistent.returncode==0, 'Persistent workflow failed; inspect bounded diagnostic log'
                     assert 'PERSISTENT_SECURITY_PASS ' in persistent.stdout
