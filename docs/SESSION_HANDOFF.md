@@ -1,4 +1,30 @@
-## Final checkout validation and credential handoff - October16
+## LIVE release complete - October16
+
+Ray requested ending testing and updating live. Completed public cutover to
+wzos-v2-accounts-checkout-live-1016 at100percent, https://app.workzoneos.org/.
+Runtime d47033b, image53f9348a618430d823067748ce0958ef084b6d73565780ffcb4a1195dda76a22.
+739 PostgreSQL PASS/no skips,123 JavaScript PASS, final build SUCCESS, exact-image
+scan critical0/high5 previously assessed no-listed-fix distro findings. Actual live
+assets/version/protected APIs/origin/security-header checks PASS; existing admin
+session opened the organization and new Guided Workspace B. No further feature
+testing requested or running. Save/cleanup only, then await Ray's next direction.
+
+Actual Stripe six prices/classification/product-restricted USD20 once coupon/VA
+registration readback PASS. All six new V2 prices now explicit exclusive-tax;
+same IDs/amounts. API secret3 is correct restricted live; webhook1/encryption1 bound
+only to app runtime with approved scope. Earlier API1/2 were wrong types and are
+not bound. No real payment, subscription change, Checkout Session or customer send.
+Coupon restriction needed expanded readback, not a new coupon or data change.
+
+Checkout-hold-1016 is the staged same-image payment/config fallback: it pauses new
+purchases while retaining webhooks, billing enforcement and durable file holds.
+Never roll back to old hub after these persisted states. Atlas actual model
+inference, existing-Core automatic upgrade eligibility/credit and real payment/
+media/SMS/device acceptance remain separate unfinished items. See
+docs/FINAL_CHECKOUT_VALIDATION_20261016.md for exact results and evidence pointers.
+Release scripts and results are saved/pushed on codex/preproduction-modules.
+
+## Historical final checkout validation and credential handoff - October16
 
 Resumed at Ray's request to validate and deploy. Full disposable PostgreSQL737
 PASS/no skips; JavaScript123 PASS/no skips; official SDK/preflight fixtures6 PASS.

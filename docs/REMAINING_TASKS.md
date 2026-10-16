@@ -1,4 +1,21 @@
-## Current next gates - final release validation October16
+## Current status - live release completed October16
+
+- Live app updated: checkout-live-1016 at100percent; source d47033b/image53f9348a.
+  PostgreSQL739/JavaScript123 PASS, actual live assets/auth/origin/header checks PASS.
+  Guided Workspace B and organization admin entrance confirmed in the deployed page.
+- Stripe new-customer checkout enabled with validated restricted API3, webhook1 and
+  encryption1; actual six-price/tax/classification/coupon/VA readback PASS. No real
+  payment or Checkout Session created. Existing-Core automatic subscription change
+  and one-time-credit eligibility remain unfinished; do not direct existing members
+  through new-customer checkout. Real payment acceptance remains for a later session.
+- Exact-image scan critical0/high5: previously assessed distro issues with no listed
+  fix retained for follow-up; no blanket security/compliance claim. Pause fallback
+  preserves billing and file holds. Details: FINAL_CHECKOUT_VALIDATION_20261016.md.
+- Stop testing at Ray's request. Remaining separate work: actual Atlas inference,
+  existing-Core upgrade completion, real Daily/SMS/device acceptance, ongoing distro
+  fixes and any later UI/product changes. No additional work starts automatically.
+
+## Historical next gates - superseded release validation October16
 
 - Full PostgreSQL737/JavaScript123 and billing image build PASS. Fresh backup and
   schema/private bucket checks PASS. See FINAL_CHECKOUT_VALIDATION_20261016.md.

@@ -1,5 +1,54 @@
 # Final checkout release validation - October 16, 2026
 
+## LIVE - completed release
+
+100percent traffic now serves `wzos-v2-accounts-checkout-live-1016` at
+https://app.workzoneos.org/. Application source d47033b, immutable image
+`sha256:53f9348a618430d823067748ce0958ef084b6d73565780ffcb4a1195dda76a22`.
+Full PostgreSQL739 PASS/0 failures/errors/skips; JavaScript123 PASS unchanged;
+final buildc10cf15e-5cf7-4625-a40e-9ed5e8b64e55 SUCCESS. Read-only coupon preflight
+repair b9f8889 passed3 focused fixtures and actual six-price/coupon/VA readback.
+The product-restricted coupon was correct; its applies_to field required expansion.
+All six approved V2 prices now explicitly exclude applicable tax, retaining the
+same IDs, amounts and intervals. Older products/subscriptions remain unchanged.
+
+Exact-image scan completed: critical0, high5, medium1, low36, minimal25. The five
+high findings match the previously reviewed distro issues; every affected package
+has fixedVersion.kind=MAXIMUM in this inventory. They remain tracked, not fixed or
+suppressed. No new Stripe-package finding was identified. Scan operation
+6547f6eb-651c-420f-b0ef-ea836e7d181f; findings under final-image-findings.json.
+No temporary IAM grant was needed: existing operator permissions performed scans.
+
+Both hold/live revisions passed preserved-configuration comparison: existing
+identity/resources/SQL/ingress and prior secret bindings retained; only approved
+scanner and commerce additions. gcloud added the single container display name;
+the verifier explicitly checks that harmless normalization. Deployment tooling
+4e95e9c records that comparison; no new app rebuild was required for tooling fixes.
+
+Pinned new secret bindings: API3, webhook1, purchase encryption1. API3 is restricted
+live and passed actual provider reads. No key value was printed or committed.
+Payment mode is live; no real Checkout Session, charge, subscription change or
+customer message was created during acceptance. Real end-to-end payment remains
+untested. Paid activation/subscription lifecycle are covered by739 automated checks.
+Existing-Core upgrade/once-credit eligibility remains unfinished; existing members
+cannot accidentally create a second subscription through new-customer checkout.
+
+Live confirmation passed: exact shipped frontend assets, release fingerprint,
+protected account/admin/commerce APIs, foreign-origin denial and security headers.
+Existing verified admin session selected the organization and opened Guided
+Workspace B successfully. Local screenshot live-guided-workspace.jpg is ignored.
+Root already-open older clients need a refresh to load the new updater initially.
+
+Rollback target `wzos-v2-accounts-checkout-hold-1016` uses the same accepted image
+with new checkout paused, preserving webhook delivery, paid activation, billing
+enforcement and file holds. This is a payment/configuration rollback; a shared-code
+fault requires fail-closed maintenance and repair, never the older unguarded hub.
+Cloud evidence pointer remains $HOME/wzos-final-20261016-path.txt. Retain private
+receipts and backup1792177616406. No new testing is running; final work is recording
+the release and verifying cleanup of this session's owned SQL proxy.
+
+## Earlier validation history - superseded by completed release above
+
 ## Verified in this release session
 
 - Application/test source: `638d467`. Packaging repair: `39b3fcb`.
