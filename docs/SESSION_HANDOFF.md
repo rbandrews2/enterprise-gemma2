@@ -1,3 +1,18 @@
+## Live workflow failure repaired; retest ready - October15
+
+Approved actual live workflow failed real_clean_upload; job removed and independent
+jobs list[]. Earlier first creation stopped before execution on JSON timeout string;
+helper646e5fc repaired it without changing300s. Scanner request logged HTTP200 at
+31.7595s, exceeding old30s caller read wait; response body unavailable, no clean verdict
+claim. Full workflow remains unaccepted. No public app/schema/IAM changes.
+Sourcee9ad09a extends bounded read65s/acceptance70s for existing60s scanner limit,
+retains5s connect/metadata, no retries/fallback and all integrity/identity/hold gates.
+695 PostgreSQL PASS in262.617s, zero failures/errors/skips. Buildace779fe SUCCESS;
+26 mocked checks PASS in repaired test-only imagefb0ef7929cda0530ffad9c03b367c50565731a310e56db7541fb61837d1327ad.
+See docs/SECURITY_COLD_START_REPAIR_20261015.md for exact digest/evidence/new proposed
+single300s job with existing app identity. Fresh action-time approval required for
+new image/workload execution. Do not use failed old image or silently treat mock aslive.
+
 ## Findings assessment and workflow harness prepared - October15
 
 Remaining five HIGH findings assessed and retained with bounded applicability
