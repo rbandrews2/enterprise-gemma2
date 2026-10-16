@@ -1,3 +1,23 @@
+## Corrected live security workflow29 PASS - October16
+
+Ray approved corrected-image single live retest. Image4d90f2dde45188afddc4cec5256fcb3a8c16bbcd53c5466073127b616c18927d
+ran once as wzos-security-workflow-4hmlc; succeeded tasks1/failed0, job.exit0.
+SECURITY_WORKFLOW_PASS explicitly reports mode=live, identity=Google metadata,
+passed29. Actual private scanner detected the intact fixture; blocked admin download
+and publication, denied infected release, and enforced member/cross-org boundaries.
+Clean upload/quarantine/injected outage/recovery/notification/audit checks passed.
+No mocks substitute for clean/detection scans; outage remains explicitly injected.
+Cleanup WORKFLOW_JOB_REMOVED; independent jobs-after-live-retest.json confirms
+WORKFLOW_JOBS_REMAINING0. Approval consumed; no job or new IAM grant remains.
+Evidence pointer $HOME/wzos-fixture-workflow-latest.txt: live-retest/ configuration,
+execution.json, logs.json, job.exit/removal log; live-retest-launch.log and independent
+jobs-after-live-retest.json. See docs/SECURITY_FIXTURE_REPAIR_20261016.md.
+No public app/schema/traffic/customer sends. This accepts Google metadata/private
+scanner plus in-process app control flow with temporary SQLite/local files, not
+full deployed Firebase/browser/CloudSQL/GoogleStorage workflow acceptance. Next
+complete those persisted-deployment/rollback gates and remaining five HIGH OS
+findings assessment before public security activation. Test image is never a web
+service release. Existing695 PostgreSQL/108 Node evidence remains unchanged.
 ## Corrected immutable workflow image ready - October16
 
 Build453c0c18-30b8-476d-915d-3f1763bb7647 SUCCESS. Corrected test-only image

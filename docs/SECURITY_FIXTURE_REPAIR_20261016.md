@@ -69,3 +69,29 @@ review grant was requested. This is not an application vulnerability waiver.
 Use the corrected helper copied into the cloud evidence directory as
 run_security_workflow_job.sh. build-final.json and image.txt preserve the exact
 artifact. No job has launched; approval is pending for this new image/workload.
+
+## Approved final remote-path acceptance completed
+
+Ray explicitly approved the corrected-image retest. It executed exactly once as
+wzos-security-workflow-4hmlc using immutable image4d90f2dd above, the existing app
+identity and reviewed one-task/300s/retries0/1CPU/512MiB configuration.
+
+Actual result: SECURITY_WORKFLOW_PASS mode=live, identity=Google metadata, passed29.
+Execution succeededCount1, failedCount absent/0; helper job.exit0. Detection,
+blocked download/publication, infected-release refusal and tenant incident/file
+isolation now passed through the real private scanner, as did earlier recovery,
+notifications and audit checks. The simulated outage remains explicitly synthetic.
+
+Cleanup reported WORKFLOW_JOB_REMOVED; independent regional jobs query saved to
+jobs-after-live-retest.json confirmed WORKFLOW_JOBS_REMAINING0. No new IAM grant,
+secret binding, public endpoint, production schema/traffic or customer sends.
+Evidence under the existing workflow pointer: live-retest/{job-created.json,
+job-config.json,execution.json,execution-command.log,logs.json,job-removal.log,
+job.exit}, live-retest-launch.log and jobs-after-live-retest.json.
+
+This completes the synthetic remote scanner/app-control-flow gate. Persistence is
+temporary SQLite/local files; identities inside the app are injected test identities.
+It does not establish deployed Firebase login, CloudSQL/GoogleStorage persistence,
+real-browser acceptance or a blanket waiver of outstanding OS vulnerability findings.
+Next address those release/rollback gates before public security activation; never
+deploy this test harness image as a web service. The single retest approval is consumed.
