@@ -44,7 +44,8 @@ x=json.load(open(sys.argv[1]))['spec']['template']['spec']
 task=x['template']['spec']
 assert x['taskCount']==1 and x.get('parallelism',1)==1
 assert task['serviceAccountName']=='wzos-v2-accounts@enterprise-gemma2.iam.gserviceaccount.com'
-assert task['maxRetries']==0 and task['timeoutSeconds']==300
+# Cloud Run v1 serializes its int64 timeout as a JSON string.
+assert task['maxRetries']==0 and str(task['timeoutSeconds'])=='300'
 c=task['containers'][0]
 assert len(task['containers'])==1 and c['image']==sys.argv[2]
 assert not c.get('env') and not c.get('volumeMounts') and not task.get('volumes')
