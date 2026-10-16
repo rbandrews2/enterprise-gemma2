@@ -1,0 +1,11 @@
+# New dependency image: must pass scan and release gates before traffic.
+FROM us-central1-docker.pkg.dev/enterprise-gemma2/enterprise-gemma2/wzos-v2-accounts@sha256:ef31216bc772a0233b7c59a9e219dcd9b17f6c6f2c8ed058270a9a009676ab9d
+USER root
+COPY requirements-commerce.txt requirements-accounts.txt /app/
+RUN pip install --no-cache-dir -r /app/requirements-commerce.txt
+COPY services /app/services
+COPY shared /app/shared
+COPY knowledge/billing/v2-stripe-catalog.json /app/knowledge/billing/v2-stripe-catalog.json
+RUN chmod -R a+rX /app/services /app/shared /app/knowledge/billing
+USER wzos
+RUN python -c "from services.workspace_preview.commerce_runtime import register; from stripe import StripeClient"

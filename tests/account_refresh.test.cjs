@@ -7,6 +7,7 @@ const fs=require('node:fs');
 class Element {
  constructor(tag,text=''){this.tag=tag;this.textContent=text;this.children=[];this.value='';}
  append(...nodes){this.children.push(...nodes);}
+ prepend(...nodes){this.children.unshift(...nodes);}
  setAttribute(name,value){this.attributes??={};this.attributes[name]=value;} addEventListener(){} showModal(){} close(){} remove(){}
  reportValidity(){return true;}
  insertBefore(node){this.append(node);}
@@ -185,4 +186,51 @@ test('organization HTML response is reported safely without claiming creation',a
  await ui.choices.querySelectorAll('button').find(b=>b.textContent==='Create organization').onclick();
  assert.match(ui.message.textContent,/unexpected response/);assert.doesNotMatch(ui.message.textContent,/PRIVATE_HTML/);
  assert.equal(ui.requests.filter(r=>r.url==='/api/account').length,1);
+});
+
+async function checkoutFixture({receipt,redirect='https://checkout.stripe.com/c/pay/synthetic',failFirst=false}={}){
+ const body=new Element('body'),bar=new Element('bar'),requests=[],navigations=[];let attempts=0;
+ const ok=data=>({ok:true,json:async()=>data});
+ const fetch=async(url,options)=>{
+  requests.push({url,body:options.body&&JSON.parse(options.body)});
+  if(url.includes('signInWithPassword'))return ok({idToken:'synthetic',refreshToken:'synthetic',expiresIn:3600});
+  if(url==='/api/account')return ok({organizations:[]});
+  if(url==='/api/account/commerce')return ok({enabled:true,offers:[{id:'core',edition:'core',included_seats:15,maximum_seats:30,setup_cents:9900,monthly_cents:5900,additional_seat_monthly_cents:300}]});
+  if(url.startsWith('/api/account/purchases/'))return ok(receipt);
+  if(url==='/api/account/checkout'){if(failFirst&&attempts++===0)throw Error('connection lost');return ok({session_id:'cs_synthetic',checkout_url:redirect});}
+  throw Error('Unexpected request '+url);
+ };
+ const sandbox={window:{},document:{body,createElement:t=>new Element(t),querySelector:()=>bar},fetch,Date,URLSearchParams,URL,Intl,
+  crypto:{randomUUID:()=>require('node:crypto').randomUUID()},history:{replaceState(){}},
+  location:{hostname:'localhost',search:receipt?'?purchase=cs_synthetic':'',pathname:'/',hash:'',assign:url=>navigations.push(url),reload(){}}};
+ vm.runInNewContext(fs.readFileSync('services/workspace_preview/static/account.js','utf8'),sandbox);
+ sandbox.window.wzosAccount.start({auth_api_key:'synthetic'});
+ const panel=body.children[0],form=panel.children.find(c=>c.tag==='form');
+ const inputs=form.querySelectorAll('input');inputs[0].value='buyer@example.test';inputs[1].value='synthetic';
+ form.onsubmit({preventDefault(){}});await settle();await settle();
+ return {panel,requests,navigations};
+}
+
+test('checkout retries retain request identity and only navigate to hosted Stripe',async()=>{
+ const ui=await checkoutFixture({failFirst:true});
+ const buy=ui.panel.querySelectorAll('button').find(b=>b.textContent==='Continue to secure checkout');
+ assert.ok(buy);await buy.onclick();await buy.onclick();
+ const posts=ui.requests.filter(r=>r.url==='/api/account/checkout');
+ assert.equal(posts.length,2);assert.equal(posts[0].body.request_id,posts[1].body.request_id);
+ assert.equal(posts[0].body.seats,15);assert.equal(posts[0].body.email,undefined);
+ assert.deepEqual(ui.navigations,['https://checkout.stripe.com/c/pay/synthetic']);
+});
+
+test('checkout refuses an unexpected redirect host',async()=>{
+ const ui=await checkoutFixture({redirect:'https://example.test/forged'});
+ await ui.panel.querySelectorAll('button').find(b=>b.textContent==='Continue to secure checkout').onclick();
+ assert.equal(ui.navigations.length,0);
+ assert.match(ui.panel.children.find(c=>c.attributes?.role==='status').textContent,/destination was not accepted/);
+});
+
+for(const paid of [false,true])test('checkout return requires verified receipt before filling activation '+paid,async()=>{
+ const ui=await checkoutFixture({receipt:paid?{status:'fulfilled',edition:'core',seats:15,activation_code:'synthetic-code'}:{status:'pending'}});
+ const activation=ui.panel.querySelectorAll('input').find(x=>x.attributes?.['aria-label']==='Activation code');
+ assert.equal(activation.value,paid?'synthetic-code':'');
+ assert.equal(ui.navigations.length,0);
 });

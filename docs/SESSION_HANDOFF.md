@@ -1,3 +1,17 @@
+## PAUSED - checkout runtime integration saved - October16
+
+Ray requested focusing on checkout, then asked to save before refreshing the
+computer. Stop work here. Resume only on request. See
+docs/CHECKOUT_RUNTIME_INTEGRATION_20261016.md for complete implementation, startup
+DDL, evidence, required secret bindings and exact next steps. Checkout/lifecycle
+and new-organization UI are now connected in SOURCE, disabled by default; NOT live.
+Initial Python34 PASS/34 PG skips, final targeted3 PASS, Node26 PASS/no skips.
+Broader integration/PG/provider/browser acceptance remains open. No deployment,
+new credentials/grants, payments or customer messages. User reports changing tax
+classification; independent verification and Virginia collection still pending.
+Next verify fresh Git/cloud state, finish checkout gates and secure webhook/key/
+encryption binding; do not silently resume unrelated work or enable paid checkout.
+
 ## Stripe tax decision and checkout safeguards - October16
 
 Ray confirmed Cloud SaaS/business use txcd_10103001 for the two new V2 products.

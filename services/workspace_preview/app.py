@@ -630,6 +630,8 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
     if accounts:
         accounts.register(app)
         app.state.accounts = accounts
+        from . import commerce_runtime
+        commerce_runtime.register(app, accounts)
         # Dispatch reads the account employee contracts, so it exists only with accounts.
         from . import dispatch
         dispatch.register(app, connect, actor, permitted_row, roster)

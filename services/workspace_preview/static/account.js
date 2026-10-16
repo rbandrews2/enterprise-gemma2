@@ -125,6 +125,48 @@ window.wzosAccount = (() => {
      const inviteToken=invitation.value.trim();if(inviteToken.length<32||inviteToken.length>128)throw Error('An invitation token is required to join. Ask your organization administrator for an invitation.');
      await api('/api/account/join',{token:inviteToken});await choose();});
     choices.append(element('p','Creating a new organization requires a WZOS activation code. Joining an existing organization requires an invitation from its administrator.'),name,activation,create,invitation,join);panel.insertBefore(choices,message);
+    // Purchase controls belong to new customers, never organization members.
+    if(!account.organizations.length){
+     const purchaseId=new URLSearchParams(location.search).get('purchase');
+     if(purchaseId?.startsWith('cs_')&&purchaseId.length<512){
+      const receiptBox=element('section');const receiptStatus=element('p','Checking your purchase…');
+      const check=element('button','Check payment status');receiptBox.append(receiptStatus,check);choices.prepend(receiptBox);
+      const checkReceipt=async()=>{
+       const receipt=await api('/api/account/purchases/'+encodeURIComponent(purchaseId));
+       if(receipt.status==='fulfilled'&&receipt.activation_code){
+        activation.value=receipt.activation_code;
+        receiptStatus.textContent=`Payment confirmed. ${receipt.edition==='enterprise'?'Enterprise':'Core'} includes ${receipt.seats} active logins. Enter your organization name to activate.`;
+        check.hidden=true;history.replaceState(null,'',location.pathname+location.hash);
+       }else receiptStatus.textContent='Payment confirmation is pending. Check again shortly; do not pay again.';
+      };
+      check.onclick=()=>run(checkReceipt);
+      try{await checkReceipt();}catch(e){receiptStatus.textContent=e.message;}
+     }
+     try{
+      const commerce=await api('/api/account/commerce');
+      if(commerce.enabled){
+       const purchase=element('details');purchase.append(element('summary','Purchase WZOS for a new organization'));
+       for(const offer of commerce.offers){
+        const card=element('section');const seats=element('input');seats.type='number';seats.required=true;seats.min=String(offer.included_seats);seats.max=String(offer.maximum_seats||100000);seats.step='1';seats.value=seats.min;seats.setAttribute('aria-label',offer.edition+' active logins');
+        const total=element('p');const money=cents=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(cents/100);
+        function price(){const count=Number(seats.value);const monthly=offer.monthly_cents+Math.max(0,count-offer.included_seats)*offer.additional_seat_monthly_cents;total.textContent=`${money(offer.setup_cents)} setup + ${money(monthly)}/month, plus applicable tax. ${offer.included_seats} logins included; each extra is ${money(offer.additional_seat_monthly_cents)}/month. Admins count as logins.`;}
+        seats.oninput=price;price();
+        const buy=element('button','Continue to secure checkout');let retryId=null,retrySeats=null;
+        buy.onclick=()=>run(async()=>{
+         if(!seats.reportValidity())return;const count=Number(seats.value);
+         if(retrySeats!==count){retryId=crypto.randomUUID();retrySeats=count;}
+         const result=await api('/api/account/checkout',{request_id:retryId,offer_id:offer.id,seats:count});
+         if(!result.checkout_url)throw Error('This checkout is no longer open. Check your purchase status before trying again.');
+         const destination=new URL(result.checkout_url);
+         if(destination.protocol!=='https:'||!['checkout.stripe.com','checkout.superiorllc.org'].includes(destination.hostname))throw Error('Checkout destination was not accepted.');
+         location.assign(destination.href);
+        });
+        card.append(element('h3',offer.edition==='enterprise'?'Enterprise':'Core'),total,seats,buy);purchase.append(card);
+       }
+       choices.append(purchase);
+      }
+     }catch(e){/* Existing activation and invitation flows remain available. */}
+    }
    }
    async function login(create){
     if(!email.reportValidity()||!password.reportValidity())return;

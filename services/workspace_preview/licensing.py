@@ -29,6 +29,8 @@ class Licensing:
                    (activation_hash, seats, email.lower() if email else None))
 
     def redeem(self, db, activation_hash, org, user):
+        if getattr(self,'billing_check',None):
+            self.billing_check(db,activation_hash)
         grant = db.execute('SELECT * FROM activation_entitlements WHERE activation_hash=?', (activation_hash,)).fetchone()
         if grant:
             if grant['purchaser_email'] and grant['purchaser_email'] != user['email']:

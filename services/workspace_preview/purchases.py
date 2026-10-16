@@ -42,17 +42,24 @@ class Offer:
 
 
 class Purchases:
-    def __init__(self, accounts, provider, offers, cipher, *, livemode=False, require_automatic_tax=False):
-        if livemode:
+    def __init__(self, accounts, provider, offers, cipher, *, livemode=False, require_automatic_tax=False, recurring_lifecycle=False):
+        if livemode and not (recurring_lifecycle and require_automatic_tax):
             raise ValueError('Production commerce requires recurring lifecycle acceptance before enabling')
         if getattr(provider, 'livemode', livemode) is not livemode:
             raise ValueError('Provider mode does not match the commerce environment')
         self.accounts,self.provider,self.offers,self.cipher=accounts,provider,{o.id:o for o in offers},cipher
         self.livemode=livemode
         self.require_automatic_tax=require_automatic_tax
+        self.single_purchase_identity=False
         with accounts.connect() as db:
             db.execute("CREATE TABLE IF NOT EXISTS purchase_requests (id TEXT PRIMARY KEY,email TEXT NOT NULL,offer_id TEXT NOT NULL,edition TEXT NOT NULL CHECK(edition IN ('core','enterprise')),seats INTEGER NOT NULL CHECK(seats>0),expected_items TEXT NOT NULL,expected_cents INTEGER NOT NULL,session_id TEXT UNIQUE,status TEXT NOT NULL,activation_hash TEXT UNIQUE,sealed_code TEXT)")
             db.execute('CREATE TABLE IF NOT EXISTS purchase_events (event_id TEXT PRIMARY KEY,session_id TEXT NOT NULL,processed_at TEXT NOT NULL)')
+        self.lifecycle = None
+        if recurring_lifecycle:
+            from .purchase_lifecycle import PurchaseLifecycle
+            self.lifecycle = PurchaseLifecycle(self)
+            accounts.licensing.billing_check = self.lifecycle.check_activation
+            accounts.billing_check = self.lifecycle.check_organization
 
     def checkout(self, request_id, email, offer_id, seats):
         from uuid import UUID
@@ -65,6 +72,10 @@ class Purchases:
         with self.accounts.connect() as db:
             db.execute('BEGIN IMMEDIATE')
             previous=db.execute('SELECT * FROM purchase_requests WHERE id=?',(request_id,)).fetchone()
+            if not previous and self.single_purchase_identity:
+                previous=db.execute('SELECT * FROM purchase_requests WHERE email=? ORDER BY id LIMIT 1',(email,)).fetchone()
+                if previous:
+                    request_id=previous['id']
             if previous:
                 if (previous['email'],previous['offer_id'],previous['seats'],previous['expected_items'])!=(email,offer_id,seats,encoded):
                     raise HTTPException(409,'Checkout retry differs from its original request')
@@ -77,7 +88,7 @@ class Purchases:
         url=result.get('url')
         if url:
             parsed=urlsplit(url)
-            if parsed.scheme!='https' or parsed.hostname not in ('checkout.stripe.com','checkout.superiorllc.org') or parsed.username or parsed.password:
+            if parsed.scheme!='https' or parsed.hostname not in ('checkout.stripe.com','checkout.superiorllc.org') or parsed.username or parsed.password or parsed.port not in (None,443):
                 raise ValueError('Unexpected checkout destination')
         with self.accounts.connect() as db:
             db.execute('BEGIN IMMEDIATE')
@@ -90,7 +101,10 @@ class Purchases:
         if len(raw_body)>1024*1024 or not signature or len(signature)>8192:raise ValueError('Invalid webhook envelope')
         event=self.provider.verify_event(raw_body,signature)
         if event.get('livemode') is not self.livemode:raise ValueError('Unexpected payment mode')
+        if not isinstance(event.get('id'),str) or not event['id'].startswith('evt_'):raise ValueError('Invalid event identifier')
         kind=event.get('type')
+        if self.lifecycle and kind in self.lifecycle.events:
+            return self.lifecycle.handle(event)
         if kind not in ('checkout.session.completed','checkout.session.async_payment_succeeded','checkout.session.async_payment_failed'):
             return {'ignored':True}
         session_id=event['data']['object']['id']
@@ -99,6 +113,16 @@ class Purchases:
         if session.get('id')!=session_id or session.get('livemode') is not self.livemode:raise ValueError('Session identity/mode mismatch')
         if session.get('payment_status')!='paid':
             return {'pending':True,'activation_issued':False}
+        billing = None
+        if self.lifecycle:
+            with self.accounts.connect() as db:
+                pending = db.execute('SELECT * FROM purchase_requests WHERE session_id=?', (session_id,)).fetchone()
+                if not pending:raise ValueError('Unrecognized checkout session')
+                duplicate = db.execute('SELECT session_id FROM purchase_events WHERE event_id=?', (event['id'],)).fetchone()
+                if duplicate:
+                    if duplicate['session_id'] != session_id:raise ValueError('Event identity mismatch')
+                    return {'duplicate':True,'fulfilled':pending['status']=='fulfilled'}
+            billing = self.lifecycle.initial(session, pending)
         with self.accounts.connect() as db:
             db.execute('BEGIN IMMEDIATE')
             row=db.execute('SELECT * FROM purchase_requests WHERE session_id=?',(session_id,)).fetchone()
@@ -137,6 +161,8 @@ class Purchases:
                 db.execute('INSERT INTO activation_codes VALUES (?,?,?,?,?)',(hash_,edition,expiry,None,None))
                 self.accounts.licensing.attach_activation(db,hash_,row['seats'],row['email'])
                 db.execute('UPDATE purchase_requests SET status=?,activation_hash=?,sealed_code=? WHERE id=?',('fulfilled',hash_,sealed,row['id']))
+                if billing:
+                    db.execute('INSERT INTO purchase_subscriptions VALUES (?,?,?,?,?,1)', (row['id'],*billing))
             db.execute('INSERT INTO purchase_events VALUES (?,?,?)',(event['id'],session_id,datetime.now(timezone.utc).isoformat()))
         return {'fulfilled':True,'activation_issued':True}
 
@@ -145,7 +171,11 @@ class Purchases:
             row=db.execute('SELECT * FROM purchase_requests WHERE session_id=? AND email=?',(session_id,verified_identity['email'])).fetchone()
         if not row:raise HTTPException(404,'Purchase unavailable for this verified account')
         result={'status':row['status'],'seats':row['seats'],'edition':row['edition']}
-        if row['status']=='fulfilled':result['activation_code']=self.cipher.decrypt(row['sealed_code'].encode()).decode()
+        if row['status']=='fulfilled':
+            if self.lifecycle:
+                with self.accounts.connect() as db:
+                    self.lifecycle.check_activation(db,row['activation_hash'])
+            result['activation_code']=self.cipher.decrypt(row['sealed_code'].encode()).decode()
         return result
 
     def register_private_receipts(self, app):
@@ -188,6 +218,9 @@ class StripeProvider:
 
     def retrieve_session(self, session_id):
         return self.client.v1.checkout.sessions.retrieve(session_id,{'expand':['line_items']}).to_dict()
+
+    def retrieve_subscription(self, subscription_id):
+        return self.client.v1.subscriptions.retrieve(subscription_id,{'expand':['latest_invoice']}).to_dict()
 
     def verify_event(self, raw_body, signature):
         from stripe import Webhook, SignatureVerificationError

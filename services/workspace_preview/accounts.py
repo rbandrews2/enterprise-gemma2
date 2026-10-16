@@ -125,6 +125,9 @@ class Accounts:
             row = db.execute('SELECT m.role,o.id,o.name,o.edition FROM memberships m JOIN organizations o ON o.id=m.organization_id WHERE m.user_id=? AND o.id=? AND m.active=1 AND o.active=1', (user['id'], org)).fetchone()
         if not row:
             raise HTTPException(403, 'Active organization membership required')
+        if getattr(self,'billing_check',None):
+            with self.connect() as db:
+                self.billing_check(db,org)
         return {**user, 'membership_role': row['role'],
                 'role': 'admin' if row['role'] == 'admin' else 'member',
                 'organization_id': row['id'], 'organization': row['name'], 'edition': row['edition']}

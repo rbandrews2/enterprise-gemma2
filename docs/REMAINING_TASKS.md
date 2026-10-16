@@ -1,5 +1,11 @@
 ## Current next gates - October16
 
+- PAUSED at user request for computer refresh. Checkout is connected in source,
+  default disabled, not deployed. Resume from docs/CHECKOUT_RUNTIME_INTEGRATION_20261016.md:
+  complete exact PostgreSQL/integrated/provider/browser checks, bind existing key
+  plus webhook/encryption secrets, build/review image, then reviewed activation.
+  Source Python34 passed/34 PG skipped; final targeted3 passed; Node26 passed.
+
 - Stripe tax: Ray approved SaaS business-use txcd_10103001 for only the two V2
   products, plus immediate collection using the existing Virginia registration
   without filing services. Both live changes remain PENDING after browser loss.
