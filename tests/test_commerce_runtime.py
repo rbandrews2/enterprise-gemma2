@@ -128,6 +128,29 @@ class CommerceRuntimeTests(seats.SeatLicensingTests):
         with patch.dict(os.environ,{'WZOS_COMMERCE_ENABLED':'1','WZOS_STRIPE_MODE':'live','WZOS_STRIPE_TAX_VERIFIED':'0'}):
             with self.assertRaisesRegex(RuntimeError,'tax configuration'):configured_purchases(self.accounts)
 
+    def test_checkout_pause_preserves_pending_fulfillment_and_billing_enforcement(self):
+        self.buy()
+        with patch.dict(os.environ, {'WZOS_COMMERCE_CHECKOUT_PAUSED':'1'}):
+            self.assertEqual(self.client.get('/api/account/commerce',headers=self.headers()).json(),{'enabled':False,'offers':[]})
+            response=self.client.post('/api/account/checkout',headers=self.headers(),json={
+                'request_id':str(uuid4()),'offer_id':'core','seats':15})
+            self.assertEqual(response.status_code,503)
+            self.assertEqual(self.provider.calls,1)
+            self.assertEqual(self.event().status_code,200)
+            code=self.receipt().json()['activation_code']
+            created=self.client.post('/api/account/organizations',headers=self.headers(),json={
+                'name':'Already paid company','activation_code':code})
+            self.assertEqual(created.status_code,200,created.text)
+            self.org=created.json()['id']
+            self.subscription['status']='canceled'
+            self.assertEqual(self.event('customer.subscription.deleted',{'id':'sub_synthetic'}).status_code,200)
+            self.assertEqual(self.client.get('/api/account/license',headers=self.headers()).status_code,403)
+            self.subscription['status']='active'
+            self.assertEqual(self.event('customer.subscription.updated',{'id':'sub_synthetic'}).status_code,200)
+            self.assertEqual(self.client.get('/api/account/license',headers=self.headers()).status_code,200)
+        # Removing the pause restores offers for an unrelated new customer.
+        self.assertTrue(self.client.get('/api/account/commerce',headers=self.headers('other')).json()['enabled'])
+
 
 @unittest.skipUnless(os.getenv('WZOS_TEST_DATABASE_URL'),'Dedicated PostgreSQL test database not configured')
 class PostgreSQLCommerceRuntimeTests(CommerceRuntimeTests):

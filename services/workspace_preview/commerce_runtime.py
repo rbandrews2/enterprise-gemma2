@@ -55,7 +55,7 @@ def register(app, accounts, purchases=None):
         user = accounts.identity(request)
         with accounts.connect() as db:
             existing = db.execute('SELECT organization_id FROM memberships WHERE user_id=? AND active=1', (user['id'],)).fetchone()
-        if not purchases or existing:
+        if not purchases or existing or os.getenv('WZOS_COMMERCE_CHECKOUT_PAUSED') == '1':
             return {'enabled': False, 'offers': []}
         return {'enabled': True, 'offers': [
             {key: getattr(offer, key) for key in ('id', 'edition', 'included_seats', 'maximum_seats',
@@ -67,6 +67,8 @@ def register(app, accounts, purchases=None):
         if not purchases:
             raise HTTPException(503, 'Online checkout is not available yet.')
         user = new_customer(request)
+        if os.getenv('WZOS_COMMERCE_CHECKOUT_PAUSED') == '1':
+            raise HTTPException(503, 'Online checkout is temporarily unavailable. Please try again later.')
         try:
             return purchases.checkout(str(body.request_id), user['email'], body.offer_id, body.seats)
         except HTTPException:

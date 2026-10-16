@@ -78,6 +78,27 @@ secret there, not a restricted API key. No value was displayed. Corrective user
 handoff is pending: Stripe's "Your new API key" window contains the API credential;
 save it as another version of the API secret, leaving webhook secret unchanged.
 
+## Checkout pause safeguard
+
+Restricted live server key version3 now verifies. Read-only catalog inspection
+reached the provider and blocked on price tax behavior; verify each exact V2 price
+before selecting the approved exclusive-tax setup. Do not alter older products.
+
+The release adds WZOS_COMMERCE_CHECKOUT_PAUSED=1 as a runtime pause. It hides new
+customer offers and returns503 before creating another session. Existing receipts,
+paid activation, webhooks and authoritative subscription access checks stay active.
+The focused test verifies pending payment completion, cancellation blocking and
+recovery while paused; local17 PASS/17 PostgreSQL skipped. The initial sandbox
+attempt failed before application execution because of Windows temporary-directory
+permissions; the normal-access focused run passed. Exact new full PostgreSQL/image
+gates must pass before deployment. This introduces no schema changes.
+
+Stage the new billing-aware image with checkout paused as the fallback, then the
+same accepted image with new checkout enabled as the candidate. This is a safe
+payment/configuration rollback, not an independent older-code rollback. For a
+shared-code fault, fail closed/maintenance and repair; never serve an older version
+that bypasses persisted file holds or subscription access restrictions.
+
 Before traffic: successful immutable billing image and dependency review; credential
 preflight; preserved auth/ingress/runtime/secret configuration comparison; candidate
 and security/billing-capable rollback staged without traffic; actual public and
