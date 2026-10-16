@@ -1,0 +1,28 @@
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args: ['build', '--platform', 'linux/amd64', '--file', 'Dockerfile.accounts-commerce', '--tag', '${_IMAGE}', '.']
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - run
+      - --rm
+      - --network=none
+      - --read-only
+      - --cap-drop=ALL
+      - --security-opt=no-new-privileges
+      - --env=PYTHONDONTWRITEBYTECODE=1
+      - --env=PYTHONPATH=/app
+      - --mount=type=bind,source=/workspace/commerce_tests/test_stripe_sdk.py,target=/tmp/test_stripe_sdk.py,readonly
+      - --entrypoint=python
+      - '${_IMAGE}'
+      - -m
+      - unittest
+      - discover
+      - -s
+      - /tmp
+      - -p
+      - test_stripe_sdk.py
+images: ['${_IMAGE}']
+timeout: 600s
+queueTtl: 600s
+options:
+  machineType: E2_MEDIUM
