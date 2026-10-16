@@ -1,3 +1,17 @@
+## Fixture classification diagnosed - October 16
+
+Isolated native engine comparison d7b6ab4 PASS, exit0: ClamAV1.5.4/28155 classified
+raw68-byte EICAR infected, workflow's PDF-wrapped bytes clean, intact EICAR inside
+OOXML archive infected. Benign clean, expanded-limit/missing-engine error; daemon
+stopped. Evidence pointer $HOME/wzos-fixture-diagnosis-latest.txt. The PDF-prefix
+violates EICAR's standard test format; mocked substring matching masked this
+invalid expectation. See docs/SCANNER_FIXTURE_DIAGNOSIS_20261016.md.
+No new Cloud Run job, IAM/production change or customer sends. This comparison is
+not an exact earlier live-instance/signature replay. Next correct the synthetic
+workflow fixture using a supported document-container upload, log bounded status
+on failures, and validate locally before a separately approved live retest. Do not
+weaken scanner/hold policy or mark full workflow accepted. Existing application
+695 PostgreSQL/108 Node passes remain applicable; no product source changed.
 ## Repaired live retest executed; detection gate remains blocked - October 16
 
 CLI sign-in confirmed admin@workzoneos.org / enterprise-gemma2. The previously
