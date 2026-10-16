@@ -77,3 +77,32 @@ messages, public endpoint or production traffic/schema updates. The job inherits
 its app identity's existing permissions despite not binding secrets; this is the
 security-sensitive action requiring confirmation. Old private scanner staysmin0/max1.
 Full deployed browser/Firebase/cloud-persistence acceptance remains later work.
+
+## Repaired live retest executed; detection gate remains blocked - October 16
+
+CLI sign-in confirmed admin@workzoneos.org / enterprise-gemma2. The previously
+approved exact fb0ef792 test-only image ran once with helper646e5fc; no new grant,
+secret binding, public application/schema/traffic change or customer sends.
+Configuration limits verified. Result: job.exit1, SECURITY_WORKFLOW_FAILED
+real_eicar_upload_detected. By sequential fail-fast harness order, the preceding
+22 checks passed, including real clean upload, metadata authentication, quarantine,
+injected outage hold, persisted admin notification, clean rescan, explicit release
+and recovery audit. The final infected-download/release and other-org incident
+checks were not reached; do not claim26 PASS or full workflow acceptance.
+The earlier cold-start failure is overcome: scanner HTTP200 at33.109808744s,
+then two200 responses at0.040019855s/0.044259224s. HTTP status is not an engine
+verdict. The harness does not log the failed fixture's actual classification;
+clean versus held/error cannot be inferred. Its fixture wraps the standard test
+string in PDF-looking bytes, unlike the engine gate's raw standard fixture.
+Next compare these fixtures against the same engine/signatures and collect only
+non-sensitive classification diagnostics. Do not weaken malware assertions or
+claim malware detection failure cause until established. No automatic rerun:
+the single repaired live execution approval is consumed.
+Cleanup helper reported WORKFLOW_JOB_REMOVED; independent jobs list confirmed
+WORKFLOW_JOBS_REMAINING0. Private evidence under the existing home release pointer:
+live-workflow-cold-retest/, live-workflow-cold-retest-launch.log,
+jobs-after-cold-retest.json, scanner-cold-retest-logs.json and
+live-workflow-cold-retest-all-logs.json. Existing695 PostgreSQL/108 Node results
+remain applicable; no product source change or redundant suite/build.
+Remaining five HIGH OS findings and full deployed Firebase/CloudSQL/Storage/browser
+acceptance remain separate gates. Public release remains unchanged.
