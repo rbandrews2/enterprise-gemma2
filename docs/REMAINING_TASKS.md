@@ -1,3 +1,28 @@
+## Corrected immutable workflow image ready - October16
+
+Build453c0c18-30b8-476d-915d-3f1763bb7647 SUCCESS. Corrected test-only image
+4d90f2dde45188afddc4cec5256fcb3a8c16bbcd53c5466073127b616c18927d;
+29 checks PASS against real local ClamAV plus29 mocked checks inside image.
+Source9ffb411; no product/dependency/production/IAM changes. Evidence pointer
+$HOME/wzos-fixture-workflow-latest.txt includes build-final.json,image.txt and
+corrected run_security_workflow_job.sh (requires29 live checks).
+Next request one new scoped app-identity live retest, same300s/task1/retries0/
+1CPU/512MiB limits and immediate cleanup. No new job launched; approval pending.
+See docs/SECURITY_FIXTURE_REPAIR_20261016.md for exact scope and acceptance limits.
+## Corrected workflow29 real-engine checks PASS - October16
+
+Source9ffb411 replaces invalid PDF-wrapped EICAR with intact standard fixture in
+supported Forms Hub DOCX upload.29 mocked checks PASS;29 real local-engine app
+checks PASS with ClamAV1.5.4/28155, injected app identities, temporary SQLite/files.
+Detection, admin download423, publication409, release409, member/unrelated-org404
+and other-org incident isolation now complete. Existing work-order member423,
+quarantine/recovery/audit checks remain. Engine stopped; gate exit0; peak999216KiB.
+No production source/schema/IAM/traffic/customer sends changed. No full deployed
+Google authentication/storage acceptance claim. See docs/SECURITY_FIXTURE_REPAIR_20261016.md.
+Cloud evidence pointer $HOME/wzos-fixture-workflow-latest.txt. Test-only image
+build453c0c18-30b8-476d-915d-3f1763bb7647 submitted; verify final status/digest
+before approval for new live29-check job. Prior live execution approval consumed.
+Do not silently rerun old image or attach app identity without new scoped approval.
 ## Fixture classification diagnosed - October 16
 
 Isolated native engine comparison d7b6ab4 PASS, exit0: ClamAV1.5.4/28155 classified
