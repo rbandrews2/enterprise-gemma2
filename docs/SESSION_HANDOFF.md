@@ -1,3 +1,38 @@
+## Stripe tax decision and checkout safeguards - October16
+
+Ray confirmed Cloud SaaS/business use txcd_10103001 for the two new V2 products.
+Live Stripe Tax showed collecting locations0; all locations listed only North
+Carolina and global unattributed revenue, both not collecting. Ray explicitly
+approved adding his existing Virginia registration with immediate collection,
+without filing services. Approval is saved but UNUSED: browser disconnected before
+product-tax-code edits or registration creation. Do not report either as applied.
+
+Local purchase validation now handles completed automatic tax separately from
+the approved subtotal, with strict rejection of altered/pending tax and discounts.
+Restricted-key/mode guards, bounded SDK calls, real raw-signature verification tests
+and read-only six-price/coupon/VA registration preflight added. No new DDL/routes,
+credentials, runtime grants, customer sends or charges. Production commerce remains
+blocked pending recurring lifecycle, organization mapping and upgrade eligibility.
+Focused final run:47 discovered,28 PASS,19 PostgreSQL skipped (no disposable DB
+configured),0 failures/errors. Includes purchase19, catalog3 and official SDK/
+preflight6. Log .local-data/release-20261016/commerce-focused.log. Full Python
+candidate validation remains OPEN: initial sandbox run stopped after reproducing
+Windows temporary-folder AccessDenied before application execution. Normal-access
+rerun stopped after prolonged lack of progress; no complete result, not a pass.
+Its diagnostic log is .local-data/release-20261016/python-billing-access.log.
+Exact PostgreSQL remains open. Owned test sessions stopped; no background test left.
+
+Next: apply confirmed code only to V2 products; add approved Virginia registration
+and verify active; capture nonsecret evidence. Prepare narrow restricted-key user
+entry into Secret Manager (never chat), then run read-only preflight and controlled
+tax calculation. Current live account is acct_1RVoyBCTCYI3n5kZ. Last browser inventory
+Chrome4, tax/product tab560208015, keys560208005; verify afresh if disconnected.
+Later inventory changed Chrome to3 and showed Enterprise product editor open;
+binding timed out, so no user in-progress edits were overwritten. Secret Manager
+tab URL names `wzos-v2-stripe-api-keY` (capital Y); do not create a duplicate or
+assume canonical lowercase name. Value, permissions and version were not inspected.
+See docs/V2_PRICING_ACTIVATION_20261016.md for permission plan and acceptance limits.
+
 ## V2 live Stripe catalog prepared; release candidate pending - October16
 
 Ray approved USD Core99setup/59monthly/15included/3extra/max30 and Enterprise

@@ -117,6 +117,42 @@ class PurchaseOnboardingTests(seat_fixture.SeatLicensingTests):
             self.assertEqual(db.execute('SELECT COUNT(*) FROM purchase_events').fetchone()[0],0)
             self.assertEqual(db.execute('SELECT status FROM purchase_requests').fetchone()[0],'pending')
 
+    def taxed_session(self, tax_cents=837):
+        self.purchases.require_automatic_tax=True
+        self.checkout()
+        session=self.provider.sessions[self.session_id]
+        session.update(payment_status='paid',amount_subtotal=15800,amount_total=15800+tax_cents,
+                       automatic_tax={'enabled':True,'status':'complete'},
+                       total_details={'amount_tax':tax_cents,'amount_discount':0,'amount_shipping':0})
+        return session
+
+    def test_verified_tax_adds_to_approved_subtotal_including_zero_tax(self):
+        # Synthetic amounts test arithmetic, not Virginia taxability or a tax rate.
+        for tax_cents in (837,0):
+            self.taxed_session(tax_cents)
+            self.assertTrue(self.purchases.webhook(*self.event())['fulfilled'])
+
+    def test_tax_failure_discount_shipping_and_tampered_totals_never_fulfill(self):
+        for mutation in ('pending','disabled','negative','boolean','subtotal','total','discount','shipping','missing'):
+            with self.subTest(mutation=mutation):
+                session=self.taxed_session()
+                if mutation=='pending':session['automatic_tax']['status']='requires_location_inputs'
+                elif mutation=='disabled':session['automatic_tax']['enabled']=False
+                elif mutation=='negative':session['total_details']['amount_tax']=-1
+                elif mutation=='boolean':session['total_details']['amount_tax']=True
+                elif mutation=='subtotal':session['amount_subtotal']=1
+                elif mutation=='total':session['amount_total']=15800
+                elif mutation=='discount':session['total_details']['amount_discount']=2000
+                elif mutation=='shipping':session['total_details']['amount_shipping']=100
+                else:session.pop('total_details')
+                with self.assertRaises(ValueError):self.purchases.webhook(*self.event())
+        with self.db.connect() as db:self.assertEqual(db.execute('SELECT COUNT(*) FROM activation_codes').fetchone()[0],0)
+
+    def test_live_provider_cannot_be_attached_to_sandbox_checkout(self):
+        self.provider.livemode=True
+        with self.assertRaisesRegex(ValueError,'Provider mode'):
+            Purchases(self.accounts,self.provider,[self.offer],self.purchases.cipher)
+
 
 @unittest.skipUnless(os.getenv('WZOS_TEST_DATABASE_URL'),'Dedicated PostgreSQL test database not configured')
 class PostgreSQLPurchaseOnboardingTests(PurchaseOnboardingTests):

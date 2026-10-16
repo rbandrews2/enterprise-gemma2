@@ -42,11 +42,14 @@ class Offer:
 
 
 class Purchases:
-    def __init__(self, accounts, provider, offers, cipher, *, livemode=False):
+    def __init__(self, accounts, provider, offers, cipher, *, livemode=False, require_automatic_tax=False):
         if livemode:
             raise ValueError('Production commerce requires recurring lifecycle acceptance before enabling')
+        if getattr(provider, 'livemode', livemode) is not livemode:
+            raise ValueError('Provider mode does not match the commerce environment')
         self.accounts,self.provider,self.offers,self.cipher=accounts,provider,{o.id:o for o in offers},cipher
         self.livemode=livemode
+        self.require_automatic_tax=require_automatic_tax
         with accounts.connect() as db:
             db.execute("CREATE TABLE IF NOT EXISTS purchase_requests (id TEXT PRIMARY KEY,email TEXT NOT NULL,offer_id TEXT NOT NULL,edition TEXT NOT NULL CHECK(edition IN ('core','enterprise')),seats INTEGER NOT NULL CHECK(seats>0),expected_items TEXT NOT NULL,expected_cents INTEGER NOT NULL,session_id TEXT UNIQUE,status TEXT NOT NULL,activation_hash TEXT UNIQUE,sealed_code TEXT)")
             db.execute('CREATE TABLE IF NOT EXISTS purchase_events (event_id TEXT PRIMARY KEY,session_id TEXT NOT NULL,processed_at TEXT NOT NULL)')
@@ -108,7 +111,20 @@ class Purchases:
             received=[{'price':i['price']['id'],'quantity':i['quantity']} for i in session.get('line_items',{}).get('data',[])]
             if session.get('line_items',{}).get('has_more') or sorted(received,key=lambda i:i['price'])!=sorted(expected,key=lambda i:i['price']):
                 raise ValueError('Paid line items do not match the approved purchase')
-            if session.get('status')!='complete' or session.get('mode')!='subscription' or session.get('currency')!='usd' or session.get('amount_total')!=row['expected_cents']:
+            if session.get('status')!='complete' or session.get('mode')!='subscription' or session.get('currency')!='usd':
+                raise ValueError('Paid amount/session mismatch')
+            if self.require_automatic_tax:
+                tax=session.get('automatic_tax',{}); totals=session.get('total_details',{})
+                tax_cents=totals.get('amount_tax')
+                if (tax.get('enabled') is not True or tax.get('status')!='complete'
+                        or type(tax_cents) is not int or tax_cents<0
+                        or type(session.get('amount_subtotal')) is not int
+                        or session['amount_subtotal']!=row['expected_cents']
+                        or totals.get('amount_discount')!=0 or totals.get('amount_shipping')!=0
+                        or type(session.get('amount_total')) is not int
+                        or session['amount_total']!=row['expected_cents']+tax_cents):
+                    raise ValueError('Paid tax calculation or subtotal mismatch')
+            elif session.get('amount_total')!=row['expected_cents']:
                 raise ValueError('Paid amount/session mismatch')
             if session.get('customer_details',{}).get('email','').lower()!=row['email']:
                 raise ValueError('Purchasing identity mismatch')
@@ -141,19 +157,33 @@ class Purchases:
 
 class StripeProvider:
     """SDK adapter; caller supplies only server-owned prices and secrets."""
-    def __init__(self, restricted_key, webhook_secret):
-        from stripe import StripeClient
-        self.client=StripeClient(restricted_key,stripe_version='2026-08-26.dahlia')
+    def __init__(self, restricted_key, webhook_secret, *, livemode=False,
+                 automatic_tax=False, tax_configuration_verified=False):
+        from stripe import StripeClient, RequestsClient
+        prefix='rk_live_' if livemode else 'rk_test_'
+        if (not isinstance(restricted_key,str) or not restricted_key.startswith(prefix)
+                or len(restricted_key)>512 or any(c.isspace() for c in restricted_key)):
+            raise ValueError('A restricted Stripe key matching the environment is required')
+        if not isinstance(webhook_secret,str) or not webhook_secret.startswith('whsec_') or any(c.isspace() for c in webhook_secret):
+            raise ValueError('Stripe webhook signing configuration is required')
+        if automatic_tax and not tax_configuration_verified:
+            raise ValueError('Verify tax registration and product classification before automatic tax')
+        self.livemode,self.automatic_tax=livemode,automatic_tax
+        self.client=StripeClient(restricted_key,stripe_version='2026-08-26.dahlia',
+                                 max_network_retries=0,http_client=RequestsClient(timeout=15))
         self.webhook_secret=webhook_secret
 
     def create_session(self, request_id, email, line_items):
         suffix=''.join(chr(97+int(c,16)) for c in request_id.replace('-','')[:8])
-        result=self.client.v1.checkout.sessions.create({
+        parameters={
             'mode':'subscription','customer_email':email,'line_items':line_items,
+            'client_reference_id':request_id,
             'success_url':'https://app.workzoneos.org/?purchase={CHECKOUT_SESSION_ID}',
             'cancel_url':'https://workzoneos.org/#purchase',
             'integration_identifier':'wzos_checkout_'+suffix,
-        },options={'idempotency_key':'wzos-checkout-'+request_id})
+        }
+        if self.automatic_tax:parameters['automatic_tax']={'enabled':True}
+        result=self.client.v1.checkout.sessions.create(parameters,options={'idempotency_key':'wzos-checkout-'+request_id})
         return result.to_dict()
 
     def retrieve_session(self, session_id):

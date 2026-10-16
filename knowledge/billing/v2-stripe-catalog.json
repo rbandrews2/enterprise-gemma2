@@ -5,6 +5,13 @@
   "currency": "usd",
   "approved_on": "2026-10-16",
   "checkout_enabled": false,
+  "tax_review": {
+    "approved_product_tax_code": "txcd_10103001",
+    "description": "Cloud SaaS - business use",
+    "live_product_assignment_verified": false,
+    "virginia_registration_verified": false,
+    "tax_calculation_tested": false
+  },
   "offers": {
     "core": {
       "product_id": "prod_VS8NPXcRzhnRq4",

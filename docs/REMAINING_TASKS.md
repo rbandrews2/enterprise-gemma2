@@ -1,5 +1,12 @@
 ## Current next gates - October16
 
+- Stripe tax: Ray approved SaaS business-use txcd_10103001 for only the two V2
+  products, plus immediate collection using the existing Virginia registration
+  without filing services. Both live changes remain PENDING after browser loss.
+  Actual Tax dashboard showed zero collecting locations. Complete changes/readback
+  and controlled tax calculation before enabling automatic tax. Local purchase19
+  and official SDK/preflight6 passed; recurring lifecycle/upgrade gates remain open.
+
 - Complete candidate UI browser checks for both roles/editions and phone/desktop;
   Node119 passed. Keep Guided Workspace B scoped to landing. Review tools appear
   only on Enterprise desktop. Core upgrade nudges are admin-only.
