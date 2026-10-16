@@ -1,4 +1,17 @@
-## Current next gates - October16
+## Current next gates - final release validation October16
+
+- Full PostgreSQL737/JavaScript123 and billing image build PASS. Fresh backup and
+  schema/private bucket checks PASS. See FINAL_CHECKOUT_VALIDATION_20261016.md.
+- Finish correct restricted server API-key handoff (version2 contains webhook
+  signing secret), then read-only live catalog/classification/VA preflight. Dedicated
+  webhook, scoped secret access and Virginia collection are applied; no live app
+  update yet. New dependency image review remains open, not a zero-findings claim.
+- Stage and verify preserved auth/roles/editions/ingress, durable holds and billing-
+  capable rollback; deploy accepted immutable candidate and validate actual browser.
+- Existing-Core upgrade/subscription credit and actual Atlas model inference remain
+  unfinished and must not be described as accepted by these checkout gates.
+
+## Previous gates - retained historical context October16
 
 - PAUSED at user request for computer refresh. Checkout is connected in source,
   default disabled, not deployed. Resume from docs/CHECKOUT_RUNTIME_INTEGRATION_20261016.md:

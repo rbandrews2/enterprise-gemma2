@@ -1,3 +1,28 @@
+## Final checkout validation and credential handoff - October16
+
+Resumed at Ray's request to validate and deploy. Full disposable PostgreSQL737
+PASS/no skips; JavaScript123 PASS/no skips; official SDK/preflight fixtures6 PASS.
+Actual schema has zero conflicts; fresh backup1792177616406 SUCCESSFUL. Private
+bucket access prevention/uniform access/no public IAM PASS. Repaired billing image
+buildfb9a3478-3185-4446-a9fa-96b99c1fce25 SUCCESS, digest254b7fef478cabf57a65237a5fa520e5276c6bd47b04b3a1d566b1717f8ab742.
+App/test source638d467; packaging39b3fcb, no application change between them.
+
+Approved dedicated Stripe webhook created; user saved signing secret. Approved
+three secret-scoped runtime grants applied; stable encryption key saved privately.
+Existing Virginia registration collection now active; no filing service. Details
+and exact evidence pointers: docs/FINAL_CHECKOUT_VALIDATION_20261016.md.
+
+Checkout activation remains BLOCKED: API secret version1 is a publishable key,
+version2 is a webhook signing secret. Type-only checks disclosed no values. User
+has Stripe's "Your new API key" window and a new-version Secret Manager form ready;
+copy restricted rk_live_ credential there, never chat. Then verify version metadata,
+read-only live six-price/coupon/classification/VA preflight and image review before
+staging security/billing-capable rollback and candidate, preserving existing config.
+No app deployment/traffic change, customer charge or message occurred this session.
+Cloud evidence pointer $HOME/wzos-final-20261016-path.txt. Owned SQL proxy recorded
+there must be verified before reuse/cleanup. Cloud Shell briefly reconnected;
+always verify current terminal/project rather than relying on old scrollback.
+
 ## PAUSED - checkout runtime integration saved - October16
 
 Ray requested focusing on checkout, then asked to save before refreshing the
