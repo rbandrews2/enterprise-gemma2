@@ -1,6 +1,11 @@
 steps:
   - name: gcr.io/cloud-builders/docker
     args: ['build', '--platform', 'linux/amd64', '--file', 'Dockerfile.accounts-commerce', '--tag', '${_IMAGE}', '.']
+  # The submitted archive is private by default; expose only this synthetic
+  # fixture to the non-root, network-disabled validation container.
+  - name: gcr.io/cloud-builders/docker
+    entrypoint: chmod
+    args: ['a+r', '/workspace/commerce_tests/test_stripe_sdk.py']
   - name: gcr.io/cloud-builders/docker
     args:
       - run
