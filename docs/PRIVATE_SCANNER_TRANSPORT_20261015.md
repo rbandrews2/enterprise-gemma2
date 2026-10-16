@@ -48,7 +48,8 @@ security integration test runs against SQLite and the full PostgreSQL gate.
 
 The caller permits one active scan per web process. Identity HTTP operations use
 five-second timeouts; scanner HTTP connect timeout is five seconds and other I/O
-timeouts are thirty seconds. A verdict arriving after the 35-second acceptance
+timeouts are65 seconds, accommodating the service's60-second request limit.
+A verdict arriving after the70-second acceptance
 window is discarded. That window is not hard cancellation of an in-progress
 blocking socket operation: an I/O timeout may finish later. There are no automatic
 retries. The receiving service admits one request at a time, bounds upload reading

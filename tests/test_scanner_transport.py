@@ -143,8 +143,21 @@ class RemoteScannerTests(unittest.TestCase):
         self.assertEqual(self.scanner(lambda request:self.reply(request),lambda audience:'').scan(DATA).status,'error')
         def timeout(request): raise httpx.ReadTimeout('private details')
         self.assertEqual(self.scanner(timeout).scan(DATA).status,'error')
-        with patch('services.workspace_preview.scanner_transport.monotonic',side_effect=[0,36]):
+        with patch('services.workspace_preview.scanner_transport.monotonic',side_effect=[0,71]):
             self.assertEqual(self.scanner(lambda request:self.reply(request)).scan(DATA).status,'error')
+
+    def test_verified_cold_start_response_fits_bounded_service_wait(self):
+        calls=[]
+        def delayed(request):
+            calls.append(request)
+            self.assertEqual(request.extensions['timeout']['read'],65)
+            self.assertEqual(request.extensions['timeout']['connect'],5)
+            return self.reply(request)
+        # Real Cloud Run acceptance observed a valid response after31.76s.
+        with patch('services.workspace_preview.scanner_transport.monotonic',
+                   side_effect=[0,31.76,31.76]):
+            self.assertEqual(self.scanner(delayed).scan(DATA),ScanResult('clean','ClamAV 1.5.4/28154'))
+        self.assertEqual(len(calls),1)
 
     def test_url_pinning_partial_configuration_and_busy_input(self):
         for url in ('http://scanner.run.app','https://scanner.run.app.evil.example',

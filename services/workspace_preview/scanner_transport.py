@@ -50,7 +50,9 @@ class RemoteScanner:
         if not isinstance(data, bytes) or not 0 < len(data) <= MAX_BYTES or not self.slots.acquire(blocking=False):
             return ScanResult('error')
         try:
-            deadline = monotonic() + 35
+            # The private service can spend its first request starting the
+            # signature-checked engine. Its request limit is 60 seconds.
+            deadline = monotonic() + 70
             origin = scanner_origin(self.url)
             from .archive_policy import zip_complete
             if not zip_complete(data):
@@ -60,7 +62,7 @@ class RemoteScanner:
                 return ScanResult('error')
             request_id, digest = str(uuid4()), hashlib.sha256(data).hexdigest()
             with httpx.Client(transport=self.transport, follow_redirects=False, trust_env=False,
-                              timeout=httpx.Timeout(30, connect=5)) as client:
+                              timeout=httpx.Timeout(65, connect=5)) as client:
                 with client.stream('POST', origin + '/scan', content=data, headers={
                     'Authorization': 'Bearer ' + token,
                     # Cloud Run consumes this header, preserving Authorization for
