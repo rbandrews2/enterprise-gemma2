@@ -64,6 +64,20 @@ def main():
                 fixture=(b'X5O!P%@AP[4'+b'\\PZX54(P^)7CC)7}'+b'$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*')
                 results['standard_safe_detection_fixture']=scanner.scan(fixture).status
                 assert results['standard_safe_detection_fixture']=='infected', 'Safe detection fixture not detected'
+                # Compare the workflow's nonstandard PDF-looking wrapper with
+                # an intact standard fixture inside a supported OOXML container.
+                # A wrapper verdict is diagnostic, never an expected infection.
+                assert len(fixture) == 68
+                results['pdf_wrapped_fixture']=scanner.scan(b'%PDF-1.7\n'+fixture+b'\n%%EOF\n').status
+                document=io.BytesIO()
+                with zipfile.ZipFile(document,'w',zipfile.ZIP_DEFLATED) as archive:
+                    archive.writestr('[Content_Types].xml',
+                        '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"/>')
+                    archive.writestr('word/document.xml',
+                        '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"/>')
+                    archive.writestr('synthetic-antivirus-test.txt',fixture)
+                results['ooxml_contained_standard_fixture']=scanner.scan(document.getvalue()).status
+                assert results['ooxml_contained_standard_fixture']=='infected', 'Contained standard fixture not detected'
                 packed=io.BytesIO()
                 with zipfile.ZipFile(packed,'w',zipfile.ZIP_DEFLATED) as archive:
                     archive.writestr('synthetic-limit.txt',b'0'*(11*1024*1024))
