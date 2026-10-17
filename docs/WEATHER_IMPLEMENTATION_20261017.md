@@ -56,8 +56,12 @@ no live location or customer message is needed for synthetic acceptance.
   max5 sites/pass, stops starting sites after120sec; no cloud workload provisioned.
   Independent scheduled monitoring is NOT active. API/UI say so explicitly.
 
-Focused local results:13 Python tests PASS;132 Node tests PASS. Full local Python
-suite and disposable PostgreSQL gate are pending. Initial fixture issues corrected:
+Focused initial local results:13 Python tests PASS. Final local Node suite133 PASS,
+no skips. Full cloud PostgreSQL suite769 PASS/no skips on361a367; final weather
+PostgreSQL23 PASS/no skips on4abb067. Final frontend privacy repair c6adf9f passed
+all133 local Node checks and6 focused Cloud Shell Node checks. Git comparison proved
+its Python backend/worker identical to the23-test PostgreSQL candidate, preserving
+the evidence instead of repeating unrelated suites. Initial fixture issues corrected:
 patched test clock needed matching alert timestamps; SMS opt-out request needed its
 version. Assignment UI test now exercises My jobs instead of the obsolete member
 Messaging render path. Offline GPS test now expects a real device fix, not invented
@@ -65,4 +69,18 @@ missing evidence. No real user GPS or customer SMS used.
 
 Browser preview uses explicit synthetic weather and sample job coordinates. Existing
 synthetic dispatch-notification404 banner is unrelated to weather. Mobile has no
-horizontal overflow; final proof and PostgreSQL results to be recorded after checks.
+horizontal overflow (390px viewport). Proof outside Git:
+.local-data/release-20261017/weather-card-preview.png. Temporary viewport reset.
+The duplicate broad local Python run was stopped to reduce laptop load; no full
+local-Python success is claimed. Cloud full-suite result is the release gate.
+
+Actual NWS public-city connectivity check returned ready/forecast with a source
+timestamp for Norfolk. No personal coordinates were collected. Live readings remain
+provider observations or forecasts, never a claim of on-site sensor telemetry.
+
+Cloud evidence directory is recorded by $HOME/wzos-weather-path.txt. Full suite,
+final PostgreSQL and frontend logs are retained there. The4abb067 build was superseded
+by the frontend organization-selector privacy fix; do not deploy that older image.
+Final application source c6adf9f36b6c2ed25882785b5abe96e4b1ba8224. Its guarded build
+and deployment preserve current brand-4e281c6 runtime configuration. No independent
+monitor workload/IAM or weather SMS activation has been applied.

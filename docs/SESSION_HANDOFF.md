@@ -47,10 +47,12 @@ Public app/sign-in/SMS working; earlier CLI-auth blocker is closed.
 
 ## Next work
 
-Weather/geofencing requested planning review completed from read-only GEMINI_WZOS_V1
-(07b8eef). Strategy: WEATHER_GEOFENCING_INTEGRATION_20261017.md. Reference has useful
-proximity UI/math, but invented weather fallback and unsupported verification/safety
-claims must not be copied. No runtime/deployment changes made for this inspection.
+Weather/geofencing implemented in c6adf9f after read-only GEMINI_WZOS_V1 review.
+See WEATHER_IMPLEMENTATION_20261017.md: full cloud PostgreSQL769 PASS, final weather
+PostgreSQL23 PASS, local Node133 and Cloud Node6 PASS/no skips. Final backend unchanged
+from23-test candidate; frontend privacy fix verified. Final build/public deployment
+pending. Separate monitor workload/IAM needs approval; weather SMS remains off.
+Cloud evidence: $HOME/wzos-weather-path.txt. No new scheduler/IAM grants applied.
 Ray's card preference: fixed compact basic-weather card that follows user location
 after permission, refreshes on meaningful movement, and labels stale/fallback data.
 Confirmed combined scope: retain assigned-site alerts for affected workers/admins

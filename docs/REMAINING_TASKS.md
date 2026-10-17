@@ -58,15 +58,17 @@ older evidence remain there; do not silently discard or re-open completed gates.
 
 ## Planned integrations
 
-- [ ] Weather/geofencing integration planned from read-only GEMINI_WZOS_V1 review.
+- [ ] Weather/geofencing implementation c6adf9f is saved/pushed; release pending.
   Ray chose a fixed compact weather card showing basic live conditions, following
   user location after permission; label source time/stale data and location fallback.
   Combine with official local hazards and independent assigned-site alert monitoring:
   notify affected workers/admins, clearly distinguish location versus job alerts.
-  Implement in sequence: location contract -> weather card -> durable alerts ->
-  foreground arrival prompts -> focused acceptance. See
+  Implemented: location contract, weather card, durable notices/acknowledgements,
+  consent-gated SMS integration and foreground arrival prompts. Cloud suite769,
+  weather PostgreSQL23, local Node133 and Cloud frontend6 passed without skips. See
   WEATHER_GEOFENCING_INTEGRATION_20261017.md for reuse, defects and product decisions.
-  No weather/geofencing feature was activated by this review.
+  Next: final build/public deployment; separate scheduled-job/IAM activation approval
+  per WEATHER_MONITOR_ACTIVATION_20261017.md. Background monitoring/SMS remain off.
 
 ## Included polish
 
