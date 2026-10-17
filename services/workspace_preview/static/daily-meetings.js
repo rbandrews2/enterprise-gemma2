@@ -34,7 +34,13 @@
    call.on('error',()=>{if(same()){stop();$('meetings-state').textContent='UNAVAILABLE';status('Meeting connection failed. Check your connection and retry.');}});
    status('Opening meeting controls. Camera and microphone start off.');
    // Authorization stays in memory and is passed to the SDK, never to a URL or storage.
-   await call.join({url:access.url,token:access.token});
+   let joinTimer;
+   try{
+    await Promise.race([
+     call.join({url:access.url,token:access.token}),
+     new Promise((_,reject)=>{joinTimer=setTimeout(()=>reject(new Error('Meeting controls did not load. Leave and retry when your connection is ready.')),30000);})
+    ]);
+   }finally{clearTimeout(joinTimer);}
   }catch(error){if(same()){stop();$('meetings-state').textContent='UNAVAILABLE';status(error.message||'Meeting could not connect.');}}
  }
  $('meeting-leave').onclick=()=>{stop();$('meetings-state').textContent='SCHEDULED';status('You left the meeting.');};

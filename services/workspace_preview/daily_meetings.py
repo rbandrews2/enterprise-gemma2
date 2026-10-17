@@ -13,6 +13,15 @@ import httpx
 from fastapi import HTTPException, Request
 
 
+def frame_origins(origin):
+    """Exact tenant hosts only; Daily Prebuilt also uses its documented fallbacks."""
+    match = re.fullmatch(r'https://([a-z0-9][a-z0-9-]{0,61})[.]daily[.]co', origin)
+    if not match:
+        return ()
+    return tuple('https://' + match[1] + '.' + suffix
+                 for suffix in ('daily.co', 'dailywebrtc.com', 'dailywebrtc.net'))
+
+
 class DailyProvider:
     def __init__(self, transport=None):
         self.key = os.getenv('WZOS_DAILY_API_KEY', '').strip()

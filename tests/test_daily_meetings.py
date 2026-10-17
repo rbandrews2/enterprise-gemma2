@@ -12,7 +12,7 @@ import httpx
 from fastapi import HTTPException
 from fastapi.testclient import TestClient
 from services.workspace_preview.app import create_app
-from services.workspace_preview.daily_meetings import DailyProvider
+from services.workspace_preview.daily_meetings import DailyProvider, frame_origins
 from services.workspace_preview.storage import SQLiteStorage
 from services.v2.knowledge.store import Store
 
@@ -113,7 +113,15 @@ class DailyMeetingTests(unittest.TestCase):
         response=self.client.get('/');csp=response.headers['content-security-policy']
         self.assertIn('frame-src https://synthetic.daily.co',csp)
         self.assertNotIn('*.daily.co',csp)
-        self.assertIn('microphone=(self "https://synthetic.daily.co")',response.headers['permissions-policy'])
+        expected = frame_origins(self.provider.origin)
+        self.assertEqual(expected, ('https://synthetic.daily.co', 'https://synthetic.dailywebrtc.com', 'https://synthetic.dailywebrtc.net'))
+        for origin in expected:
+            self.assertIn(origin, csp)
+            self.assertIn('"' + origin + '"', response.headers['permissions-policy'])
+        self.assertNotIn('*.dailywebrtc', csp)
+        self.assertNotIn('other.dailywebrtc.com', csp)
+        self.assertEqual(frame_origins('https://synthetic.daily.co.evil.example'), ())
+        self.assertEqual(frame_origins('http://synthetic.daily.co'), ())
 
 
 @unittest.skipUnless(os.getenv('WZOS_TEST_DATABASE_URL'),'Dedicated PostgreSQL database not configured')

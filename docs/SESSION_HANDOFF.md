@@ -47,8 +47,10 @@ Public app/sign-in/SMS working; earlier CLI-auth blocker is closed.
 
 ## Next work
 
-1. Prepare Daily two-device/five-minute test; readiness requested from Ray. Installed
-   Android address-bar/install-prompt checks passed; no media session started.
+1. Daily first five-minute test schedule cancelled after laptop blank iframe.
+   Ray reported meeting inside TV; two-way media remains unaccepted. Exact fallback
+   media-origin repair and bounded join timeout are local, NOT DEPLOYED. See
+   DAILY_FRAME_REPAIR_20261017.md. Focused PostgreSQL gate and policy approval next.
 2. Run the next remaining integration gate from REMAINING_TASKS.md, coordinating
    device tests with Ray. No automatic new texts or media sessions.
 3. Preserve admin/member, tenant and Core/Enterprise boundaries. Do not enable broad

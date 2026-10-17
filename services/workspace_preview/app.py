@@ -218,13 +218,16 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
         daily = getattr(app.state, 'daily_meetings', None)
         if daily and daily.enabled and request.url.path == '/':
             csp = response.headers['Content-Security-Policy']
-            csp = csp.replace("connect-src 'self'", "connect-src 'self' https://api.daily.co " + daily.origin)
+            origins = daily_meetings.frame_origins(daily.origin)
+            allowed_frames = ' '.join(origins)
+            csp = csp.replace("connect-src 'self'", "connect-src 'self' https://api.daily.co " + allowed_frames)
             if 'frame-src ' in csp:
-                csp = csp.replace('frame-src ', 'frame-src ' + daily.origin + ' ')
+                csp = csp.replace('frame-src ', 'frame-src ' + allowed_frames + ' ')
             else:
-                csp += '; frame-src ' + daily.origin
+                csp += '; frame-src ' + allowed_frames
             response.headers['Content-Security-Policy'] = csp
-            response.headers['Permissions-Policy'] = 'camera=(self "' + daily.origin + '"), microphone=(self "' + daily.origin + '")'
+            media_origins = ' '.join('"' + origin + '"' for origin in origins)
+            response.headers['Permissions-Policy'] = 'camera=(self ' + media_origins + '), microphone=(self ' + media_origins + ')'
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers['X-Frame-Options'] = 'DENY'
         response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
