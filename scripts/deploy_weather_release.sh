@@ -51,7 +51,7 @@ print('STAGED_CONFIG_PRESERVED')
 PY
 gcloud run services update-traffic "$service" --project="$project" --region="$region" --to-revisions="$service-weather-$short=100" --quiet > "$root/cutover.log" 2>&1
 if ! python3 - "$root" <<'PY'
-import hashlib,sys,time,urllib.request
+import hashlib,sys,time,urllib.request,urllib.error
 from pathlib import Path
 root=Path(sys.argv[1]);static=Path('services/workspace_preview/static')
 for name in ['weather.js','weather.css','timeclock.js','workspace.js','workspace.css','organization-hub.js','training-content.js','training-media.js','navigation.js','team-modules.js','dispatch.js','forms-hub.js','forms-hub.css','review-workflows.js','install.js','phone-number.js','manifest.webmanifest','account.js','daily-meetings.js','wzos-logo.png','favicon.ico','favicon-32.png','install-icon-144.png','install-icon-180.png','install-icon-192.png','install-icon-512.png','install-maskable-192.png','install-maskable-512.png']:
@@ -70,6 +70,13 @@ with urllib.request.urlopen('https://app.workzoneos.org/?release=brand-daily',ti
  for host in ('wzos.daily.co','wzos.dailywebrtc.com','wzos.dailywebrtc.net'):
   assert permissions.count('"https://'+host+'"')==2, 'Camera/microphone policy mismatch'
 print('LIVE_WEATHER_AND_EXISTING_MEDIA_POLICY_PASS')
+for path in ('/api/weather/sites','/api/weather/notices'):
+ try:
+  urllib.request.urlopen('https://app.workzoneos.org'+path,timeout=30)
+  raise AssertionError('Anonymous weather data was exposed')
+ except urllib.error.HTTPError as error:
+  assert error.code==401, 'Unexpected anonymous weather response'
+print('LIVE_WEATHER_AUTH_BOUNDARY_PASS')
 with urllib.request.urlopen('https://app.workzoneos.org/api/app/version?release=office-update',timeout=30) as r:
  assert r.status==200;version=r.read()
 (root/'live-version.json').write_bytes(version)
