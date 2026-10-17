@@ -39,3 +39,16 @@ and https://www.twilio.com/docs/messaging/guides/track-outbound-message-status .
   errors/status and reveal provider outcomes. A device test is still required.
 - No live SMS was sent by this work, and no cloud change yet. Cloud Shell browser
   control timed out repeatedly; user was asked to reconnect. Mode remains test.
+
+## Release preparation
+
+Candidate core266e302 was pushed. Follow-up adds a bounded 30-second form send
+wait (idempotent retry checks receipt without duplicating notifications) and
+source-only release helpers. scripts/test_office_sms_postgres.sh runs only the
+impacted PostgreSQL fixture classes in a disposable Unix-socket cluster; no
+production database access. scripts/deploy_office_sms_update.sh requires an exact
+40-character candidate commit, runs that focused gate, checks current live base
+imageec8f4243 and flow-354f7a9 traffic, builds/stages, compares preserved runtime
+config, cuts over, checks fourteen frontend files/version, and rolls traffic back
+to flow-354f7a9 if live asset verification fails. It leaves SMS mode unchanged.
+No claim that these cloud steps ran: browser connection is still unavailable.

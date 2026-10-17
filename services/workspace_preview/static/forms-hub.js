@@ -338,11 +338,12 @@
   let officeRequest=null;const generation=epoch;
   send.onclick=async()=>{
    if(officeSending)return;officeRequest=officeRequest||{request_id:crypto.randomUUID(),template_id:t.id,template_revision:t.revision,...values()};
+   const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),30000);
    officeSending=true;for(const input of form.querySelectorAll('input,select,textarea,button'))input.disabled=true;delivery.textContent='Sending completed form to office…';
-   try{await api('/api/form-submissions/completed',{method:'POST',body:JSON.stringify(officeRequest)});if(generation!==epoch)return;
+   try{await api('/api/form-submissions/completed',{method:'POST',body:JSON.stringify(officeRequest),signal:controller.signal});if(generation!==epoch)return;
     dirty=false;delivery.textContent='Received by office. Your organization’s admins can review the saved form in Forms hub.';document.dispatchEvent(new CustomEvent('wzos:office-sent'));
-   }catch(error){if(generation===epoch)delivery.textContent='Not sent: '+error.message;}
-   finally{officeSending=false;for(const input of form.querySelectorAll('input,select,textarea,button'))input.disabled=false;}
+   }catch(error){if(generation===epoch)delivery.textContent=error.name==='AbortError'?'Could not confirm receipt. Retry to check the same submission; your entries are still here.':'Not sent: '+error.message;}
+   finally{clearTimeout(timeout);officeSending=false;for(const input of form.querySelectorAll('input,select,textarea,button'))input.disabled=false;}
   };
   const save=button('Download filled form');save.onclick=()=>downloadDocument(t,values());
   const clear=button('Clear entries');clear.onclick=()=>{if(!confirm('Clear everything you entered on this form?'))return;for(const c of inputs.values())c.clear();order.value='';location.value='';dirty=false;officeRequest=null;delivery.textContent='';heading.focus();};
