@@ -271,7 +271,7 @@ class Weather:
                     continue
                 title = json.loads(record['payload'])['title']
                 prior = {r['alert_id']: json.loads(r['payload']) for r in db.execute('SELECT * FROM weather_alerts WHERE organization_id=? AND order_id=?', (orgid, oid)).fetchall()}
-                incoming = {a['id']: a for a in weather['alerts']}
+                incoming = {a['id']: a for a in weather['alerts'] if instant(a.get('expires')) and instant(a['expires']) > now()}
                 for aid, old in prior.items():
                     if aid not in incoming and old.get('active'):
                         incoming[aid] = {**old, 'active': False, 'headline': 'No longer active: ' + old['event']}
@@ -352,7 +352,7 @@ def register(app, connect, actor, jobs, order, roster, *, accounts=False):
                 raise HTTPException(429, 'Job weather was checked recently. Wait one minute.')
             service.rate[key] = time.monotonic()
         background.add_task(service.poll, user['organization_id'])
-        return {'status': 'scheduled', 'background_monitoring': False}
+        return {'status': 'scheduled', 'background_monitoring': os.getenv('WZOS_WEATHER_BACKGROUND_ENABLED') == '1'}
 
     @app.get('/api/weather/notices')
     def notices(request: Request):
@@ -364,7 +364,7 @@ def register(app, connect, actor, jobs, order, roster, *, accounts=False):
                 site = {'organization_id': user['organization_id'], 'order_id': row['order_id']}
                 if eligible(db, site, user['id'], accounts=accounts):
                     result.append({**dict(row), 'alert': json.loads(row['payload']), 'superseded': row['revision'] != row['current_revision']})
-        return {'items': [{k:v for k,v in r.items() if k != 'payload'} for r in result], 'sms_enabled': os.getenv('WZOS_WEATHER_SMS_ENABLED') == '1', 'background_monitoring': False}
+        return {'items': [{k:v for k,v in r.items() if k != 'payload'} for r in result], 'sms_enabled': os.getenv('WZOS_WEATHER_SMS_ENABLED') == '1', 'background_monitoring': os.getenv('WZOS_WEATHER_BACKGROUND_ENABLED') == '1'}
 
     @app.post('/api/weather/notices/{notice_id}/ack')
     def acknowledge(notice_id: str, request: Request):

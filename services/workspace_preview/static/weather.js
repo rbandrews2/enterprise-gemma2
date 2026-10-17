@@ -15,7 +15,7 @@ if(typeof document!=='undefined')(()=>{
  const label=(text,input)=>{const l=make('label',text);l.append(input);return l;};
  const field=(type,value='')=>{const n=make('input');n.type=type;n.value=value;return n;};
  const session=()=>window.wzosClock?.getSession(),scope=()=>{const s=session();return s?s.organization_id+':'+s.id:'';};
- let owner='',epoch=0,sites=[],following=false,watch=null,fix=null,lastWeather=null,lastPoint=null,lastFetch=0,fetching=false,fetchPoint=null,queuedPoint=null,weatherEpoch=0,nearSince={},dismissed=new Set(),lastNotices=0,noticesBusy=false;
+ let owner='',epoch=0,sites=[],following=false,watch=null,fix=null,lastWeather=null,lastPoint=null,lastFetch=0,fetching=false,fetchPoint=null,queuedPoint=null,weatherEpoch=0,nearSince={},dismissed=new Set(),lastNotices=0,noticesBusy=false,backgroundEnabled=false;
  const heading=make('div','','weather-heading'),title=make('h2','Weather'),location=make('p','Choose your location','weather-location');
  const follow=button('Use location'),stop=button('Stop'),refresh=button('↻');refresh.setAttribute('aria-label','Refresh weather');refresh.title='Refresh weather';stop.hidden=true;
  heading.append(make('span','☀','weather-symbol'),title,follow,stop,refresh);
@@ -67,7 +67,7 @@ if(typeof document!=='undefined')(()=>{
   const current=owner;watch=navigator.geolocation.watchPosition(position=>{
    if(owner!==current||!following||document.hidden)return;
    fix={latitude:position.coords.latitude,longitude:position.coords.longitude,accuracy:position.coords.accuracy,timestamp:position.timestamp};
-   proximity();if(!lastPoint||weatherDistance(fix,lastPoint)>=1000||Date.now()-lastFetch>15*60000)loadWeather(fix);
+   proximity();if(!lastPoint||weatherDistance(fix,lastPoint)>=1000||Date.now()-lastFetch>15*60000)loadWeather(fix);else if(lastWeather)render(lastWeather,lastPoint);
   },error=>{if(owner===current){fix=null;nearSince={};arrival.replaceChildren();status.textContent=error.code===1?'Location permission denied. Choose a job location.':'Location fix unavailable. Previous weather may be stale.';if(error.code===1)stopFollow();}}, {enableHighAccuracy:false,maximumAge:30000,timeout:15000});
  }
  follow.onclick=()=>{following=true;follow.hidden=true;stop.hidden=false;startWatch();};stop.onclick=stopFollow;
@@ -89,27 +89,27 @@ if(typeof document!=='undefined')(()=>{
   order.onchange=()=>{const s=sites.find(s=>s.order_id===order.value);lat.value=s?.latitude??'';lon.value=s?.longitude??'';radius.value=s?.radius_meters??350;enabled.checked=s?.monitoring??false;start.value=local(s?.starts_at);end.value=local(s?.ends_at);};
   save.onclick=async()=>{if(!order.value||!lat.value||!lon.value){status.textContent='Select a work order and enter its reviewed coordinates.';return;}if(enabled.checked&&(!start.value||!end.value)){status.textContent='Set the monitoring start and finish.';return;}
    const s=sites.find(s=>s.order_id===order.value),current=owner;save.disabled=true;
-   try{await send('/api/weather/sites/'+encodeURIComponent(order.value),{expected_version:s?.version||0,latitude:Number(lat.value),longitude:Number(lon.value),radius_meters:Number(radius.value),monitoring:enabled.checked,starts_at:start.value?new Date(start.value).toISOString():null,ends_at:end.value?new Date(end.value).toISOString():null},'PUT');if(owner===current){await loadSites();status.textContent='Site settings saved. Background monitoring has not been activated.';}}
+   try{await send('/api/weather/sites/'+encodeURIComponent(order.value),{expected_version:s?.version||0,latitude:Number(lat.value),longitude:Number(lon.value),radius_meters:Number(radius.value),monitoring:enabled.checked,starts_at:start.value?new Date(start.value).toISOString():null,ends_at:end.value?new Date(end.value).toISOString():null},'PUT');if(owner===current){await loadSites();status.textContent=backgroundEnabled?'Site settings saved for the configured monitoring window.':'Site settings saved. Background monitoring has not been activated.';}}
    catch(error){if(owner===current)status.textContent=error.message;}finally{save.disabled=false;}};
   check.onclick=async()=>{check.disabled=true;const current=owner;try{await send('/api/weather/poll',{});if(owner===current)status.textContent='Job weather check scheduled. Refresh job alerts shortly.';}catch(error){if(owner===current)status.textContent=error.message;}finally{check.disabled=false;}};
-  configBody.append(label('Work order',order),label('Site latitude',lat),label('Site longitude',lon),label('Arrival radius (meters)',radius),label('Monitor this site',enabled),label('Monitoring starts',start),label('Monitoring ends',end),save,check,make('p','Site coordinates are reviewed job references. Background monitoring and SMS require activation.','fine'));
+  configBody.append(label('Work order',order),label('Site latitude',lat),label('Site longitude',lon),label('Arrival radius (meters)',radius),label('Monitor this site',enabled),label('Monitoring starts',start),label('Monitoring ends',end),save,check,make('p','Site coordinates are reviewed job references. Background monitoring and SMS are controlled separately.','fine'));
  }
  async function loadNotices(){
   if(!owner||noticesBusy||document.hidden||!navigator.onLine)return;const current=owner,turn=epoch;noticesBusy=true;
-  try{const data=await api('/api/weather/notices');if(owner!==current||turn!==epoch)return;noticeList.replaceChildren();lastNotices=Date.now();
+  try{const data=await api('/api/weather/notices');if(owner!==current||turn!==epoch)return;backgroundEnabled=data.background_monitoring===true;noticeList.replaceChildren();lastNotices=Date.now();
    for(const n of data.items.filter(n=>!n.superseded).slice(0,30)){const details=make('details','','weather-hazard');details.append(make('summary',n.body),make('p',n.alert.description),make('p',n.alert.instruction));
     const b=button(n.acknowledged_at?'Acknowledged':'Acknowledge');b.disabled=!!n.acknowledged_at;b.onclick=async()=>{b.disabled=true;try{await send('/api/weather/notices/'+n.id+'/ack',{});if(owner===current)loadNotices();}catch(error){if(owner===current)status.textContent=error.message;b.disabled=false;}};details.append(b);
     if(session()?.edition==='enterprise'){const open=button('Open My jobs');open.onclick=()=>window.showWzosView('assignments');details.append(open);}
     noticeList.append(details);}
-   if(!noticeList.children.length)noticeList.append(make('p','No job-site weather notices.'));
+   if(!noticeList.children.length)noticeList.append(make('p',backgroundEnabled?'No job-site weather notices.':'No job-site weather notices. Automatic monitoring is not active.'));
   }catch(error){if(owner===current)noticeList.replaceChildren(make('p','Job alerts unavailable.'));}finally{noticesBusy=false;}
  }
  document.addEventListener('wzos:session',()=>{if(scope()!==owner){clear();if(owner){loadSites();loadNotices();}}});
  document.addEventListener('wzos:view',()=>{if(owner)loadSites();});
  document.addEventListener('wzos:weather-job',event=>{const site=sites.find(s=>s.order_id===event.detail?.order_id);if(site){stopFollow();loadWeather({...site,title:'Job site · '+site.title});root.scrollIntoView({behavior:'smooth',block:'start'});}else status.textContent='This job has no reviewed weather location yet.';});
- document.addEventListener('visibilitychange',()=>{if(document.hidden)stopWatch();else if(owner){if(following)startWatch();loadSites();loadNotices();if(lastPoint)loadWeather(lastPoint);}});
+ document.addEventListener('visibilitychange',()=>{if(document.hidden)stopWatch();else if(owner){if(following){status.textContent='Finding your current location…';startWatch();}else if(lastPoint)loadWeather(lastPoint);loadSites();loadNotices();}});
  window.addEventListener('offline',()=>{if(lastWeather)render({...lastWeather,status:'stale'},lastPoint);});
  window.addEventListener('online',()=>{if(owner){loadSites();loadNotices();if(lastPoint)loadWeather(lastPoint);}});
- setInterval(()=>{if(!owner||document.hidden)return;proximity();if(lastWeather)render(lastWeather,lastPoint);if(Date.now()-lastFetch>=15*60000&&lastPoint)loadWeather(fix||lastPoint);if(Date.now()-lastNotices>=60000)loadNotices();},10000);
+ setInterval(()=>{if(!owner||document.hidden)return;proximity();if(lastWeather&&lastWeather.status!=='stale'&&(Date.now()-Date.parse(lastWeather.source_time)>3600000||!navigator.onLine))render({...lastWeather,status:'stale'},lastPoint);if(Date.now()-lastFetch>=15*60000&&lastPoint&&(!following||fix))loadWeather(fix||lastPoint);if(Date.now()-lastNotices>=60000)loadNotices();},10000);
  clear();if(owner){loadSites();loadNotices();}
 })();

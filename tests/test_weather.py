@@ -146,6 +146,11 @@ class WeatherTests(unittest.TestCase):
         self.assertEqual(len(notices),1)
         self.assertTrue(notices[0]['alert']['active'])
 
+    def test_alert_that_expires_in_cache_does_not_create_new_warning(self):
+        self.configure()
+        self.data['alerts'][0]['expires']=(now()-timedelta(seconds=1)).isoformat()
+        self.assertEqual(self.service.poll(self.org)['notices'],0)
+
     def test_assignment_recipient_and_revocation_at_sms_send(self):
         self.requirements();self.approve(self.propose())
         with patch('services.workspace_preview.weather.now',return_value=fixture.START):
