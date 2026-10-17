@@ -9,7 +9,7 @@ from uuid import uuid4
 
 import httpx
 
-from services.workspace_preview.weather import NWS, now, alerts_normalized, sms_blocker
+from services.workspace_preview.weather import NWS, now, alerts_normalized, sms_blocker, background_enabled
 from tests import test_dispatch as fixture
 
 
@@ -23,6 +23,11 @@ def hazard(base=None):
 
 
 class ProviderTests(unittest.TestCase):
+    def test_background_coverage_is_explicitly_organization_scoped(self):
+        with patch.dict(os.environ,{'WZOS_WEATHER_BACKGROUND_ENABLED':'1','WZOS_WEATHER_MONITORED_ORGANIZATIONS':'pilot-org'}):
+            self.assertTrue(background_enabled('pilot-org'))
+            self.assertFalse(background_enabled('another-org'))
+
     def provider(self, error=False, forecast_error=False, malicious=False):
         calls = []
         a = hazard()

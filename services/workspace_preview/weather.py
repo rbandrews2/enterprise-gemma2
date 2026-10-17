@@ -27,6 +27,11 @@ def now():
     return datetime.now(timezone.utc)
 
 
+def background_enabled(organization_id):
+    allowed = {v.strip() for v in os.getenv('WZOS_WEATHER_MONITORED_ORGANIZATIONS', '').split(',') if v.strip()}
+    return os.getenv('WZOS_WEATHER_BACKGROUND_ENABLED') == '1' and organization_id in allowed
+
+
 def instant(value):
     try:
         result = datetime.fromisoformat(str(value).replace('Z', '+00:00'))
@@ -353,7 +358,7 @@ def register(app, connect, actor, jobs, order, roster, *, accounts=False):
                 raise HTTPException(429, 'Job weather was checked recently. Wait one minute.')
             service.rate[key] = time.monotonic()
         background.add_task(service.poll, user['organization_id'])
-        return {'status': 'scheduled', 'background_monitoring': os.getenv('WZOS_WEATHER_BACKGROUND_ENABLED') == '1'}
+        return {'status': 'scheduled', 'background_monitoring': background_enabled(user['organization_id'])}
 
     @app.get('/api/weather/notices')
     def notices(request: Request):
@@ -365,7 +370,7 @@ def register(app, connect, actor, jobs, order, roster, *, accounts=False):
                 site = {'organization_id': user['organization_id'], 'order_id': row['order_id']}
                 if eligible(db, site, user['id'], accounts=accounts):
                     result.append({**dict(row), 'alert': json.loads(row['payload']), 'superseded': row['revision'] != row['current_revision']})
-        return {'items': [{k:v for k,v in r.items() if k != 'payload'} for r in result], 'sms_enabled': os.getenv('WZOS_WEATHER_SMS_ENABLED') == '1', 'background_monitoring': os.getenv('WZOS_WEATHER_BACKGROUND_ENABLED') == '1'}
+        return {'items': [{k:v for k,v in r.items() if k != 'payload'} for r in result], 'sms_enabled': os.getenv('WZOS_WEATHER_SMS_ENABLED') == '1', 'background_monitoring': background_enabled(user['organization_id'])}
 
     @app.post('/api/weather/notices/{notice_id}/ack')
     def acknowledge(notice_id: str, request: Request):
