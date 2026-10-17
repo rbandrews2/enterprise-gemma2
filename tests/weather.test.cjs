@@ -49,7 +49,7 @@ test('location is opt-in, member settings hidden, watch clears on hide/logout',a
  h.flat().find(n=>n.textContent==='Use location').onclick();assert.ok(h.calls.includes('watch'));
  h.document.hidden=true;h.events.visibilitychange();assert.deepEqual(h.cleared,[7]);
  h.document.hidden=false;h.events.visibilitychange();assert.equal(h.calls.filter(n=>n==='watch').length,2);
- h.setSession(null);h.events['wzos:session']();assert.equal(h.root.hidden,true);assert.deepEqual(h.cleared,[7,7]);
+ const chooser=h.root.querySelector('[data-weather-chooser]');h.setSession(null);h.events['wzos:session']();assert.equal(h.root.hidden,true);assert.deepEqual(h.cleared,[7,7]);assert.equal(h.root.children.includes(chooser),false);
 });
 test('old location responses cannot overwrite a newer movement or another session',async()=>{
  const h=ui();await settle();h.flat().find(n=>n.textContent==='Use location').onclick();h.watch(36.,-76.);h.watch(37.,-76.);

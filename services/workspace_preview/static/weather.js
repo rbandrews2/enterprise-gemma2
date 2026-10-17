@@ -26,7 +26,7 @@ if(typeof document!=='undefined')(()=>{
  root.append(heading,location,summary,status,hazards,arrival,notices,config);
  function stopWatch(){if(watch!==null)navigator.geolocation?.clearWatch(watch);watch=null;fix=null;nearSince={};arrival.replaceChildren();}
  function stopFollow(){following=false;stopWatch();weatherEpoch++;queuedPoint=null;follow.hidden=false;stop.hidden=true;location.textContent=lastWeather?'Last location · following stopped':'Location following stopped';}
- function clear(){epoch++;weatherEpoch++;stopFollow();owner=scope();sites=[];lastWeather=null;lastPoint=null;lastFetch=0;queuedPoint=null;nearSince={};dismissed.clear();summary.replaceChildren();hazards.replaceChildren();noticeList.replaceChildren();configBody.replaceChildren();status.textContent='';location.textContent='Choose your location';root.hidden=!owner;config.hidden=session()?.role!=='admin';}
+ function clear(){epoch++;weatherEpoch++;stopFollow();owner=scope();sites=[];backgroundEnabled=false;lastWeather=null;lastPoint=null;lastFetch=0;queuedPoint=null;nearSince={};dismissed.clear();summary.replaceChildren();hazards.replaceChildren();noticeList.replaceChildren();configBody.replaceChildren();root.querySelector('[data-weather-chooser]')?.remove();status.textContent='';location.textContent='Choose your location';root.hidden=!owner;config.hidden=session()?.role!=='admin';}
  function render(data,point){
   lastWeather=data;lastPoint=point;summary.replaceChildren();hazards.replaceChildren();
   location.textContent=point.title||data.location||'Selected location';
@@ -107,7 +107,7 @@ if(typeof document!=='undefined')(()=>{
  }
  document.addEventListener('wzos:session',()=>{if(scope()!==owner){clear();if(owner){loadSites();loadNotices();}}});
  document.addEventListener('wzos:view',()=>{if(owner)loadSites();});
- document.addEventListener('wzos:weather-job',event=>{const site=sites.find(s=>s.order_id===event.detail?.order_id);if(site){stopFollow();loadWeather({...site,title:'Job site · '+site.title});root.scrollIntoView({behavior:'smooth',block:'start'});}else status.textContent='This job has no reviewed weather location yet.';});
+ document.addEventListener('wzos:weather-job',event=>{const site=sites.find(s=>s.order_id===event.detail?.order_id);if(site){stopFollow();loadWeather({...site,title:'Job site · '+site.title});}else status.textContent='This job has no reviewed weather location yet.';root.scrollIntoView({behavior:'smooth',block:'start'});});
  document.addEventListener('visibilitychange',()=>{if(document.hidden)stopWatch();else if(owner){if(following){status.textContent='Finding your current location…';startWatch();}else if(lastPoint)loadWeather(lastPoint);loadSites();loadNotices();}});
  window.addEventListener('offline',()=>{if(lastWeather)render({...lastWeather,status:'stale'},lastPoint);});
  window.addEventListener('online',()=>{if(owner){loadSites();loadNotices();if(lastPoint)loadWeather(lastPoint);}});
