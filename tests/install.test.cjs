@@ -35,6 +35,7 @@ test('already standalone hides install action and rejected prompt remains usable
 test('manifest has install icons and launches workspace without an activation in the URL',()=>{
  const m=JSON.parse(fs.readFileSync('services/workspace_preview/static/manifest.webmanifest','utf8'));
  assert.equal(m.start_url,'/');assert.equal(m.scope,'/');assert.equal(m.display,'standalone');
- assert.deepEqual(m.icons.map(i=>i.sizes),['192x192','512x512']);
- for(const icon of m.icons)assert.ok(fs.existsSync('services/workspace_preview/static'+icon.src));
+ assert.deepEqual(m.icons.map(i=>i.sizes),['192x192','512x512','192x192','512x512']);
+ assert.equal(m.id,'/');assert.deepEqual(m.icons.map(i=>i.purpose),['any','any','maskable','maskable']);
+ for(const icon of m.icons)assert.ok(fs.existsSync('services/workspace_preview/static'+icon.src.split('?')[0]));
 });

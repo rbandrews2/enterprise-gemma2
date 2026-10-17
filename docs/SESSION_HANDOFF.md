@@ -47,7 +47,9 @@ Public app/sign-in/SMS working; earlier CLI-auth blocker is closed.
 
 ## Next work
 
-1. Daily first five-minute test schedule cancelled after laptop blank iframe.
+1. Supplied logo is applied locally across shell/auth/dashboard/favicon/install assets;
+   see WZOS_BRANDING_20261017.md. Combine the next build with Daily repair.
+2. Daily first five-minute test schedule cancelled after laptop blank iframe.
    Ray reported meeting inside TV; two-way media remains unaccepted. Exact fallback
    media-origin repair and bounded join timeout are local, NOT DEPLOYED. See
    DAILY_FRAME_REPAIR_20261017.md. Focused PostgreSQL gate and policy approval next.

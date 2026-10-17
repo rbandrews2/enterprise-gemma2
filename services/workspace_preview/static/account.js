@@ -80,6 +80,7 @@ window.wzosAccount = (() => {
   }
   const passkeysAvailable=Boolean(config.passkeys&&window.isSecureContext&&window.PublicKeyCredential&&navigator.credentials);
   const panel=element('dialog');panel.className='account-dialog';
+  const logo=element('img');logo.src='/wzos-logo.png?brand=20261017';logo.alt='Work Zone OS';logo.className='account-brand-logo';logo.width=80;logo.height=89;panel.append(logo);
   const title=element('h2','Welcome to WZOS');const note=element('p',key?'Sign in to your organization.':'Account sign-in is awaiting Google authentication configuration.');
   const email=element('input');email.type='email';email.autocomplete='username';email.required=true;
   const password=element('input');password.type='password';password.autocomplete='current-password';password.required=true;password.setAttribute('aria-label','Password');

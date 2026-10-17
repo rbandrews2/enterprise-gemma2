@@ -223,3 +223,6 @@ p{font-size:calc(var(--wzos-paragraph-font-size,1em) + 1pt)!important}
 
 /* Landing cards replace only the mobile top module menu. */
 @media(max-width:760px){body.landing-active .sidebar nav,body.landing-active .sidebar .nav-label{display:none!important}}
+
+/* Supplied WZOS artwork: preserve proportions and existing glass layout. */
+.brand .brand-logo{display:block;object-fit:contain;width:48px;height:54px;flex:0 0 48px;padding:0;background:transparent;border-radius:0;letter-spacing:normal}.account-brand-logo{display:block;width:80px;height:89px;object-fit:contain;margin:0 auto 16px}.dashboard-brand-logo{display:block;width:64px;height:71px;object-fit:contain;margin:0 0 12px}@media(max-width:600px){.brand .brand-logo{width:40px;height:45px;flex-basis:40px}.dashboard-brand-logo{width:54px;height:60px}}

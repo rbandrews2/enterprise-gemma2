@@ -303,8 +303,25 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
 
     @app.get('/install-icon-{size}.png')
     def install_icon(size: int):
-        if size not in (192,512): raise HTTPException(404,'Icon not found')
+        if size not in (144,180,192,512): raise HTTPException(404,'Icon not found')
         return FileResponse(STATIC/f'install-icon-{size}.png',media_type='image/png')
+
+    @app.get('/install-maskable-{size}.png')
+    def maskable_install_icon(size: int):
+        if size not in (192,512): raise HTTPException(404,'Icon not found')
+        return FileResponse(STATIC/f'install-maskable-{size}.png',media_type='image/png')
+
+    @app.get('/wzos-logo.png')
+    def brand_logo():
+        return FileResponse(STATIC/'wzos-logo.png',media_type='image/png')
+
+    @app.get('/favicon.ico')
+    def brand_favicon():
+        return FileResponse(STATIC/'favicon.ico',media_type='image/x-icon')
+
+    @app.get('/favicon-32.png')
+    def brand_favicon_png():
+        return FileResponse(STATIC/'favicon-32.png',media_type='image/png')
 
     @app.get("/api/maps/config")
     def maps_config(request: Request):
