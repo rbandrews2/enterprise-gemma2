@@ -286,6 +286,10 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
     def script():
         return FileResponse(STATIC / "workspace.js", media_type="text/javascript")
 
+    @app.get('/phone-number.js')
+    def phone_number_script():
+        return FileResponse(STATIC/'phone-number.js',media_type='text/javascript')
+
     @app.get('/install.js')
     def install_script():
         return FileResponse(STATIC/'install.js', media_type='text/javascript')

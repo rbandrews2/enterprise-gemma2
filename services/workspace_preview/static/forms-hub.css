@@ -60,3 +60,5 @@
  .wzos-form-doc table{width:100%;border-collapse:collapse;margin:10px 0;--wzos-paragraph-font-size:9.5pt;font-size:9.5pt}.wzos-form-doc caption{text-align:left;font-weight:600;padding-bottom:3px}
  .wzos-form-doc th,.wzos-form-doc td{border:1px solid #666;padding:4px 6px;height:1.4em;text-align:left}
 }
+
+.forms-primary-actions{display:flex;flex-direction:column;gap:10px;align-items:stretch}.forms-primary-actions button{min-height:46px}.forms-delivery-status{margin-top:12px}

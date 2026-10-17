@@ -47,7 +47,7 @@ function startAtlasWait(render,signal,clock=globalThis){
   integrations:{match:/integrat|connect|external|sync/i,text:"Integrations will connect approved outside services to WZOS. Connections are not configurable from this preview. Each integration needs its own tested permissions and settings; I will show its actual connection status when that workflow is available."},
   admin:{match:/admin|organization|permission|access|role|edition|account/i,text:"Both editions have member and admin access. Members have basic access to their own work orders; admins manage their organization's work orders and team settings. Advanced planning is Enterprise-only; app guidance is available in both editions."}
  };
- topics.forms.text+=' For persisted work, choose Open saved drafts, save an incident/DVIR/JSA draft, link your own or active Enterprise assigned job, then submit a saved version for internal admin review in Forms hub. Saved job references stay with a form after cancellation; new links require current access. This does not open private original work orders or submit to an agency.';
+ topics.forms.text+=' For persisted work, choose Open saved drafts, save an incident/DVIR/JSA draft, link your own or active Enterprise assigned job, or fill a printable form and choose Send to office for internal admin review in Forms hub. Saved job references stay with a form after cancellation; new links require current access. This does not open private original work orders or submit to an agency.';
  let returnFocus=null, target=null, greetingDismissed=false, chatBusy=false, chatEpoch=0, chatHistory=[], chatController=null;
  const panel=byId("assistant-panel"), dock=byId("assistant-dock");
  function answer(key){

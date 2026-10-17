@@ -1,6 +1,6 @@
 "use strict";
 // Forms Hub: download/print library. Team forms are admin uploads (files or Google links); WZOS printables can be filled in on screen.
-// Entries in WZOS printables are never sent to the server. The server enforces team-form access.
+// Printable entries stay on screen until the user explicitly sends an immutable copy to office.
 (() => {
  const $=id=>document.getElementById(id), api=(...args)=>window.wzosClock.api(...args);
  const node=(tag,value,cls)=>{const n=document.createElement(tag);if(value!=null)n.textContent=value;if(cls)n.className=cls;return n;};
@@ -15,12 +15,12 @@
  const reduced=()=>window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
  // The server accepts simple filenames only; keep the user's name recognizable.
  const safeName=name=>(name.replace(/[^\w .()-]+/g,'-').replace(/^[.\s-]+/,'').slice(0,200))||'form.pdf';
- let templates=[], library=null, epoch=0, dirty=false, pending=null, busy=false, transfer=null, cleaning=false;
+ let templates=[], library=null, epoch=0, dirty=false, pending=null, busy=false, transfer=null, cleaning=false, officeSending=false;
  const fullTemplates=new Map();
 
  const canDiscard=()=>!dirty||confirm('Your entries are not saved. Leave without printing or downloading this form?');
- window.wzosFormsCanLeave=()=>busy?confirm('A team form is still uploading. Leave and cancel the upload?')&&(transfer?.abort(),true):canDiscard();
- window.addEventListener('beforeunload',event=>{if(dirty||busy){event.preventDefault();event.returnValue='';}});
+ window.wzosFormsCanLeave=()=>officeSending?false:busy?confirm('A team form is still uploading. Leave and cancel the upload?')&&(transfer?.abort(),true):canDiscard();
+ window.addEventListener('beforeunload',event=>{if(dirty||busy||officeSending){event.preventDefault();event.returnValue='';}});
  $('forms-nav').onclick=()=>window.showWzosView('forms');
 
  async function template(summary){
@@ -325,7 +325,7 @@
   const editor=$('forms-editor');editor.replaceChildren();editor.hidden=false;dirty=false;
   const heading=node('h2',t.title);heading.id='forms-editor-title';heading.tabIndex=-1;
   const b=node('span','WZOS printable form','forms-badge');b.dataset.category='wzos_printable';
-  editor.append(heading,b,node('p','Your entries stay on this screen only. They are not saved, so print or download the form before you leave.','forms-notice-box'),node('p',t.print_notice,'fine'));
+  editor.append(heading,b,node('p','Your entries stay on this screen until you choose Send to office. Print, download or send before you leave.','forms-notice-box'),node('p',t.print_notice,'fine'));
   const form=node('form');form.noValidate=true;form.id='forms-form';const inputs=new Map();
   const order=node('select');order.id='forms-order';order.append(option('','None'),...window.wzosClock.getOrders().map(o=>option(o.title,o.title)));
   const location=node('input');location.id='forms-location';location.maxLength=500;
@@ -334,11 +334,21 @@
   const actions=node('div',null,'forms-actions');
   const values=()=>({fields:Object.fromEntries([...inputs].map(([k,c])=>[k,c.read()])),order:order.value,location:location.value.trim()});
   const print=button('Print or save as PDF','primary');print.onclick=()=>printDocument(t,values());
+  const send=button('Send to office','primary'),delivery=node('p','','forms-delivery-status');delivery.setAttribute('role','status');
+  let officeRequest=null;const generation=epoch;
+  send.onclick=async()=>{
+   if(officeSending)return;officeRequest=officeRequest||{request_id:crypto.randomUUID(),template_id:t.id,template_revision:t.revision,...values()};
+   officeSending=true;for(const input of form.querySelectorAll('input,select,textarea,button'))input.disabled=true;delivery.textContent='Sending completed form to office…';
+   try{await api('/api/form-submissions/completed',{method:'POST',body:JSON.stringify(officeRequest)});if(generation!==epoch)return;
+    dirty=false;delivery.textContent='Received by office. Your organization’s admins can review the saved form in Forms hub.';document.dispatchEvent(new CustomEvent('wzos:office-sent'));
+   }catch(error){if(generation===epoch)delivery.textContent='Not sent: '+error.message;}
+   finally{officeSending=false;for(const input of form.querySelectorAll('input,select,textarea,button'))input.disabled=false;}
+  };
   const save=button('Download filled form');save.onclick=()=>downloadDocument(t,values());
-  const clear=button('Clear entries');clear.onclick=()=>{if(!confirm('Clear everything you entered on this form?'))return;for(const c of inputs.values())c.clear();order.value='';location.value='';dirty=false;heading.focus();};
+  const clear=button('Clear entries');clear.onclick=()=>{if(!confirm('Clear everything you entered on this form?'))return;for(const c of inputs.values())c.clear();order.value='';location.value='';dirty=false;officeRequest=null;delivery.textContent='';heading.focus();};
   const close=button('Close');close.onclick=()=>{if(!canDiscard())return;dirty=false;editor.hidden=true;editor.replaceChildren();if(opener?.isConnected)opener.focus();};
-  actions.append(print,save,clear,close);form.append(actions);editor.append(form);
-  form.addEventListener('input',()=>{dirty=true;});form.onsubmit=event=>event.preventDefault();
+  const primaryActions=node('div',null,'forms-primary-actions');primaryActions.append(print,send);actions.append(primaryActions,save,clear,close);form.append(actions,delivery);editor.append(form);
+  form.addEventListener('input',()=>{dirty=true;officeRequest=null;delivery.textContent='';});form.onsubmit=event=>event.preventDefault();
   editor.scrollIntoView?.({behavior:reduced()?'auto':'smooth',block:'start'});heading.focus({preventScroll:true});
  }
  // A printable document built with DOM text nodes only, so entries can never become markup.
@@ -356,7 +366,7 @@
     else f.append(line(v));
     grid.append(f);}
   }
-  doc.append(node('p',`WZOS printable form · ${t.title} · template revision ${t.revision} · ${data?'filled on screen; not saved in WZOS':'blank'}`,'footer'));
+  doc.append(node('p',`WZOS printable form · ${t.title} · template revision ${t.revision} · ${data?'filled form':'blank'}`,'footer'));
   return doc;
  }
  function printDocument(t,data){
@@ -373,6 +383,7 @@
   notice(`Download requested for ${t.title}${data?' with your entries':' (blank)'}. Check your browser downloads before leaving. Open the file in any browser to print it or save it as a PDF.`);
  }
 
+ window.WzosForms={printReceived:record=>{if(record.form_type==='printable'&&record.template)printDocument(record.template,record);}};
  async function show(){
   const generation=++epoch;notice('');
   try{const catalog=await api('/api/forms/templates');if(generation!==epoch)return;templates=catalog.items;renderBuiltins();}catch(error){notice(error.message);}

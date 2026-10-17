@@ -31,6 +31,22 @@ def register(app,connect,actor,actors,synthetic=True):
         db.execute('CREATE TABLE IF NOT EXISTS study_plans (organization_id TEXT,owner_id TEXT,course_id TEXT,status TEXT,updated_at TEXT,PRIMARY KEY(organization_id,owner_id,course_id))')
         db.execute('CREATE TABLE IF NOT EXISTS fixture_messages (id TEXT PRIMARY KEY,organization_id TEXT,sender_id TEXT,recipient_id TEXT,body TEXT,created_at TEXT)')
     service=sms.register(app,connect,actor,actors,live_permitted=not synthetic)
+    def notify_office(db,user,submission_id):
+        queued=[];created=datetime.now(timezone.utc).isoformat()
+        for recipient in actors(user).values():
+            if recipient['organization_id']!=user['organization_id'] or recipient['role']!='admin':continue
+            # UUID derived from immutable submission + recipient makes notices retry-safe.
+            from uuid import uuid5, NAMESPACE_URL
+            mid=str(uuid5(NAMESPACE_URL,'wzos-office:'+submission_id+':'+recipient['id']))
+            text='A completed form was sent to office. Open Forms hub to review it.'
+            db.execute('INSERT INTO fixture_messages VALUES (?,?,?,?,?,?)',(mid,user['organization_id'],user['id'],recipient['id'],text,created))
+            db.execute('INSERT INTO message_receipts VALUES (?,?,?,?,?)',(user['organization_id'],mid,recipient['id'],0,None))
+            contact=db.execute('SELECT status FROM sms_contacts WHERE organization_id=? AND user_id=?',(user['organization_id'],recipient['id'])).fetchone()
+            if contact and contact['status']=='verified':
+                row=service.enqueue(db,organization_id=user['organization_id'],recipient_id=recipient['id'],body='WZOS: A completed form is ready for office review. Open WZOS > Forms hub. Reply STOP to opt out.',purpose='form_submission',reference_id=submission_id,actor_id=user['id'])
+                if row['status']=='queued':queued.append(row['id'])
+        return queued
+    app.state.notify_office=notify_office
     @app.get('/api/training')
     def training(request:Request):
         user=actor(request)

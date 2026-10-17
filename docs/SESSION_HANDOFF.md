@@ -1,3 +1,38 @@
+## Saved completed-form/SMS/PWA candidate - October16
+
+Next user task: remove Submit a saved form chooser; add Send to office directly
+under Print or save as PDF; repair SMS and reproduce V1 standalone PWA behavior.
+Implemented locally, not deployed. Details: FORMS_SMS_PWA_UPDATE_20261016.md.
+Fourteen focused Python tests PASS (no skips in selected classes),seven Node
+phone/install checks PASS; changed JS syntax PASS. No schema/dependency changes.
+
+Printable forms now persist immutable validated snapshots into existing
+form_submissions, admin review/print queue and organization admin notices.
+SMS office notifications contain no private form contents; member-triggered
+notifications require actual submitted form plus active sender and admin target.
+Normal SMS composition stays admin-only; consent/verified phone/STOP preserved.
+
+Live Twilio inspection BEFORE changes: test mode ready/one approved recipient,
+admin phone Not enabled, empty outbox. User reported no action when requesting a
+code. Normalizes common US phone input, opens setup prominently, adds inline
+feedback and refreshable actual verification delivery/error code. No live SMS
+sent; do not call carrier delivery accepted. Runtime mode remains test; all-member
+SMS activation and actual phone acceptance remain separate verification work.
+
+V1 manifest .local-recovery/core-netlify/manifest.json used standalone/root scope.
+V2 already used standalone. Kept V2 id/start/scope stable, added standalone override
+and mobile/Apple app metadata; instructions explain launching from installed icon.
+A webpage cannot hide ordinary browser URL chrome. Existing pending offline data
+must not be cleared or uninstalled automatically.
+
+Cloud/browser blocker: in-app browser timed out repeatedly and reset its kernel.
+User asked to switch to Chrome; direct attempt returned Browser is not available:
+chrome. Asked to connect Chrome extension to this task or choose a manual Cloud
+Shell command. Continue local packaging; no browser/cloud credentials copied.
+Current LIVE revision remains flow-354f7a9 imageec8f4243e411d4f6a1d96e1a8daec3b2f81ca2a0c0447c835314442664ca6ccb.
+Use that immutable parent for source-only overlay, preserve all runtime config;
+never rerun old checkout/hub deployment scripts against stale assumptions.
+
 ## LIVE module-flow update completed - October16
 
 Ray authorized deploying the saved updates. Source354f7a9 is now live at

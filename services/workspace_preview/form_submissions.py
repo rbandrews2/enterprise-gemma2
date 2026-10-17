@@ -1,10 +1,12 @@
-"""Immutable internal submissions of saved forms; no external delivery."""
+"""Immutable organization-scoped office submissions and review."""
 import hashlib
 import json
+import math
+from datetime import date, time
 from datetime import datetime, timezone
 from typing import Literal
 from uuid import UUID
-from fastapi import HTTPException, Request, Query
+from fastapi import BackgroundTasks, HTTPException, Request, Query
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 class Submission(BaseModel):
@@ -12,6 +14,67 @@ class Submission(BaseModel):
     request_id: UUID
     form_id: UUID
     expected_form_version: int=Field(ge=1,strict=True)
+
+class CompletedForm(BaseModel):
+    model_config = ConfigDict(extra='forbid', str_strip_whitespace=True)
+    request_id: UUID
+    template_id: str = Field(min_length=1, max_length=100)
+    template_revision: int = Field(ge=1, strict=True)
+    fields: dict = Field(max_length=100)
+    order: str = Field(default='', max_length=200)
+    location: str = Field(default='', max_length=500)
+
+
+def printable_snapshot(body, templates):
+    template = templates.get((body.template_id, body.template_revision))
+    if not template:
+        raise HTTPException(404, 'Form template revision not found')
+    if len(json.dumps(body.fields)) > 64000:
+        raise HTTPException(422, 'Form entries are too large')
+    definitions = {f['key']: f for section in template['sections'] for f in section['fields']}
+    if set(body.fields) - definitions.keys():
+        raise HTTPException(422, 'Unknown form field')
+    cleaned = {}
+    def text(value, maximum=4000):
+        if not isinstance(value, str) or len(value) > maximum:
+            raise HTTPException(422, 'Invalid form entry or text too long')
+        return value.strip()
+    for key, value in body.fields.items():
+        field = definitions[key]; kind = field['type']
+        if kind == 'rows':
+            columns = {c['key']: c for c in field['columns']}
+            if not isinstance(value, list) or len(value) > field['max_rows']:
+                raise HTTPException(422, 'Too many form rows')
+            rows = []
+            for row in value:
+                if not isinstance(row, dict) or set(row) - columns.keys():
+                    raise HTTPException(422, 'Invalid form row')
+                rows.append({k: text(v, columns[k].get('max_length', 200)) for k, v in row.items()})
+            cleaned[key] = rows
+        elif kind == 'multiselect':
+            if not isinstance(value, list) or any(not isinstance(v,str) for v in value) or len(value) != len(set(value)) or not set(value) <= set(field['options']):
+                raise HTTPException(422, 'Invalid form choices')
+            cleaned[key] = value
+        else:
+            value = text(value, field.get('max_length', 4000 if kind=='textarea' else 200))
+            if kind == 'select' and value and value not in field['options']:
+                raise HTTPException(422, 'Invalid form choice')
+            if value and kind in ('date', 'time', 'number'):
+                try:
+                    if kind == 'date': date.fromisoformat(value)
+                    elif kind == 'time': time.fromisoformat(value)
+                    else:
+                        number = float(value)
+                        if not math.isfinite(number) or number < field.get('min',-math.inf) or number > field.get('max',math.inf): raise ValueError()
+                except ValueError:
+                    raise HTTPException(422, 'Invalid form date, time or number')
+            cleaned[key] = value
+    if not any(v for v in cleaned.values()):
+        raise HTTPException(422, 'Complete at least one form field before sending to office')
+    return {'title': template['title'], 'form_type':'printable', 'status':'completed',
+            'template_id':body.template_id, 'template_revision':body.template_revision,
+            'template':template, 'fields':cleaned, 'order':body.order, 'location':body.location}
+
 
 class Review(BaseModel):
     model_config=ConfigDict(extra='forbid',str_strip_whitespace=True)
@@ -24,6 +87,8 @@ class Review(BaseModel):
         return self
 
 def register(app,connect,actor):
+    from .forms_hub import load_catalog
+    templates, _ = load_catalog()
     with connect() as db:
         db.execute('CREATE TABLE IF NOT EXISTS form_submissions (id TEXT PRIMARY KEY,organization_id TEXT NOT NULL,form_id TEXT NOT NULL,form_version INTEGER NOT NULL,submitted_by TEXT NOT NULL,payload TEXT NOT NULL,payload_hash TEXT NOT NULL,status TEXT NOT NULL,version INTEGER NOT NULL,submitted_at TEXT NOT NULL,reviewed_by TEXT,reviewed_at TEXT,note TEXT NOT NULL,UNIQUE(organization_id,form_id,form_version))')
     def unpack(row):
@@ -44,6 +109,26 @@ def register(app,connect,actor):
             if json.loads(row['payload']).get('status')=='cancelled':raise HTTPException(409,'Cancelled forms cannot be submitted')
             db.execute('INSERT INTO form_submissions VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)',(sid,org,fid,row['version'],user['id'],row['payload'],hashlib.sha256(row['payload'].encode()).hexdigest(),'received',1,datetime.now(timezone.utc).isoformat(),None,None,''))
             return unpack(db.execute('SELECT * FROM form_submissions WHERE id=?',(sid,)).fetchone())
+    @app.post('/api/form-submissions/completed')
+    def send_completed(body:CompletedForm,request:Request,background:BackgroundTasks):
+        user=actor(request);sid=str(body.request_id);org=user['organization_id']
+        payload=json.dumps(printable_snapshot(body,templates),sort_keys=True,separators=(',',':'))
+        digest=hashlib.sha256(payload.encode()).hexdigest();queued=[]
+        with connect() as db:
+            db.execute('BEGIN IMMEDIATE')
+            prior=db.execute('SELECT * FROM form_submissions WHERE id=?',(sid,)).fetchone()
+            if prior:
+                if (prior['organization_id'],prior['submitted_by'],prior['payload_hash']) != (org,user['id'],digest):
+                    raise HTTPException(409,'Office submission retry conflict')
+                return unpack(prior)
+            db.execute('INSERT INTO form_submissions VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)',
+                (sid,org,sid,1,user['id'],payload,digest,'received',1,datetime.now(timezone.utc).isoformat(),None,None,''))
+            notify=getattr(app.state,'notify_office',None)
+            if notify: queued=notify(db,user,sid)
+            saved=unpack(db.execute('SELECT * FROM form_submissions WHERE id=?',(sid,)).fetchone())
+        service=getattr(app.state,'messaging',None)
+        if queued and service: background.add_task(service.process,org,queued)
+        return saved
     @app.get('/api/form-submissions')
     def listing(request:Request,offset:int=Query(0,ge=0),limit:int=Query(25,ge=1,le=50)):
         user=actor(request);clause='organization_id=?';params=[user['organization_id']]

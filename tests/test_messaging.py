@@ -412,6 +412,32 @@ class AccountSMSAccessTests(unittest.TestCase):
             db.execute("UPDATE sms_outbox SET next_attempt_at='2000-01-01T00:00:00+00:00' WHERE id=?", (outbox_id,))
         return outbox_id
 
+    def test_member_office_notice_targets_only_admin_and_rechecks_access(self):
+        response=self.client.put('/api/messaging/sms/contact',headers=self.headers('admin'),json={'request_id':str(uuid4()),'expected_version':0,'phone':MEMBER_PHONE,'consent':True,'consent_version':'2026-10-09'})
+        self.assertEqual(response.status_code,200,response.text)
+        code=re.search(r'code: (\d{6})',self.provider.sent[-1]['body']).group(1)
+        self.assertEqual(self.client.post('/api/messaging/sms/contact/verify',headers=self.headers('admin'),json={'code':code}).status_code,200)
+        self.provider.outcomes=[SendResult('retryable')]
+        body={'request_id':str(uuid4()),'template_id':'jsa','template_revision':1,'fields':{'competent_person':'Synthetic private form data'}}
+        response=self.client.post('/api/form-submissions/completed',headers=self.headers('member'),json=body)
+        self.assertEqual(response.status_code,200,response.text)
+        with self.service.connect() as db:
+            row=db.execute("SELECT * FROM sms_outbox WHERE purpose='form_submission'").fetchone()
+            self.assertEqual(row['recipient_id'],'admin');self.assertNotIn('Synthetic private form data',row['body'])
+            db.execute("UPDATE memberships SET role='member' WHERE organization_id=? AND user_id='admin'",(self.org,))
+            db.execute("UPDATE sms_outbox SET next_attempt_at='2000-01-01T00:00:00+00:00' WHERE id=?",(row['id'],))
+        sends=len(self.provider.sent);self.service.process(self.org)
+        self.assertEqual(len(self.provider.sent),sends)
+        with self.service.connect() as db:
+            saved=db.execute('SELECT * FROM sms_outbox WHERE id=?',(row['id'],)).fetchone()
+            self.assertEqual(saved['status'],'blocked')
+
+    def test_own_contact_exposes_delivery_status_without_code_or_body(self):
+        response=self.client.get('/api/messaging/sms/contact',headers=self.headers('member'))
+        delivery=response.json()['verification_delivery']
+        self.assertEqual(delivery['status'],'accepted')
+        self.assertNotIn('body',delivery);self.assertNotIn('secret',delivery)
+
     def test_queued_notification_rechecks_recipient_membership(self):
         outbox_id = self.queue_retry(); sends = len(self.provider.sent)
         with self.service.connect() as db:

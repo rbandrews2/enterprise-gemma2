@@ -21,9 +21,9 @@ window.wzosInstall=(()=>{
   const button=document.createElement('button');button.type='button';button.textContent='Install WZOS';
   const note=document.createElement('p');note.setAttribute('role','status');
   button.onclick=async()=>{
-   if(!invitation){note.textContent='Use your browser’s Install app or Add to Home Screen option. Installation is optional; you can continue here.';return;}
+   if(!invitation){note.textContent='In Chrome, choose Install app (or Add to Home Screen → Install). On iPhone, choose Share → Add to Home Screen → Open as Web App. Then launch WZOS from its home-screen icon for an app window without the address bar. Installation is optional; you can continue here.';return;}
    button.disabled=true;
-   try{const current=invitation;invitation=null;await current.prompt();const result=await current.userChoice;note.textContent=result.outcome==='accepted'?'Installation requested. Open WZOS from your device when it is ready.':'Installation dismissed. You can continue in your browser.';}
+   try{const current=invitation;invitation=null;await current.prompt();const result=await current.userChoice;note.textContent=result.outcome==='accepted'?'Installation requested. Launch WZOS from its home-screen app icon when ready; opening a website link still uses the browser.':'Installation dismissed. You can continue in your browser.';}
    catch(e){note.textContent='Installation is unavailable right now. You can continue in your browser.';}
    finally{button.disabled=false;}
   };

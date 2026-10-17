@@ -10,31 +10,22 @@
  document.getElementById('forms-view').append(root);
  async function show(){
   const generation=++epoch;root.replaceChildren();if(view!=='forms')return;
-  root.append(el('h2','Submit a saved form'),el('p','Send a saved revision to your organization’s admin review queue. Save edits first. Attachments and email/text delivery are not included.'));
   const notice=el('p');notice.setAttribute('role','status');root.append(notice);
   try{
-   const [drafts,submissions]=await Promise.all([api(`/api/modules/forms?limit=50&offset=${draftOffset}`),api(`/api/form-submissions?offset=${offset}`)]);
+   const submissions=await api(`/api/form-submissions?offset=${offset}`);
    if(generation!==epoch)return;
-   const label=el('label','Saved revision'),select=el('select');
-   for(const row of drafts.items){const option=el('option',`${row.title} · revision ${row.version}`);option.value=row.id;select.append(option);}label.append(select);
-   const submit=el('button','Submit saved revision');submit.type='button';submit.className='primary';submit.disabled=!drafts.items.length;let retry=null;
-   select.onchange=()=>{retry=null;};
-   submit.onclick=async()=>{
-    if(busy)return;const row=drafts.items.find(item=>item.id===select.value);if(!row)return;
-    retry=retry||{request_id:crypto.randomUUID(),form_id:row.id,expected_form_version:row.version};busy=true;submit.disabled=true;
-    try{await api('/api/form-submissions',{method:'POST',body:JSON.stringify(retry)});if(generation===epoch){await show();}}
-    catch(error){if(generation===epoch)notice.textContent=error.message;}finally{busy=false;submit.disabled=false;}
-   };
-   root.append(label,submit,el('p',`Showing ${drafts.items.length} of ${drafts.total} saved forms. Submission history below confirms receipt.`));
-   for(const [title,step,disabled] of [['Previous saved forms',-50,draftOffset===0],['Next saved forms',50,draftOffset+50>=drafts.total]]){const button=el('button',title);button.disabled=disabled;button.onclick=()=>{if(!busy){draftOffset=Math.max(0,draftOffset+step);show();}};root.append(button);}
-   const refresh=el('button','Refresh saved forms and submissions');refresh.onclick=()=>{if(!busy)show();};root.append(refresh);
-   root.append(el('h2',submissions.can_review?'Organization form review queue':'Your submissions'));
+   root.append(el('h2',submissions.can_review?'Office received forms':'Your sent forms'));
    for(const item of submissions.items){
     const card=el('article');card.className='report-section panel';
     card.append(el('h3',item.form.title),el('p',`Revision ${item.form_version} · ${item.status.replaceAll('_',' ')} · ${new Date(item.submitted_at).toLocaleString()}`));
     const details=el('details');details.append(el('summary','View submitted content'));
     for(const key of ['location','details'])if(item.form[key])details.append(el('p',item.form[key]));
     for(const group of ['inspection','safety'])for(const [key,value] of Object.entries(item.form[group]||{}))details.append(el('p',`${key.replaceAll('_',' ')}: ${value??'Not recorded'}`));
+    if(item.form.form_type==='printable'){
+     if(item.form.order)details.append(el('p','Work order: '+item.form.order));
+     for(const section of item.form.template?.sections||[]){details.append(el('h4',section.title));for(const field of section.fields){const value=item.form.fields[field.key];if(value!==undefined&&value!=='')details.append(el('p',field.label+': '+(typeof value==='object'?JSON.stringify(value):value)));}}
+     const print=el('button','Print received form or save as PDF');print.onclick=()=>window.WzosForms?.printReceived(item.form);details.append(print);
+    }
     details.append(el('p',`Submitted by: ${item.submitted_by}`));card.append(details);
     if(item.note)card.append(el('p',`Admin note: ${item.note}`));
     if(submissions.can_review&&item.status==='received'){
@@ -52,6 +43,7 @@
    for(const [title,step,disabled] of [['Previous',-25,offset===0],['Next',25,offset+25>=submissions.total]]){const button=el('button',title);button.disabled=disabled;button.onclick=()=>{if(!busy){offset=Math.max(0,offset+step);show();}};root.append(button);}
   }catch(error){if(generation===epoch)notice.textContent=error.message;}
  }
+ document.addEventListener('wzos:office-sent',()=>{offset=0;show();});
  document.addEventListener('wzos:view',event=>{view=event.detail;offset=0;draftOffset=0;show();});
  document.addEventListener('wzos:session',()=>{offset=0;draftOffset=0;show();});
 })();

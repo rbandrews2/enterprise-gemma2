@@ -52,7 +52,8 @@
  const CONTACT_STATUS={none:'Not enabled',pending_verification:'Waiting for verification code',verified:'Verified — text messages on',opted_out:'Opted out'};
  const checkbox=()=>{const box=node('input','');box.type='checkbox';Object.assign(box.style,{width:'auto',display:'inline-block',margin:'0 .5rem 0 0',verticalAlign:'middle'});return box;};
  const button=(text,cls='secondary')=>{const b=node('button',text);b.type='button';b.className=cls;return b;};
- const smsLine=sms=>'Text message: '+(SMS_STATUS[sms.status]||sms.status)+(sms.phone?' · '+sms.phone:'')+(sms.reason_text?' — '+sms.reason_text:'')+(sms.error_code?' (provider code '+sms.error_code+')':'');
+ const providerHelp={'21608':'Trial account: verify the recipient in Twilio.','21610':'Recipient opted out; they must opt back in.','21606':'Check the Twilio sender’s SMS capability.','30034':'Sender A2P registration is incomplete.','20003':'Twilio rejected authentication; check runtime secret bindings.'};
+ const smsLine=sms=>'Text message: '+(SMS_STATUS[sms.status]||sms.status)+(sms.phone?' · '+sms.phone:'')+(sms.reason_text?' — '+sms.reason_text:'')+(sms.error_code?' (provider code '+sms.error_code+')':'')+(providerHelp[sms.error_code]?' '+providerHelp[sms.error_code]:'');
  async function guarded(epoch,control,work,done){control.disabled=true;try{await work();if(epoch===generation){await show('messages');if(done)$('team-notice').textContent=done;}}catch(error){if(epoch===generation)$('team-notice').textContent=error.message;}finally{control.disabled=false;}}
  async function messagesView(root,epoch){
   const admin=window.wzosClock.getSession()?.role==='admin';
@@ -83,20 +84,30 @@
   // Enterprise dispatch (assignments and admin planning) renders here when available.
   await window.wzosDispatch?.render(root,()=>epoch===generation,$('team-notice'));if(epoch!==generation)return;
   // The member's own text message settings; only the phone's owner can turn texts on.
-  const mine=node('details',''),mineBody=node('form','');mineBody.onsubmit=event=>event.preventDefault();mine.className='report-section panel';mine.open=contact.status==='pending_verification';mine.append(node('summary','My text message settings'),mineBody);
+  const mine=node('details',''),mineBody=node('form','');mineBody.onsubmit=event=>event.preventDefault();mine.className='report-section panel';mine.open=contact.status!=='verified';mine.append(node('summary','My text message settings'),mineBody);
   mineBody.append(node('p','Status: '+(CONTACT_STATUS[contact.status]||contact.status)+(contact.phone?' · '+contact.phone:'')));
   if(!contact.sms_ready)mineBody.append(node('p','Text sending is not available in this environment yet. You can still record your number and consent.'));
-  const phoneLabel=node('label','Mobile number (international format, e.g. +15551234567)'),phone=node('input','');phone.type='tel';phone.autocomplete='tel';phone.value=contact.phone||'';phone.pattern='^\\+[1-9][0-9]{7,14}$';phoneLabel.append(phone);
+  const phoneLabel=node('label','Mobile number (US 10 digits or international +country code)'),phone=node('input','');phone.type='tel';phone.autocomplete='tel';phone.value=contact.phone||'';phoneLabel.append(phone);
   const consentLabel=node('label',''),consent=checkbox();consentLabel.append(consent,' '+contact.consent_text);
+  const phoneNotice=node('p','');phoneNotice.setAttribute('role','status');phoneNotice.setAttribute('aria-live','polite');
+  if(contact.verification_delivery)phoneNotice.textContent=smsLine(contact.verification_delivery);
   const request=button(contact.status==='verified'?'Change number':'Send verification code');
-  request.onclick=()=>{if(!consent.checked){$('team-notice').textContent='Review and accept the text message consent first.';return;}if(!phone.checkValidity()||!phone.value){$('team-notice').textContent='Enter the number in international format, starting with +.';return;}
-   guarded(epoch,request,()=>api('/api/messaging/sms/contact',{method:'PUT',body:JSON.stringify({request_id:crypto.randomUUID(),expected_version:contact.version,phone:phone.value.trim(),consent:true,consent_version:contact.current_consent_version})}),'Verification requested. Enter the code sent to your phone.');};
-  mineBody.append(phoneLabel,consentLabel,request);
+  request.onclick=async()=>{
+   if(!consent.checked){phoneNotice.textContent='Review and check the text message consent box first.';return;}
+   const number=window.WzosPhone.normalize(phone.value);if(!number){phoneNotice.textContent='Enter a US 10-digit number, or an international number starting with + and its country code.';return;}
+   request.disabled=true;phoneNotice.textContent='Requesting your verification text…';
+   try{const result=await api('/api/messaging/sms/contact',{method:'PUT',body:JSON.stringify({request_id:crypto.randomUUID(),expected_version:contact.version,phone:number,consent:true,consent_version:contact.current_consent_version})});
+    if(epoch!==generation)return;await show('messages');$('team-notice').textContent=result.verification_delivery?smsLine(result.verification_delivery):'Verification requested. Check My text message settings for delivery status.';
+   }catch(error){if(epoch===generation)phoneNotice.textContent='Verification not requested: '+error.message;}
+   finally{request.disabled=false;}
+  };
+  const refreshPhone=button('Refresh verification status');refreshPhone.onclick=()=>show('messages');
+  mineBody.append(phoneLabel,consentLabel,request,refreshPhone,phoneNotice);
   if(contact.status==='pending_verification'){const codeLabel=node('label','Verification code'),code=node('input','');code.inputMode='numeric';code.autocomplete='one-time-code';code.maxLength=6;codeLabel.append(code);const verify=button('Verify number','primary');
-   verify.onclick=()=>{if(!/^[0-9]{6}$/.test(code.value.trim())){$('team-notice').textContent='Enter the 6-digit code from the text message.';return;}guarded(epoch,verify,()=>api('/api/messaging/sms/contact/verify',{method:'POST',body:JSON.stringify({code:code.value.trim()})}),'Number verified. Text messages are on.');};mineBody.append(codeLabel,verify);}
+   verify.onclick=()=>{if(!/^[0-9]{6}$/.test(code.value.trim())){phoneNotice.textContent='Enter the 6-digit code from the text message.';return;}guarded(epoch,verify,()=>api('/api/messaging/sms/contact/verify',{method:'POST',body:JSON.stringify({code:code.value.trim()})}),'Number verified. Text messages are on.');};mineBody.append(codeLabel,verify);}
   if(['verified','pending_verification'].includes(contact.status)){const stop=button('Turn off text messages');stop.onclick=()=>guarded(epoch,stop,()=>api('/api/messaging/sms/contact/opt-out',{method:'POST',body:JSON.stringify({expected_version:contact.version})}),'Text messages turned off.');mineBody.append(stop);}
   mineBody.append(node('p','You can also reply STOP to any WZOS text. WZOS messages remain available in the app.'));
-  root.append(mine);
+  if(contact.status!=='verified')root.prepend(mine);else root.append(mine);
   if(!admin)return;
   // Admin delivery oversight for this organization only.
   const panel=node('details',''),inner=node('section','');panel.className='report-section panel';panel.append(node('summary','Text message delivery (admin)'),inner);
@@ -106,7 +117,7 @@
   const run=button('Send queued texts now');run.onclick=()=>guarded(epoch,run,()=>api('/api/messaging/sms/process',{method:'POST'}),'Queue processed.');inner.append(node('h3','Recent texts'),run);
   if(!outbox.items.length)inner.append(node('p','No text messages yet.'));
   for(const row of outbox.items){const item=node('article','');item.className='clock-entry';
-   item.append(node('p',`${names[row.recipient_id]||row.recipient_id} · ${row.purpose==='verification'?'Verification code':'Message copy'} · ${new Date(row.created_at).toLocaleString()} · attempts ${row.attempts}`),node('p',smsLine(row)));
+   item.append(node('p',`${names[row.recipient_id]||row.recipient_id} · ${row.purpose==='verification'?'Verification code':row.purpose==='form_submission'?'Office notification':'Text notification'} · ${new Date(row.created_at).toLocaleString()} · attempts ${row.attempts}`),node('p',smsLine(row)));
    const actions=node('div','');actions.className='clock-actions';
    const act=(text,action,confirmText)=>{const b=button(text);b.onclick=()=>{if(confirmText&&!confirm(confirmText))return;guarded(epoch,b,()=>api('/api/messaging/sms/outbox/'+row.id+'/resolve',{method:'POST',body:JSON.stringify({action,confirm_possible_duplicate:action==='retry'&&row.status==='ambiguous'})}),'Text message updated.');};actions.append(b);};
    if(row.status==='ambiguous'){if(row.purpose!=='verification')act('Resend (may duplicate)','retry','The provider may already have sent this text. Resend anyway?');act('Mark failed','mark_failed');}

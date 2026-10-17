@@ -166,7 +166,12 @@ class Messaging:
                 (row['organization_id'], row['recipient_id'])).fetchone()
             if not recipient:
                 return 'recipient_inactive'
-            if row['purpose'] != 'verification':
+            if row['purpose'] == 'form_submission':
+                submission=db.execute('SELECT 1 FROM form_submissions WHERE id=? AND organization_id=? AND submitted_by=?',(row['reference_id'],row['organization_id'],row['created_by'])).fetchone()
+                sender=db.execute('SELECT 1 FROM memberships WHERE organization_id=? AND user_id=? AND active=1',(row['organization_id'],row['created_by'])).fetchone()
+                office=db.execute("SELECT 1 FROM memberships WHERE organization_id=? AND user_id=? AND active=1 AND role='admin'",(row['organization_id'],row['recipient_id'])).fetchone()
+                if not submission or not sender or not office:return 'sender_inactive'
+            elif row['purpose'] != 'verification':
                 sender = db.execute(
                     "SELECT 1 FROM memberships WHERE organization_id=? AND user_id=? AND active=1 AND role='admin'",
                     (row['organization_id'], row['created_by'])).fetchone()
@@ -370,9 +375,11 @@ def register(app, connect, actor, actors, live_permitted):
         user = actor(request)
         with connect() as db:
             row = db.execute('SELECT * FROM sms_contacts WHERE organization_id=? AND user_id=?', (user['organization_id'], user['id'])).fetchone()
+            delivery=db.execute("SELECT * FROM sms_outbox WHERE organization_id=? AND recipient_id=? AND purpose='verification' ORDER BY created_at DESC,id DESC LIMIT 1",(user['organization_id'],user['id'])).fetchone()
         readiness = service.readiness()
         return {**contact_view(row), 'consent_text': CONSENT_TEXT, 'current_consent_version': CONSENT_VERSION,
-                'sms_mode': readiness['mode'], 'sms_ready': readiness['ready']}
+                'sms_mode': readiness['mode'], 'sms_ready': readiness['ready'],
+                'verification_delivery':public(delivery,include_body=False) if delivery else None}
 
     @app.put('/api/messaging/sms/contact')
     def enroll(body: ContactRequest, request: Request, background: BackgroundTasks):

@@ -57,6 +57,27 @@ class FormSubmissionTests(unittest.TestCase):
         self.assertEqual(self.items(query='?offset=1').json()['items'],[])
         self.assertEqual(self.items(query='?limit=51').status_code,422)
 
+    def test_completed_printable_is_saved_once_and_received_only_by_office(self):
+        body={'request_id':str(uuid4()),'template_id':'jsa','template_revision':1,'fields':{'work_date':'2026-10-16','competent_person':'Synthetic supervisor'},'location':'Synthetic work site'}
+        endpoint='/api/form-submissions/completed'
+        response=self.client.post(endpoint,headers=self.h(),json=body)
+        self.assertEqual(response.status_code,200,response.text)
+        self.assertEqual(self.client.post(endpoint,headers=self.h(),json=body).json(),response.json())
+        self.assertEqual(self.items('enterprise-admin').json()['items'][0]['form']['fields']['competent_person'],'Synthetic supervisor')
+        self.assertEqual(self.items('core-admin').json()['items'],[])
+        inbox=self.client.get('/api/messages',headers=self.h('enterprise-admin')).json()['items']
+        self.assertEqual(len([m for m in inbox if 'sent to office' in m['body']]),1)
+        self.assertEqual(self.client.post(endpoint,headers=self.h(),json={**body,'location':'Changed'}).status_code,409)
+        self.assertEqual(self.client.post(endpoint,headers=self.h('core-admin'),json=body).status_code,409)
+
+    def test_completed_printable_rejects_unknown_fields_invalid_dates_and_oversize_values(self):
+        body={'request_id':str(uuid4()),'template_id':'jsa','template_revision':1,'fields':{}}
+        endpoint='/api/form-submissions/completed'
+        for fields in [{},{'unknown':'bad'},{'work_date':'not-a-date'},{'competent_person':'x'*201},{'competent_person':{'html':'unsafe'}}]:
+            response=self.client.post(endpoint,headers=self.h(),json={**body,'fields':fields})
+            self.assertEqual(response.status_code,422,response.text)
+        self.assertEqual(self.items().json()['total'],0)
+
 @unittest.skipUnless(os.getenv('WZOS_TEST_DATABASE_URL'),'Dedicated PostgreSQL database not configured')
 class PostgreSQLFormSubmissionTests(FormSubmissionTests):
     def make_storage(self,root):
