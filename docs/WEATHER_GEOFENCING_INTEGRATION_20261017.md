@@ -3,6 +3,17 @@
 October 17, 2026. Planning/static inspection only; no application code, cloud resources,
 location collection, notifications or production settings changed.
 
+## Confirmed card direction
+
+Ray prefers one fixed weather card with basic live information that follows the
+user's changing location. Keep a consistent responsive placement and compact size
+in the existing glass/amber design; do not introduce a floating overlay that covers
+mobile controls. Show locality, condition icon/text, temperature, feels-like,
+wind/gusts, precipitation and source update time. Hazard details may expand only
+when relevant. Location-following is the normal mode after explicit permission;
+selected-job weather is an explicitly labeled fallback, not a silent replacement.
+This preference updates the plan; implementation/deployment is still pending.
+
 ## Source examined
 
 Read-only source: C:/Users/MolecularDev/GEMINI_WZOS_V1, HEAD
@@ -56,8 +67,9 @@ React state/auth/storage architecture or add a second runtime.
 - Admins set/review site center and radius; members receive only assigned permitted
   sites. Record coordinate source, reviewed_at, radius, version and updated_by.
   A map pin is a proximity reference, not an approved road-work perimeter.
-- Use explicit foreground location permission with a visible stop control. Default
-  weather to the selected job; device-position weather is opt-in. Avoid sending
+- Use explicit foreground location permission with a visible stop control. Follow
+  user location after permission; if denied/unavailable offer selected-job weather
+  with a clear location label, or location selection. Avoid sending
   employee identity or continuous precise tracks to weather providers.
 - Proposed settings/evidence DDL must be reviewed for tenant keys, constraints,
   retention and backward compatibility before implementation/deployment. Do not
@@ -77,8 +89,18 @@ React state/auth/storage architecture or add a second runtime.
   while keeping organization subscriptions/recipients private. Respect provider
   cache headers. Proposed pilot intervals: alerts once/minute per unique area,
   forecasts every15 minutes; tune after request-volume/latency evidence.
-- Card on dashboard and job detail: location, temperature/feels-like, wind/gusts,
-  precipitation, next-hours outlook, source timestamp and visible active hazards.
+- Fixed card: locality, basic conditions, temperature/feels-like, wind/gusts,
+  precipitation, source timestamp and relevant active hazards. Optional expanded
+  details can include the next-hours outlook; keep the default face brief.
+  Reuse one foreground location subscription, debounce meaningful movement or
+  forecast-area changes and cancel/ignore stale requests so an older response
+  cannot overwrite the new location. Refresh on resume and bounded freshness
+  timers even when stationary, without one provider call per GPS fix. Movement
+  thresholds and freshness limits remain implementation settings to validate.
+  Do not call old-location data current during a refresh: label it as previous
+  location until replacement arrives. Use genuine last-success data offline,
+  prominently stale with original source time; no simulated fallback readings.
+  Live means latest available provider data, not instantaneous sensor telemetry.
   Show all applicable hazards, ordered by severity. No data is not an all-clear.
 - Separate official NWS alerts from configurable organization advisories. Atlas may
   explain sourced alerts; an LLM must not decide whether an official alert is sent

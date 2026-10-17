@@ -51,6 +51,8 @@ Weather/geofencing requested planning review completed from read-only GEMINI_WZO
 (07b8eef). Strategy: WEATHER_GEOFENCING_INTEGRATION_20261017.md. Reference has useful
 proximity UI/math, but invented weather fallback and unsupported verification/safety
 claims must not be copied. No runtime/deployment changes made for this inspection.
+Ray's card preference: fixed compact basic-weather card that follows user location
+after permission, refreshes on meaningful movement, and labels stale/fallback data.
 
 1. Supplied logo is live across shell/auth/dashboard/favicon/install assets;
    see WZOS_BRANDING_20261017.md. Browser confirmed original319x355 artwork loaded.
