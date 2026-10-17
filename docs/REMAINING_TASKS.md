@@ -19,9 +19,10 @@ older evidence remain there; do not silently discard or re-open completed gates.
 
 1. [x] Restore Cloud Shell CLI sign-in and verify project/account/live revision.
    admin@workzoneos.org/enterprise-gemma2; office-8d09c4a ready and100% traffic.
-2. [ ] Installed Android PWA acceptance: launch from installed icon without address
-   bar; confirm installed-state handling, update prompt and pending-draft preservation.
-   Existing standalone metadata is deployed. No forced uninstall/storage clearing.
+2. [ ] Complete remaining installed-app acceptance. Ray confirmed Android home-screen
+   launch has no browser address bar and no repeated Install WZOS prompt (October17).
+   Update prompt and pending-draft preservation remain separate checks; do not mark
+   them accepted from this result. No forced uninstall/storage clearing.
 3. [ ] Daily embedded meetings: admin creates; organization member joins; two consenting
    devices see/hear each other inside WZOS; Leave stops camera/microphone; validate
    cancellation/expiry and participant revocation behavior. Recording/transcription off;

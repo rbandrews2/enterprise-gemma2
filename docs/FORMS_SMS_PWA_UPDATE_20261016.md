@@ -95,3 +95,9 @@ recipient. Thus real provider handoff is confirmed; device receipt and successfu
 code verification remain pending. Agent did not enter consent or request/resend
 codes. Live Messaging page is preserved for user completion. No broader SMS mode
 change. Prior statement that no live SMS was sent by agent remains accurate.
+
+## Android installed launch acceptance - October17
+
+Ray opened WZOS from its installed home-screen icon and confirmed both: no Chrome
+address bar and no repeated Install WZOS prompt. This closes those two device checks.
+It does not establish update-prompt, offline-draft or all-device acceptance.

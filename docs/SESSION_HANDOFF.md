@@ -8,6 +8,9 @@ Historical checkpoints were preserved under docs/history; they are not current b
 
 ## Completed this session
 
+- Ray confirmed installed Android WZOS opens without a browser address bar and does
+  not repeat the install prompt. Update/draft-preservation acceptance stays open.
+
 - User completed phone ownership verification in the live app. Browser showed
   "Number verified. Text messages are on."
 - Sent one normal, non-sensitive WZOS test notification to the previously approved
@@ -44,7 +47,8 @@ Public app/sign-in/SMS working; earlier CLI-auth blocker is closed.
 
 ## Next work
 
-1. Installed Android PWA check requested from Ray (address bar absent and install prompt hidden).
+1. Prepare Daily two-device/five-minute test; readiness requested from Ray. Installed
+   Android address-bar/install-prompt checks passed; no media session started.
 2. Run the next remaining integration gate from REMAINING_TASKS.md, coordinating
    device tests with Ray. No automatic new texts or media sessions.
 3. Preserve admin/member, tenant and Core/Enterprise boundaries. Do not enable broad
