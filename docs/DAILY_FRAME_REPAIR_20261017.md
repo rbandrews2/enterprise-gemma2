@@ -54,3 +54,15 @@ preserve runtime configuration/ingress/secret bindings/roles and stage before tr
 Verify exact three policy origins and daily-meetings.js. Rollback traffic100% to
 wzos-v2-accounts-office-8d09c4a. No additional call until Ray resumes the controlled
 two-device/five-minute test. Existing-Core/Enterprise and admin/member limits remain.
+
+## Built combined candidate ready for review
+
+Source4e281c612169bcb86fbd3439485c1ab0395834c4 includes Ray's supplied logo,
+icons and narrow frame-policy/timeout repair. Exact PostgreSQL8 PASS/no skips,
+39 focused Node checks PASS;13 focused Python meeting/provider tests PASS.
+Image sha256:14b89663d97726b12f5173163ba31aa94ebf8bb7be85da3c4fb2be06fda51da1
+built successfully (Cloud Build03ba2173-4629-409f-9dae-08632e36cad3), not deployed.
+Guarded scripts/deploy_daily_brand_repair.sh atce168ba preserves runtime config,
+checks exact live origins and artwork files, and rolls traffic back tooffice-8d09c4a
+on failure. No additional call/credential/IAM changes are part of the cutover.
+Next action requires approval of ONLY the two extra exact fallback media origins.
