@@ -36,3 +36,8 @@ Respect that: no more codes requested, no consent entry or verification bypass.
 Do not label phone verification complete. Repair prevents overlapping active codes
 and adds matching request labels/time/expiry; real fresh-code acceptance remains
 pending until user voluntarily resumes. Sending remains controlled test mode.
+
+Post-deploy browser confirmed request label/time/expiry and Delivered to phone.
+One cosmetic encoding error in the new explanatory sentence was corrected
+in source to plain ASCII; include that copy-only correction in the next release.
+It is not yet live; no further build or SMS requested solely for that wording.

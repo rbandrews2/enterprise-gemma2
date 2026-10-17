@@ -94,7 +94,7 @@
   const activeExpiry=contact.code_expires_at?Date.parse(contact.code_expires_at):0;
   const activeDelivery=contact.verification_delivery;
   const activeCode=!contact.code_locked&&contact.status==='pending_verification'&&activeExpiry>Date.now()&&['sending','accepted','sent','delivered','ambiguous'].includes(activeDelivery?.status);
-  if(activeDelivery&&contact.status==='pending_verification')mineBody.append(node('p','Request '+String(activeDelivery.reference_id||'').slice(-6).toUpperCase()+': code requested '+new Date(activeDelivery.created_at).toLocaleTimeString()+'. Expires '+new Date(activeExpiry).toLocaleTimeString()+'. Use that request’s text; older texts may arrive later.'));
+  if(activeDelivery&&contact.status==='pending_verification')mineBody.append(node('p','Request '+String(activeDelivery.reference_id||'').slice(-6).toUpperCase()+': code requested '+new Date(activeDelivery.created_at).toLocaleTimeString()+'. Expires '+new Date(activeExpiry).toLocaleTimeString()+'. Use the text for this request; older texts may arrive later.'));
   const request=button(contact.status==='verified'?'Change number':'Send verification code');
   if(activeCode){request.disabled=true;mineBody.append(node('p','A code is already on its way. Wait for it before requesting another. After expiry, refresh verification status.'));}
   phone.oninput=()=>{request.disabled=activeCode&&window.WzosPhone.normalize(phone.value)===contact.phone;};
