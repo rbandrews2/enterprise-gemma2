@@ -26,13 +26,14 @@ Historical checkpoints were preserved under docs/history; they are not current b
 
 ## Deployed baseline and source status
 
-Last independently verified deployment: source4e281c612169bcb86fbd3439485c1ab0395834c4,
-revision wzos-v2-accounts-brand-4e281c6,100% traffic, image
-sha256:14b89663d97726b12f5173163ba31aa94ebf8bb7be85da3c4fb2be06fda51da1.
-Guarded deployment exited0; runtime configuration preserved;25 public assets matched
-source hashes; exact Daily origins/camera/microphone policy and version endpoint passed.
-Focused validation:39 Node,13 Python and8 PostgreSQL checks passed. No schema changes.
-Rollback: office-8d09c4a, image6a2312b6ca77f675398a5858621e08e0b87e7dfd878495bc25ce01b6f950a83d.
+Last independently verified deployment: sourcec6adf9f36b6c2ed25882785b5abe96e4b1ba8224,
+revision wzos-v2-accounts-weather-c6adf9f,100% traffic, image
+sha256:edb4a3c4dde24cb6fe57d65ad79f1cfd611ab507d1d1bf03ea70e18f972e92ed.
+Guarded deployment exited0; runtime preserved;28 public assets matched source hashes,
+exact Daily permissions, weather markup, anonymous weather401 and version passed.
+Validation: full cloud PostgreSQL769, weather PostgreSQL23, local Node133/Cloud Node6.
+Three additive weather tables/index applied at startup; no existing-table alteration.
+Rollback: brand-4e281c6, image14b89663d97726b12f5173163ba31aa94ebf8bb7be85da3c4fb2be06fda51da1.
 
 Source2f44ed3 ASCII-only SMS request guidance correction is included in this release.
 New documentation commits do not imply a new deployment.
@@ -41,8 +42,8 @@ New documentation commits do not imply a new deployment.
 
 CLI sign-in restored by user. Independently verified active account
 admin@workzoneos.org, project enterprise-gemma2, latest ready revision
-wzos-v2-accounts-brand-4e281c6 and actual traffic100% on that revision.
-No current cloud connection blocker. Approved logo/Daily deployment completed.
+wzos-v2-accounts-weather-c6adf9f and actual traffic100% on that revision.
+No current cloud connection blocker. Weather card/manual checks/arrival update deployed.
 Public app/sign-in/SMS working; earlier CLI-auth blocker is closed.
 
 ## Next work
@@ -50,8 +51,8 @@ Public app/sign-in/SMS working; earlier CLI-auth blocker is closed.
 Weather/geofencing implemented in c6adf9f after read-only GEMINI_WZOS_V1 review.
 See WEATHER_IMPLEMENTATION_20261017.md: full cloud PostgreSQL769 PASS, final weather
 PostgreSQL23 PASS, local Node133 and Cloud Node6 PASS/no skips. Final backend unchanged
-from23-test candidate; frontend privacy fix verified. Final build/public deployment
-pending. Separate monitor workload/IAM needs approval; weather SMS remains off.
+from23-test candidate; frontend privacy fix verified. Build/public deployment complete.
+Separate monitor workload/IAM needs approval; weather SMS remains off.
 Cloud evidence: $HOME/wzos-weather-path.txt. No new scheduler/IAM grants applied.
 Ray's card preference: fixed compact basic-weather card that follows user location
 after permission, refreshes on meaningful movement, and labels stale/fallback data.

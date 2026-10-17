@@ -81,6 +81,11 @@ provider observations or forecasts, never a claim of on-site sensor telemetry.
 Cloud evidence directory is recorded by $HOME/wzos-weather-path.txt. Full suite,
 final PostgreSQL and frontend logs are retained there. The4abb067 build was superseded
 by the frontend organization-selector privacy fix; do not deploy that older image.
-Final application source c6adf9f36b6c2ed25882785b5abe96e4b1ba8224. Its guarded build
-and deployment preserve current brand-4e281c6 runtime configuration. No independent
+Final application source c6adf9f36b6c2ed25882785b5abe96e4b1ba8224. Build afb75ef5-b2ee-
+4442-8388-38fa0277d941 succeeded, image sha256:edb4a3c4dde24cb6fe57d65ad79f1cfd611ab507d1d1bf03ea70e18f972e92ed.
+Guarded deployment completed with deploy.exit0: weather-c6adf9f Ready/100% traffic;
+28 public asset hashes, weather markup, existing exact Daily policy, anonymous weather
+401 boundaries and version endpoint passed. Runtime preserved from brand-4e281c6.
+Rollback traffic to brand-4e281c6; new additive weather tables remain intact.
+No independent
 monitor workload/IAM or weather SMS activation has been applied.

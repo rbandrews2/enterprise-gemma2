@@ -1,7 +1,9 @@
 # Proposed closed-app job-weather activation
 
-Not applied. Exact tested application source4abb067; image digest to be recorded
-after build. Current app identity/configuration independently inspected in Cloud
+Monitor not applied. Exact application sourcec6adf9f36b6c2ed25882785b5abe96e4b1ba8224;
+image sha256:edb4a3c4dde24cb6fe57d65ad79f1cfd611ab507d1d1bf03ea70e18f972e92ed
+is built and deployed as wzos-v2-accounts-weather-c6adf9f,100% traffic.
+Current app identity/configuration independently inspected in Cloud
 Shell; no credentials or values were printed.
 
 ## Separate app deployment

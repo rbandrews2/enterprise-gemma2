@@ -58,7 +58,7 @@ older evidence remain there; do not silently discard or re-open completed gates.
 
 ## Planned integrations
 
-- [ ] Weather/geofencing implementation c6adf9f is saved/pushed; release pending.
+- [ ] Weather/geofencing implementation c6adf9f is deployed; scheduled activation pending.
   Ray chose a fixed compact weather card showing basic live conditions, following
   user location after permission; label source time/stale data and location fallback.
   Combine with official local hazards and independent assigned-site alert monitoring:
@@ -67,7 +67,8 @@ older evidence remain there; do not silently discard or re-open completed gates.
   consent-gated SMS integration and foreground arrival prompts. Cloud suite769,
   weather PostgreSQL23, local Node133 and Cloud frontend6 passed without skips. See
   WEATHER_GEOFENCING_INTEGRATION_20261017.md for reuse, defects and product decisions.
-  Next: final build/public deployment; separate scheduled-job/IAM activation approval
+  Public weather-c6adf9f100% passed runtime/28 asset/policy/auth checks.
+  Next: separate scheduled-job/IAM activation approval
   per WEATHER_MONITOR_ACTIVATION_20261017.md. Background monitoring/SMS remain off.
 
 ## Included polish
