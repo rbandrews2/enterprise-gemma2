@@ -25,7 +25,7 @@ https://docs.daily.co/docs/guides/privacy-and-security/content-security-policy
 The SDK is served locally; no new remote script source, unsafe-eval or wildcard is
 needed for this repair. Existing vendored SDK0.93.0 remains unchanged.
 
-## Prepared narrow policy change (NOT DEPLOYED)
+## Narrow policy change (DEPLOYED after approval)
 
 When configured Daily is enabled, derive only these exact origins from the validated
 tenant domain, for frame-src/connect-src and camera/microphone Permissions-Policy:
@@ -65,4 +65,16 @@ built successfully (Cloud Build03ba2173-4629-409f-9dae-08632e36cad3), not deploy
 Guarded scripts/deploy_daily_brand_repair.sh atce168ba preserves runtime config,
 checks exact live origins and artwork files, and rolls traffic back tooffice-8d09c4a
 on failure. No additional call/credential/IAM changes are part of the cutover.
-Next action requires approval of ONLY the two extra exact fallback media origins.
+User approved ONLY the two extra exact fallback media origins and deployment.
+
+## Actual cutover result
+
+Guarded helper completed with deploy.exit0. Revision wzos-v2-accounts-brand-4e281c6
+is Ready and serves100% of traffic. Runtime/annotations/ingress/secret bindings were
+preserved. All25 public assets matched source hashes. Live root CSP and camera/mic
+Permissions-Policy contained the exact three tenant hosts; no Daily wildcard.
+Version endpoint returned200. Authenticated organization selection opened dashboard;
+supplied artwork loaded319x355. No new meeting/media session or SMS was started.
+Two-device audio/video and Leave indicators still require controlled acceptance.
+Cloud logs/config evidence remain in $HOME/wzos-daily-frame-path.txt directory;
+local screenshot .local-data/release-20261017/live-logo-release.png is outside Git.

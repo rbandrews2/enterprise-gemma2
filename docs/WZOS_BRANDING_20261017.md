@@ -22,9 +22,16 @@ dashboard and meeting lifecycle);13 earlier focused meeting/provider Python chec
 passed. Brand preview desktop/mobile images loaded and had no horizontal overflow
 (actual CSS viewport417px under temporary phone-size override); override reset.
 Preview's pre-existing synthetic /api/dispatch/notifications404 was observed and
-is not attributed to branding or production. New live artwork not yet deployed.
+is not attributed to branding or production.
 
 Combine with Daily frame repair only after its exact tenant media-origin approval;
 no logo change requires extra credential access or IAM. Deployment must verify
 favicon/Apple/maskable/master assets and the shared shell, plus existing role/
 organization/edition and runtime configuration preservation.
+
+Deployment completed after exact Daily approval: source4e281c6/image14b89663,
+revision wzos-v2-accounts-brand-4e281c6,100% traffic. All25 public asset hashes,
+runtime preservation and policy checks passed. Live dashboard displayed the supplied
+original319x355 logo successfully; screenshot saved outside Git at
+.local-data/release-20261017/live-logo-release.png. Device icon refresh timing remains
+controlled by browser/OS; no reinstall or storage clearing is required.

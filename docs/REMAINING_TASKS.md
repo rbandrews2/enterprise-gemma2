@@ -12,13 +12,15 @@ older evidence remain there; do not silently discard or re-open completed gates.
 - [x] SMS verification completed by Ray; ordinary one-way text notification received
   on the approved phone. Controlled test-recipient acceptance is complete.
 - [x] SMS challenge overlap repair deployed;19 local/8 PostgreSQL checks passed.
+- [x] Supplied WZOS logo/favicon/device icons and exact Daily fallback policy deployed
+  as brand-4e281c6;25 public asset hashes/config/policy checks passed. Media retest open.
 - [x] Local generated test cache removed; fresh Cloud Shell has no owned temporary
   test cluster, proxy or deployment helper running.
 
 ## Next execution order
 
 1. [x] Restore Cloud Shell CLI sign-in and verify project/account/live revision.
-   admin@workzoneos.org/enterprise-gemma2; office-8d09c4a ready and100% traffic.
+   admin@workzoneos.org/enterprise-gemma2; brand-4e281c6 ready and100% traffic.
 2. [ ] Complete remaining installed-app acceptance. Ray confirmed Android home-screen
    launch has no browser address bar and no repeated Install WZOS prompt (October17).
    Update prompt and pending-draft preservation remain separate checks; do not mark
@@ -54,10 +56,9 @@ older evidence remain there; do not silently discard or re-open completed gates.
     or explicitly defer remaining gaps with Ray, then deploy any new accepted updates
     with configuration preservation and billing/security-compatible rollback.
 
-## Pending source-only polish
+## Included polish
 
-- 2f44ed3 fixes one encoding artifact in SMS request guidance. Not deployed yet;
-  include in the next release with meaningful feature work.
+- 2f44ed3 fixes one encoding artifact in SMS request guidance; deployed with4e281c6.
 
 ## Rules and product decisions
 
