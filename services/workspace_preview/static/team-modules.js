@@ -91,13 +91,19 @@
   const consentLabel=node('label',''),consent=checkbox();consentLabel.append(consent,' '+contact.consent_text);
   const phoneNotice=node('p','');phoneNotice.setAttribute('role','status');phoneNotice.setAttribute('aria-live','polite');
   if(contact.verification_delivery)phoneNotice.textContent=smsLine(contact.verification_delivery);
+  const activeExpiry=contact.code_expires_at?Date.parse(contact.code_expires_at):0;
+  const activeDelivery=contact.verification_delivery;
+  const activeCode=!contact.code_locked&&contact.status==='pending_verification'&&activeExpiry>Date.now()&&['sending','accepted','sent','delivered','ambiguous'].includes(activeDelivery?.status);
+  if(activeDelivery&&contact.status==='pending_verification')mineBody.append(node('p','Request '+String(activeDelivery.reference_id||'').slice(-6).toUpperCase()+': code requested '+new Date(activeDelivery.created_at).toLocaleTimeString()+'. Expires '+new Date(activeExpiry).toLocaleTimeString()+'. Use that request’s text; older texts may arrive later.'));
   const request=button(contact.status==='verified'?'Change number':'Send verification code');
+  if(activeCode){request.disabled=true;mineBody.append(node('p','A code is already on its way. Wait for it before requesting another. After expiry, refresh verification status.'));}
+  phone.oninput=()=>{request.disabled=activeCode&&window.WzosPhone.normalize(phone.value)===contact.phone;};
   request.onclick=async()=>{
    if(!consent.checked){phoneNotice.textContent='Review and check the text message consent box first.';return;}
    const number=window.WzosPhone.normalize(phone.value);if(!number){phoneNotice.textContent='Enter a US 10-digit number, or an international number starting with + and its country code.';return;}
    request.disabled=true;phoneNotice.textContent='Requesting your verification textâ€¦';
    try{const result=await api('/api/messaging/sms/contact',{method:'PUT',body:JSON.stringify({request_id:crypto.randomUUID(),expected_version:contact.version,phone:number,consent:true,consent_version:contact.current_consent_version})});
-    if(epoch!==generation)return;await show('messages');$('team-notice').textContent=result.verification_delivery?smsLine(result.verification_delivery):'Verification requested. Check My text message settings for delivery status.';
+    if(epoch!==generation)return;await show('messages');$('team-notice').textContent=result.existing_code_active?'Your current code is still valid. No replacement text was sent.':result.verification_delivery?smsLine(result.verification_delivery):'Verification requested. Check My text message settings for delivery status.';
    }catch(error){if(epoch===generation)phoneNotice.textContent='Verification not requested: '+error.message;}
    finally{request.disabled=false;}
   };

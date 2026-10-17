@@ -332,6 +332,7 @@ def contact_view(row, own=True):
             'verified_at': row['verified_at'], 'opted_out_at': row['opted_out_at'], 'updated_at': row['updated_at']}
     if own:
         view['code_expires_at'] = row['code_expires_at'] if row['status'] == 'pending_verification' else None
+        view['code_locked'] = row['status'] == 'pending_verification' and row['code_attempts'] >= 5
     return view
 
 
@@ -399,6 +400,15 @@ def register(app, connect, actor, actors, live_permitted):
             version = row['version'] if row else 0
             if version != body.expected_version:
                 raise HTTPException(409, 'Text message settings changed. Reload before saving.')
+            # Delayed SMS can arrive out of order. Keep the active challenge stable
+            # for the same phone until expiry/lockout instead of invalidating it.
+            if (row and row['phone'] == body.phone and row['status'] == 'pending_verification'
+                    and row['code_hash'] and row['code_attempts'] < 5
+                    and row['code_expires_at'] > stamp()):
+                active = db.execute("SELECT * FROM sms_outbox WHERE organization_id=? AND recipient_id=? AND purpose='verification' ORDER BY created_at DESC,id DESC LIMIT 1", (org, uid)).fetchone()
+                if active and active['status'] in CODE_SENT:
+                    return {**contact_view(row), 'verification_delivery': public(active, include_body=False),
+                            'existing_code_active': True}
             today, current = now().date().isoformat(), stamp()
             sent = row['codes_sent'] if row and row['codes_day'] == today else 0
             if sent >= CODES_PER_DAY:
@@ -418,7 +428,7 @@ def register(app, connect, actor, actors, live_permitted):
                 db.execute("UPDATE sms_outbox SET status='cancelled',reason='superseded',updated_at=? WHERE id=?", (current, old['id']))
                 db.execute('DELETE FROM sms_secrets WHERE outbox_id=?', (old['id'],))
                 event(db, org, old['id'], 'member', 'cancelled', 'superseded', uid)
-            text = f'WZOS verification code: {CODE_PLACEHOLDER}. It expires in {CODE_MINUTES} minutes. If you did not request it, ignore this message. Reply STOP to opt out.'
+            text = f'WZOS verification code: {CODE_PLACEHOLDER}. It expires in {CODE_MINUTES} minutes. Request {str(body.request_id)[-6:].upper()}. If you did not request it, ignore this message. Reply STOP to opt out.'
             queued = service.enqueue(db, organization_id=org, recipient_id=uid, body=text, purpose='verification',
                                      reference_id=str(body.request_id), actor_id=uid, phone=body.phone, secret=code, secret_expires=expires)
             row = db.execute('SELECT * FROM sms_contacts WHERE organization_id=? AND user_id=?', (org, uid)).fetchone()
@@ -437,7 +447,9 @@ def register(app, connect, actor, actors, live_permitted):
                 return contact_view(row)
             if not row or row['status'] != 'pending_verification' or not row['code_hash']:
                 raise HTTPException(409, 'Request a new verification code first')
-            if row['code_attempts'] >= 5 or row['code_expires_at'] < stamp():
+            if row['code_attempts'] >= 5:
+                raise HTTPException(409, 'Too many incorrect attempts. Request a new verification code.')
+            if row['code_expires_at'] <= stamp():
                 raise HTTPException(409, 'This code expired. Request a new verification code.')
             latest = db.execute("SELECT status FROM sms_outbox WHERE organization_id=? AND recipient_id=? AND purpose='verification' ORDER BY created_at DESC,id DESC LIMIT 1", (org, uid)).fetchone()
             if not latest or latest['status'] not in CODE_SENT:

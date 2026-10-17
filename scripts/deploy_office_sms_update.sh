@@ -5,7 +5,7 @@ umask 077
 project=enterprise-gemma2
 service=wzos-v2-accounts
 region=us-central1
-base=us-central1-docker.pkg.dev/enterprise-gemma2/enterprise-gemma2/wzos-v2-accounts@sha256:ec8f4243e411d4f6a1d96e1a8daec3b2f81ca2a0c0447c835314442664ca6ccb
+base=us-central1-docker.pkg.dev/enterprise-gemma2/enterprise-gemma2/wzos-v2-accounts@sha256:454a9747b76ea9528bd1f703f7a504503450f020695f658cd8aa771af91a173d
 source_commit=${1:?Exact tested candidate commit required}
 [[ "$source_commit" =~ ^[0-9a-f]{40}$ ]]
 short=${source_commit:0:7}
@@ -25,7 +25,7 @@ from pathlib import Path
 s=json.loads((Path(sys.argv[1])/'before.json').read_text())
 assert s['spec']['template']['spec']['containers'][0]['image']==sys.argv[2], 'Live image drift: review first'
 t=[t for t in s['status']['traffic'] if t.get('percent')]
-assert len(t)==1 and t[0]['percent']==100 and t[0]['revisionName']=='wzos-v2-accounts-flow-354f7a9', 'Traffic drift: review first'
+assert len(t)==1 and t[0]['percent']==100 and t[0]['revisionName']=='wzos-v2-accounts-office-6caf8ee', 'Traffic drift: review first'
 assert s['metadata']['annotations']['run.googleapis.com/ingress']=='internal-and-cloud-load-balancing'
 PY
 printf 'FROM %s\nUSER root\nCOPY services /app/services\nRUN chmod -R a+rX /app/services\nUSER wzos\n' "$base" > Dockerfile.module-flow
@@ -38,6 +38,7 @@ timeout: 600s
 options:
   machineType: E2_MEDIUM
 YAML
+printf '\n.venv-accounts-test/\n' >> .gcloudignore
 image=us-central1-docker.pkg.dev/$project/$project/wzos-v2-accounts:office-$short
 if ! gcloud builds submit --project="$project" --config=cloudbuild.module-flow.yaml --substitutions="_IMAGE=$image" --async --format='value(id)' . > "$root/build-id.txt" 2> "$root/build.log"; then tail -n 12 "$root/build.log"; exit 1; fi
 build_id=$(cat "$root/build-id.txt")
@@ -92,8 +93,8 @@ with urllib.request.urlopen('https://app.workzoneos.org/api/app/version?release=
 print('LIVE_OFFICE_SMS_PWA_ASSETS_PASS')
 PY
 then
- gcloud run services update-traffic "$service" --project="$project" --region="$region" --to-revisions="$service-flow-354f7a9=100" --quiet
- echo ROLLED_BACK_TO_FLOW_354F7A9
+ gcloud run services update-traffic "$service" --project="$project" --region="$region" --to-revisions="$service-office-6caf8ee=100" --quiet
+ echo ROLLED_BACK_TO_OFFICE_6CAF8EE
  exit 1
 fi
 gcloud run services describe "$service" --project="$project" --region="$region" --format=json > "$root/live.json"

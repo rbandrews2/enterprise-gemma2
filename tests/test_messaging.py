@@ -135,6 +135,18 @@ class MessagingTests(unittest.TestCase):
         with self.app.state.messaging.connect() as db:
             return db.execute('SELECT COUNT(*) FROM sms_secrets').fetchone()[0]
 
+    def test_overlapping_request_keeps_sent_challenge_until_expiry(self):
+        self.enroll()
+        original = self.contact(); sends = len(self.provider.sent)
+        code = re.search(r'code: (\d{6})', self.provider.sent[-1]['body']).group(1)
+        again = self.enroll().json()
+        self.assertTrue(again['existing_code_active'])
+        self.assertEqual(again['code_expires_at'], original['code_expires_at'])
+        self.assertEqual(again['version'], original['version'])
+        self.assertEqual(len(self.provider.sent), sends)
+        self.assertEqual(self.client.post('/api/messaging/sms/contact/verify', headers=self.h(), json={'code': code}).status_code, 200)
+        self.assert_code_hidden(code)
+
     def test_verification_codes_are_never_exposed_and_unsent_codes_never_verify(self):
         code = '424242'
         verify = lambda: self.client.post('/api/messaging/sms/contact/verify', headers=self.h(), json={'code': code})
@@ -170,6 +182,8 @@ class MessagingTests(unittest.TestCase):
             db.execute("UPDATE sms_outbox SET next_attempt_at='2000-01-01T00:00:00+00:00' WHERE id=?", (first['id'],))
         messaging.process('enterprise-demo')
         self.assertRegex(self.provider.sent[-1]['body'], r'code: \d{6}\.'); self.assertEqual(self.secrets_left(), 0)
+        with messaging.connect() as db:
+            db.execute("UPDATE sms_contacts SET code_expires_at='2000-01-01T00:00:00+00:00'")
         self.provider.outcomes = [SendResult('retryable')]
         second = self.enroll().json()['verification_delivery']; sends = len(self.provider.sent)
         with messaging.connect() as db:
@@ -191,7 +205,11 @@ class MessagingTests(unittest.TestCase):
         self.assertEqual(attempts, 5)
         self.assertEqual(self.client.post('/api/messaging/sms/contact/verify', headers=self.h(), json={'code': code}).status_code, 409)
         for _ in range(4):
+            with self.app.state.messaging.connect() as db:
+                db.execute("UPDATE sms_contacts SET code_expires_at='2000-01-01T00:00:00+00:00'")
             self.assertEqual(self.enroll().status_code, 200)
+        with self.app.state.messaging.connect() as db:
+            db.execute("UPDATE sms_contacts SET code_expires_at='2000-01-01T00:00:00+00:00'")
         self.assertEqual(self.enroll().status_code, 429)
 
     def test_admin_text_copy_is_sent_once_and_tracked_separately_from_acknowledgement(self):

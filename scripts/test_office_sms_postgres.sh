@@ -22,7 +22,9 @@ export WZOS_TEST_DATABASE_URL="postgresql:///wzos_test?host=$cluster/socket"
 import os,sys,unittest
 sys.path.insert(0,os.getcwd())
 suite=unittest.defaultTestLoader.loadTestsFromNames([
- 'tests.test_form_submissions.PostgreSQLFormSubmissionTests',
+ 'tests.test_messaging.PostgreSQLMessagingTests.test_overlapping_request_keeps_sent_challenge_until_expiry',
+ 'tests.test_messaging.PostgreSQLMessagingTests.test_retried_verification_uses_its_secret_once_and_expired_codes_are_not_sent',
+ 'tests.test_messaging.PostgreSQLMessagingTests.test_verification_attempts_expiry_and_daily_limit',
  'tests.test_messaging.PostgreSQLAccountSMSAccessTests',
 ])
 result=unittest.TextTestRunner(verbosity=2).run(suite)
