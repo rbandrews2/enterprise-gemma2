@@ -10,6 +10,7 @@ source_commit=${1:?Exact tested commit required}
 short=${source_commit:0:7}
 root=$(cat "$HOME/wzos-weather-path.txt")
 test "$(cat "$root/gate.exit")" = 0
+test "$(cat "$root/tested-source.txt")" = "$source_commit"
 test "$(cat "$root/build.exit")" = 0
 cd "$root/source"
 test "$(git rev-parse HEAD)" = "$source_commit"

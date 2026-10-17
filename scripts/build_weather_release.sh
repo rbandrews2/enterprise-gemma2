@@ -14,6 +14,7 @@ test "$(gcloud config get-value project 2>/dev/null)" = "$project"
 gcloud auth print-access-token >/dev/null
 for attempt in $(seq 1 30); do test ! -f "$root/gate.exit" || break; sleep 5; done
 test "$(cat "$root/gate.exit")" = 0
+test "$(cat "$root/tested-source.txt")" = "$source_commit"
 cd "$root/source"
 test "$(git rev-parse HEAD)" = "$source_commit"
 gcloud run services describe "$service" --project="$project" --region="$region" --format=json > "$root/before.json"

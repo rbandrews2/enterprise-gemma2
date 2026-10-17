@@ -1,7 +1,11 @@
 const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const vm=require('node:vm'),fs=require('node:fs');
-const {weatherDistance,weatherProximity}=require('../services/workspace_preview/static/weather.js');
+const {weatherDistance,weatherProximity,weatherStale}=require('../services/workspace_preview/static/weather.js');
+test('forecast remains valid through its actual period and stale cache stays stale',()=>{
+ const time=Date.now(),data={status:'ready',basis:'forecast',source_time:new Date(time-3*3600000).toISOString(),valid_until:new Date(time+600000).toISOString()};
+ assert.equal(weatherStale(data,time),false);assert.equal(weatherStale({...data,status:'stale'},time),true);assert.equal(weatherStale(data,time+700000),true);
+});
 const site={latitude:0,longitude:0,radius_meters:350};
 const fix=(change={})=>({latitude:0,longitude:0,accuracy:10,timestamp:1000000,...change});
 test('distance supports coincident points and known separation',()=>{

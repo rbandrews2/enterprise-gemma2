@@ -6,7 +6,8 @@ function weatherProximity(fix,site,time=Date.now()){
  if(!fix||![fix.latitude,fix.longitude,fix.accuracy,fix.timestamp,site.latitude,site.longitude,site.radius_meters].every(Number.isFinite)||Math.abs(fix.latitude)>90||Math.abs(fix.longitude)>180||Math.abs(site.latitude)>90||Math.abs(site.longitude)>180||fix.accuracy<0||site.radius_meters<50||time-fix.timestamp>120000||fix.timestamp>time+5000)return 'unavailable';
  const distance=weatherDistance(fix,site);return distance+fix.accuracy<=site.radius_meters?'inside':distance-fix.accuracy>site.radius_meters+30?'outside':'uncertain';
 }
-if(typeof module!=='undefined')module.exports={weatherDistance,weatherProximity};
+function weatherStale(data,time=Date.now()){const until=Date.parse(data.valid_until);return data.status==='stale'||data.status==='unavailable'||(Number.isFinite(until)?time>=until:!Number.isFinite(Date.parse(data.source_time))||time-Date.parse(data.source_time)>3600000);}
+if(typeof module!=='undefined')module.exports={weatherDistance,weatherProximity,weatherStale};
 if(typeof document!=='undefined')(()=>{
  const root=document.getElementById('weather-card');if(!root)return;
  const make=(tag,text='',cls='')=>{const n=document.createElement(tag);n.textContent=text;if(cls)n.className=cls;return n;};
@@ -34,7 +35,7 @@ if(typeof document!=='undefined')(()=>{
    const item=make('div');item.append(make('span',name),make('strong',value));summary.append(item);
   }
   summary.append(make('p',data.condition||'Conditions unavailable'));
-  const sourceDate=new Date(data.source_time),old=!Number.isFinite(sourceDate.getTime())||Date.now()-sourceDate.getTime()>3600000;
+  const sourceDate=new Date(data.source_time),old=weatherStale(data);
   status.textContent=data.status==='unavailable'?'Weather unavailable. No current all-clear is available.':`${data.status==='stale'||!navigator.onLine||old?'Stale · ':''}${data.source||'National Weather Service'} · ${data.basis==='forecast'?'Forecast':'Observation'} · ${Number.isFinite(sourceDate.getTime())?sourceDate.toLocaleString():'source time unavailable'}`;
   for(const alert of data.alerts||[]){if(Date.parse(alert.expires)<=Date.now())continue;const d=make('details','','weather-hazard');d.dataset.severity=alert.severity;
    d.append(make('summary',`${alert.severity} · ${alert.headline}`),make('p',alert.description),make('p',alert.instruction),make('p','Valid until '+new Date(alert.expires).toLocaleString(),'fine'));hazards.append(d);}
@@ -110,6 +111,6 @@ if(typeof document!=='undefined')(()=>{
  document.addEventListener('visibilitychange',()=>{if(document.hidden)stopWatch();else if(owner){if(following){status.textContent='Finding your current location…';startWatch();}else if(lastPoint)loadWeather(lastPoint);loadSites();loadNotices();}});
  window.addEventListener('offline',()=>{if(lastWeather)render({...lastWeather,status:'stale'},lastPoint);});
  window.addEventListener('online',()=>{if(owner){loadSites();loadNotices();if(lastPoint)loadWeather(lastPoint);}});
- setInterval(()=>{if(!owner||document.hidden)return;proximity();if(lastWeather&&lastWeather.status!=='stale'&&(Date.now()-Date.parse(lastWeather.source_time)>3600000||!navigator.onLine))render({...lastWeather,status:'stale'},lastPoint);if(Date.now()-lastFetch>=15*60000&&lastPoint&&(!following||fix))loadWeather(fix||lastPoint);if(Date.now()-lastNotices>=60000)loadNotices();},10000);
+ setInterval(()=>{if(!owner||document.hidden)return;proximity();if(lastWeather&&lastWeather.status!=='stale'&&(weatherStale(lastWeather)||!navigator.onLine))render({...lastWeather,status:'stale'},lastPoint);if(Date.now()-lastFetch>=15*60000&&lastPoint&&(!following||fix))loadWeather(fix||lastPoint);if(Date.now()-lastNotices>=60000)loadNotices();},10000);
  clear();if(owner){loadSites();loadNotices();}
 })();

@@ -146,6 +146,7 @@ class NWS:
                           'location': ', '.join(str(locality.get(k) or '') for k in ('city', 'state')).strip(', ') or 'Selected location',
                           'latitude': key[0], 'longitude': key[1], 'fetched_at': now().isoformat(),
                           'source_time': forecast.get('updateTime'), 'temperature_f': period.get('temperature') if period.get('temperatureUnit') == 'F' else None,
+                          'valid_until': period.get('endTime'),
                           'condition': str(period.get('shortForecast') or 'Conditions unavailable')[:180],
                           'feels_like_f': None, 'humidity_percent': value(period, 'relativeHumidity'),
                           'wind_mph': None, 'gust_mph': None, 'precipitation_inches': None,
@@ -157,7 +158,7 @@ class NWS:
                     observation = self.get(client, stations[0]['id'].rstrip('/') + '/observations/latest')['properties']
                     observed = instant(observation.get('timestamp'))
                     if observed and timedelta(0) <= now() - observed < timedelta(hours=1):
-                        result.update(basis='observation', wind_text='', source_time=observed.isoformat(),
+                        result.update(basis='observation', wind_text='', source_time=observed.isoformat(), valid_until=(observed+timedelta(hours=1)).isoformat(),
                                       condition=str(observation.get('textDescription') or result['condition'])[:180],
                                       temperature_f=value(observation, 'temperature', lambda x,u: x * 9/5 + 32 if u == 'wmoUnit:degC' else None),
                                       feels_like_f=value(observation, 'heatIndex', lambda x,u: x * 9/5 + 32 if u == 'wmoUnit:degC' else None),
