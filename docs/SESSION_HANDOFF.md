@@ -47,6 +47,11 @@ Public app/sign-in/SMS working; earlier CLI-auth blocker is closed.
 
 ## Next work
 
+Weather/geofencing requested planning review completed from read-only GEMINI_WZOS_V1
+(07b8eef). Strategy: WEATHER_GEOFENCING_INTEGRATION_20261017.md. Reference has useful
+proximity UI/math, but invented weather fallback and unsupported verification/safety
+claims must not be copied. No runtime/deployment changes made for this inspection.
+
 1. Supplied logo is live across shell/auth/dashboard/favicon/install assets;
    see WZOS_BRANDING_20261017.md. Browser confirmed original319x355 artwork loaded.
 2. Daily first five-minute test schedule cancelled after laptop blank iframe.

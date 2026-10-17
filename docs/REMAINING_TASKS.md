@@ -56,6 +56,14 @@ older evidence remain there; do not silently discard or re-open completed gates.
     or explicitly defer remaining gaps with Ray, then deploy any new accepted updates
     with configuration preservation and billing/security-compatible rollback.
 
+## Planned integrations
+
+- [ ] Weather/geofencing integration planned from read-only GEMINI_WZOS_V1 review.
+  Implement in sequence: location contract -> weather card -> durable alerts ->
+  foreground arrival prompts -> focused acceptance. See
+  WEATHER_GEOFENCING_INTEGRATION_20261017.md for reuse, defects and product decisions.
+  No weather/geofencing feature was activated by this review.
+
 ## Included polish
 
 - 2f44ed3 fixes one encoding artifact in SMS request guidance; deployed with4e281c6.
