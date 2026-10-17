@@ -53,6 +53,8 @@ proximity UI/math, but invented weather fallback and unsupported verification/sa
 claims must not be copied. No runtime/deployment changes made for this inspection.
 Ray's card preference: fixed compact basic-weather card that follows user location
 after permission, refreshes on meaningful movement, and labels stale/fallback data.
+Confirmed combined scope: retain assigned-site alerts for affected workers/admins
+alongside the card; distinguish current-location hazards from named job-site alerts.
 
 1. Supplied logo is live across shell/auth/dashboard/favicon/install assets;
    see WZOS_BRANDING_20261017.md. Browser confirmed original319x355 artwork loaded.

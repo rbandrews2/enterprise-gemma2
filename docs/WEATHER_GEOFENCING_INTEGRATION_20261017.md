@@ -3,7 +3,28 @@
 October 17, 2026. Planning/static inspection only; no application code, cloud resources,
 location collection, notifications or production settings changed.
 
-## Confirmed card direction
+## Combined weather experience (Ray's confirmed direction)
+
+The fixed card and assignment alerts are complementary parts of one feature;
+the card does not replace the alert plan below.
+
+- Everyday view: a fixed compact glass card follows the user's permitted foreground
+  location and refreshes basic conditions as they move.
+- Personal hazards: show relevant official alerts for that location in the card;
+  use an accessible severity indicator and expandable source details.
+- Assigned-site hazards: server monitoring independently checks active assigned
+  sites during configured monitoring windows, even when the worker is elsewhere
+  or WZOS is closed. Notify affected assigned workers and relevant org admins
+  through durable in-app notices and consent-controlled SMS when activated.
+- Each alert says whether it concerns current location or a named assigned job,
+  includes validity/source time and opens the relevant details. Do not silently
+  switch the card's location when a job alert arrives. Retain deduplication,
+  updates/cancellations/expiry and acknowledgement tracking from the alert plan.
+- Closed-app personal-location alerts are not promised: only assigned sites can
+  be monitored without continuous background device tracking. Foreground GPS
+  following, server job monitoring and delivery status remain distinct.
+- Geofence arrival prompts remain connected to My jobs/Time Tracker, with explicit
+  user confirmation; weather warnings never automatically change attendance.
 
 Ray prefers one fixed weather card with basic live information that follows the
 user's changing location. Keep a consistent responsive placement and compact size

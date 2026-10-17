@@ -61,6 +61,8 @@ older evidence remain there; do not silently discard or re-open completed gates.
 - [ ] Weather/geofencing integration planned from read-only GEMINI_WZOS_V1 review.
   Ray chose a fixed compact weather card showing basic live conditions, following
   user location after permission; label source time/stale data and location fallback.
+  Combine with official local hazards and independent assigned-site alert monitoring:
+  notify affected workers/admins, clearly distinguish location versus job alerts.
   Implement in sequence: location contract -> weather card -> durable alerts ->
   foreground arrival prompts -> focused acceptance. See
   WEATHER_GEOFENCING_INTEGRATION_20261017.md for reuse, defects and product decisions.
