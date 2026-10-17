@@ -27,6 +27,7 @@
    const details=node('dl');
    for(const [label,value] of [['Location',item.address],['Start time',local(item.starts_at)],['Estimated finish',local(item.ends_at)],['Your role',item.role_title],['Client company',item.client_company],['Client point of contact',item.client_contact_name],['Contact phone',item.client_contact_phone]])details.append(node('dt',label),node('dd',value||'Not provided'));
    body.append(details);const direction=window.WzosNavigation.link(item.address,{id:item.order_id,assignment_id:item.id});if(direction)body.append(direction);
+   const weather=button('Job weather');weather.onclick=()=>document.dispatchEvent(new CustomEvent('wzos:weather-job',{detail:{order_id:item.order_id}}));body.append(weather);
    body.append(node('h3','Assigned crew'));const crew=node('ul');for(const person of item.crew||[])crew.append(node('li',`${person.name} · ${person.role_title}`));if(!crew.children.length)crew.append(node('li','Crew details unavailable for this historical assignment.'));body.append(crew);
    body.append(node('h3','Dispatcher notes'),node('p',item.notes||'No additional instructions.'));
    body.append(node('p','Status: '+(ASSIGNMENT[item.status]||item.status)+(item.responded_at?' · '+local(item.responded_at):'')));

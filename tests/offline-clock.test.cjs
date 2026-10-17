@@ -283,11 +283,11 @@ test('device timer excludes offline breaks and resumes the selected task',async(
  h.get('clock-task').value='travel';await h.get('clock-switch').handlers.click();h.advance(20);assert.match(h.get('clock-active-job').textContent,/Travel Time/);assert.equal(h.posts('/api/time/commands').length,0);
  const resumed=await reopen(storage);assert.equal(resumed.get('clock-task').value,'travel');assert.match(resumed.get('clock-active-job').textContent,/pending admin review/);
 });
-test('offline missing GPS evidence stays missing; reconnect captures a separate fresh fix',async()=>{
+test('offline device GPS can be captured without internet and reconnect stays separate',async()=>{
  const storage=deviceStorage(),h=await offlineAfterLoad({storage,geo:true});h.get('clock-task').value='setup';await h.get('clock-switch').handlers.click();await settle();
- const key='wzos.time-tracker.v1:org-a:member:locations',saved=JSON.parse(storage.data.get(key));assert.equal(saved.items[0].unavailable,'offline');assert.equal(saved.items[0].latitude,undefined);
+ const key='wzos.time-tracker.v1:org-a:member:locations',saved=JSON.parse(storage.data.get(key));assert.equal(saved.items[0].unavailable,undefined);assert.equal(saved.items[0].latitude,37);
  h.navigator.onLine=true;h.windowEvents.online();await settle();await settle();const items=h.posts('/api/time/locations').flatMap(c=>JSON.parse(c[1].body).items);
- assert.ok(items.some(p=>p.event==='switch_task'&&p.unavailable==='offline'&&p.latitude===undefined));assert.ok(items.some(p=>p.event==='reconnect'&&p.latitude===37));
+ assert.ok(items.some(p=>p.event==='switch_task'&&p.latitude===37));assert.ok(items.some(p=>p.event==='reconnect'&&p.latitude===37));
 });
 test('location permission denial preserves clock actions and uploads the reason',async()=>{
  const h=harness({storage:deviceStorage(),geo:true,denyGeo:true});h.events['wzos:session']();await settle();await h.get('clock-out').handlers.click();await settle();

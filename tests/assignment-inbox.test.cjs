@@ -12,7 +12,7 @@ function harness(){
  return {window,get,events,calls,timers,flatten,setSession(value){session=value;},setNotificationFailure(value){failNotifications=value;}};
 }
 test('assignment opens all dispatched details and only an explicit confirmation answers it',async()=>{
- const h=harness(),root=h.get('root');await h.window.wzosDispatch.render(root,()=>true,h.get('notice'));
+ const h=harness(),root=h.get('team-content');h.events['wzos:view']({detail:'assignments'});await new Promise(resolve=>setImmediate(resolve));
  let nodes=h.flatten(root),text=nodes.map(n=>n.textContent).join(' ');
  for(const required of ['Example client','Alex','555-0100','Casey','West entrance','Estimated finish','Confirm receipt'])assert.ok(text.includes(required),required);
  assert.equal(h.calls.filter(c=>c.options).length,0);

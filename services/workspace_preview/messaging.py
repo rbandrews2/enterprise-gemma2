@@ -171,6 +171,14 @@ class Messaging:
                 sender=db.execute('SELECT 1 FROM memberships WHERE organization_id=? AND user_id=? AND active=1',(row['organization_id'],row['created_by'])).fetchone()
                 office=db.execute("SELECT 1 FROM memberships WHERE organization_id=? AND user_id=? AND active=1 AND role='admin'",(row['organization_id'],row['recipient_id'])).fetchone()
                 if not submission or not sender or not office:return 'sender_inactive'
+            elif row['purpose'] == 'weather':
+                from .weather import sms_blocker
+                reason = sms_blocker(db, row)
+                if reason:
+                    return reason
+                sender = db.execute("SELECT 1 FROM memberships WHERE organization_id=? AND user_id=? AND active=1 AND role='admin'", (row['organization_id'], row['created_by'])).fetchone()
+                if not sender:
+                    return 'sender_inactive'
             elif row['purpose'] != 'verification':
                 sender = db.execute(
                     "SELECT 1 FROM memberships WHERE organization_id=? AND user_id=? AND active=1 AND role='admin'",

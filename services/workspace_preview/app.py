@@ -735,4 +735,12 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
             raise error
 
     timeclock.register(app, connect, actor, time_order, roster, jobs=time_jobs)
+    from . import weather
+    weather.register(app, connect, actor, time_jobs, permitted_row, roster, accounts=account_workspace)
+    @app.get('/weather.js')
+    def weather_script():
+        return FileResponse(STATIC / 'weather.js', media_type='text/javascript')
+    @app.get('/weather.css')
+    def weather_style():
+        return FileResponse(STATIC / 'weather.css', media_type='text/css')
     return app

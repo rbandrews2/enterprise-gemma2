@@ -107,7 +107,6 @@
   if(locations.length>=2000){locationStatus.textContent='Location storage full. Connect to upload saved evidence.';return;}
   const item={request_id:crypto.randomUUID(),command_id:commandId,shift_id:shiftId,event,task,captured_at:new Date().toISOString()};
   const position=await new Promise(resolve=>{
-   if(!navigator.onLine){resolve({unavailable:'offline'});return;}
    if(!navigator.geolocation){resolve({unavailable:'unavailable'});return;}
    navigator.geolocation.getCurrentPosition(p=>resolve({latitude:p.coords.latitude,longitude:p.coords.longitude,accuracy:p.coords.accuracy}),
     e=>resolve({unavailable:e.code===1?'permission_denied':e.code===3?'timeout':'unavailable'}),{enableHighAccuracy:true,maximumAge:0,timeout:10000});
@@ -333,6 +332,15 @@
   refresh().then(()=>{if(['working','on_break'].includes(timeline().state))captureLocation('reconnect');flushLocations();});});
  document.addEventListener('visibilitychange',()=>{if(!document.hidden&&navigator.onLine&&['working','on_break'].includes(timeline().state))captureLocation('reconnect');});
  setInterval(()=>{if(!locationBusy&&['working','on_break'].includes(timeline().state)){locationBusy=true;captureLocation('interval').finally(()=>{locationBusy=false;});}},5*60*1000);
+ document.addEventListener('wzos:arrival-select',async event=>{
+  const owner=actorId,job=event.detail?.order_id;if(!job)return;
+  await refresh();if(owner!==actorId)return;
+  if(active&&active.order_id!==job){message('Your current shift is linked to another job. Review it before changing work.');return;}
+  if(![...node('clock-order').options].some(o=>o.value===job)){message('This job is no longer available. Refresh your assignments.');return;}
+  if(!active)node('clock-order').value=job;
+  node('clock-task').value='job_site';
+  message('Device GPS suggests you are near this job. Review and press '+(active?'Switch task':'Clock in')+' to confirm. No attendance was changed.');
+ });
  renderDrafts();
  setInterval(tick,1000);controls();
 })();
