@@ -1,3 +1,12 @@
+## SMS live checkpoint - October17 after release
+
+User entered phone/consent and requested a verification code in Chrome.
+Read-only Refresh verification status showed Sent to carrier for the approved
+recipient. Thus real provider handoff is confirmed; device receipt and successful
+code verification remain pending. Agent did not enter consent or request/resend
+codes. Live Messaging page is preserved for user completion. No broader SMS mode
+change. Prior statement that no live SMS was sent by agent remains accurate.
+
 ## LIVE completed forms, SMS feedback and PWA update - October17
 
 Source 6caf8eeda859a927ceaa2237a65c32cb1a01b7c5 is LIVE at

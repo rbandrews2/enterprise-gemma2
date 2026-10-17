@@ -86,3 +86,12 @@ installed app icon, not a browser link; preserve offline drafts, no storage clea
 Next: read user's SMS result, inspect inline/provider error if any, finish phone
 verification and one controlled notification; confirm installed-icon launch.
 Broader member SMS activation remains separate from controlled test mode.
+
+## SMS live checkpoint - October17 after release
+
+User entered phone/consent and requested a verification code in Chrome.
+Read-only Refresh verification status showed Sent to carrier for the approved
+recipient. Thus real provider handoff is confirmed; device receipt and successful
+code verification remain pending. Agent did not enter consent or request/resend
+codes. Live Messaging page is preserved for user completion. No broader SMS mode
+change. Prior statement that no live SMS was sent by agent remains accurate.
