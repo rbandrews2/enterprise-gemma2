@@ -1,3 +1,37 @@
+## LIVE module-flow update completed - October16
+
+Ray authorized deploying the saved updates. Source354f7a9 is now live at
+https://app.workzoneos.org/ on wzos-v2-accounts-flow-354f7a9,100percent traffic.
+Image sha256:ec8f4243e411d4f6a1d96e1a8daec3b2f81ca2a0c0447c835314442664ca6ccb.
+Cloud Build51807551-6a97-4836-8cab-473516a4c335 SUCCESS. Source-only overlay on
+previous checkout-live53f9348a; no dependency/schema/IAM/secret/sending-mode changes.
+
+Exact staged configuration comparison PASS after accepting only gcloud's added
+single-container display name wzos-v2-accounts-1. Actual identity/resources/env/
+secret bindings/SQL/autoscaling/ingress unchanged. Live ten changed JS/CSS hashes
+match source; app/version200; final service traffic independently readback100.
+Previous checkout-live-1016 retained as billing/security-capable rollback.
+
+Actual deployed browser: existing admin selected company successfully; mobile
+390x844 Dashboard hides top module navigation and status-check language; opening
+Navigation restores that menu and shows map, starting/destination inputs and
+Google Maps active-guidance wording. Desktop dashboard retains sidebar and has
+black organization heading with white outline. Temporary viewport reset. Saved
+screenshots under ignored .local-data/release-20261016/live-mobile-landing.png and
+live-dashboard-flow-354f7a9.png. App left on Dashboard for Ray's visual review.
+
+Deployment helper repaired to request structured build status separately from
+console logs, and normalize only the verified display name. First helper stopped
+before staging on JSON console contamination; reused the SUCCESS image, no rebuild.
+First staged comparison stopped before traffic on display-name difference; checked
+that exact difference before continuation. No user messages, camera/mic session,
+new payment or billable route request sent. One overview map loaded in browser.
+Real Daily audio/video and Twilio carrier acceptance remain pending as before.
+Cloud evidence pointers: $HOME/wzos-flow-latest-path.txt and
+$HOME/wzos-flow-launch-path.txt; before/staged/revision/live.json,
+build-described.json,cutover-verified.log and live-version.json. No disposable
+DB/proxy/IAM grants created by this release.
+
 ## Saved module-flow and mobile landing fixes - October16
 
 User requested practical module corrections and then clarified that the mobile

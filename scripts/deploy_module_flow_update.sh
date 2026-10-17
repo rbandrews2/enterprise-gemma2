@@ -35,7 +35,13 @@ options:
   machineType: E2_MEDIUM
 YAML
 image=us-central1-docker.pkg.dev/$project/$project/wzos-v2-accounts:module-flow-354f7a9
-if ! gcloud builds submit --project="$project" --config=cloudbuild.module-flow.yaml --substitutions="_IMAGE=$image" --format=json . > "$root/build.json" 2> "$root/build.log"; then tail -n 12 "$root/build.log"; exit 1; fi
+if ! gcloud builds submit --project="$project" --config=cloudbuild.module-flow.yaml --substitutions="_IMAGE=$image" --async --format='value(id)' . > "$root/build-id.txt" 2> "$root/build.log"; then tail -n 12 "$root/build.log"; exit 1; fi
+build_id=$(cat "$root/build-id.txt")
+for attempt in $(seq 1 70); do
+ gcloud builds describe "$build_id" --project="$project" --format=json > "$root/build.json"
+ status=$(python3 -c 'import json,sys;print(json.load(open(sys.argv[1]))["status"])' "$root/build.json")
+ case "$status" in SUCCESS) break;; QUEUED|WORKING|PENDING) sleep 10;; *) echo "BUILD_FAILED $status"; exit 1;; esac
+done
 python3 - "$root" <<'PY'
 import json,sys
 from pathlib import Path
@@ -56,6 +62,8 @@ assert r['status']['imageDigest']==sys.argv[2]
 prior=b['spec']['template']['spec'];actual=copy.deepcopy(r['spec'])
 assert actual['containers'][0]['image']==sys.argv[2]
 actual['containers'][0]['image']=prior['containers'][0]['image']
+if 'name' not in prior['containers'][0]:
+ assert actual['containers'][0].pop('name',None)=='wzos-v2-accounts-1'
 assert actual==prior, 'Runtime configuration changed'
 ignore={'run.googleapis.com/client-name','run.googleapis.com/client-version','run.googleapis.com/operation-id'}
 annotations=lambda s:{k:v for k,v in s['spec']['template']['metadata'].get('annotations',{}).items() if k not in ignore}
