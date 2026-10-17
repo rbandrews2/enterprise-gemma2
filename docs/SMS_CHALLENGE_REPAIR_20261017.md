@@ -41,3 +41,13 @@ Post-deploy browser confirmed request label/time/expiry and Delivered to phone.
 One cosmetic encoding error in the new explanatory sentence was corrected
 in source to plain ASCII; include that copy-only correction in the next release.
 It is not yet live; no further build or SMS requested solely for that wording.
+
+## Controlled real-device acceptance - October17 daytime
+
+User completed phone verification; actual app showed Number verified/Text messages on.
+One normal SMS notification sent through the admin composer to the approved number;
+user confirmed it arrived. No code or consent entered by agent. Controlled SMS gate
+closed for this recipient. Broad sending remains test mode; office SMS and assignment
+journeys remain separate. Current docs condensed with full historical archives:
+- SESSION_HANDOFF_before_sms_acceptance_20261017.md sha256 3be88955a4b01943ad6c42fb7b824faa694f769cd3e80f085bd48c56d86a2ac2
+- REMAINING_TASKS_before_sms_acceptance_20261017.md sha256 1cdd58849bae77b9c6ce5355719c708c5b2f2bb83b95d3c368cd410d52f7d013
