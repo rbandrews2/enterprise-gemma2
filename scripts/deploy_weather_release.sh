@@ -16,6 +16,13 @@ cd "$root/source"
 test "$(git rev-parse HEAD)" = "$source_commit"
 immutable=$(cat "$root/immutable.txt")
 [[ "$immutable" =~ ^us-central1-docker.pkg.dev/enterprise-gemma2/enterprise-gemma2/wzos-v2-accounts@sha256:[0-9a-f]{64}$ ]]
+python3 - "$root" "$short" "$immutable" <<'PY'
+import json,sys
+from pathlib import Path
+b=json.loads((Path(sys.argv[1])/'build.json').read_text())
+assert b['status']=='SUCCESS'
+assert any(i['name'].endswith(':weather-'+sys.argv[2]) and sys.argv[3].endswith('@'+i['digest']) for i in b['results']['images']), 'Build/source digest mismatch'
+PY
 gcloud run services describe "$service" --project="$project" --region="$region" --format=json > "$root/before.json"
 python3 - "$root" <<'PY'
 import json,sys
