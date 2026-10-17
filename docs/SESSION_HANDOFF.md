@@ -52,12 +52,16 @@ Weather/geofencing implemented in c6adf9f after read-only GEMINI_WZOS_V1 review.
 See WEATHER_IMPLEMENTATION_20261017.md: full cloud PostgreSQL769 PASS, final weather
 PostgreSQL23 PASS, local Node133 and Cloud Node6 PASS/no skips. Final backend unchanged
 from23-test candidate; frontend privacy fix verified. Build/public deployment complete.
-Separate monitor workload/IAM needs approval; weather SMS remains off.
+Ray approved the scoped monitor workload/IAM on October17 at once per hour; weather SMS remains off. Activation is pending.
 Cloud evidence: $HOME/wzos-weather-path.txt. No new scheduler/IAM grants applied.
-NEXT: await the scoped weather-monitor pilot approval requested in chat; do not
-provision the new workload/invoker grant or enable weather SMS without it. Exact
-scope/image/rollback: WEATHER_MONITOR_ACTIVATION_20261017.md. Signed-in live card
-rendered; no device GPS collected. Live proof: release-20261017/live-weather-release.png.
+NEXT: activate the APPROVED once-hourly weather-monitor pilot (cron `0 * * * *`,
+America/New_York), preserving the exact scope in WEATHER_MONITOR_ACTIVATION_20261017.md.
+Weather SMS remains OFF. Browser control timed out twice after a read-only preflight
+attempt; its command/result is unverified. No job, scheduler or IAM mutation command
+was submitted. Reconnect and inspect fresh project/auth/resource state before creating
+anything. Verify one bounded execution and schedule before setting exact-org coverage.
+Signed-in live card was previously rendered; no device GPS collected. Live proof:
+release-20261017/live-weather-release.png.
 Owned local preview/test processes stopped; source and reference checkouts clean.
 Ray's card preference: fixed compact basic-weather card that follows user location
 after permission, refreshes on meaningful movement, and labels stale/fallback data.

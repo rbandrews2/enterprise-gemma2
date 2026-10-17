@@ -71,8 +71,9 @@ older evidence remain there; do not silently discard or re-open completed gates.
   weather PostgreSQL23, local Node133 and Cloud frontend6 passed without skips. See
   WEATHER_GEOFENCING_INTEGRATION_20261017.md for reuse, defects and product decisions.
   Public weather-c6adf9f100% passed runtime/28 asset/policy/auth checks.
-  Next: separate scheduled-job/IAM activation approval
-  per WEATHER_MONITOR_ACTIVATION_20261017.md. Background monitoring/SMS remain off.
+  Next: activate Ray-approved once-hourly scheduled job/IAM pilot
+  per WEATHER_MONITOR_ACTIVATION_20261017.md. Browser preflight timed out; activation
+  is not verified. Background monitoring/SMS remain off until verified; SMS stays off.
 
 ## Included polish
 
