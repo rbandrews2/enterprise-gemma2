@@ -52,3 +52,37 @@ imageec8f4243 and flow-354f7a9 traffic, builds/stages, compares preserved runtim
 config, cuts over, checks fourteen frontend files/version, and rolls traffic back
 to flow-354f7a9 if live asset verification fails. It leaves SMS mode unchanged.
 No claim that these cloud steps ran: browser connection is still unavailable.
+
+## Live acceptance - October17
+
+Source 6caf8eeda859a927ceaa2237a65c32cb1a01b7c5 is LIVE at
+https://app.workzoneos.org/ on wzos-v2-accounts-office-6caf8ee, 100% traffic.
+Image sha256:454a9747b76ea9528bd1f703f7a504503450f020695f658cd8aa771af91a173d.
+Cloud Build 0a56b34e-8427-4136-85db-52df4de4bfe7 succeeded. Release exit0;
+staged runtime configuration preserved; fourteen public assets match exact source;
+version endpoint200; no owned disposable PostgreSQL cluster still running.
+Rollback: wzos-v2-accounts-flow-354f7a9 (billing/security compatible).
+No DDL, dependency, IAM, secret binding, ingress or sending-mode changes.
+
+Validation: 11 focused PostgreSQL checks PASS, zero skips (7.403s), in addition
+to prior 14 local Python and seven Node checks. Do not rerun unrelated suites.
+Live signed-in admin browser: old saved-form chooser absent; Send to office sits
+under Print/save PDF. Submitted one clearly labeled SYNTHETIC incident worksheet
+(no incident occurred); actual server receipt and office queue entry appeared,
+with an in-app admin notice. No SMS queued: admin phone remains Not enabled.
+Proof outside Git: .local-data/release-20261017/live-office-receipt.png.
+
+Read-only provider preflight using pinned Secret Manager values without printing
+or saving them: Twilio account active, type Full; configured sender found and SMS
+capable. No provider settings or voice webhook were modified. Runtime uses SID1,
+auth-token1, sender2 (latest enabled references); public callback origin correct.
+SMS remains test mode with the previously approved recipient only. No actual SMS
+sent by agent. User asked to enter phone/consent and request code in live Messaging;
+carrier/device delivery acceptance is pending. Never mark SMS fully accepted yet.
+
+PWA standalone metadata and V1-equivalent launch guidance deployed. Actual Android
+home-screen launch without address bar still needs device confirmation. Launch
+installed app icon, not a browser link; preserve offline drafts, no storage clearing.
+Next: read user's SMS result, inspect inline/provider error if any, finish phone
+verification and one controlled notification; confirm installed-icon launch.
+Broader member SMS activation remains separate from controlled test mode.
