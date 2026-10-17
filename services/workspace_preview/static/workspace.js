@@ -195,6 +195,7 @@ window.showWzosView=view=>{
  document.querySelector(".breadcrumb + strong").textContent=({dashboard:"Dashboard",assignments:"My jobs",meetings:"Video meetings",training:"Video training",messages:"Messaging",navigation:"Navigation",report:"Work Zone Report",clock:"⚡ Time Tracker",forms:"Forms hub",form_drafts:"Saved form drafts",schedule:"Schedule management"})[view]||"Work orders";
  document.dispatchEvent(new CustomEvent("wzos:view",{detail:view}));
  document.body.classList.toggle('navigation-active',view==='navigation');
+ document.body.classList.toggle('landing-active',view==='dashboard');
  if(view==="clock")document.dispatchEvent(new CustomEvent("wzos:clock-open"));
  return true;
 };

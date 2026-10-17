@@ -208,6 +208,10 @@ class DispatchTests(unittest.TestCase):
         data = self.client.get('/api/dispatch/my-assignments?phase=upcoming', headers=self.h('member')).json()
         self.assertEqual((data['total'], data['limit'], data['offset']), (1, 25, 0))
         self.assertEqual(self.client.get('/api/dispatch/my-assignments?offset=25', headers=self.h('member')).json()['items'], [])
+        messages = self.client.get('/api/messages', headers=self.h('member')).json()['items']
+        self.assertTrue(any(m.get('assignment_id') == data['items'][0]['id'] for m in messages))
+        other_messages = self.client.get('/api/messages', headers=self.h('other')).json()['items']
+        self.assertFalse(any(m.get('assignment_id') == data['items'][0]['id'] for m in other_messages))
         url = '/api/dispatch/assignments/' + data['items'][0]['id'] + '/respond'
         self.assertEqual(self.client.post(url, headers=self.h('other'), json={'response':'accepted'}).status_code, 404)
         self.assertEqual(self.client.post(url, headers=self.h('member'), json={'response':'accepted'}).status_code, 200)

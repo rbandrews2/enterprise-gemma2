@@ -1,7 +1,7 @@
 const test=require('node:test'),assert=require('node:assert/strict'),vm=require('node:vm'),fs=require('node:fs');
 function harness({enabled=true,mapFailure=true,manual=false}={}){
  const events={},windowEvents={},calls=[],gps=[],maps=[];let session={id:'member',organization_id:'org1',edition:'enterprise'},hold=null;
- function element(tag){return{tag,textContent:'',value:'',children:[],isConnected:true,append(...nodes){this.children.push(...nodes);},insertBefore(node,before){this.children.splice(this.children.indexOf(before),0,node);},replaceChildren(...nodes){this.children=nodes;},setAttribute(){},removeAttribute(name){delete this[name];},remove(){this.isConnected=false;}};}
+ function element(tag){return{tag,textContent:'',value:'',children:[],isConnected:true,append(...nodes){this.children.push(...nodes);},insertBefore(node,before){this.children.splice(this.children.indexOf(before),0,node);},replaceChildren(...nodes){this.children=nodes;},setAttribute(name,value){this[name]=value;},removeAttribute(name){delete this[name];},remove(){this.isConnected=false;}};}
  const document={createElement:element,addEventListener:(name,fn)=>events[name]=fn};
  const navigator={onLine:true,geolocation:{getCurrentPosition:(...args)=>gps.push(args)}};
  const response={status:'ready',distance_meters:2400,duration_seconds:300,calculated_at:new Date().toISOString(),destination:'Frozen site',destination_basis:'dispatched_snapshot',directions:[{instruction:'Head east <script>'}],encoded_polyline:'??'};
@@ -27,13 +27,13 @@ test('Job navigation displays its destination without accepting an override',asy
 });
 
 test('Active guidance uses Google Maps from the device location, without sending GPS or origin',async()=>{
- const h=harness({manual:true,enabled:false});await h.open();const link=h.find('Start turn-by-turn in Google Maps');
- assert.equal(link.hidden,true);assert.equal(link.href,undefined);
+ const h=harness({manual:true,enabled:false});await h.open();const link=h.find('Start navigation in Google Maps');
+ assert.equal(!!link.hidden,false);assert.equal(link['aria-disabled'],'true');assert.equal(link.href,undefined);
  h.destination().value='Main & First, Norfolk VA';h.destination().oninput();
  const url=new URL(link.href);assert.equal(url.origin,'https://www.google.com');assert.equal(url.searchParams.get('destination'),'Main & First, Norfolk VA');
  assert.equal(url.searchParams.get('dir_action'),'navigate');assert.equal(url.searchParams.has('origin'),false);
  assert.equal(link.target,'_blank');assert.equal(link.rel,'noopener noreferrer');assert.equal(h.gps.length,0);assert.equal(h.calls.length,1);
- h.destination().value='';h.destination().oninput();assert.equal(link.hidden,true);assert.equal(link.href,undefined);
+ h.destination().value='';h.destination().oninput();assert.equal(!!link.hidden,false);assert.equal(link['aria-disabled'],'true');assert.equal(link.href,undefined);
 });
 test('No automatic location or route calls; manual calculation uses assignment, retains directions on map failure',async()=>{
  const h=harness();await h.open();assert.equal(h.gps.length,0);assert.equal(h.calls.length,1);

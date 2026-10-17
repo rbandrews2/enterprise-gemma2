@@ -30,3 +30,7 @@ test('link controls start collapsed, preserve every existing link and support re
 test('editor bounds links at ten and never treats titles as HTML',()=>{
  const {media,all}=setup(),e=media.editor(Array.from({length:10},()=>clip),()=>{}),add=all(e.element,'BUTTON').find(b=>b.textContent==='Add video link');assert.equal(add.disabled,true);add.onclick();assert.equal(e.value().length,10);const card=media.render({...clip,title:'<img src=x onerror=alert(1)>'});assert.equal(all(card,'IMG').length,0);assert.equal(all(card,'H4')[0].textContent,'<img src=x onerror=alert(1)>');
 });
+
+test('add-video editor exposes a blank URL immediately without marking unchanged data dirty',()=>{
+ const {media,all}=setup();let edits=0;const e=media.editor([],()=>edits++,{open:true,emptyRow:true});assert.equal(e.element.open,true);const url=all(e.element,'INPUT').find(n=>n.type==='url');assert.ok(url);assert.equal(url.value,'');assert.deepEqual(Array.from(e.value()),[]);assert.equal(edits,0);url.value='https://example.org/video.mp4';e.element.oninput();assert.equal(edits,1);assert.equal(e.value().length,1);
+});

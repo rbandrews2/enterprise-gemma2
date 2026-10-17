@@ -112,7 +112,6 @@
  async function build(root,current){
   const session=window.wzosClock.getSession();if(session?.edition!=='enterprise')return null;
   const wrap=node('div');wrap.dataset.dispatch='1';
-  const mine=await memberPanel(root,current);if(mine)wrap.append(mine);
   if(session.role==='admin'){const admin=await adminPanel(root,current);if(admin)wrap.append(admin);}
   return wrap;
  }
@@ -125,17 +124,17 @@
   const host=node('div');host.dataset.dispatch='1';host.dataset.assignmentsOnly='1';root.append(host);
   try{const panel=await memberPanel(root,current);if(panel&&current()){host.append(panel);say('Open a job, review the details and confirm receipt.');}}catch(error){if(current())say(error.message);}
  }
- let polling=false,notificationScope='';
+ let polling=false,notificationScope='',lastPending=-1;
  async function updateNotifications(){
   const session=window.wzosClock.getSession(),nav=document.getElementById('assignments-nav'),count=document.getElementById('assignment-count'),alert=document.getElementById('assignment-alert');
   const scope=session?.organization_id+':'+session?.id;
   nav.hidden=session?.edition!=='enterprise';
-  if(scope!==notificationScope){notificationScope=scope;count.textContent='…';alert.hidden=true;assignmentOffset=0;}
+  if(scope!==notificationScope){notificationScope=scope;lastPending=-1;count.textContent='…';alert.hidden=true;assignmentOffset=0;}
   if(nav.hidden){count.textContent='0';alert.hidden=true;return;}
   if(polling||document.hidden)return;
   if(!navigator.onLine){alert.hidden=false;alert.textContent='Offline — reconnect to check new work assignments.';return;}
   polling=true;
-  try{const data=await api('/api/dispatch/notifications');const next=window.wzosClock.getSession();if(scope!==next?.organization_id+':'+next?.id)return;count.textContent=String(data.pending_count);alert.hidden=!data.pending_count;alert.textContent=`${data.pending_count} work assignment${data.pending_count===1?'':'s'} ${data.pending_count===1?"needs":"need"} your confirmation. Open My jobs to review.`;}catch(error){if(scope===notificationScope){alert.hidden=false;alert.textContent='New assignments could not be checked. Reconnect or refresh My jobs; WZOS will retry.';}}finally{polling=false;}
+  try{const data=await api('/api/dispatch/notifications');const next=window.wzosClock.getSession();if(scope!==next?.organization_id+':'+next?.id)return;count.textContent=String(data.pending_count);alert.hidden=!data.pending_count;alert.textContent=`${data.pending_count} work assignment${data.pending_count===1?'':'s'} ${data.pending_count===1?"needs":"need"} your confirmation. `;if(data.pending_count){const open=button('Open My jobs','primary');open.onclick=()=>window.showWzosView('assignments');alert.append(open);}if(data.pending_count!==lastPending&&document.getElementById('assignments-nav').classList.contains('active'))showAssignments();lastPending=data.pending_count;}catch(error){if(scope===notificationScope){alert.hidden=false;alert.textContent='New assignments could not be checked. Reconnect or refresh My jobs; WZOS will retry.';}}finally{polling=false;}
  }
  document.getElementById('assignments-nav').onclick=()=>window.showWzosView('assignments');
  document.addEventListener('wzos:view',event=>{assignmentEpoch++;if(event.detail==='assignments')showAssignments();});

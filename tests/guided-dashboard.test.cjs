@@ -15,7 +15,8 @@ test('guided landing uses authorized module data and working navigation',async()
  assert.ok(h.all(h.main).some(n=>n.textContent==='Synthetic organization'));
  assert.ok(h.all(h.main).some(n=>n.textContent==='Your operation. In clear view.'));
  const feature=h.all(h.main).find(n=>n.className==='panel hub-card guided-feature');assert.ok(feature);feature.onclick();assert.deepEqual(h.clicks,['report-nav']);
- assert.ok(h.all(h.main).some(n=>n.textContent==='● Status checks incomplete'));
+ assert.equal(h.all(h.main).some(n=>/Status checks incomplete|No current verified|Security signals/.test(n.textContent)),false);
+ assert.equal(h.all(h.main).find(n=>n.textContent==='Synthetic organization').className,'organization-heading');
 });
 test('Core upgrade is admin-only, informational and closes on session changes',async()=>{
  const h=setup('admin','core');h.emit('wzos:session');await flush();const upgrade=h.all(h.nav).find(n=>n.id==='core-upgrade');assert.equal(upgrade.hidden,false);upgrade.onclick();

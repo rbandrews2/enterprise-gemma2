@@ -28,6 +28,11 @@
 .forms-editor{margin-top:1.25rem}.forms-editor h2:focus{outline:2px solid #f4c542;outline-offset:4px}
 .forms-editor fieldset{border:1px solid #3b4140;border-radius:8px;margin:1rem 0;padding:.9rem;min-width:0}
 .forms-editor legend{padding:0 .4rem;color:#edcf79;font-weight:650}
+.forms-editor form>fieldset{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.85rem 1.1rem;align-items:start}
+.forms-editor form>fieldset>label{margin:0!important;min-width:0}
+.forms-editor form>fieldset>fieldset,.forms-editor .forms-wide{grid-column:1/-1}
+.forms-editor input:not([type=checkbox]):not([type=radio]),.forms-editor select{min-height:46px;padding:.7rem .8rem}
+.forms-editor textarea{min-height:112px;resize:vertical;padding:.7rem .8rem}
 .forms-choices{display:grid;grid-template-columns:repeat(auto-fill,minmax(12rem,1fr));gap:.3rem .9rem}
 #forms-view .forms-choice{display:flex;align-items:center;gap:.5rem;margin:.2rem 0}
 .forms-choice input,.forms-source input{width:1.1rem;height:1.1rem;flex-shrink:0;accent-color:#f4a547}
@@ -36,7 +41,7 @@
 #forms-view .forms-row label{margin-top:0;--wzos-paragraph-font-size:.8rem;font-size:.8rem}
 .forms-print{display:none}
 @media(max-width:900px){.forms-layout{grid-template-columns:1fr}}
-@media(max-width:650px){#forms-view .panel{padding:1rem}.forms-actions button{flex:1 1 100%}.forms-row{grid-template-columns:1fr}}
+@media(max-width:650px){#forms-view .panel{padding:1rem}.forms-actions button{flex:1 1 100%}.forms-row,.forms-editor form>fieldset{grid-template-columns:1fr}}
 @media(prefers-reduced-motion:reduce){#forms-view *{transition:none!important;animation:none!important;scroll-behavior:auto!important}}
 /* Printed form; keep in step with DOC_CSS in forms-hub.js, which styles downloaded copies. */
 @media print{

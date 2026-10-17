@@ -188,6 +188,12 @@ p{font-size:calc(var(--wzos-paragraph-font-size,1em) + 1pt)!important}
 .training-media-editor>summary:focus-visible{outline:2px solid #dcb351;outline-offset:3px}
 .training-media-editor[open]>summary{border-bottom:1px solid rgba(224,180,75,.24);margin-bottom:.8rem}
 .training-media-row{padding:.8rem 0;border-bottom:1px solid rgba(255,255,255,.1)}
+.guided-dashboard>.organization-heading{color:#050505;-webkit-text-stroke:1px #fff;paint-order:stroke fill;text-shadow:1px 0 #fff,-1px 0 #fff,0 1px #fff,0 -1px #fff}
+.navigation-guidance{display:inline-block;margin:.8rem 0;min-height:44px;text-decoration:none}
+.navigation-guidance[aria-disabled=true]{opacity:.55;cursor:not-allowed}
+.training-admin-tools{margin-bottom:1rem}.training-admin-tools form{margin-top:1rem}
+.training-admin-tools label,.sms-compose label{display:block;margin:.75rem 0}
+.sms-compose{max-width:48rem;padding:1.25rem}.sms-compose textarea{width:100%;min-height:120px;box-sizing:border-box}
 .training-media-row input[type=checkbox]{width:auto;display:inline-block;margin:.5rem}
 .training-video button,.training-media-editor button{min-height:44px;margin:.35rem .5rem .35rem 0}
 .training-video-screen{width:100%;max-width:720px;aspect-ratio:16/9;min-height:200px;overflow:hidden;background:#050606;border-radius:12px;margin:.75rem 0}
@@ -211,3 +217,9 @@ p{font-size:calc(var(--wzos-paragraph-font-size,1em) + 1pt)!important}
 .core-upgrade{color:#edcb89!important}.core-upgrade[hidden]{display:none!important}.upgrade-dialog{max-width:560px;width:calc(100% - 32px);max-height:85vh;overflow:auto;color:#eee}.upgrade-dialog::backdrop{background:#000b;backdrop-filter:blur(5px)}
 .navigation-guidance{display:inline-flex;align-items:center;min-height:44px;margin:12px 12px 12px 0;text-decoration:none}.navigation-guidance[hidden]{display:none}
 @media(max-width:900px){#dashboard-view .guided-layout{grid-template-columns:1fr}#dashboard-view .guided-story img{max-height:180px;width:auto}#dashboard-view .guided-story{padding:24px}}
+
+/* The mobile landing cards are its launch menu; restore the top menu on all other views. */
+@media(max-width:760px){body.landing-active .sidebar nav,body.landing-active .sidebar .nav-label{display:none!important}}
+
+/* Landing cards replace only the mobile top module menu. */
+@media(max-width:760px){body.landing-active .sidebar nav,body.landing-active .sidebar .nav-label{display:none!important}}

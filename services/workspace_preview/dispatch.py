@@ -121,6 +121,16 @@ def register(app, connect, actor, permitted_row, actors):
         for sql in DDL:
             db.execute(sql)
 
+    def assignment_message_targets(user, message_ids):
+        if user['edition'] != 'enterprise' or not message_ids:
+            return {}
+        marks = ','.join('?' for _ in message_ids)
+        with connect() as db:
+            rows = db.execute('SELECT id,message_id FROM dispatch_assignments WHERE organization_id=? AND user_id=? AND message_id IN (' + marks + ')', [user['organization_id'], user['id'], *message_ids]).fetchall()
+        return {row['message_id']: row['id'] for row in rows}
+
+    app.state.assignment_message_targets = assignment_message_targets
+
     def enterprise(request, admin=True):
         user = actor(request)
         if user['edition'] != 'enterprise':

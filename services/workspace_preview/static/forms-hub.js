@@ -317,7 +317,8 @@
   }
   else{input=node('input');input.type={date:'date',time:'time',number:'number'}[field.type]||'text';if(field.type==='number'){input.min=field.min??'';input.max=field.max??'';input.step='any';}else if(field.type==='text')input.maxLength=field.max_length||200;}
   input.id=id;
-  return {element:labelled(field.label,input),read:()=>input.value.trim(),clear:()=>{input.value='';}};
+  const element=labelled(field.label,input);if(field.type==='textarea')element.className='forms-wide';
+  return {element,read:()=>input.value.trim(),clear:()=>{input.value='';}};
  }
  async function openForm(summary,opener){
   let t;try{t=await template(summary);}catch(error){notice(error.message);return;}

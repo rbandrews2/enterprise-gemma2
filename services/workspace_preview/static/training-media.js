@@ -42,8 +42,8 @@
   close.onclick=stop;
   card.append(el('p','Load the video here, or open the original link.'),load,close,screen,link);return card;
  }
- function editor(initial,onchange){
-  const details=el('details');details.className='training-media-editor';const summary=el('summary','Video links');details.append(summary);
+ function editor(initial,onchange,{open=false,emptyRow=false}={}){
+  const details=el('details');details.className='training-media-editor';details.open=open;const summary=el('summary','Video links');details.append(summary);
   const rows=el('div'),add=button('Add video link');details.append(el('p','Paste a YouTube, Vimeo or direct video link. Save the draft, then publish to update the training.'),rows,add);
   const entries=[];
   function refresh(){summary.textContent='Video links ('+entries.length+')';add.disabled=entries.length>=10;}
@@ -56,7 +56,7 @@
    const entry={card,value:()=>({title:title.value.trim()||'Training video',url:url.value.trim(),rights_confirmed:rights.checked,rights_note:note.value.trim()})};entries.push(entry);
    remove.onclick=()=>{entries.splice(entries.indexOf(entry),1);card.remove();refresh();onchange();};card.append(remove);rows.append(card);refresh();
   }
-  initial.forEach(row);add.onclick=()=>{if(entries.length>=10)return;row();onchange();};
+  initial.forEach(row);if(!initial.length&&emptyRow)row();add.onclick=()=>{if(entries.length>=10)return;details.open=true;row();onchange();};
   details.oninput=onchange;refresh();
   return {element:details,value:()=>entries.map(e=>e.value()).filter(m=>m.url)};
  }

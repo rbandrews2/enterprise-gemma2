@@ -10,7 +10,7 @@
  const previous=window.wzosModulesCanLeave;
  window.wzosModulesCanLeave=()=>!busy&&(!dirty||confirm('Leave unsaved training changes?'))&&(!previous||previous());
  const root=el('section');root.className='panel report-section';root.id='training-content-panel';
- document.getElementById('team-view').append(root);
+ document.getElementById('team-view').insertBefore(root,document.getElementById('team-content'));
  const notice=el('p');notice.setAttribute('role','status');
  const say=t=>{notice.textContent=t;};
  async function run(control,work,done){if(busy)return;busy=true;control.disabled=true;try{const result=await work();dirty=false;await show();say(typeof done==='function'?done(result):done);}catch(e){say(e.message);}finally{busy=false;control.disabled=false;}}
@@ -46,14 +46,14 @@
  const parseSections=text=>text.split(/\n\s*\n/).map(b=>b.trim()).filter(Boolean).map(b=>{const [heading,...rest]=b.split('\n');return {heading:heading.trim(),body:rest.join('\n').trim()||heading.trim()};});
  const formatSections=ss=>ss.map(s=>s.heading+'\n'+s.body).join('\n\n');
 
- function editor(existing,host){
+ function editor(existing,host,{videoFirst=false}={}){
   const d=existing?.draft||{title:'',summary:'',sections:[],media:[],questions:[],passing_score:80,max_attempts:3};
   const form=el('form');form.onsubmit=e=>e.preventDefault();form.oninput=()=>{dirty=true;};
   const id=el('input'),title=el('input'),summary=el('textarea'),content=el('textarea'),questions=el('textarea'),pass=el('input'),tries=el('input');
-  id.value=existing?.id||'';id.disabled=!!existing;id.pattern='[a-z0-9][a-z0-9_-]{0,59}';title.value=d.title;summary.value=d.summary;content.value=formatSections(d.sections);content.rows=8;questions.value=formatQuestions(d.questions);questions.rows=8;
+  id.value=existing?.id||(videoFirst?'video-'+crypto.randomUUID().slice(0,8):'');id.disabled=!!existing;id.pattern='[a-z0-9][a-z0-9_-]{0,59}';title.value=d.title;summary.value=d.summary;content.value=formatSections(d.sections);content.rows=8;questions.value=formatQuestions(d.questions);questions.rows=8;
   pass.type=tries.type='number';pass.min=50;pass.max=100;pass.value=d.passing_score;tries.min=1;tries.max=10;tries.value=d.max_attempts;
   content.placeholder='Heading on the first line, then the text. Separate sections with a blank line.';questions.placeholder='Q: Question text\n- Wrong option\n* Correct option';
-  const media=window.WzosTrainingMedia.editor(d.media,()=>{dirty=true;});
+  const media=window.WzosTrainingMedia.editor(d.media,()=>{dirty=true;},{open:videoFirst,emptyRow:videoFirst});
   const save=el('button','Save draft'),publish=el('button','Publish current draft');publish.className='primary';publish.disabled=!existing;
   form.append(labelled('Module identifier (lowercase, cannot change later)',id),labelled('Title',title),labelled('Summary',summary),labelled('Training content',content),
    media.element,
@@ -78,7 +78,8 @@
   window.WzosTrainingMedia.stopAll();
   const generation=++epoch;root.replaceChildren();root.hidden=view!=='training';if(root.hidden)return;
   const session=window.wzosClock.getSession(),admin=session?.role==='admin';
-  root.append(el('h2','Organization training'),el('p','Three separate records: self-reported study (above, your own statement), assessment completion (here, scored by WZOS on a published module) and verified qualifications (reviewed by an admin in Employees). Passing an assessment is not a certificate and does not verify a qualification.'),notice);
+  root.append(el('h2','Video training'),notice);
+  if(admin){const tools=el('section'),host=el('div'),add=el('button','Add training video');tools.className='training-admin-tools';add.className='primary';add.onclick=()=>{editor(null,host,{videoFirst:true});host.scrollIntoView?.({block:'start'});};tools.append(add,host);root.append(tools);}
   try{
    const [modules,assignments,completions]=await Promise.all([api('/api/training-modules'),api('/api/training-assignments'),api('/api/training-completions')]);
    if(generation!==epoch)return;

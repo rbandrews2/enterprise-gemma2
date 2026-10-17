@@ -52,9 +52,10 @@ def register(app,connect,actor,actors,synthetic=True):
             ids=[r['id'] for r in rows];marks=','.join('?'*len(ids))
             receipts={r['message_id']:r for r in db.execute('SELECT * FROM message_receipts WHERE organization_id=? AND message_id IN ('+marks+')',[user['organization_id'],*ids]).fetchall()} if ids else {}
             texts={r['reference_id']:r for r in db.execute("SELECT * FROM sms_outbox WHERE organization_id=? AND purpose='message' AND reference_id IN ("+marks+')',[user['organization_id'],*ids]).fetchall()} if ids else {}
+        targets = getattr(app.state, 'assignment_message_targets', lambda user, ids: {})(user, ids)
         def item(row):
             receipt=receipts.get(row['id']);text=texts.get(row['id']) if row['sender_id']==user['id'] else None
-            return {**dict(row),'acknowledgement_requested':bool(receipt and receipt['ack_required']),'acknowledged_at':receipt['acknowledged_at'] if receipt else None,
+            return {**dict(row),'assignment_id':targets.get(row['id']),'acknowledgement_requested':bool(receipt and receipt['ack_required']),'acknowledged_at':receipt['acknowledged_at'] if receipt else None,
                     'sms':sms.public(text,include_body=False) if text else None}
         return {'items':[item(r) for r in rows],'synthetic_only':synthetic,'external_delivery':service.readiness()['ready']}
     @app.post('/api/messages')

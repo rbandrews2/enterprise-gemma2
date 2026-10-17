@@ -35,11 +35,12 @@
    const locate=node('button','Use my current location'),calculate=node('button','Calculate route'),close=node('button','Close route');
    locate.type=close.type='button';calculate.type='submit';locate.className=close.className='secondary';calculate.className='primary';
    const form=node('form'),status=node('p','Checking routing availability…'),result=node('div');status.setAttribute('role','status');status.setAttribute('aria-live','polite');
-   const guidance=node('a','Start turn-by-turn in Google Maps');guidance.className='primary navigation-guidance';guidance.target='_blank';guidance.rel='noopener noreferrer';
-   const syncGuidance=()=>{const address=destinationInput.value.trim();guidance.hidden=!address||address.length>250;
-    if(guidance.hidden)guidance.removeAttribute('href');else guidance.href='https://www.google.com/maps/dir/?api=1&travelmode=driving&dir_action=navigate&destination='+encodeURIComponent(address);};
+   const guidance=node('a','Start navigation in Google Maps');guidance.className='primary navigation-guidance';guidance.target='_blank';guidance.rel='noopener noreferrer';
+   const help=node('p','Enter your destination, then start voice-guided, turn-by-turn navigation in Google Maps. Calculate route shows the map and detailed directions here.');
+   const syncGuidance=()=>{const address=destinationInput.value.trim(),valid=!!address&&address.length<=250;guidance.setAttribute('aria-disabled',String(!valid));
+    if(!valid)guidance.removeAttribute('href');else guidance.href='https://www.google.com/maps/dir/?api=1&travelmode=driving&dir_action=navigate&destination='+encodeURIComponent(address);};
    destinationInput.oninput=syncGuidance;syncGuidance();
-   form.append(label,destinationLabel,locate,calculate);panel.append(title,notice,form,guidance,close,status,result);card.append(panel);
+   form.append(label,destinationLabel,locate,calculate);panel.append(title,help,form,guidance,close,status,result);card.append(panel);
    close.hidden=Boolean(job.manual);
    close.onclick=clear;let coordinates=null, configured=false, locating=false;
    origin.oninput=()=>{coordinates=null;};calculate.disabled=true;

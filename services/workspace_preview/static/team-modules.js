@@ -7,7 +7,7 @@
  async function show(name){
   generation++;view=name;dirty=false;const epoch=generation,root=$('team-content');root.replaceChildren();$('team-notice').textContent='';
   if(!['training','messages','navigation'].includes(name))return;
-  $('team-title').textContent={training:'Training study planner',messages:'Messaging',navigation:'Navigation'}[name];
+  $('team-title').textContent={training:'Video training',messages:'Text notifications',navigation:'Navigation'}[name];
   try{
    if(name==='navigation'){
     window.WzosNavigationRoute?.overview?.(root);
@@ -60,20 +60,21 @@
    admin?api('/api/messaging/sms/contacts'):null,admin?api('/api/messaging/sms/readiness'):null,admin?api('/api/messaging/sms/outbox'):null]);
   if(epoch!==generation)return;
   const names=Object.fromEntries(roster.items.map(m=>[m.id,m.name])),smsBy=Object.fromEntries((people?.items||[]).map(p=>[p.id,p.status]));
-  root.append(node('p',messages.synthetic_only?'Synthetic test inbox. Text messages go only to approved test numbers when test sending is configured. Shows up to 50 recent messages.':'Organization messages. Shows up to 50 recent messages.'));
+  root.append(node('p',admin?'Send one-way text notifications to your organization. Replies are not monitored.':'Notifications from your organization. Manage your mobile number below.'));
   // Compose
-  const form=node('form',''),label=node('label','Recipient'),recipient=node('select',''),bodyLabel=node('label','Message'),body=node('textarea',''),submit=node('button','Send message');submit.className='primary';body.required=true;body.maxLength=2000;let retry=null;
+  const form=node('form',''),label=node('label','Send text to'),recipient=node('select',''),bodyLabel=node('label','Text message'),body=node('textarea',''),submit=node('button','Send text notification');form.className='panel sms-compose';submit.className='primary';body.required=true;body.rows=4;body.maxLength=600;let retry=null;
   for(const member of roster.items){const option=node('option',member.name+' · '+member.role);option.value=member.id;recipient.append(option);}label.append(recipient);bodyLabel.append(body);
   const ackLabel=node('label',''),ack=checkbox();ackLabel.append(ack,' Ask the recipient to acknowledge');
-  const smsLabel=node('label',''),smsBox=checkbox(),smsHint=node('p','');smsLabel.append(smsBox,' Also send a text message copy');smsHint.className='muted';smsLabel.hidden=smsHint.hidden=!admin;
-  const hint=()=>{const status=smsBy[recipient.value]||'none';smsHint.textContent=readiness&&!readiness.ready?'Text sending is not available: '+(readiness.mode==='disabled'?'turned off for this environment.':'settings incomplete.'):'Recipient text messages: '+(CONTACT_STATUS[status]||status)+'.';};hint();
-  form.append(label,bodyLabel,ackLabel,smsLabel,smsHint,submit);form.oninput=()=>{dirty=true;retry=null;hint();};
-  form.onsubmit=async event=>{event.preventDefault();if(sending)return;retry=retry||{request_id:crypto.randomUUID(),recipient_id:recipient.value,text:body.value,request_acknowledgement:ack.checked,sms_copy:admin&&smsBox.checked};sending=true;submit.disabled=body.disabled=recipient.disabled=true;
-   try{const saved=await api('/api/messages',{method:'POST',body:JSON.stringify(retry)});if(epoch===generation){dirty=false;await show('messages');$('team-notice').textContent='Message saved in WZOS.'+(saved.sms?(saved.sms.status==='queued'?' Text message copy queued — its delivery status is shown on the message.':' '+smsLine(saved.sms)+'.'):'');}}
-   catch(error){if(epoch===generation)$('team-notice').textContent=error.message;}finally{sending=false;submit.disabled=body.disabled=recipient.disabled=false;}};root.append(form);
+  const smsHint=node('p','');smsHint.setAttribute('role','status');smsHint.className='muted';
+  const hint=()=>{const status=smsBy[recipient.value]||'none';submit.disabled=!admin||!readiness?.ready||status!=='verified';smsHint.textContent=!readiness?.ready?'Text sending is unavailable. Review Text message delivery below.':status!=='verified'?'This recipient must enable and verify their mobile number in My text message settings.':readiness.mode==='test'?'Controlled testing: only approved test numbers can receive texts.':'Ready to send by SMS.';};hint();
+  form.append(node('h2','Send a text notification'),label,bodyLabel,ackLabel,smsHint,submit);form.oninput=()=>{dirty=true;retry=null;hint();};
+  form.onsubmit=async event=>{event.preventDefault();if(sending||submit.disabled||!admin)return;retry=retry||{request_id:crypto.randomUUID(),recipient_id:recipient.value,text:body.value,request_acknowledgement:ack.checked,sms_copy:true};sending=true;submit.disabled=body.disabled=recipient.disabled=true;
+   try{const saved=await api('/api/messages',{method:'POST',body:JSON.stringify(retry)});if(epoch===generation){dirty=false;await show('messages');$('team-notice').textContent=saved.sms?(saved.sms.status==='queued'?'Text notification queued. Delivery status appears below.':smsLine(saved.sms)):'Text notification was not queued. Review delivery settings.';}}
+   catch(error){if(epoch===generation)$('team-notice').textContent=error.message;}finally{sending=false;body.disabled=recipient.disabled=false;hint();}};if(admin)root.append(form);
   // Inbox and sent items
   const me=window.wzosClock.getSession()?.id;
-  for(const message of messages.items){const card=node('article','');card.className='report-section panel';
+  root.append(node('h2',admin?'Recent notifications':'My notifications'));
+  for(const message of messages.items){if(message.assignment_id&&message.recipient_id===me)continue;const card=node('article','');card.className='report-section panel';
    card.append(node('p',`${names[message.sender_id]||message.sender_id} → ${names[message.recipient_id]||message.recipient_id} · ${new Date(message.created_at).toLocaleString()}`),node('p',message.body));
    if(message.sms)card.append(node('p',smsLine(message.sms)));
    if(message.acknowledgement_requested)card.append(node('p',message.acknowledged_at?'Acknowledged '+new Date(message.acknowledged_at).toLocaleString():'Acknowledgement requested — not yet acknowledged'));

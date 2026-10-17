@@ -1,3 +1,42 @@
+## Saved module-flow and mobile landing fixes - October16
+
+User requested practical module corrections and then clarified that the mobile
+landing page should use its glass cards as its only module menu. Source changes
+are saved in the owned codex/preproduction-modules checkout; NOT DEPLOYED yet.
+
+- Mobile <=760px: landing-active hides only sidebar navigation and its label;
+  approved view switches toggle this class, restoring the menu on other pages.
+  Desktop sidebar and account controls are unchanged.
+- Removed dashboard status/check claims, retained operational error reporting;
+  organization heading black with white outline.
+- Training: Add training video opens the link editor at the top, including an
+  empty URL field; existing video links remain replaceable/removable. Publishing
+  still requires the existing assessment rules; no video-only completion bypass.
+- Messaging: admin text-notification composer always requests SMS, reflects queued
+  versus blocked states, retains verified phone/consent and controlled test-mode
+  restrictions. No SMS sent; live carrier acceptance remains pending.
+- Navigation: explicit visible Start navigation in Google Maps action, disabled
+  until a destination exists; explains voice guidance vs internal route details.
+- Forms: aligned scalar fields and full-width long-text/repeating sections.
+- Job alerts link to My jobs, incoming assignment notices carry tenant/recipient
+  scoped assignment IDs and are excluded from generic messages. Polling only
+  refreshes assignments when pending counts change, preserving open edits.
+
+Focused results: dispatch/Daily Python 63 run,34 passed,29 PostgreSQL variants
+skipped (local SQLite only); training/Daily JavaScript11 PASS; navigation/dashboard
+JavaScript15 PASS after updating assertions for requested copy/visibility changes.
+Navigation assignment/link8 also passed during the first focused run. These are
+focused checks, not a new complete PostgreSQL release gate. No schema/dependency,
+provider credential, IAM or sending-mode changes.
+
+Browser review blocked: automatic approval review reported workspace out of
+credits, before the app inspection executed. Do not bypass this. Live visual,
+real two-device meeting/audio/leave and SMS acceptance remain open. Restore browser
+review availability, inspect mobile landing/menu transitions and controls, then
+build a source-only overlay on current live image53f9348a, preserving commerce,
+security holds, runtime config and current checkout-live rollback. Do not run
+older hard-coded deployment scripts against the obsolete hub baseline.
+
 ## Current status - live release completed October16
 
 - Live app updated: checkout-live-1016 at100percent; source d47033b/image53f9348a.
