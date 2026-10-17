@@ -54,6 +54,11 @@ PostgreSQL23 PASS, local Node133 and Cloud Node6 PASS/no skips. Final backend un
 from23-test candidate; frontend privacy fix verified. Build/public deployment complete.
 Separate monitor workload/IAM needs approval; weather SMS remains off.
 Cloud evidence: $HOME/wzos-weather-path.txt. No new scheduler/IAM grants applied.
+NEXT: await the scoped weather-monitor pilot approval requested in chat; do not
+provision the new workload/invoker grant or enable weather SMS without it. Exact
+scope/image/rollback: WEATHER_MONITOR_ACTIVATION_20261017.md. Signed-in live card
+rendered; no device GPS collected. Live proof: release-20261017/live-weather-release.png.
+Owned local preview/test processes stopped; source and reference checkouts clean.
 Ray's card preference: fixed compact basic-weather card that follows user location
 after permission, refreshes on meaningful movement, and labels stale/fallback data.
 Confirmed combined scope: retain assigned-site alerts for affected workers/admins

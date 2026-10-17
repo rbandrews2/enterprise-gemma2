@@ -7,6 +7,9 @@ older evidence remain there; do not silently discard or re-open completed gates.
 
 ## Closed latest checkpoint
 
+- [x] Fixed weather card, NWS adapter, scoped manual job-alert checks/receipts and
+  foreground arrival prompts deployed as weather-c6adf9f; automatic monitor still off.
+
 - [x] Completed-form Send to office, immutable office receipt and admin in-app notice
   validated on the live app with a synthetic form.
 - [x] SMS verification completed by Ray; ordinary one-way text notification received

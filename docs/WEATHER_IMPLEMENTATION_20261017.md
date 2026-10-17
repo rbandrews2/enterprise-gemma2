@@ -1,6 +1,7 @@
 # Weather implementation contract
 
-Implementation in the owned integration checkout; not deployed yet.
+Implementation in the owned integration checkout; card/manual checks/arrival prompts
+are deployed. Independent scheduled monitoring and weather SMS are not activated.
 Basic card/local official hazards work for both roles/editions. Admins configure
 monitored sites in their own organization; members read only permitted sites.
 Existing assignment authorization and attendance reconciliation remain authoritative.
@@ -89,3 +90,10 @@ Guarded deployment completed with deploy.exit0: weather-c6adf9f Ready/100% traff
 Rollback traffic to brand-4e281c6; new additive weather tables remain intact.
 No independent
 monitor workload/IAM or weather SMS activation has been applied.
+
+Signed-in live browser verification: selected the existing Molecular Project
+Development LLC organization; Weather card rendered with Use location and collapsed
+job-location/alerts/admin settings. No GPS permission requested or accepted by agent.
+Live proof: .local-data/release-20261017/live-weather-release.png (outside Git).
+Synthetic preview server and duplicate broad local test process stopped; preview tab
+closed. Live app and Cloud Shell retained. Monitor approval request is pending.
