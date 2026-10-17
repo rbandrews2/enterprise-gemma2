@@ -1,8 +1,9 @@
-# Proposed closed-app job-weather activation
+# Active hourly job-weather monitor
 
-Ray approved this pilot on October17 at ONCE PER HOUR, superseding the earlier five-minute proposal. Activation is not yet verified; browser control timed out during the first read-only preflight. No mutation command was submitted. Exact application sourcec6adf9f36b6c2ed25882785b5abe96e4b1ba8224;
+Ray approved this pilot on October17 at ONCE PER HOUR, superseding the earlier five-minute proposal. Activation is COMPLETE: hourly Scheduler enabled, private bounded worker verified, app coverage deployed to weather-hourly-1017. Weather SMS remains OFF. Weather SMS stays OFF. Exact application sourcec6adf9f36b6c2ed25882785b5abe96e4b1ba8224;
 image sha256:edb4a3c4dde24cb6fe57d65ad79f1cfd611ab507d1d1bf03ea70e18f972e92ed
-is built and deployed as wzos-v2-accounts-weather-c6adf9f,100% traffic.
+was initially deployed as wzos-v2-accounts-weather-c6adf9f. The same immutable image
+is now served by wzos-v2-accounts-weather-hourly-1017 at100% traffic.
 Current app identity/configuration independently inspected in Cloud
 Shell; no credentials or values were printed.
 
@@ -71,3 +72,50 @@ and weather SMS; stop/remove the worker after execution ends, remove its scoped
 invoker binding and unused scheduler caller identity. Retain database notices,
 receipts, settings and release evidence. No customer data deletion or old-release
 billing/security bypass is part of rollback.
+
+## Activation progress (October17)
+
+- Reconnected Cloud Shell and verified enterprise-gemma2 / admin@workzoneos.org.
+- Scheduler API enabled successfully; its Google-managed service agent has the
+  standard roles/cloudscheduler.serviceAgent role. No manual project-wide grant.
+- Read-only database lookup uniquely confirmed the approved organization and found
+  zero configured job sites. Temporary SQL proxy/socket removed in a finally block;
+  credentials stayed in process memory and were not printed.
+- Created private wzos-weather-monitor using the approved edb4a3c4 image, one task,
+  parallelism1, 1CPU/512MiB,180s timeout,retries0; only existing DB secret/SQL binding.
+  WZOS_WEATHER_POLLER_ENABLED=1; WZOS_WEATHER_SMS_ENABLED=0. No Twilio bindings.
+- Initial execution wzos-weather-monitor-tpbhg SUCCEEDED (exit0): checked0, notices0, unavailable0. Empty live configuration; this is workload/database acceptance, not actual hazard-delivery acceptance.
+- Created wzos-weather-scheduler identity. Immediate scoped invocation binding hit
+  service-account propagation delay; retry succeeded. Readback confirms ONLY the
+  scheduler identity has roles/run.invoker on this job. No broad role substituted.
+- Scheduler readback: ENABLED, cron `0 * * * *`, America/New_York, OAuth to exact
+  jobs:run endpoint, no retries. A manual Scheduler dispatch verified the caller path:
+  AttemptFinished at2026-10-17T19:51:52Z returned HTTP200.
+- Web coverage revision weather-hourly-1017 is Ready and100% traffic, same image.
+  Exact runtime comparison preserved secrets, service identity, resources, ingress
+  and SQL instance, changing only the three weather flags for the approved org.
+- Do not claim real job hazard delivery from an empty pass. Admin must configure
+  reviewed site coordinates and monitoring windows; no synthetic job added to live DB.
+
+## Active checkpoint
+
+Schedule `0 * * * *` / America/New_York (top of each hour), one organization,
+up to5 active sites/pass. No device/background employee GPS collection, no SMS.
+Hourly polling can delay alerts up to an hour plus provider/delivery latency.
+Zero job sites were configured at activation: admins must save reviewed coordinates
+and explicit monitoring windows in Weather -> Job weather & arrival settings.
+No fake sites were inserted and no actual hazard-delivery acceptance is claimed.
+Evidence: $HOME/wzos-weather-path.txt -> monitor-job.json, monitor-iam.json,
+monitor-execution.json, monitor-first-run.log, monitor-scheduler.json,
+monitor-scheduler-events.json, monitor-web-before/staged/revision/live.json.
+Live proof: .local-data/release-20261017/live-weather-hourly.png (outside Git).
+Rollback: pause Scheduler first, disable the organization's coverage flags (or
+restore traffic to weather-c6adf9f), keep SMS off; remove worker/caller access only
+after active execution ends. Retain weather/site/receipt records. Existing app image,
+authentication, secrets, SQL connection and public ingress restrictions preserved.
+
+Final acceptance: Scheduler-triggered execution wzos-weather-monitor-m5fcz also
+SUCCEEDED (one successful task,zero failed). Public version HTTP200 and anonymous
+weather notices HTTP401 passed. Signed-in Weather card rendered with background
+monitoring active; no real GPS permission requested. No source/runtime rebuild or
+unrelated full-suite rerun was needed for this approved configuration activation.

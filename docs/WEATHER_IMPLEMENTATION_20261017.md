@@ -97,3 +97,14 @@ job-location/alerts/admin settings. No GPS permission requested or accepted by a
 Live proof: .local-data/release-20261017/live-weather-release.png (outside Git).
 Synthetic preview server and duplicate broad local test process stopped; preview tab
 closed. Live app and Cloud Shell retained. Monitor approval request is pending.
+
+## Hourly pilot activation follow-up
+
+Ray approved once-hourly monitoring onOctober17. It is now active for Molecular
+only, cron0 * * * * / America/New_York; weather SMS remainsOFF. See
+WEATHER_MONITOR_ACTIVATION_20261017.md for scoped identity/job/scheduler evidence.
+Both direct and Scheduler-triggered live worker executions succeeded. Public app
+is now weather-hourly-1017 at100% using the same edb4a3c4 immutable image; only3
+weather coverage flags changed, with runtime/authentication preservation verified.
+Zero configured job sites at activation; actual site/hazard/mobile acceptance open.
+This supersedes earlier statements above that scheduled monitoring was inactive.

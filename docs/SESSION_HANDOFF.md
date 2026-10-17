@@ -27,7 +27,7 @@ Historical checkpoints were preserved under docs/history; they are not current b
 ## Deployed baseline and source status
 
 Last independently verified deployment: sourcec6adf9f36b6c2ed25882785b5abe96e4b1ba8224,
-revision wzos-v2-accounts-weather-c6adf9f,100% traffic, image
+revision wzos-v2-accounts-weather-hourly-1017,100% traffic, image
 sha256:edb4a3c4dde24cb6fe57d65ad79f1cfd611ab507d1d1bf03ea70e18f972e92ed.
 Guarded deployment exited0; runtime preserved;28 public assets matched source hashes,
 exact Daily permissions, weather markup, anonymous weather401 and version passed.
@@ -42,7 +42,7 @@ New documentation commits do not imply a new deployment.
 
 CLI sign-in restored by user. Independently verified active account
 admin@workzoneos.org, project enterprise-gemma2, latest ready revision
-wzos-v2-accounts-weather-c6adf9f and actual traffic100% on that revision.
+wzos-v2-accounts-weather-hourly-1017 and actual traffic100% on that revision.
 No current cloud connection blocker. Weather card/manual checks/arrival update deployed.
 Public app/sign-in/SMS working; earlier CLI-auth blocker is closed.
 
@@ -52,16 +52,17 @@ Weather/geofencing implemented in c6adf9f after read-only GEMINI_WZOS_V1 review.
 See WEATHER_IMPLEMENTATION_20261017.md: full cloud PostgreSQL769 PASS, final weather
 PostgreSQL23 PASS, local Node133 and Cloud Node6 PASS/no skips. Final backend unchanged
 from23-test candidate; frontend privacy fix verified. Build/public deployment complete.
-Ray approved the scoped monitor workload/IAM on October17 at once per hour; weather SMS remains off. Activation is pending.
+Ray-approved once-hourly monitor is ACTIVE; weather SMS remains OFF.
 Cloud evidence: $HOME/wzos-weather-path.txt. No new scheduler/IAM grants applied.
-NEXT: activate the APPROVED once-hourly weather-monitor pilot (cron `0 * * * *`,
-America/New_York), preserving the exact scope in WEATHER_MONITOR_ACTIVATION_20261017.md.
-Weather SMS remains OFF. Browser control timed out twice after a read-only preflight
-attempt; its command/result is unverified. No job, scheduler or IAM mutation command
-was submitted. Reconnect and inspect fresh project/auth/resource state before creating
-anything. Verify one bounded execution and schedule before setting exact-org coverage.
-Signed-in live card was previously rendered; no device GPS collected. Live proof:
-release-20261017/live-weather-release.png.
+Hourly pilot ACTIVE: cron `0 * * * *`, America/New_York. Private job first run
+wzos-weather-monitor-tpbhg succeeded, checked0/notices0/unavailable0 (zero configured
+sites). Dedicated scheduler identity has invocation only on this job; authenticated
+Scheduler test returnedHTTP200 at2026-10-17T19:51:52Z; its execution m5fcz also succeeded. Web coverage exact-org allowlist
+is deployed as weather-hourly-1017 at100%, same image/runtime except3 weather flags.
+SMS staysOFF. See WEATHER_MONITOR_ACTIVATION_20261017.md. NEXT: admin configures
+reviewed job-site coordinates/windows; actual hazard/mobile-arrival acceptance remains
+open. No synthetic live sites or device GPS collection. Evidence$HOME/wzos-weather-path.txt;
+proof release-20261017/live-weather-hourly.png. No broad IAM/SMS changes.
 Owned local preview/test processes stopped; source and reference checkouts clean.
 Ray's card preference: fixed compact basic-weather card that follows user location
 after permission, refreshes on meaningful movement, and labels stale/fallback data.

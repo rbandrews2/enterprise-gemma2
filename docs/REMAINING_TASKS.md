@@ -8,7 +8,7 @@ older evidence remain there; do not silently discard or re-open completed gates.
 ## Closed latest checkpoint
 
 - [x] Fixed weather card, NWS adapter, scoped manual job-alert checks/receipts and
-  foreground arrival prompts deployed as weather-c6adf9f; automatic monitor still off.
+  foreground arrival prompts deployed; approved hourly monitor now active (SMS off).
 
 - [x] Completed-form Send to office, immutable office receipt and admin in-app notice
   validated on the live app with a synthetic form.
@@ -61,7 +61,7 @@ older evidence remain there; do not silently discard or re-open completed gates.
 
 ## Planned integrations
 
-- [ ] Weather/geofencing implementation c6adf9f is deployed; scheduled activation pending.
+- [x] Weather/geofencing implementation c6adf9f deployed; hourly pilot activated.
   Ray chose a fixed compact weather card showing basic live conditions, following
   user location after permission; label source time/stale data and location fallback.
   Combine with official local hazards and independent assigned-site alert monitoring:
@@ -71,9 +71,10 @@ older evidence remain there; do not silently discard or re-open completed gates.
   weather PostgreSQL23, local Node133 and Cloud frontend6 passed without skips. See
   WEATHER_GEOFENCING_INTEGRATION_20261017.md for reuse, defects and product decisions.
   Public weather-c6adf9f100% passed runtime/28 asset/policy/auth checks.
-  Next: activate Ray-approved once-hourly scheduled job/IAM pilot
-  per WEATHER_MONITOR_ACTIVATION_20261017.md. Browser preflight timed out; activation
-  is not verified. Background monitoring/SMS remain off until verified; SMS stays off.
+  Hourly pilot active per WEATHER_MONITOR_ACTIVATION_20261017.md: first worker pass
+  succeeded; Scheduler caller returnedHTTP200; web exact-org coverage100% deployed.
+  SMS remains OFF. Zero configured sites: admin must review/save coordinates/windows;
+  actual hazard delivery and moving-device arrival acceptance remain open.
 
 ## Included polish
 
