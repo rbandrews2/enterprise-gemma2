@@ -55,6 +55,9 @@ python3 "$root/check_runtime.py" "$root"
 source_dir="$root/source"
 test "$(git -C "$source_dir" rev-parse HEAD)" = "$(cat "$root/source-commit.txt")"
 image=$(cat "$root/job-image.txt")
+speech_model=short
+test ! -f "$root/speech-model.txt" || speech_model=$(cat "$root/speech-model.txt")
+[[ "$speech_model" = short || "$speech_model" = long ]]
 [[ "$image" =~ ^us-central1-docker.pkg.dev/enterprise-gemma2/enterprise-gemma2/wzos-v2-field-voice-pilot@sha256:[a-f0-9]{64}$ ]]
 gcloud run services list --project="$project" --region="$region" --filter="metadata.name=$service" --format=json > "$root/model-preflight.json"
 gcloud run jobs list --project="$project" --region="$region" --filter="metadata.name=$job" --format=json > "$root/job-preflight.json"
@@ -114,9 +117,9 @@ origin=$(cat "$root/model-url.txt")
 timeout 120 gcloud run jobs create "$job" --project="$project" --region="$region" --image="$image" \
  --service-account=wzos-v2-accounts@enterprise-gemma2.iam.gserviceaccount.com --labels="wzos-pilot=$nonce" \
  --tasks=1 --parallelism=1 --max-retries=0 --task-timeout=900s --cpu=1 --memory=512Mi \
- --set-env-vars="WZOS_FIELD_VOICE_MODEL_URL=$origin" --quiet > "$root/job-create.log" 2>&1
+ --set-env-vars="WZOS_FIELD_VOICE_MODEL_URL=$origin,WZOS_FIELD_VOICE_SPEECH_MODEL=$speech_model" --quiet > "$root/job-create.log" 2>&1
 gcloud run jobs describe "$job" --project="$project" --region="$region" --format=json > "$root/job-config.json"
-python3 - "$root" "$image" "$origin" <<'PY'
+python3 - "$root" "$image" "$origin" "$speech_model" <<'PY'
 import json,sys
 from pathlib import Path
 p=Path(sys.argv[1]);j=json.loads((p/'job-config.json').read_text());outer=j['spec']['template']['spec'];s=outer['template']['spec'];c=s['containers'][0]
@@ -124,7 +127,7 @@ assert outer['taskCount']==1 and outer.get('parallelism',1)==1
 assert s['serviceAccountName']=='wzos-v2-accounts@enterprise-gemma2.iam.gserviceaccount.com'
 assert s['maxRetries']==0 and str(s['timeoutSeconds'])=='900'
 assert c['image']==sys.argv[2] and not c.get('volumeMounts') and not s.get('volumes')
-assert c.get('env')==[{'name':'WZOS_FIELD_VOICE_MODEL_URL','value':sys.argv[3]}]
+assert {e['name']:e['value'] for e in c.get('env',[])}=={'WZOS_FIELD_VOICE_MODEL_URL':sys.argv[3],'WZOS_FIELD_VOICE_SPEECH_MODEL':sys.argv[4]}
 assert c['resources']['limits']['cpu'] in ('1','1000m') and c['resources']['limits']['memory']=='512Mi'
 print('FIELD_VOICE_JOB_CONFIG_VERIFIED')
 PY

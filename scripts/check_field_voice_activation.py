@@ -37,7 +37,7 @@ elif phase == 'ready-job':
     assert outer['taskCount']==1 and outer.get('parallelism',1)==1
     assert task['serviceAccountName']=='wzos-v2-accounts@enterprise-gemma2.iam.gserviceaccount.com'
     assert task['maxRetries']==0 and str(task['timeoutSeconds'])=='240'
-    assert c['image']==(root/'job-image.txt').read_text().strip()
+    assert c['image']=='us-central1-docker.pkg.dev/enterprise-gemma2/enterprise-gemma2/wzos-v2-field-voice-pilot@sha256:eb8cd6d7ea2230d48d1b0aee91f3f11d998fbbfada30ad81a7f3283cab17959a'
     assert c['command']==['python'] and c['args']==['-c',(root/'check_identity.py').read_text().rstrip('\n')]
     assert c.get('env')==[{'name':'WZOS_FIELD_VOICE_MODEL_URL','value':(root/'hosting-url.txt').read_text().strip()}]
     assert not task.get('volumes') and not c.get('volumeMounts')
@@ -82,6 +82,10 @@ elif phase == 'staged':
             old.pop(key,None);assert env.pop(key)=={'name':key,'value':value}
         key='WZOS_FIELD_VOICE_MODEL_URL';old.pop(key,None)
         assert env.pop(key)=={'name':key,'value':(root/'hosting-url.txt').read_text().strip()}
+        key='WZOS_FIELD_VOICE_SPEECH_MODEL';old.pop(key,None)
+        speech_model=(root/'speech-model.txt').read_text().strip()
+        assert speech_model in ('short','long')
+        assert env.pop(key)=={'name':key,'value':speech_model}
         assert env==old and actual==expected, 'Runtime or existing secret/configuration change'
         assert annotation(r['metadata'])==annotation(before['spec']['template']['metadata'])
     assert traffic(staged)==prior

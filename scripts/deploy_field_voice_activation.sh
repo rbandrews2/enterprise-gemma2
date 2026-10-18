@@ -5,6 +5,8 @@ umask 077
 root=${1:?Private evidence directory}
 project=enterprise-gemma2; region=us-central1; service=wzos-v2-accounts
 test -f "$root/activation-approved"
+speech_model=$(cat "$root/speech-model.txt")
+[[ "$speech_model" = short || "$speech_model" = long ]]
 python3 "$root/check_runtime.py" "$root"
 test "$(cat "$root/pilot.exit")" = 0; test -f "$root/cleanup.verified"
 test -f "$root/speech-setup.verified"
@@ -60,7 +62,7 @@ gcloud run services describe wzos-atlas-inference --project="$project" --region=
 gcloud run services get-iam-policy wzos-atlas-inference --project="$project" --region="$region" --format=json > "$root/hosting-iam.json"
 python3 "$root/check_activation.py" model "$root"
 origin=$(cat "$root/hosting-url.txt")
-job_image=$(cat "$root/job-image.txt")
+job_image=us-central1-docker.pkg.dev/enterprise-gemma2/enterprise-gemma2/wzos-v2-field-voice-pilot@sha256:eb8cd6d7ea2230d48d1b0aee91f3f11d998fbbfada30ad81a7f3283cab17959a
 test "$job_image" = us-central1-docker.pkg.dev/enterprise-gemma2/enterprise-gemma2/wzos-v2-field-voice-pilot@sha256:eb8cd6d7ea2230d48d1b0aee91f3f11d998fbbfada30ad81a7f3283cab17959a
 timeout 120 gcloud run jobs create "$ready_job" --project="$project" --region="$region" --image="$job_image" \
  --service-account=wzos-v2-accounts@enterprise-gemma2.iam.gserviceaccount.com --labels="wzos-pilot=$nonce" \
@@ -76,7 +78,7 @@ for mode in hold live; do
  enabled=0; test "$mode" != live || enabled=1
  gcloud run deploy "$service" --project="$project" --region="$region" --image="$image" --no-traffic \
   --revision-suffix="voice-$mode-$tag" \
-  --update-env-vars="WZOS_FIELD_VOICE_ENABLED=$enabled,WZOS_FIELD_VOICE_SPEECH_ENABLED=$enabled,WZOS_FIELD_VOICE_MODEL_ENABLED=$enabled,WZOS_FIELD_VOICE_MODEL_URL=$origin" \
+  --update-env-vars="WZOS_FIELD_VOICE_ENABLED=$enabled,WZOS_FIELD_VOICE_SPEECH_ENABLED=$enabled,WZOS_FIELD_VOICE_MODEL_ENABLED=$enabled,WZOS_FIELD_VOICE_MODEL_URL=$origin,WZOS_FIELD_VOICE_SPEECH_MODEL=$speech_model" \
   --quiet > "$root/voice-$mode-stage.log" 2>&1
  gcloud run revisions describe "$service-voice-$mode-$tag" --project="$project" --region="$region" --format=json > "$root/voice-$mode-revision.json"
 done
