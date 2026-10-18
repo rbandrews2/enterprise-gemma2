@@ -1,3 +1,5 @@
 -r requirements-accounts.txt
 stripe==15.6.0
-cryptography>=46.0.0,<47
+# Match the WebAuthn/pyOpenSSL graph already validated by the accounts suite.
+# Do not downgrade authentication dependencies when adding commerce tooling.
+cryptography>=49.0.0,<51

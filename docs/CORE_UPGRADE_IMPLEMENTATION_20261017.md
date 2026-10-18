@@ -65,3 +65,11 @@ bounded at read time by the original paid period, even without a later webhook.
 19 final focused SQLite cases PASS (67.556s);6 Node cases PASS. A new exact-source
 cloud gate is required for these backend guards; the earlier2febb92 full gate is
 baseline evidence only. Live upgrade flag remains OFF.
+
+Baseline cloud2febb92 PostgreSQL gate PASS:804 tests,401.645s,0 failures/errors/skips.
+SDK install then blocked because requirements-commerce.txt requested cryptography
+>=46,<47 while webauthn3.0.1 requires>=49. Installed verified accounts graph is
+cryptography50.0.2 / pyOpenSSL26.4.0 (requires>=49,<51). Correct commerce declaration
+to>=49,<51; retain the reviewed runtime dependency graph rather than downgrade it.
+Do not report the baseline overall gate PASS: SDK/Node did not execute after that
+resolver failure. Final candidate must pass all gates after the declaration repair.
