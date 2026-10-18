@@ -215,3 +215,23 @@ class VoiceTransportTests(unittest.TestCase):
             return httpx.Response(200,json={'results':[{'alternatives':[{'transcript':'Used 50 drums.'}]}]})
         with patch.dict(os.environ,{'WZOS_FIELD_VOICE_SPEECH_ENABLED':'1'}):
             self.assertEqual(asyncio.run(Speech(httpx.MockTransport(handle),token).transcribe(audio())),'Used 50 drums.')
+
+    def test_multi_sentence_speech_model_and_sequential_results(self):
+        calls=[]
+        async def token():return 'synthetic-token'
+        def handle(request):
+            config=json.loads(request.content)['config'];self.assertEqual(config['model'],'long')
+            self.assertEqual(config['languageCodes'],['en-US']);self.assertIn('us-speech.googleapis.com',str(request.url))
+            calls.append(True)
+            return httpx.Response(200,json={'results':[{'alternatives':[{'transcript':text}]} for text in (
+                'Lane closure completed.', 'Used 50 drums and four arrow boards.', 'A car clipped a cone at 9:15 AM.')]})
+        with patch.dict(os.environ,{'WZOS_FIELD_VOICE_SPEECH_ENABLED':'1','WZOS_FIELD_VOICE_SPEECH_MODEL':'long'}):
+            text=asyncio.run(Speech(httpx.MockTransport(handle),token).transcribe(audio()))
+        self.assertIn('50 drums and four arrow boards',text);self.assertTrue(text.endswith('9:15 AM.'))
+        self.assertEqual(len(calls),1)
+
+    def test_unreviewed_speech_model_refused_before_provider_request(self):
+        async def token():raise AssertionError('No credential request expected')
+        with patch.dict(os.environ,{'WZOS_FIELD_VOICE_SPEECH_ENABLED':'1','WZOS_FIELD_VOICE_SPEECH_MODEL':'other'}):
+            with self.assertRaises(ModelUnavailable):
+                asyncio.run(Speech(token_provider=token).transcribe(audio()))

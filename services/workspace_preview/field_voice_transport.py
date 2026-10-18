@@ -49,13 +49,16 @@ class Speech:
         validate_audio(audio)
         if os.getenv('WZOS_FIELD_VOICE_SPEECH_ENABLED') != '1':
             raise ModelUnavailable('Voice transcription is not enabled. You can type your report.')
+        model = os.getenv('WZOS_FIELD_VOICE_SPEECH_MODEL', 'short')
+        if model not in ('short', 'long'):
+            raise ModelUnavailable('Voice transcription configuration needs admin review. You can type your report.')
         try:
             async with asyncio.timeout(45):
                 token = await self.token_provider()
                 async with httpx.AsyncClient(transport=self.transport, trust_env=False,
                         follow_redirects=False, timeout=40) as client:
                     async with client.stream('POST', SPEECH_URL, headers={'Authorization': 'Bearer '+token}, json={
-                        'config': {'autoDecodingConfig': {}, 'languageCodes': ['en-US'], 'model': 'short'},
+                        'config': {'autoDecodingConfig': {}, 'languageCodes': ['en-US'], 'model': model},
                         'content': base64.b64encode(audio).decode('ascii')}) as response:
                         body = await bounded_json(response, 65536)
             text = ' '.join(r['alternatives'][0]['transcript'] for r in body.get('results', [])).strip()
