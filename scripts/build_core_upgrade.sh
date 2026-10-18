@@ -24,7 +24,7 @@ assert s['spec']['template']['spec']['containers'][0]['image']==sys.argv[2], 'Li
 assert [(t.get('revisionName'),t.get('percent')) for t in s['status']['traffic'] if t.get('percent')]==[('wzos-v2-accounts-weather-hourly-1017',100)], 'Traffic drift'
 assert s['metadata']['annotations']['run.googleapis.com/ingress']=='internal-and-cloud-load-balancing'
 PY
-printf 'FROM %s\nUSER root\nCOPY services /app/services\nRUN chmod -R a+rX /app/services\nUSER wzos\nRUN python -m compileall -q /app/services\n' "$base" > Dockerfile.core-upgrade
+printf 'FROM %s\nUSER root\nCOPY services /app/services\nRUN python -m compileall -q /app/services && chmod -R a+rX /app/services\nUSER wzos\n' "$base" > Dockerfile.core-upgrade
 cat > cloudbuild.core-upgrade.yaml <<'YAML'
 steps:
 - name: gcr.io/cloud-builders/docker
