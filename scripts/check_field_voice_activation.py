@@ -24,6 +24,27 @@ elif phase == 'baseline':
     assert before['spec']==actual['spec'] and traffic(actual)==prior, 'Review live configuration drift'
     env={e['name']:e.get('value') for e in actual['spec']['template']['spec']['containers'][0]['env']}
     assert env.get('WZOS_ATLAS_VLLM_ENABLED','0')=='0', 'Ordinary chat must remain unchanged'
+elif phase == 'preflight':
+    assert read('hosting-preflight.json')==[] and read('ready-job-preflight.json')==[]
+elif phase == 'ready-job-owner':
+    rows=read('ready-job-cleanup-before.json')
+    assert len(rows)==1 and rows[0]['metadata']['labels']['wzos-pilot']==(root/'hosting-nonce.txt').read_text().strip()
+elif phase == 'ready-job-absent':
+    assert read('ready-job-cleanup-after.json')==[]
+elif phase == 'ready-job':
+    j=read('ready-job-config.json');outer=j['spec']['template']['spec'];task=outer['template']['spec'];c=task['containers'][0]
+    assert j['metadata']['labels']['wzos-pilot']==(root/'hosting-nonce.txt').read_text().strip()
+    assert outer['taskCount']==1 and outer.get('parallelism',1)==1
+    assert task['serviceAccountName']=='wzos-v2-accounts@enterprise-gemma2.iam.gserviceaccount.com'
+    assert task['maxRetries']==0 and str(task['timeoutSeconds'])=='240'
+    assert c['image']==(root/'job-image.txt').read_text().strip()
+    assert c['command']==['python'] and c['args']==['-c',(root/'check_identity.py').read_text().rstrip('\n')]
+    assert c.get('env')==[{'name':'WZOS_FIELD_VOICE_MODEL_URL','value':(root/'hosting-url.txt').read_text().strip()}]
+    assert not task.get('volumes') and not c.get('volumeMounts')
+    assert c['resources']['limits']['cpu'] in ('1','1000m') and c['resources']['limits']['memory']=='512Mi'
+elif phase == 'ready-execution':
+    e=read('ready-job-execution.json')
+    assert e['status'].get('succeededCount')==1 and not e['status'].get('failedCount')
 elif phase == 'model':
     s,iam=read('hosting-ready.json'),read('hosting-iam.json')
     assert any(c['type']=='Ready' and c['status']=='True' for c in s['status']['conditions'])

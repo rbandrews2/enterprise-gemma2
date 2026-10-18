@@ -15,14 +15,27 @@ image=$(cat "$root/app-image.txt"); tag=$(git -C "$source_dir" rev-parse --short
 python3 "$root/check_activation.py" pilot "$root"
 gcloud run services describe "$service" --project="$project" --region="$region" --format=json > "$root/activation-before.json"
 python3 "$root/check_activation.py" baseline "$root"
+ready_job=wzos-field-voice-ready
+gcloud run services list --project="$project" --region="$region" --filter='metadata.name=wzos-atlas-inference' --format=json > "$root/hosting-preflight.json"
+gcloud run jobs list --project="$project" --region="$region" --filter="metadata.name=$ready_job" --format=json > "$root/ready-job-preflight.json"
+python3 "$root/check_activation.py" preflight "$root"
 # New ongoing workload: same pinned model image/resources as the accepted pilot.
 nonce="v20261018-$RANDOM"
 printf '%s\n' "$nonce" > "$root/hosting-nonce.txt"
 completed=0
+cleanup_ready_job() {
+ gcloud run jobs list --project="$project" --region="$region" --filter="metadata.name=$ready_job" --format=json > "$root/ready-job-cleanup-before.json"
+ if python3 "$root/check_activation.py" ready-job-owner "$root"; then
+  gcloud run jobs delete "$ready_job" --project="$project" --region="$region" --quiet > "$root/ready-job-delete.log" 2>&1
+ fi
+ gcloud run jobs list --project="$project" --region="$region" --filter="metadata.name=$ready_job" --format=json > "$root/ready-job-cleanup-after.json"
+ python3 "$root/check_activation.py" ready-job-absent "$root"
+}
 on_exit() {
  result=$?; trap - EXIT
  if test "$completed" != 1; then
   set +e
+  cleanup_ready_job > "$root/ready-job-cleanup.log" 2>&1
   # Disable processing before removing a model created by this activation only.
   if test -f "$root/voice-rollback.sh"; then bash "$root/voice-rollback.sh" > "$root/voice-rollback.log" 2>&1; fi
   gcloud run services describe wzos-atlas-inference --project="$project" --region="$region" --format=json > "$root/hosting-cleanup-before.json" 2>/dev/null
@@ -47,6 +60,18 @@ gcloud run services describe wzos-atlas-inference --project="$project" --region=
 gcloud run services get-iam-policy wzos-atlas-inference --project="$project" --region="$region" --format=json > "$root/hosting-iam.json"
 python3 "$root/check_activation.py" model "$root"
 origin=$(cat "$root/hosting-url.txt")
+job_image=$(cat "$root/job-image.txt")
+test "$job_image" = us-central1-docker.pkg.dev/enterprise-gemma2/enterprise-gemma2/wzos-v2-field-voice-pilot@sha256:10382d00e3a792c41f17829b3262048173713711218d735c87dfa97ff29f1ed8
+timeout 120 gcloud run jobs create "$ready_job" --project="$project" --region="$region" --image="$job_image" \
+ --service-account=wzos-v2-accounts@enterprise-gemma2.iam.gserviceaccount.com --labels="wzos-pilot=$nonce" \
+ --tasks=1 --parallelism=1 --max-retries=0 --task-timeout=240s --cpu=1 --memory=512Mi \
+ --set-env-vars="WZOS_FIELD_VOICE_MODEL_URL=$origin" --command=python \
+ --args="^~^-c~$(cat "$root/check_identity.py")" --quiet > "$root/ready-job-create.log" 2>&1
+gcloud run jobs describe "$ready_job" --project="$project" --region="$region" --format=json > "$root/ready-job-config.json"
+python3 "$root/check_activation.py" ready-job "$root"
+timeout 360 gcloud run jobs execute "$ready_job" --project="$project" --region="$region" --wait --quiet --format=json > "$root/ready-job-execution.json" 2> "$root/ready-job-execution.log"
+python3 "$root/check_activation.py" ready-execution "$root"
+cleanup_ready_job > "$root/ready-job-cleanup.log" 2>&1
 for mode in hold live; do
  enabled=0; test "$mode" != live || enabled=1
  gcloud run deploy "$service" --project="$project" --region="$region" --image="$image" --no-traffic \
