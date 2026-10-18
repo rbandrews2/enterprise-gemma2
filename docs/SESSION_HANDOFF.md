@@ -28,9 +28,13 @@ Full integration gates now PASS on c18951e:811 PostgreSQL/136 Node, no failures
 or skips. Local synthetic app harness in c6bfa69 passes; derivative build
 74a46069-95f9-41e9-9965-c97ded5610d1 SUCCESS, digest eaa44f814c0917c2719ba0c09a1b34849145f2cc27ba9130a16153a094d4571d. See
 ATLAS_APP_WORKFLOW_SCOPE_20261018.md for evidence and proposed identity test.
-No new GPU or app-identity job launched. Pilot did not
-prove real app metadata auth or source grounding; both are next bounded-test gates.
-No active model/GPU service remains; do not automatically replay the consumed pilot.
+Separate app-path pilot COMPLETE:2/2 real metadata-authenticated requests through
+the app/VLLM adapter,4.832s saved synthetic job/source and2.679s member SMS guidance.
+Stale409/cross-tenant404/Core-report403 precede inference. Pilot and observer exit0;
+model/job absent, guard stopped, production spec unchanged/Atlas=0 independently
+verified. See ATLAS_APP_WORKFLOW_RESULTS_20261018.md and cloud pointer
+$HOME/wzos-atlas-app-live-path.txt. No active GPU/job remains; no automatic replay.
+Actual reviewed source coverage, browser inference and ongoing hosting remain open.
 The older development section below is historical; its deployment blocker is closed.
 
 ## Completed this session

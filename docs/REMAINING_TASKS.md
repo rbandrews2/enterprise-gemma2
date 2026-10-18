@@ -7,6 +7,10 @@ older evidence remain there; do not silently discard or re-open completed gates.
 
 ## Closed latest checkpoint
 
+- [x] Atlas real app metadata invocation and synthetic saved-job/reference plumbing:
+  2/2 requests, stale409/cross-tenant404/Core403 denied before inference. Workloads
+  deleted, guard stopped, production unchanged. See ATLAS_APP_WORKFLOW_RESULTS_20261018.md.
+
 - [x] Private full-size Atlas31B operator pilot:8/8 synthetic responses, mean2.86s
   warm; verified service deletion/guard stop/production unchanged. No customer Atlas
   activation. See ATLAS_PILOT_RESULTS_20261018.md. Context corrections local27 PASS;
@@ -48,10 +52,11 @@ older evidence remain there; do not silently discard or re-open completed gates.
    needs no HF_TOKEN binding; no model service remains after bounded cleanup.
    Integrated gates for the current-capability context patch PASS (811 PostgreSQL,
    136 Node, no failures/skips); isolated synthetic harness local check passes.
-   Test-only image eaa44f81… built successfully, no live job launched.
-   See ATLAS_APP_WORKFLOW_SCOPE_20261018.md. Next validate
-   actual WZOS metadata-token invocation and grounded saved-job/source responses.
-   Real cold requests, security/source evaluations and ongoing hosting remain open.
+   Test-only image eaa44f81… passed2/2 real metadata-authenticated app requests and
+   synthetic source provenance/tenant checks; both workloads removed. See
+   ATLAS_APP_WORKFLOW_RESULTS_20261018.md. Next validate reviewed authoritative
+   sources, customer-app browser inference, real cold requests and security/source
+   evaluations. Ongoing hosting and public activation remain open.
    Do not equate UI/retrieval/scanner or operator-token success with app acceptance.
    Price further resource changes and obtain scoped workload access approval.
 5. [ ] User-led paid Core-to-Enterprise acceptance remains. Implementation is live,

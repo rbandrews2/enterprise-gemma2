@@ -87,3 +87,7 @@ cleanup verify ownership before deletion. `run_atlas_app_workflow_job.sh` verifi
 the exact image, identity, canonical audience, resources, timeout, no secrets or
 volumes and zero retries before execution. It records only the specific job
 execution's logs. No production application revision or configuration is changed.
+
+Completed successfully with the approved image: two requests and all three
+pre-inference denials passed. Model/job deleted; guard stopped; app unchanged.
+See ATLAS_APP_WORKFLOW_RESULTS_20261018.md. Approval consumed; no automatic replay.
