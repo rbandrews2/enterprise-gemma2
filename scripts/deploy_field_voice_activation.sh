@@ -61,7 +61,7 @@ gcloud run services get-iam-policy wzos-atlas-inference --project="$project" --r
 python3 "$root/check_activation.py" model "$root"
 origin=$(cat "$root/hosting-url.txt")
 job_image=$(cat "$root/job-image.txt")
-test "$job_image" = us-central1-docker.pkg.dev/enterprise-gemma2/enterprise-gemma2/wzos-v2-field-voice-pilot@sha256:10382d00e3a792c41f17829b3262048173713711218d735c87dfa97ff29f1ed8
+test "$job_image" = us-central1-docker.pkg.dev/enterprise-gemma2/enterprise-gemma2/wzos-v2-field-voice-pilot@sha256:eb8cd6d7ea2230d48d1b0aee91f3f11d998fbbfada30ad81a7f3283cab17959a
 timeout 120 gcloud run jobs create "$ready_job" --project="$project" --region="$region" --image="$job_image" \
  --service-account=wzos-v2-accounts@enterprise-gemma2.iam.gserviceaccount.com --labels="wzos-pilot=$nonce" \
  --tasks=1 --parallelism=1 --max-retries=0 --task-timeout=240s --cpu=1 --memory=512Mi \
