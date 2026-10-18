@@ -24,7 +24,11 @@ spec and Atlas=0 independently verified. See ATLAS_PILOT_RESULTS_20261018.md.
 Local context correction prepared after the live replies exposed stale messaging
 help; updates embedded meetings/SMS/form delivery/navigation and fixes cross-page
 time matching.27 focused mocked context/transport checks pass. Not yet deployed;
-full integration gates required on the new source before release. Pilot did not
+Full integration gates now PASS on c18951e:811 PostgreSQL/136 Node, no failures
+or skips. Local synthetic app harness in c6bfa69 passes; derivative build
+74a46069-95f9-41e9-9965-c97ded5610d1 SUCCESS, digest eaa44f814c0917c2719ba0c09a1b34849145f2cc27ba9130a16153a094d4571d. See
+ATLAS_APP_WORKFLOW_SCOPE_20261018.md for evidence and proposed identity test.
+No new GPU or app-identity job launched. Pilot did not
 prove real app metadata auth or source grounding; both are next bounded-test gates.
 No active model/GPU service remains; do not automatically replay the consumed pilot.
 The older development section below is historical; its deployment blocker is closed.

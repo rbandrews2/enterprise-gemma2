@@ -33,6 +33,28 @@ f347f6901acb223b412ae729aa52afc47a1210804b861916ecfc18f46f5e3873,
 copies only the repaired intelligence guide and test harness, and runs mocked
 orchestration at build time. It is a test image, never a customer deployment.
 
+## Completed release gates
+
+Exact application source c18951e passed the full disposable PostgreSQL suite:
+811 tests in 348.308 seconds, zero failures/errors/skips. Node: 136 passed,
+zero failures/cancellations/skips. The source c6bfa69 adds only this harness,
+its derivative build files and this scope document; application sources are
+identical to c18951e. Local mocked harness also passed its five checks.
+
+Cloud evidence pointer: $HOME/wzos-atlas-context-gate-path.txt, under /tmp.
+Its native database cleanup completed; no wzos-pg-gate PostgreSQL process remained.
+The launcher's exit-file printf wrote literal `0n` for exit zero; preserve those
+original artifacts and use the independently passing full-suite log summaries.
+No suite was rerun merely to correct that presentation issue.
+
+Test-only image build submitted as
+74a46069-95f9-41e9-9965-c97ded5610d1 in us-central1 from c6bfa69.
+Build pointer: $HOME/wzos-atlas-app-build-path.txt. Final status SUCCESS, including
+Linux mocked orchestration in Docker RUN. Immutable test image:
+`us-central1-docker.pkg.dev/enterprise-gemma2/enterprise-gemma2/wzos-v2-atlas-app-workflow@sha256:eaa44f814c0917c2719ba0c09a1b34849145f2cc27ba9130a16153a094d4571d`.
+Production application spec independently compared unchanged with the completed
+pilot checkpoint; model service absent and production Atlas still disabled.
+
 ## Proposed live scope - not authorized by the consumed operator pilot
 
 - Recreate one private full-size Gemma 4 31B service with the same pinned Google

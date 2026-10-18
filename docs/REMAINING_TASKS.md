@@ -45,8 +45,11 @@ older evidence remain there; do not silently discard or re-open completed gates.
    cancellation/expiry and participant revocation behavior. Recording/transcription off;
    approved initial session maximum two devices/five minutes. See DAILY_MEETINGS_INTEGRATION_20261014.md.
 4. [ ] Atlas in-app integration: private31B operator inference passed8/8. GCS loading
-   needs no HF_TOKEN binding; no model service remains after bounded cleanup. Run
-   integrated gates for the prepared current-capability context patch, then validate
+   needs no HF_TOKEN binding; no model service remains after bounded cleanup.
+   Integrated gates for the current-capability context patch PASS (811 PostgreSQL,
+   136 Node, no failures/skips); isolated synthetic harness local check passes.
+   Test-only image eaa44f81… built successfully, no live job launched.
+   See ATLAS_APP_WORKFLOW_SCOPE_20261018.md. Next validate
    actual WZOS metadata-token invocation and grounded saved-job/source responses.
    Real cold requests, security/source evaluations and ongoing hosting remain open.
    Do not equate UI/retrieval/scanner or operator-token success with app acceptance.
