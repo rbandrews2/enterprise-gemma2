@@ -19,7 +19,7 @@
  editor.append(edits,node('h2','Production quantities'),quantities,button('Add quantity',()=>{fields.report.production_quantities.push({item_name:'',quantity:null,unit:null});renderEditor();mark();}),node('h2','Incident drafts'),incidents,warnings,label('I reviewed these quantities, incident details, times and priorities.',review));
  const controls=node('div',undefined,'voice-actions');controls.append(save,send,newReport);editor.append(controls);editor.hidden=true;
  savedList.append(node('summary','Saved field reports'));
- root.append(title,label('Selected job',choose),notice,actions,label('Transcript — kept only in this review session',transcript),generate,editor,savedList);
+ root.append(title,node('p','Google transcribes your recording; Atlas prepares drafts for your review. WZOS discards the audio after transcription. Nothing is sent to office until you confirm.'),label('Selected job',choose),notice,actions,label('Transcript — kept only in this review session',transcript),generate,editor,savedList);
  transcript.oninput=()=>{mark();generate.textContent='Generate drafts from edited transcript';};
  for(const input of [dateInput,description,locationInput])input.oninput=mark;
  choose.onchange=()=>{if(fields&&!confirm('Clear the current unsaved report and switch jobs?')){choose.value=draft?.job_id||jobs[0]?.id||'';return;}reset();};

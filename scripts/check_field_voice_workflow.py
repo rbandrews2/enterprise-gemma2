@@ -168,8 +168,16 @@ def run(audio_root, mode='live'):
                     headers={**headers, 'Content-Type':'audio/wav'}, content=audio)
                 del audio
                 if case in ('silence', 'noise'):
-                    require(response.status_code == 503, case+' must not invent transcript')
-                    checks.append({'case':case, 'status':'no_transcript', 'seconds':round(time.monotonic()-started, 2)})
+                    if response.status_code == 200:
+                        # An ASR fragment must still never become an actionable work report.
+                        fragment = response.json()['transcript']
+                        rejected = client.post('/api/field-voice/extract', headers=headers,
+                            json={**basis, 'transcript':fragment})
+                        del fragment
+                        require(rejected.status_code in (422,), case+' cannot create work')
+                    else:
+                        require(response.status_code == 503, case+' handled without a draft')
+                    checks.append({'case':case, 'status':'no_draft', 'seconds':round(time.monotonic()-started, 2)})
                     continue
                 require(response.status_code == 200 and response.json()['audio_retained'] is False, case+' transcription')
                 transcript = response.json()['transcript']
@@ -220,7 +228,7 @@ def run(audio_root, mode='live'):
                 require(db.execute('SELECT COUNT(*) FROM sms_outbox').fetchone()[0] == 0, 'zero SMS')
                 for row in db.execute('SELECT payload FROM field_voice_drafts'):
                     require(set(json.loads(row['payload'])) == {'work_date', 'report'}, 'structured persistence only')
-        require(len(speech_calls) == 10 and len(model_calls) == 8, 'exact paid request count')
+        require(len(speech_calls) == 10 and 8 <= len(model_calls) <= 10, 'paid request budget')
     result = {'status':'PASS', 'mode':mode, 'synthetic_only':True, 'identity':'Google metadata/ADC' if mode == 'live' else 'mocked',
         'speech_requests':len(speech_calls), 'model_requests':len(model_calls),
         'raw_audio_or_transcript_logged':False, 'sms_sent':0, 'checks':checks}

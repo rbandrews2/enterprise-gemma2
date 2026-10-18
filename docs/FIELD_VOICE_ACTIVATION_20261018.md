@@ -24,4 +24,3 @@ Sources: https://cloud.google.com/run/pricing ; https://cloud.google.com/speech-
 
 ## Prepared implementation
 Transport isolation and reviewed synthetic harness are committed in1b7c2b3. Local dry-run PASS:10 synthetic audio attempts/8 mocked extractions; role/tenant/stale denials, review, atomic DWR+incident receipt, idempotency, unknown quantities and zero SMS. Local focused Python16 ran:10 pass,6 PostgreSQL cases skipped pending cloud gate. Generated synthetic audio archiveSHA256 f70a0cdae930dc9b315d2a47660f3a7b8f54e17452b81e42373b0e545c200436; uploaded to Cloud Shell only, not Git or customer storage. Cloud validation pointer: $HOME/wzos-field-voice-path.txt. Speech and model approval questions sent; neither answer received as of this checkpoint. No API enablement, role binding, GPU creation, job identity assignment or production activation performed.
-
