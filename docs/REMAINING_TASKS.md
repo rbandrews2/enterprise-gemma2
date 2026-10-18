@@ -139,4 +139,4 @@ Added scripts/start_mobile_preview.ps1, with hidden background launch, readiness
 
 ### October 18 live release closure
 - [x] User-authorized mobile Home/weather release deployed at100%; PostgreSQL831 + Node148 PASS, no skips, schema/backup/config/public checks PASS. See MOBILE_RELEASE_20261018.md. Earlier local-only gate/deployment items above are superseded for c944173.
-- [ ] Real Android retained/revoked permissions and location-weather movement checks; Smart Field Voice live speech/model activation and ten-recording pilot remain separate. Voice processing is disabled.
+- [ ] Real Android retained/revoked permissions and location-weather movement checks. Smart Field Voice source95bc0f8 passed832 PostgreSQL/149 Node checks; app798c479c… and pilot5f666853… built successfully. Scoped Speech permission is approved and verified. Private model pilot approved but not launched; disposable job identity approval pending. Ten-recording real-provider pilot, ongoing model hosting approval, public feature activation and installed-Android recording acceptance remain open. Voice processing is disabled. See FIELD_VOICE_ACTIVATION_20261018.md.
