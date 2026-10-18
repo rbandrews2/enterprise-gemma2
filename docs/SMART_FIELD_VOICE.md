@@ -9,7 +9,7 @@ then discarded. Transcript remains only in the review session; never persisted
 or logged. A typed transcript uses the same structured extraction path.
 
 Default-off WZOS_FIELD_VOICE_ENABLED and WZOS_FIELD_VOICE_SPEECH_ENABLED flags.
-WZOS_ATLAS_VLLM_ENABLED is additionally required for real extraction. Speech uses
+WZOS_FIELD_VOICE_MODEL_ENABLED and WZOS_FIELD_VOICE_MODEL_URL are additionally required for real extraction, independently of ordinary Atlas chat. Speech uses
 workload ADC, no browser key; activation/IAM/budget and ten-recording live pilot are
 separate approval gates. No new cloud resources or permissions from implementation.
 

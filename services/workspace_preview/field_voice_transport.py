@@ -73,10 +73,10 @@ class Extractor:
         self.transport, self.token_provider = transport, token_provider or metadata_identity_token
 
     async def extract(self, transcript, job, schema):
-        if os.getenv('WZOS_ATLAS_VLLM_ENABLED') != '1':
+        if os.getenv('WZOS_FIELD_VOICE_MODEL_ENABLED') != '1':
             raise ModelUnavailable('Atlas Field Voice extraction is not enabled. Your text is unchanged.')
         try:
-            origin = service_url(os.getenv('WZOS_ATLAS_VLLM_URL', ''))
+            origin = service_url(os.getenv('WZOS_FIELD_VOICE_MODEL_URL', ''))
             async with asyncio.timeout(290):
                 token = await self.token_provider(origin)
                 async with httpx.AsyncClient(transport=self.transport, trust_env=False,

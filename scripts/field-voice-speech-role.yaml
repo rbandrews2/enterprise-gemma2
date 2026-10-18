@@ -1,0 +1,5 @@
+title: WZOS Field Voice recognition
+description: Invoke Speech V2 recognition for WZOS Field Voice; no data management permissions.
+stage: GA
+includedPermissions:
+- speech.recognizers.recognize

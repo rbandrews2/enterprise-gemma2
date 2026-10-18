@@ -193,13 +193,20 @@ class VoiceTransportTests(unittest.TestCase):
             self.assertEqual(body['response_format']['type'],'json_schema');self.assertNotIn('tools',body)
             self.assertEqual(request.headers['Authorization'],'Bearer test.identity.token')
             return httpx.Response(200,json={'choices':[{'finish_reason':'stop','message':{'content':json.dumps(report())}}]})
-        with patch.dict(os.environ,{'WZOS_ATLAS_VLLM_ENABLED':'1','WZOS_ATLAS_VLLM_URL':'https://synthetic-atlas.run.app'}):
+        with patch.dict(os.environ,{'WZOS_FIELD_VOICE_MODEL_ENABLED':'1','WZOS_FIELD_VOICE_MODEL_URL':'https://synthetic-atlas.run.app','WZOS_ATLAS_VLLM_ENABLED':'0'}):
             engine=Extractor(httpx.MockTransport(handle),token)
             self.assertTrue(asyncio.run(engine.extract('Synthetic traffic work.',{},Report.model_json_schema()))['is_relevant'])
             self.assertEqual(len(calls),1)
             failing=Extractor(httpx.MockTransport(lambda _:httpx.Response(400,text='PRIVATE PROVIDER ERROR')),token)
             with self.assertRaises(ModelUnavailable) as error:asyncio.run(failing.extract('Synthetic road work.',{},Report.model_json_schema()))
             self.assertNotIn('PRIVATE',str(error.exception))
+
+    def test_voice_does_not_inherit_chat_activation(self):
+        with patch.dict(os.environ, {'WZOS_ATLAS_VLLM_ENABLED':'1',
+                'WZOS_ATLAS_VLLM_URL':'https://synthetic-atlas.run.app',
+                'WZOS_FIELD_VOICE_MODEL_ENABLED':'0'}):
+            with self.assertRaises(ModelUnavailable):
+                asyncio.run(Extractor().extract('Synthetic road work.', {}, Report.model_json_schema()))
 
     def test_speech_uses_us_inline_audio_without_storage(self):
         async def token():return 'synthetic-token'

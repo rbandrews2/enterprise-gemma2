@@ -23,6 +23,7 @@ image='us-docker.pkg.dev/vertex-ai/vertex-vision-model-garden-dockers/pytorch-vl
 args=(serve "$ATLAS_MODEL_URI" --served-model-name=google/gemma-4-31B-it
   --enable-chunked-prefill --enable-prefix-caching --generation-config=auto
   --reasoning-parser=gemma4 --dtype=bfloat16 --quantization=fp8 --kv-cache-dtype=fp8
+  --disable-log-requests
   --max-num-seqs=2 --max-model-len=32767 --gpu-memory-utilization=0.95
   --tensor-parallel-size=1 --load-format=runai_streamer --port=8080 --host=0.0.0.0)
 joined=$(IFS=,; echo "${args[*]}")
