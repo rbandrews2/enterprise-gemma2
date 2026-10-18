@@ -47,3 +47,13 @@ OFF; current production weather-hourly-1017 is unchanged by this source candidat
 Expired unpaid upgrade invoices retain previously paid Core access only and require
 billing review before a fresh charge. Unmapped legacy/V1 subscriptions require an
 explicit verified billing association; no email-based ownership guessing.
+
+Synthetic browser acceptance: desktop and390px mobile estimate/consent/pending
+flow rendered; no real provider calls. Corrected only the new consent control's
+scoped layout; existing mobile module design remains unchanged. Browser CSS cache
+initially retained the old local stylesheet; a fresh preview origin confirmed the
+18px checkbox/flex layout and scrollable modal. Evidence outside Git:
+.local-data/release-20261017/core-upgrade-estimate.png and core-upgrade-mobile.png.
+Full cloud gate started on2febb92 using a disposable Unix-socket database; outcome
+pending. Subsequent source delta is frontend consent classes/CSS only; Python
+backend and test sources are unchanged. No live release or activation yet.

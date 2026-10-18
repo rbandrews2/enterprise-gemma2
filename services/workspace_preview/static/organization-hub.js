@@ -68,7 +68,7 @@
   let quote=null,busy=false,submitted=false,enabled=false;
   const current=()=>{const now=window.wzosClock.getSession();return upgradeDialog===dialog&&dialog.open&&now?.organization_id===session.organization_id&&now?.id===session.id&&now?.role==='admin';};
   const money=cents=>new Intl.NumberFormat(undefined,{style:'currency',currency:'USD'}).format(cents/100);
-  const consentLabel=node('label'),consent=node('input');consent.type='checkbox';consentLabel.append(consent,document.createTextNode('I approve this upgrade and authorize payment using the organization’s Stripe billing account.'));consentLabel.hidden=true;
+  const consentLabel=node('label',undefined,'upgrade-consent'),consent=node('input');consent.type='checkbox';consentLabel.append(consent,document.createTextNode('I approve this upgrade and authorize payment using the organization’s Stripe billing account.'));consentLabel.hidden=true;
   const pay=button('Confirm upgrade and pay',async()=>{
    if(!current()||busy||!quote||!consent.checked)return;
    busy=true;submitted=true;pay.disabled=true;getEstimate.disabled=true;seats.disabled=true;status.textContent='Confirming the upgrade. Do not start another purchase.';
@@ -96,7 +96,7 @@
     if(data.payment_url){const url=new URL(data.payment_url);if(url.protocol!=='https:'||url.hostname!=='invoice.stripe.com'||url.username||url.password||url.port)throw new Error('The payment destination could not be verified.');payment.href=url.href;payment.hidden=false;}
    }
   }
-  controls.append(getEstimate,estimate,consentLabel,pay);dialog.append(controls,status,payment,refresh,reopen);
+  controls.className='upgrade-controls';controls.append(getEstimate,estimate,consentLabel,pay);dialog.append(controls,status,payment,refresh,reopen);
   const close=button('Close',()=>{dialog.close();upgrade.focus?.();});dialog.append(close);dialog.addEventListener('close',()=>{dialog.remove();if(upgradeDialog===dialog)upgradeDialog=null;},{once:true});document.body.append(dialog);upgradeDialog=dialog;dialog.showModal();
   try{const data=await api('/api/account/upgrade');if(!current())return;enabled=data.enabled===true;getEstimate.disabled=!enabled;if(!enabled)status.textContent='Online upgrades are being prepared. Your current edition is unchanged.';showState(data);const license=await api('/api/account/license');if(!current()||submitted)return;seats.min=String(Math.max(25,license.seat_limit||0,license.seats_used||0));seats.value=seats.min;}catch(e){if(current())status.textContent=e.message;}
  });upgrade.hidden=true;upgrade.className='nav-item core-upgrade';upgrade.id='core-upgrade';document.querySelector('nav[aria-label="Workspace navigation"]').append(upgrade);

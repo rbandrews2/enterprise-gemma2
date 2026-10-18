@@ -215,6 +215,7 @@ p{font-size:calc(var(--wzos-paragraph-font-size,1em) + 1pt)!important}
 #dashboard-view .guided-feature{width:100%;min-height:120px;border-color:#d2a25455;background:linear-gradient(110deg,#91651d26,#0b0b0b9c);font-size:20px}
 #dashboard-view .guided-footer{color:#b2a894;font-size:13px}#dashboard-view .hub-card:active{border-color:#e7b666;box-shadow:0 0 26px #d18d3247,inset 0 0 22px #b9822519}
 .core-upgrade{color:#edcb89!important}.core-upgrade[hidden]{display:none!important}.upgrade-dialog{max-width:560px;width:calc(100% - 32px);max-height:85vh;overflow:auto;color:#eee}.upgrade-dialog::backdrop{background:#000b;backdrop-filter:blur(5px)}
+.upgrade-dialog [hidden]{display:none!important}.upgrade-dialog .upgrade-controls{display:grid;gap:12px}.upgrade-dialog .upgrade-consent{display:flex;align-items:flex-start;gap:10px}.upgrade-dialog .upgrade-consent input{width:18px;min-width:18px;height:18px;margin:4px 0 0;accent-color:#d7ad55}.upgrade-dialog>button,.upgrade-dialog>a{margin-top:12px}
 .navigation-guidance{display:inline-flex;align-items:center;min-height:44px;margin:12px 12px 12px 0;text-decoration:none}.navigation-guidance[hidden]{display:none}
 @media(max-width:900px){#dashboard-view .guided-layout{grid-template-columns:1fr}#dashboard-view .guided-story img{max-height:180px;width:auto}#dashboard-view .guided-story{padding:24px}}
 
