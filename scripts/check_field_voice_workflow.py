@@ -9,6 +9,7 @@ import base64
 import hashlib
 import json
 import os
+import re
 from pathlib import Path
 import sys
 import tempfile
@@ -75,6 +76,23 @@ def assess(case, report):
         require('am' not in str([i['time_mentioned'] for i in incidents]).lower()
                 and 'pm' not in str([i['time_mentioned'] for i in incidents]).lower(), 'no invented meridiem')
         require(report['unresolved'] or any(i['time_mentioned'] for i in incidents), 'uncertainty visible')
+
+
+def transcript_cues(text):
+    """Synthetic-fixture diagnostic booleans only; never retain the transcript."""
+    text=text.casefold()
+    return {name:bool(re.search(pattern,text)) for name,pattern in {
+        'fifty':r'\b(?:50|fifty)\b', 'forty':r'\b(?:40|forty)\b',
+        'four':r'\b(?:4|four)\b', 'drums':r'\bdrums?\b',
+        'arrow_boards':r'\barrow\s*boards?\b', 'cones':r'\bcones?\b',
+        'negation':r'\b(?:no|not|never)\b'}.items()}
+
+
+def extraction_cues(report):
+    return {'quantities':[{'quantity':q['quantity'], 'item_name':q['item_name'],
+                **{name:name in q['item_name'].casefold() for name in ('drum','arrow','cone')}}
+            for q in report['production_quantities']],
+            'incidents':len(report['incidents']), 'unresolved':len(report['unresolved'])}
 
 
 def run(audio_root, mode='live'):
@@ -217,6 +235,7 @@ def run(audio_root, mode='live'):
                     continue
                 require(response.status_code == 200 and response.json()['audio_retained'] is False, case+' transcription')
                 transcript = response.json()['transcript']
+                cues=transcript_cues(transcript)
                 response = client.post('/api/field-voice/extract', headers=headers, json={**basis, 'transcript':transcript})
                 del transcript
                 if case in ('unrelated', 'injection'):
@@ -225,7 +244,14 @@ def run(audio_root, mode='live'):
                     continue
                 require(response.status_code == 200, case+' structured extraction HTTP '+str(response.status_code))
                 fields = response.json()['fields']; require(fields['work_date'] is None, 'no invented date')
-                assess(case, fields['report'])
+                try:
+                    assess(case, fields['report'])
+                except RuntimeError as error:
+                    # Continue independent fixtures to diagnose all quality issues in
+                    # one bounded run. Never save/submit a failed draft or retry it.
+                    checks.append({'case':case,'status':'FAIL','check':str(error),
+                        'speech_cues':cues,'extraction':extraction_cues(fields['report'])})
+                    continue
                 with storage.connect() as db:
                     require(db.execute('SELECT COUNT(*) FROM field_voice_drafts').fetchone()[0] == saved, 'extraction is transient')
                 # Explicit synthetic reviewer supplies the known test date, never the model.
@@ -265,10 +291,12 @@ def run(audio_root, mode='live'):
                 for row in db.execute('SELECT payload FROM field_voice_drafts'):
                     require(set(json.loads(row['payload'])) == {'work_date', 'report'}, 'structured persistence only')
         require(len(speech_calls) == 10 and 8 <= len(model_calls) <= 10, 'paid request budget')
-    result = {'status':'PASS', 'mode':mode, 'synthetic_only':True, 'identity':'Google metadata/ADC' if mode == 'live' else 'mocked',
+    passed=not any(check['status']=='FAIL' for check in checks)
+    result = {'status':'PASS' if passed else 'FAIL', 'mode':mode, 'synthetic_only':True, 'identity':'Google metadata/ADC' if mode == 'live' else 'mocked',
         'speech_requests':len(speech_calls), 'model_requests':len(model_calls), 'model_readiness_checks':ready_checks,
         'raw_audio_or_transcript_logged':False, 'sms_sent':0, 'checks':checks}
     print(json.dumps(result), flush=True)
+    return passed
 
 
 if __name__ == '__main__':
@@ -277,7 +305,8 @@ if __name__ == '__main__':
     parser.add_argument('--mode', choices=('live','mocked'), default='live')
     args = parser.parse_args()
     try:
-        run(args.audio_root, args.mode)
+        if not run(args.audio_root, args.mode):
+            raise SystemExit(1)
     except Exception as error:
         # No provider exception body, transcript, authorization header or audio.
         print(json.dumps({'status':'FAIL', 'check':str(error) if isinstance(error, RuntimeError) else type(error).__name__}), flush=True)
