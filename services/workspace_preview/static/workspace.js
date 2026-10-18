@@ -180,7 +180,8 @@ window.atlasNavigate=id=>{
 
 window.wzosClock={api,getSession:()=>session,getOrders:()=>rows,getSelected:()=>selected};
 window.showWzosView=view=>{
- if(!['dashboard','orders','assignments','clock','forms','form_drafts','meetings','schedule','training','messages','navigation','report','field_voice'].includes(view))return false;
+ if(!['home','dashboard','orders','assignments','clock','forms','form_drafts','meetings','schedule','training','messages','navigation','report','field_voice'].includes(view))return false;
+ if(view==='home'&&!session)return false;
  if(view==='field_voice'&&(session?.edition!=='enterprise'||!window.wzosFieldVoice?.available()))return false;
  if(view==='dashboard'&&session?.role!=='admin')return false;
  if(view==='assignments'&&session?.edition!=='enterprise')return false;
@@ -197,6 +198,7 @@ window.showWzosView=view=>{
  for(const [id,on] of [["dashboard-nav",view==="dashboard"],["assignments-nav",view==="assignments"],["meetings-nav",view==="meetings"],["training-nav",view==="training"],["messages-nav",view==="messages"],["navigation-nav",view==="navigation"],["report-nav",view==="report"],["jobs-nav",view==="orders"],["clock-nav",view==="clock"],["forms-nav",["forms","form_drafts"].includes(view)],["schedule-nav",view==="schedule"]]){ $(id).classList.toggle("active",on);if(on)$(id).setAttribute("aria-current","page");else $(id).removeAttribute("aria-current");}
  document.querySelector(".breadcrumb + strong").textContent=({dashboard:"Dashboard",assignments:"My jobs",meetings:"Video meetings",training:"Video training",messages:"Messaging",navigation:"Navigation",report:"Work Zone Report",clock:"⚡ Time Tracker",forms:"Forms hub",form_drafts:"Saved form drafts",schedule:"Schedule management"})[view]||"Work orders";
  if(view==='field_voice')document.querySelector('.breadcrumb + strong').textContent='Smart Field Voice';
+ document.body.classList.toggle('mobile-home-active',view==='home');
  document.dispatchEvent(new CustomEvent("wzos:view",{detail:view}));
  document.body.classList.toggle('navigation-active',view==='navigation');
  document.body.classList.toggle('landing-active',view==='dashboard');

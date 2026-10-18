@@ -178,3 +178,6 @@ Local simulator implemented in scripts/run_mobile_preview.py and scripts/mobile_
 
 ### Simulator loading repair
 Added scripts/start_mobile_preview.ps1, with hidden background launch, readiness check, saved process/log pointers, and guarded -Stop. The new launcher returned SIMULATOR_READY and independent HTTP checks returned200 for simulator/app. State: .local-data/mobile-simulator/server-8083.json. Keep this process available for user preview. Browser URL policy blocked automated visual verification; ask user to refresh the existing simulator tab, do not bypass the block. Live site unchanged.
+
+## Mobile Home clarification — October 18
+Implemented shared mobile Home for admins/members with authorized card content, module-only pages and Home return. Desktop unchanged. See MOBILE_HOME_20261018.md: 11 focused Node checks pass; actual browser Home/Time Tracker/return/Core member filtering verified. Simulator running; local only, no deployment. Preserve untracked voice fixtures/helper.

@@ -285,6 +285,11 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
     def update_script():
         return FileResponse(STATIC/'app-updates.js', media_type='text/javascript')
 
+    @app.get('/mobile-home.js')
+    def mobile_home_script():
+        from fastapi.responses import FileResponse
+        return FileResponse(STATIC / 'mobile-home.js', media_type='application/javascript')
+
     @app.get("/workspace.js")
     def script():
         return FileResponse(STATIC / "workspace.js", media_type="text/javascript")
