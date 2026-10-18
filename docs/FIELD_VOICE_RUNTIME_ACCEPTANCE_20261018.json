@@ -1,0 +1,10 @@
+{
+  "evidence_kind": "previously_observed_runtime_gates_not_a_new_test_run",
+  "runtime_commit": "95bc0f80e51ae1ce0344db4d6606b3bb4b9ca3a6",
+  "application_image": "us-central1-docker.pkg.dev/enterprise-gemma2/enterprise-gemma2/wzos-v2-accounts@sha256:798c479ccdae437d4929b0903379df598c26f7ac6e37f8977c9e5e354566ebf9",
+  "build_id": "0b19c5a6-5fbe-4700-88e5-bf2ee6d8b39b",
+  "postgres": {"run":832,"failures":0,"errors":0,"skipped":0},
+  "node": {"run":149,"failures":0,"skipped":0},
+  "recorded_evidence": "FIELD_VOICE_ACTIVATION_20261018.md at commit 856bc21 and SESSION_HANDOFF.md at commit 00461a8",
+  "recovery_note": "Cloud Shell restart removed temporary gate logs. This records previously observed results for the unchanged immutable application, not newly executed tests. Harness-only revisions require their own focused validation."
+}

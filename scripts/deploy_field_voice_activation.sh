@@ -5,7 +5,7 @@ umask 077
 root=${1:?Private evidence directory}
 project=enterprise-gemma2; region=us-central1; service=wzos-v2-accounts
 test -f "$root/activation-approved"
-test "$(cat "$root/node.exit")" = 0; test "$(cat "$root/postgres.exit")" = 0
+python3 "$root/check_runtime.py" "$root"
 test "$(cat "$root/pilot.exit")" = 0; test -f "$root/cleanup.verified"
 test -f "$root/speech-setup.verified"
 source_dir="$root/source"

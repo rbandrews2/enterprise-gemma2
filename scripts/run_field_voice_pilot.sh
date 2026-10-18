@@ -51,7 +51,7 @@ case "$mode" in
  *) exit 2;;
 esac
 for approved in model-approved job-approved speech-setup.verified; do test -f "$root/$approved"; done
-test "$(cat "$root/node.exit")" = 0; test "$(cat "$root/postgres.exit")" = 0
+python3 "$root/check_runtime.py" "$root"
 source_dir="$root/source"
 test "$(git -C "$source_dir" rev-parse HEAD)" = "$(cat "$root/source-commit.txt")"
 image=$(cat "$root/job-image.txt")
@@ -63,7 +63,9 @@ import json,sys
 from pathlib import Path
 p=Path(sys.argv[1]);assert json.loads((p/'model-preflight.json').read_text())==[];assert json.loads((p/'job-preflight.json').read_text())==[]
 PY
-"$source_dir/.venv-accounts-test/bin/python" "$source_dir/scripts/verify_atlas_artifacts.py" > "$root/model-artifacts.json"
+artifact_python=python3
+test ! -x "$source_dir/.venv-accounts-test/bin/python" || artifact_python="$source_dir/.venv-accounts-test/bin/python"
+"$artifact_python" "$source_dir/scripts/verify_atlas_artifacts.py" > "$root/model-artifacts.json"
 nohup setsid bash "$0" guard "$root" > "$root/guard.log" 2>&1 < /dev/null & guard_pid=$!
 printf '%s\n' "$guard_pid" > "$root/guard.pid"; kill -0 "$guard_pid"
 on_exit() {
