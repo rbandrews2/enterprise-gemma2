@@ -13,6 +13,11 @@ from .intelligence import ModelUnavailable
 from .managed_intelligence import bounded_json
 
 MAX_AUDIO = 6 * 1024 * 1024
+# Fixed vocabulary context only: no quantities, times, incident claims or job data.
+# Inline phrases require no stored PhraseSet resource or additional IAM permission.
+ROAD_WORK_PHRASES = ('arrow board', 'arrow boards', 'traffic cones', 'cones',
+                    'channelizing drums', 'drums', 'lane closure', 'flagger',
+                    'attenuator', 'crash cushion', 'pavement marking', 'work zone')
 SPEECH_URL = ('https://us-speech.googleapis.com/v2/projects/enterprise-gemma2/'
               'locations/us/recognizers/_:recognize')
 
@@ -58,7 +63,9 @@ class Speech:
                 async with httpx.AsyncClient(transport=self.transport, trust_env=False,
                         follow_redirects=False, timeout=40) as client:
                     async with client.stream('POST', SPEECH_URL, headers={'Authorization': 'Bearer '+token}, json={
-                        'config': {'autoDecodingConfig': {}, 'languageCodes': ['en-US'], 'model': model},
+                        'config': {'autoDecodingConfig': {}, 'languageCodes': ['en-US'], 'model': model,
+                            'adaptation': {'phraseSets': [{'inlinePhraseSet': {
+                                'phrases': [{'value': term} for term in ROAD_WORK_PHRASES]}}]}},
                         'content': base64.b64encode(audio).decode('ascii')}) as response:
                         body = await bounded_json(response, 65536)
             text = ' '.join(r['alternatives'][0]['transcript'] for r in body.get('results', [])).strip()

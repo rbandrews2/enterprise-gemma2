@@ -222,12 +222,19 @@ class VoiceTransportTests(unittest.TestCase):
         def handle(request):
             config=json.loads(request.content)['config'];self.assertEqual(config['model'],'long')
             self.assertEqual(config['languageCodes'],['en-US']);self.assertIn('us-speech.googleapis.com',str(request.url))
+            hints=config['adaptation']['phraseSets']
+            self.assertEqual(len(hints),1);self.assertEqual(set(hints[0]),{'inlinePhraseSet'})
+            phrases=hints[0]['inlinePhraseSet']['phrases']
+            self.assertIn({'value':'arrow boards'},phrases)
+            self.assertTrue(all(set(p)=={'value'} and not any(c.isdigit() for c in p['value']) for p in phrases))
             calls.append(True)
             return httpx.Response(200,json={'results':[{'alternatives':[{'transcript':text}]} for text in (
-                'Lane closure completed.', 'Used 50 drums and four arrow boards.', 'A car clipped a cone at 9:15 AM.')]})
+                'Lane closure completed.', 'Used 50 drums and four aero boards.', 'A car clipped a cone at 9:15 AM.')]})
         with patch.dict(os.environ,{'WZOS_FIELD_VOICE_SPEECH_ENABLED':'1','WZOS_FIELD_VOICE_SPEECH_MODEL':'long'}):
             text=asyncio.run(Speech(httpx.MockTransport(handle),token).transcribe(audio()))
-        self.assertIn('50 drums and four arrow boards',text);self.assertTrue(text.endswith('9:15 AM.'))
+        # Recognition hints must not become automatic transcript replacements.
+        self.assertIn('50 drums and four aero boards',text);self.assertNotIn('arrow boards',text)
+        self.assertTrue(text.endswith('9:15 AM.'))
         self.assertEqual(len(calls),1)
 
     def test_unreviewed_speech_model_refused_before_provider_request(self):
