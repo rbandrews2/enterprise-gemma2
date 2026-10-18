@@ -38,7 +38,12 @@ jobimage=us-central1-docker.pkg.dev/$project/$project/wzos-v2-field-voice-pilot:
 printf 'FROM %s\nUSER root\nCOPY services /app/services\nRUN python -m compileall -q /app/services && chmod -R a+rX /app/services\nUSER wzos\n' "$base" > Dockerfile.field-voice
 mkdir pilot-audio
 cp "$root"/audio/*.wav pilot-audio/
-printf 'FROM %s\nUSER root\nCOPY scripts/check_field_voice_workflow.py /app/scripts/check_field_voice_workflow.py\nCOPY pilot-audio /app/pilot-audio\nRUN chmod -R a+rX /app/scripts/check_field_voice_workflow.py /app/pilot-audio\nUSER wzos\nENTRYPOINT ["python","/app/scripts/check_field_voice_workflow.py"]\nCMD ["--audio-root","/app/pilot-audio"]\n' "$appimage" > Dockerfile.field-voice-pilot
+printf 'FROM %s\nUSER root\nCOPY scripts/check_field_voice_workflow.py /app/scripts/check_field_voice_workflow.py\nCOPY pilot-audio /app/pilot-audio\n' "$appimage" > Dockerfile.field-voice-pilot
+if test -f "$root/check_speech.py"; then
+ cp "$root/check_speech.py" scripts/check_field_voice_speech.py
+ printf 'COPY scripts/check_field_voice_speech.py /app/scripts/check_field_voice_speech.py\n' >> Dockerfile.field-voice-pilot
+fi
+printf 'RUN chmod -R a+rX /app/scripts /app/pilot-audio\nUSER wzos\nENTRYPOINT ["python","/app/scripts/check_field_voice_workflow.py"]\nCMD ["--audio-root","/app/pilot-audio"]\n' >> Dockerfile.field-voice-pilot
 cat > cloudbuild.field-voice.yaml <<'YAML'
 steps:
 - name: gcr.io/cloud-builders/docker
