@@ -6,12 +6,16 @@ root=$(cat "$HOME/wzos-core-upgrade-path.txt")
 project=enterprise-gemma2
 region=us-central1
 service=wzos-v2-accounts
+resume=${1:-}
+[[ "$resume" == '' || "$resume" == --resume-staged ]]
 image=us-central1-docker.pkg.dev/enterprise-gemma2/enterprise-gemma2/wzos-v2-accounts@sha256:f347f6901acb223b412ae729aa52afc47a1210804b861916ecfc18f46f5e3873
 test "$(gcloud config get-value project 2>/dev/null)" = "$project"
 test "$(cat "$root/validation-final.exit")" = 0
 test "$(cat "$root/upgrade-preflight.exit")" = 0
 test "$(cat "$root/upgrade-provider-preview.exit")" = 0
-gcloud run services describe "$service" --project="$project" --region="$region" --format=json > "$root/upgrade-before-deploy.json"
+if [[ "$resume" != --resume-staged ]]; then
+ gcloud run services describe "$service" --project="$project" --region="$region" --format=json > "$root/upgrade-before-deploy.json"
+fi
 python3 - "$root" "$image" <<'PY'
 import datetime,json,sys
 from pathlib import Path
@@ -29,12 +33,14 @@ assert before['spec']['template']['spec']['containers'][0]['image'].endswith('@s
 assert before['metadata']['annotations']['run.googleapis.com/ingress']=='internal-and-cloud-load-balancing'
 assert read('upgrade-provider-preview.json')['payment_attempted'] is False
 PY
+if [[ "$resume" != --resume-staged ]]; then
 for mode in hold live; do
  enabled=0; test "$mode" != live || enabled=1
  gcloud run deploy "$service" --project="$project" --region="$region" --image="$image" --no-traffic \
   --revision-suffix="upgrade-$mode-bf9f524" --update-env-vars="WZOS_CORE_UPGRADES_ENABLED=$enabled" --quiet > "$root/upgrade-$mode-stage.log" 2>&1
  gcloud run revisions describe "$service-upgrade-$mode-bf9f524" --project="$project" --region="$region" --format=json > "$root/upgrade-$mode-revision.json"
 done
+fi
 gcloud run services describe "$service" --project="$project" --region="$region" --format=json > "$root/upgrade-staged-service.json"
 python3 - "$root" "$image" <<'PY'
 import copy,json,sys
@@ -54,12 +60,15 @@ for mode,value in [('hold','0'),('live','1')]:
  old={x['name']:x for x in expected['containers'][0].pop('env')};old.pop('WZOS_CORE_UPGRADES_ENABLED',None)
  assert env==old,'Existing runtime flags/secret bindings changed'
  assert actual==expected,'Runtime resource/identity/storage configuration changed'
- ignored={'run.googleapis.com/client-name','run.googleapis.com/client-version','run.googleapis.com/operation-id'}
+ assert r['metadata'].get('annotations',{}).get('serving.knative.dev/creator')=='admin@workzoneos.org'
+ ignored={'run.googleapis.com/client-name','run.googleapis.com/client-version','run.googleapis.com/operation-id','serving.knative.dev/creator'}
  annotations=lambda d:{k:v for k,v in d.get('annotations',{}).items() if k not in ignored}
  assert annotations(r['metadata'])==annotations(before['spec']['template']['metadata']), 'Template annotations changed'
 for key in ['run.googleapis.com/ingress','run.googleapis.com/invoker-iam-disabled']:
  assert staged['metadata']['annotations'].get(key)==before['metadata']['annotations'].get(key)
 assert [(t.get('revisionName'),t.get('percent')) for t in staged['status']['traffic'] if t.get('percent')]==[('wzos-v2-accounts-weather-hourly-1017',100)]
+assert staged['status']['latestCreatedRevisionName']=='wzos-v2-accounts-upgrade-live-bf9f524'
+assert staged['status']['latestReadyRevisionName']=='wzos-v2-accounts-upgrade-live-bf9f524'
 print('UPGRADE_STAGED_CONFIG_PRESERVED')
 PY
 gcloud run services update-traffic "$service" --project="$project" --region="$region" --to-revisions="$service-upgrade-live-bf9f524=100" --quiet > "$root/upgrade-cutover.log" 2>&1
