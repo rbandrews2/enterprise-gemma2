@@ -3,6 +3,7 @@ import json
 import os
 from pathlib import Path
 from uuid import UUID
+from typing import Literal
 from fastapi import HTTPException, Request
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -12,6 +13,17 @@ class PurchaseRequest(BaseModel):
     request_id: UUID
     offer_id: str = Field(max_length=32)
     seats: int = Field(strict=True, ge=1, le=100000)
+
+
+class UpgradeQuoteRequest(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    seats: int = Field(strict=True, ge=25, le=100000)
+
+
+class UpgradeConfirmation(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    request_id: UUID
+    confirmed: Literal[True]
 
 
 def configured_purchases(accounts):
@@ -32,8 +44,10 @@ def configured_purchases(accounts):
         'additional_seat_price_id')}) for key, value in catalog['offers'].items()]
     provider = StripeProvider(os.environ['WZOS_STRIPE_API_KEY'], os.environ['WZOS_STRIPE_WEBHOOK_SECRET'],
                               livemode=live, automatic_tax=live, tax_configuration_verified=live)
-    return Purchases(accounts, provider, offers, Fernet(os.environ['WZOS_PURCHASE_ENCRYPTION_KEY'].encode()),
-                     livemode=live, require_automatic_tax=live, recurring_lifecycle=True)
+    purchases = Purchases(accounts, provider, offers, Fernet(os.environ['WZOS_PURCHASE_ENCRYPTION_KEY'].encode()),
+                          livemode=live, require_automatic_tax=live, recurring_lifecycle=True)
+    purchases.upgrade_coupon_id = catalog['core_upgrade_credit']['coupon_id']
+    return purchases
 
 
 def register(app, accounts, purchases=None):
@@ -41,6 +55,49 @@ def register(app, accounts, purchases=None):
     app.state.purchases = purchases
     if purchases:
         purchases.single_purchase_identity=True
+    upgrades = None
+    if purchases and purchases.lifecycle and {'core', 'enterprise'} <= purchases.offers.keys():
+        from .subscription_upgrades import SubscriptionUpgrades
+        upgrades = SubscriptionUpgrades(purchases, getattr(purchases, 'upgrade_coupon_id',
+            'wzos_v2_core_upgrade_20_once_20261016'))
+        purchases.upgrades = upgrades
+
+    def upgrade_actor(request, *, mutation=False):
+        user = accounts.actor(request)
+        if user['role'] != 'admin':
+            raise HTTPException(403, 'Organization administrator access required')
+        if not upgrades or (mutation and (os.getenv('WZOS_CORE_UPGRADES_ENABLED') != '1'
+                or os.getenv('WZOS_COMMERCE_CHECKOUT_PAUSED') == '1')):
+            raise HTTPException(503, 'Online upgrades are temporarily unavailable. Your current edition is unchanged.')
+        return user
+
+    @app.get('/api/account/upgrade')
+    def upgrade_status(request: Request):
+        user = upgrade_actor(request)
+        return {**upgrades.status(user), 'enabled': os.getenv('WZOS_CORE_UPGRADES_ENABLED') == '1'
+                and os.getenv('WZOS_COMMERCE_CHECKOUT_PAUSED') != '1'}
+
+    @app.post('/api/account/upgrade/quote')
+    def upgrade_quote(body: UpgradeQuoteRequest, request: Request):
+        user = upgrade_actor(request, mutation=True)
+        try:
+            return upgrades.quote(user, body.seats)
+        except HTTPException:
+            raise
+        except ValueError:
+            raise HTTPException(409, 'This upgrade estimate needs billing review. No payment was made.') from None
+        except Exception:
+            raise HTTPException(503, 'The upgrade estimate is unavailable. No payment was made.') from None
+
+    @app.post('/api/account/upgrade/confirm')
+    def upgrade_confirm(body: UpgradeConfirmation, request: Request):
+        user = upgrade_actor(request, mutation=True)
+        try:
+            return upgrades.confirm(user, str(body.request_id))
+        except HTTPException:
+            raise
+        except Exception:
+            raise HTTPException(503, 'Payment confirmation is still pending. Retry the same request; do not start another purchase.') from None
 
     def new_customer(request):
         user = accounts.identity(request)

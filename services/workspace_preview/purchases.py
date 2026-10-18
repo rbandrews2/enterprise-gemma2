@@ -222,6 +222,20 @@ class StripeProvider:
     def retrieve_subscription(self, subscription_id):
         return self.client.v1.subscriptions.retrieve(subscription_id,{'expand':['latest_invoice']}).to_dict()
 
+    def preview_upgrade(self, subscription_id, customer_id, parameters):
+        details = {key: parameters[key] for key in ('items', 'proration_date', 'proration_behavior')}
+        payload = {'subscription': subscription_id, 'customer': customer_id,
+                   'subscription_details': details, 'invoice_items': parameters['add_invoice_items'],
+                   'discounts': parameters['discounts']}
+        if self.automatic_tax:
+            payload['automatic_tax'] = {'enabled': True}
+        return self.client.v1.invoices.create_preview(payload).to_dict()
+
+    def update_subscription(self, subscription_id, parameters, request_id):
+        return self.client.v1.subscriptions.update(subscription_id,
+            {**parameters, 'expand': ['latest_invoice']},
+            options={'idempotency_key': 'wzos-core-upgrade-'+request_id}).to_dict()
+
     def verify_event(self, raw_body, signature):
         from stripe import Webhook, SignatureVerificationError
         try:

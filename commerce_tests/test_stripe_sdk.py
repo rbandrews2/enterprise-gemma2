@@ -47,5 +47,35 @@ class StripeSDKTests(unittest.TestCase):
         for raw,sig in [(body+b' ',header),(body,'t=1,v1=forged'),(body,signature(body,now-3600))]:
             with self.assertRaises(ValueError):provider.verify_event(raw,sig)
 
+    def test_upgrade_preview_and_update_use_same_proration_and_one_subscription(self):
+        request_id = str(uuid4())
+        parameters = {'items': [{'id': 'si_core', 'price': 'price_enterprise', 'quantity': 1}],
+                      'add_invoice_items': [{'price': 'price_enterprise_setup', 'quantity': 1}],
+                      'discounts': [{'coupon': 'synthetic_upgrade_credit'}], 'proration_date': 1792260000,
+                      'proration_behavior': 'always_invoice', 'payment_behavior': 'pending_if_incomplete',
+                      'metadata': {'wzos_upgrade_request': request_id}}
+        with patch('stripe.StripeClient') as client:
+            provider = StripeProvider('rk_test_synthetic', 'whsec_synthetic',
+                                      automatic_tax=True, tax_configuration_verified=True)
+            provider.preview_upgrade('sub_owned', 'cus_owned', parameters)
+            api = client.return_value.v1
+            preview = api.invoices.create_preview.call_args.args[0]
+            self.assertEqual(preview['subscription'], 'sub_owned')
+            self.assertEqual(preview['customer'], 'cus_owned')
+            self.assertEqual(preview['subscription_details']['items'], parameters['items'])
+            self.assertEqual(preview['subscription_details']['proration_date'], parameters['proration_date'])
+            self.assertEqual(preview['invoice_items'], parameters['add_invoice_items'])
+            self.assertEqual(preview['discounts'], parameters['discounts'])
+            self.assertEqual(preview['automatic_tax'], {'enabled': True})
+            api.subscriptions.update.assert_not_called()
+            provider.update_subscription('sub_owned', parameters, request_id)
+            call = api.subscriptions.update.call_args
+            self.assertEqual(call.args[0], 'sub_owned')
+            self.assertEqual(call.args[1]['payment_behavior'], 'pending_if_incomplete')
+            self.assertEqual(call.args[1]['proration_date'], parameters['proration_date'])
+            self.assertEqual(call.kwargs['options']['idempotency_key'], 'wzos-core-upgrade-'+request_id)
+            api.subscriptions.create.assert_not_called()
+            api.checkout.sessions.create.assert_not_called()
+
 
 if __name__=='__main__':unittest.main()

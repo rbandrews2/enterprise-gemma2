@@ -20,7 +20,7 @@ class PurchaseLifecycle:
         with purchases.accounts.connect() as db:
             db.execute(DDL)
 
-    def observe(self, subscription_id, customer_id, expected):
+    def inspect(self, subscription_id, customer_id, expected):
         if not isinstance(subscription_id, str) or not subscription_id.startswith('sub_'):
             raise ValueError('Subscription identity required')
         sub = self.purchases.provider.retrieve_subscription(subscription_id)
@@ -28,6 +28,10 @@ class PurchaseLifecycle:
                 or resource_id(sub.get('customer')) != customer_id
                 or not isinstance(customer_id, str) or not customer_id.startswith('cus_')):
             raise ValueError('Subscription ownership mismatch')
+        upgrade, keep_core = None, False
+        upgrades = getattr(self.purchases, 'upgrades', None)
+        if upgrades:
+            expected, keep_core, upgrade = upgrades.observation(sub, expected)
         items = sub.get('items', {})
         actual = [{'price': item['price']['id'], 'quantity': item['quantity']}
                   for item in items.get('data', [])]
@@ -35,7 +39,11 @@ class PurchaseLifecycle:
         invoice = sub.get('latest_invoice')
         paid = isinstance(invoice, dict) and invoice.get('status') == 'paid' and invoice.get('paid') is True
         status = str(sub.get('status', 'unknown'))[:40] if matching else 'price_review_required'
-        return status, int(matching and status == 'active' and paid)
+        return status, int(matching and status == 'active' and (paid or keep_core)), upgrade
+
+    def observe(self, subscription_id, customer_id, expected):
+        status, access, _ = self.inspect(subscription_id, customer_id, expected)
+        return status, access
 
     def initial(self, session, request):
         import json
@@ -64,7 +72,7 @@ class PurchaseLifecycle:
             request = db.execute('SELECT * FROM purchase_requests WHERE id=?', (row['request_id'],)).fetchone()
         offer = self.purchases.offers[request['offer_id']]
         expected = [item for item in json.loads(request['expected_items']) if item['price'] != offer.setup_price_id]
-        status, access = self.observe(sub_id, row['customer_id'], expected)
+        status, access, upgrade = self.inspect(sub_id, row['customer_id'], expected)
         with self.purchases.accounts.connect() as db:
             db.execute('BEGIN IMMEDIATE')
             if db.execute('SELECT event_id FROM purchase_events WHERE event_id=?', (event['id'],)).fetchone():
@@ -72,6 +80,8 @@ class PurchaseLifecycle:
             current = db.execute('SELECT version FROM purchase_subscriptions WHERE subscription_id=?', (sub_id,)).fetchone()
             if current['version'] != row['version']:
                 raise HTTPException(409, 'Concurrent billing update; retry delivery')
+            if upgrade:
+                self.purchases.upgrades.apply(db, upgrade)
             db.execute('UPDATE purchase_subscriptions SET status=?,access_enabled=?,version=version+1 WHERE subscription_id=?', (status, access, sub_id))
             from .accounts import now
             db.execute('INSERT INTO purchase_events VALUES (?,?,?)', (event['id'], request['session_id'], now()))

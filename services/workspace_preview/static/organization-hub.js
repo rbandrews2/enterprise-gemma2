@@ -31,6 +31,7 @@
    for(const [label,selector,icon] of [['Employees','.account-employees','♙'],['Team access','.account-team','♧'],['Passkeys','.account-passkeys','⚿']]){
     if(document.querySelector(selector)){const b=button('',()=>document.querySelector(selector)?.click());b.className='panel hub-card';b.append(node('span',icon,'hub-icon'),node('strong',label));grid.append(b);}
    }content.append(grid);
+   if(state.edition==='core'){const offer=button('',()=>upgrade.click());offer.className='panel hub-card';offer.append(node('span','✦','hub-icon'),node('strong','Explore Enterprise'),node('small','One-time $20 upgrade credit for established Core customers'));content.append(offer);}
    content.append(node('p','WZOS powered by Atlas AI Assistant','guided-footer'));
    if(window.wzosSecurity){const security=button('Atlas Security',()=>window.wzosSecurity.open());security.className='panel hub-card';content.append(security);}
    const options=node('details',undefined,'panel');options.append(node('summary','Dashboard preferences'));const selections=[];
@@ -58,12 +59,46 @@
   }catch(e){if(generation===epoch)status.textContent=e.message;}
  }
  nav.onclick=()=>window.showWzosView('dashboard');
- const upgrade=button('✦ Explore Enterprise',()=>{
+ const upgrade=button('✦ Explore Enterprise',async()=>{
   const session=window.wzosClock.getSession();if(session?.edition!=='core'||session.role!=='admin'||upgradeDialog?.open)return;
   const dialog=node('dialog',undefined,'panel upgrade-dialog');dialog.setAttribute('aria-label','Explore WZOS Enterprise');
   dialog.append(node('h2','Bring your operation together with Enterprise'),node('p','Add Work Zone Reports, employee job assignments and reviewed automated dispatch to your Core workspace.'));
-  dialog.append(node('p','Enterprise: $999 setup and $249 per month, including 25 active logins. Additional active logins: $7 per month each.'),node('p','Established Core customers receive a one-time $20 upgrade credit. Online upgrade checkout is not yet available; no payment or edition change is made here.'));
-  const close=button('Continue with Core',()=>{dialog.close();upgrade.focus?.();});dialog.append(close);dialog.addEventListener('close',()=>{dialog.remove();if(upgradeDialog===dialog)upgradeDialog=null;},{once:true});document.body.append(dialog);upgradeDialog=dialog;dialog.showModal();
+  dialog.append(node('p','Enterprise: $999 setup and $249 per month, including 25 active logins. Additional active logins: $7 per month each.'),node('p','Established paid Core customers receive a one-time $20 upgrade credit. Your current subscription and billing date are retained. Stripe calculates applicable tax and the prorated change for the remaining billing period.'));
+  const controls=node('section'),status=node('p'),estimate=node('p'),seats=node('input'),label=node('label','Active logins, including admins');seats.type='number';seats.min='25';seats.max='100000';seats.step='1';seats.value='25';seats.setAttribute('aria-label','Enterprise active login allowance');label.append(seats);controls.append(label);status.setAttribute('role','status');
+  let quote=null,busy=false,submitted=false,enabled=false;
+  const current=()=>{const now=window.wzosClock.getSession();return upgradeDialog===dialog&&dialog.open&&now?.organization_id===session.organization_id&&now?.id===session.id&&now?.role==='admin';};
+  const money=cents=>new Intl.NumberFormat(undefined,{style:'currency',currency:'USD'}).format(cents/100);
+  const consentLabel=node('label'),consent=node('input');consent.type='checkbox';consentLabel.append(consent,document.createTextNode('I approve this upgrade and authorize payment using the organization’s Stripe billing account.'));consentLabel.hidden=true;
+  const pay=button('Confirm upgrade and pay',async()=>{
+   if(!current()||busy||!quote||!consent.checked)return;
+   busy=true;submitted=true;pay.disabled=true;getEstimate.disabled=true;seats.disabled=true;status.textContent='Confirming the upgrade. Do not start another purchase.';
+   try{const result=await api('/api/account/upgrade/confirm',{method:'POST',body:JSON.stringify({request_id:quote.request_id,confirmed:true})});if(current())showState(result);}catch(e){if(current()){status.textContent=e.message;pay.textContent='Retry the same confirmation';pay.disabled=!consent.checked;}}finally{busy=false;}
+  });pay.disabled=true;pay.hidden=true;
+  consent.onchange=()=>{pay.disabled=busy||!consent.checked||!quote;};
+  const getEstimate=button('Review upgrade estimate',async()=>{
+   if(!current()||busy||!enabled||submitted)return;
+   const count=Number(seats.value);if(!Number.isInteger(count)||count<Number(seats.min)||count>100000){status.textContent='Enter a whole number of logins within the displayed allowance.';return;}
+   busy=true;getEstimate.disabled=true;seats.disabled=true;quote=null;pay.hidden=true;consentLabel.hidden=true;consent.checked=false;status.textContent='Calculating your estimate. No payment is being made.';
+   try{const result=await api('/api/account/upgrade/quote',{method:'POST',body:JSON.stringify({seats:count})});if(!current())return;if(result.status!=='quoted'){showState(result);return;}quote=result;estimate.textContent=`Estimated payment now: ${money(result.quote.amount_due_cents)}, including the one-time $20 credit and applicable tax. Then ${money(result.quote.monthly_cents)} per month for ${result.quote.seats} logins. Estimate expires ${new Date(result.quote.expires_at*1000).toLocaleTimeString()}.`;status.textContent='Review this estimate before authorizing payment. Your edition changes only after payment is confirmed.';pay.hidden=false;consentLabel.hidden=false;
+   }catch(e){if(current())status.textContent=e.message;}finally{busy=false;if(current()&&!submitted){getEstimate.disabled=!enabled;seats.disabled=false;}}
+  });getEstimate.disabled=true;
+  seats.oninput=()=>{quote=null;consent.checked=false;pay.hidden=true;consentLabel.hidden=true;estimate.textContent='';};
+  const payment=node('a','Continue payment securely with Stripe','primary');payment.hidden=true;
+  const refresh=button('Check upgrade status',async()=>{if(busy||!current())return;try{const result=await api('/api/account/upgrade');if(current())showState(result);}catch(e){if(current())status.textContent=e.message;}});refresh.hidden=true;
+  const reopen=button('Refresh workspace',()=>window.location.reload());reopen.hidden=true;
+  function showState(data){
+   if(!current())return;
+   if(data.status==='applied'){status.textContent='Enterprise is active. Refresh your workspace to load the new options.';controls.hidden=true;payment.hidden=true;refresh.hidden=true;reopen.hidden=false;return;}
+   if(data.status==='review_required'){submitted=true;controls.hidden=true;payment.hidden=true;refresh.hidden=false;status.textContent='The previous upgrade invoice expired. Contact WZOS billing support before making another payment. Your current paid Core access is retained.';return;}
+   if(['pending','submitting'].includes(data.status)){
+    submitted=true;quote={request_id:data.request_id};getEstimate.disabled=true;seats.disabled=true;refresh.hidden=false;pay.hidden=data.status!=='submitting';consentLabel.hidden=pay.hidden;pay.textContent='Retry the same confirmation';pay.disabled=!consent.checked;
+    status.textContent='Your upgrade is awaiting payment confirmation. Your existing Core access continues for its paid period. Do not create another subscription.';
+    if(data.payment_url){const url=new URL(data.payment_url);if(url.protocol!=='https:'||url.hostname!=='invoice.stripe.com'||url.username||url.password||url.port)throw new Error('The payment destination could not be verified.');payment.href=url.href;payment.hidden=false;}
+   }
+  }
+  controls.append(getEstimate,estimate,consentLabel,pay);dialog.append(controls,status,payment,refresh,reopen);
+  const close=button('Close',()=>{dialog.close();upgrade.focus?.();});dialog.append(close);dialog.addEventListener('close',()=>{dialog.remove();if(upgradeDialog===dialog)upgradeDialog=null;},{once:true});document.body.append(dialog);upgradeDialog=dialog;dialog.showModal();
+  try{const data=await api('/api/account/upgrade');if(!current())return;enabled=data.enabled===true;getEstimate.disabled=!enabled;if(!enabled)status.textContent='Online upgrades are being prepared. Your current edition is unchanged.';showState(data);const license=await api('/api/account/license');if(!current()||submitted)return;seats.min=String(Math.max(25,license.seat_limit||0,license.seats_used||0));seats.value=seats.min;}catch(e){if(current())status.textContent=e.message;}
  });upgrade.hidden=true;upgrade.className='nav-item core-upgrade';upgrade.id='core-upgrade';document.querySelector('nav[aria-label="Workspace navigation"]').append(upgrade);
  document.addEventListener('wzos:session',()=>{const session=window.wzosClock.getSession();upgrade.hidden=session?.edition!=='core'||session.role!=='admin';if(upgradeDialog){upgradeDialog.close();upgradeDialog.remove();upgradeDialog=null;}});
  document.addEventListener('wzos:view',e=>{active=e.detail==='dashboard';if(active)render();else{root.hidden=true;clear();}});
