@@ -1,4 +1,4 @@
-# WZOS remaining tasks - current October 17, 2026
+# WZOS remaining tasks - current October 18, 2026
 
 Use SESSION_HANDOFF.md for source/live provenance and COLLABORATION_CONTRACT.md for
 ownership. This checklist supersedes historical status entries, which are preserved
@@ -6,6 +6,13 @@ in history/REMAINING_TASKS_before_sms_acceptance_20261017.md. Product decisions 
 older evidence remain there; do not silently discard or re-open completed gates.
 
 ## Closed latest checkpoint
+
+- [x] Core-admin Enterprise upgrade implementation deployed, sourcebf9f524/image
+  f347f690…,100% upgrade-live-bf9f524. Final810 PostgreSQL/136 Node/7 SDK gates pass;
+  persisted Stripe permissions, non-persisted credit/tax preview, schema, public
+  assets/auth/policy and real Enterprise-admin dashboard checks passed. No charge.
+  Paid existing-subscription acceptance remains separate below. Same-image paused
+  rollback prepared; see CORE_UPGRADE_RELEASE_20261018.md.
 
 - [x] Fixed weather card, NWS adapter, scoped manual job-alert checks/receipts and
   foreground arrival prompts deployed; approved hourly monitor now active (SMS off).
@@ -36,14 +43,9 @@ older evidence remain there; do not silently discard or re-open completed gates.
    repair model startup/configuration, then bounded real module/source/security
    evaluations. Do not equate Atlas UI/retrieval/scanner success with model inference.
    Price resource changes before provisioning; refresh actual budget and limits.
-5. [ ] IN PROGRESS - Core-to-Enterprise candidate bf9f524 built/pushed, not deployed.
-   Local19 billing/6 UI and synthetic browser checks pass. Final cloud810 PostgreSQL,
-   136 Node and7 Stripe SDK checks PASS/no skips; pip check clean. Corrected image
-   builda651a66a SUCCESS, digestf347f690…; live schema compatible, only new table
-   missing; today's SQL backup successful. Stripe two-resource Write approval given,
-   but save persistence unresolved; user applying directly. Provider acceptance and
-   guarded rollout remain open. No live charge. See CORE_UPGRADE_IMPLEMENTATION_20261017.md.
-   Complete Core-to-Enterprise existing-customer billing upgrade: one-time $20
+5. [ ] User-led paid Core-to-Enterprise acceptance remains. Implementation is live,
+   key permissions saved and non-persisted provider preview passed. No real payment
+   attempted. See CORE_UPGRADE_RELEASE_20261018.md. Validate one-time $20
    credit, existing Core subscription transition, seat/edition consistency and
    webhook retries/rollback. Upgrade prompts admin-only. New-customer checkout is
    integrated; real payment acceptance remains separate. See FINAL_CHECKOUT_VALIDATION_20261016.md.

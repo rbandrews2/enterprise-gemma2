@@ -1,10 +1,28 @@
-# WZOS current session handoff - October 17, 2026
+# WZOS current session handoff - October 18, 2026
 
 ## Start here
 
 Owned checkout: `.local-data/integration-release`, branch `codex/preproduction-modules`.
 Read COLLABORATION_CONTRACT.md and REMAINING_TASKS.md; inspect Git before edits.
 Historical checkpoints were preserved under docs/history; they are not current blockers.
+
+## Latest release - October18
+
+Core upgrade implementation is LIVE: wzos-v2-accounts-upgrade-live-bf9f524,100%,
+source bf9f524304a994bc9ff9cb54b795271510df8491, image sha256:f347f6901acb223b412ae729aa52afc47a1210804b861916ecfc18f46f5e3873.
+See CORE_UPGRADE_RELEASE_20261018.md for exact gates, rollout and schema evidence.
+Stripe two-resource Write save independently confirmed; non-persisted live preview
+passed$20 credit/tax, no payment/subscription change. Deployment exit0; post-schema
+compatible/missing[]/conflicts[]; proxy independently absent; browser admin entered
+Molecular Enterprise dashboard. Runtime/secrets/weather/media policy preserved.
+Rollback MUST use upgrade-hold-bf9f524 on the same image to preserve paid-upgrade
+webhooks. Paid existing-Core acceptance is still a user action, not yet passed.
+Next: ATLAS_RESTART_SCOPE_20261018.md, private31B bounded-pilot approval pending.
+Quota1000 milliGPU,10 retained objects with matching Google CRC/size metadata,
+existing private model-viewer binding and isolated PGA subnet verified. App deadline
+300s, existing dedicated model identity confirmed. No GPU/model service started.
+Atlas command rendered/checked only; never treat this as inference acceptance.
+The older development section below is historical; its deployment blocker is closed.
 
 ## Completed this session
 
@@ -24,9 +42,9 @@ Historical checkpoints were preserved under docs/history; they are not current b
 - No user's tabs, recovery files, credentials, offline drafts or release evidence removed.
 - Live public app version endpoint returned HTTP200/version b6ef659d4ed7394960cda60d.
 
-## Deployed baseline and source status
+## Previous weather baseline (superseded by October18 release above)
 
-Last independently verified deployment: sourcec6adf9f36b6c2ed25882785b5abe96e4b1ba8224,
+Previous weather deployment: sourcec6adf9f36b6c2ed25882785b5abe96e4b1ba8224,
 revision wzos-v2-accounts-weather-hourly-1017,100% traffic, image
 sha256:edb4a3c4dde24cb6fe57d65ad79f1cfd611ab507d1d1bf03ea70e18f972e92ed.
 Guarded deployment exited0; runtime preserved;28 public assets matched source hashes,
@@ -46,7 +64,7 @@ wzos-v2-accounts-weather-hourly-1017 and actual traffic100% on that revision.
 No current cloud connection blocker. Weather card/manual checks/arrival update deployed.
 Public app/sign-in/SMS working; earlier CLI-auth blocker is closed.
 
-## Active development: Core upgrade (not deployed)
+## Previous Core upgrade development checkpoint (superseded above)
 
 Candidate bf9f524 is pushed on codex/preproduction-modules. New organization_upgrades
 startup table/Stripe adapter/paid webhook transition/admin-only quote and confirmation

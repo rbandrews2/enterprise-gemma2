@@ -128,6 +128,20 @@ himself and leave the tab open. Do not claim permissions effective or enable upg
 without persisted readback/provider preview. No real subscription write/charge made.
 Proof: .local-data/release-20261017/stripe-upgrade-permissions-before.png.
 
+October18: direct user save resolved the Stripe UI issue. Reopened persisted key
+editor: both exact resources Write. Non-persisted live catalog preview PASS using
+the runtime's pinned key and synthetic state/postcode only: total122800 cents,
+credit2000 cents, tax calculation complete. No customer/subscription/payment or
+persisted invoice created; existing-subscription payment acceptance remains a
+separate user action. No claim of live payment success.
+
+Deployment helper f27bce0 stages hold/live revisions on the accepted f347f690 image,
+preserves all existing secrets/identity/resources and hourly weather flags, and
+verifies configuration before traffic. Hold rollback uses the same new image with
+new upgrades disabled, retaining webhook reconciliation for already-paid changes.
+Submitted October18; inspect upgrade-deploy.exit/log before rerunning. Migration
+applies when the first staged revision starts. Public cutover not yet verified.
+
 Read-only Atlas preflight: retained model prefix gemma-4-31B-it/ contains10 objects,
 62,578,670,545 bytes (58.28GiB); isolated wzos-atlas-us-central1 subnet retains Private
 Google Access and10.83.0.0/26. Object count/size is not a fresh integrity or inference

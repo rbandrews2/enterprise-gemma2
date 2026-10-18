@@ -29,3 +29,16 @@ Rollback: pause new upgrades using WZOS_CORE_UPGRADES_ENABLED=0 (preserve signed
 webhook reconciliation), then restore these two permissions to Read only after
 reviewing pending upgrades so already-paid fulfillment is not broken. Keep database
 upgrade records, original receipts and provider invoice references; do not drop DDL.
+
+## October18 acceptance
+
+Ray applied the approved change directly. Reopened the persisted key editor from
+the authenticated Molecular account: Subscriptions=Write and Invoices=Write.
+No credential revealed or rotated, other permissions not changed by this workflow.
+Proof outside Git: .local-data/release-20261017/stripe-upgrade-permissions-after.png.
+
+Non-persisted invoice preview using the runtime's existing pinned key PASS:
+Enterprise setup/monthly catalog, one-time credit2000 cents, currencyUSD,
+total122800 cents, automatic_tax.status=complete. Synthetic state/postcode only;
+no customer, subscription, persisted invoice or payment created/modified. This
+does not establish paid existing-subscription transition acceptance.
