@@ -46,6 +46,34 @@ wzos-v2-accounts-weather-hourly-1017 and actual traffic100% on that revision.
 No current cloud connection blocker. Weather card/manual checks/arrival update deployed.
 Public app/sign-in/SMS working; earlier CLI-auth blocker is closed.
 
+## Active development: Core upgrade (not deployed)
+
+Candidate bf9f524 is pushed on codex/preproduction-modules. New organization_upgrades
+startup table/Stripe adapter/paid webhook transition/admin-only quote and confirmation
+UI are documented in CORE_UPGRADE_IMPLEMENTATION_20261017.md. Upgrade charging remains
+OFF by default. Original purchases preserved; one subscription, one $20 credit,
+Stripe tax/proration, paid-only Enterprise seats and bounded unpaid Core continuity.
+Final focused local19 billing +6 Node UI cases PASS; synthetic desktop/mobile browser
+flow passed. Baseline2febb92 cloud PostgreSQL804 PASS/no skips; SDK dependency install
+then blocked on an old commerce crypto declaration. Repaired to>=49,<51 to match the
+already validated accounts graph (webauthn3.0.1,cryptography50.0.2,pyOpenSSL26.4.0).
+Final cloud validation submission for bf9f524 is UNVERIFIED after browser timeout;
+read existing state before resubmitting. It may have stopped during clone/checkout.
+Pointer$HOME/wzos-core-upgrade-path.txt; expected final logs validation-final.exit,
+final-sdk.log,final-postgres.log,final-node.log; candidate source-final/. No deploy
+command was submitted. Public app remains weather-hourly-1017, same accepted image.
+
+Resume: reconnect Cloud Shell, inspect final source/gate files, finish SDK/full PG/
+Node gates, verify Stripe preview/key permissions without charging, then guarded
+rollout/activation. Live payment requires user action; never charge for acceptance.
+Next Atlas finding: live app selects private_vllm but enabled=0; configured endpoint
+wzos-atlas-inference is absent from current Run service inventory. Legacy failed
+Gemma2-2B service is separate and is not the configured WZOS engine. HF_TOKEN secret
+exists; do not bind it indiscriminately. Existing31B GCS/Run:ai deployment script
+should be reused after fresh bucket/manifest/IAM/network/quota/budget verification.
+No GPU/model workload or new IAM grant created during this development increment.
+Mobile-wide UI redesign remains deferred until the remaining integration list is done.
+
 ## Next work
 
 Weather/geofencing implemented in c6adf9f after read-only GEMINI_WZOS_V1 review.

@@ -36,7 +36,11 @@ older evidence remain there; do not silently discard or re-open completed gates.
    repair model startup/configuration, then bounded real module/source/security
    evaluations. Do not equate Atlas UI/retrieval/scanner success with model inference.
    Price resource changes before provisioning; refresh actual budget and limits.
-5. [ ] Complete Core-to-Enterprise existing-customer billing upgrade: one-time $20
+5. [ ] IN PROGRESS - Core-to-Enterprise candidate bf9f524 built/pushed, not deployed.
+   Local19 billing/6 UI and synthetic browser checks pass; baseline cloud804 pass.
+   Final SDK/PostgreSQL/Node validation unverified after connection timeout; inspect
+   $HOME/wzos-core-upgrade-path.txt before retrying. See CORE_UPGRADE_IMPLEMENTATION_20261017.md.
+   Complete Core-to-Enterprise existing-customer billing upgrade: one-time $20
    credit, existing Core subscription transition, seat/edition consistency and
    webhook retries/rollback. Upgrade prompts admin-only. New-customer checkout is
    integrated; real payment acceptance remains separate. See FINAL_CHECKOUT_VALIDATION_20261016.md.

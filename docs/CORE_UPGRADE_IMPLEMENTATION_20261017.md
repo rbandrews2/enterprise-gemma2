@@ -73,3 +73,10 @@ cryptography50.0.2 / pyOpenSSL26.4.0 (requires>=49,<51). Correct commerce declar
 to>=49,<51; retain the reviewed runtime dependency graph rather than downgrade it.
 Do not report the baseline overall gate PASS: SDK/Node did not execute after that
 resolver failure. Final candidate must pass all gates after the declaration repair.
+
+Final candidate bf9f524 validation was submitted, but browser control timed out twice
+before its state could be read. Do not claim it started/passed. It may have stopped
+at clone/checkout before the last Git push completed; inspect source-final HEAD and
+validation-final.exit before restarting. Earlier baseline804 PASS is not the final
+backend guard gate. Current production remains weather-hourly-1017; no deployment
+or live upgrade/payment command was submitted. Synthetic preview is local only.
