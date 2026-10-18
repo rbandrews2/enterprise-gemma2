@@ -106,10 +106,27 @@ verified. Corrected helper5274351 submitted builda651a66a-82eb-43c9-8193-621029f
 last observed QUEUED. Inspect upgrade-build-launch.log/upgrade-build-id.txt under
 $HOME/wzos-core-upgrade-path.txt before repeating. No live cutover/activation yet.
 
+Corrected build a651a66a-82eb-43c9-8193-621029f2ab77 SUCCESS. Exact image:
+us-central1-docker.pkg.dev/enterprise-gemma2/enterprise-gemma2/wzos-v2-accounts@sha256:f347f6901acb223b412ae729aa52afc47a1210804b861916ecfc18f46f5e3873
+Read-only schema preflight PASS: compatible_existing_columns=true, conflicts[],
+missing_tables=[organization_upgrades]. Latest SQL backup1792216800000 SUCCESSFUL,
+2026-10-17T08:27:34.896Z. Owned SQL proxy stopped through its EXIT trap. No live DDL
+or production traffic change applied during preflight. Runtime still weather-hourly-1017.
+
 Stripe permissions review is still blocked on dashboard sign-in: the in-app tab
 shows login, Chrome is absent from connected-browser inventory. Ray was asked to
 sign in in the Codex panel or connect Chrome. Never infer that a user saying ready
 means the inspected tab is authenticated. No broader key permissions granted.
+
+Update: user opened authenticated in-app tab7, correct Molecular account. Existing
+restricted key WZOS V2 server checkout has Subscriptions=Read,Invoices=Read. Ray
+approved only those two resources changing to Write (CORE_UPGRADE_ACCESS_20261017.md).
+Agent staged both as Write and clicked Apply changes, but page navigated to Webhooks;
+first independent readback still showed Read. Second staged save also navigated to
+Webhooks; persistence not established. Asked Ray to apply the same approved change
+himself and leave the tab open. Do not claim permissions effective or enable upgrades
+without persisted readback/provider preview. No real subscription write/charge made.
+Proof: .local-data/release-20261017/stripe-upgrade-permissions-before.png.
 
 Read-only Atlas preflight: retained model prefix gemma-4-31B-it/ contains10 objects,
 62,578,670,545 bytes (58.28GiB); isolated wzos-atlas-us-central1 subnet retains Private

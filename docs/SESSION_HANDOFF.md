@@ -64,15 +64,21 @@ Pointer$HOME/wzos-core-upgrade-path.txt; validation-final.exit=0,final-sdk.log,
 final-postgres.log,final-node.log. Image build helper prepared/pushed5274351. Initial
 attempt stopped on the disposable venv symlink; first submitted build37d23fe9… was
 cancelled to correct compile ordering before dropping to the non-root runtime.
-Corrected build resubmitted: read upgrade-build-id.txt/upgrade-build-launch.log and
-actual Cloud Build status before continuing. No deploy or Stripe write submitted.
+Corrected builda651a66a-82eb-43c9-8193-621029f2ab77 SUCCESS; immutable digestf347f690…
+recorded in CORE_UPGRADE_IMPLEMENTATION_20261017.md and upgrade-build.json. Schema
+preflight PASS: only organization_upgrades missing, conflicts[]. SQL backup today
+1792216800000 SUCCESSFUL. Owned proxy EXIT trap stopped it. No live DDL/deploy or
+Stripe financial write submitted.
 Public app remains weather-hourly-1017, same accepted image.
 
 Resume: inspect corrected build status, verify Stripe preview/key permissions
 without charging, then guarded
 rollout/activation. Live payment requires user action; never charge for acceptance.
-Stripe in-app tab still shows login; Chrome absent from browser inventory. Ray was
-asked to sign in in Codex browser or connect Chrome; no passwords/keys requested.
+Stripe authenticated in-app tab7 now available. Existing key Subscriptions/Invoices
+Read; Ray approved only changing these to Write. Apply changes navigated to Webhooks
+without first persisted readback showing Write. User asked to apply those same two
+settings directly and leave tab open. Verify persistence before activation; no new
+credential or broad grant. See CORE_UPGRADE_ACCESS_20261017.md. No secret revealed.
 Next Atlas finding: live app selects private_vllm but enabled=0; configured endpoint
 wzos-atlas-inference is absent from current Run service inventory. Legacy failed
 Gemma2-2B service is separate and is not the configured WZOS engine. HF_TOKEN secret
