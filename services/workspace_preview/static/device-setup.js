@@ -15,6 +15,7 @@ window.wzosDeviceSetup=(()=>{
   const current=++generation,user=window.wzosClock?.getSession();if(!user){panel.hidden=true;return;}
   scope=`${user.organization_id}:${user.id}`;panel.replaceChildren();
   panel.append(node('h2','Set up your device'),node('p','Enable microphone for voice reports and meetings, and location for local weather, navigation and time records. Setup records no audio, saves no coordinates and starts no background tracking. Your browser controls how long permissions last.'));
+  if(user.edition==='enterprise')panel.append(node('p','When you record a field report, Google processes the audio for transcription and Atlas uses the transcript to draft your reports. WZOS discards the recording after transcription. Review the drafts before sending them to your office.'));
   const message=node('p');message.setAttribute('role','status');
   const enable=node('button','Enable microphone & location');enable.type='button';enable.className='primary';
   enable.onclick=async()=>{
