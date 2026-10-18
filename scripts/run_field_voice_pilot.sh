@@ -81,7 +81,7 @@ on_exit() {
  else result=1; echo CLEANUP_FAILED_GUARD_REMAINS; fi
  printf '%s\n' "$result" > "$root/pilot.exit"
  # Keep small private evidence through Cloud Shell VM resets; no source/audio.
- if tar --exclude='./source' --exclude='./audio' -czf "$HOME/wzos-field-voice-evidence-$nonce.tgz" -C "$root" .; then
+ if tar --exclude='./source' --exclude='./audio' --exclude='./pip-cache' -czf "$HOME/wzos-field-voice-evidence-$nonce.tgz" -C "$root" .; then
   printf '%s\n' "$HOME/wzos-field-voice-evidence-$nonce.tgz" > "$HOME/wzos-field-voice-evidence-latest.txt"
  else echo FIELD_VOICE_EVIDENCE_ARCHIVE_FAILED; fi
  exit "$result"
