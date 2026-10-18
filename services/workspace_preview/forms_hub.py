@@ -13,6 +13,7 @@ verify, edit or determine the applicability of team forms.
 """
 import hashlib
 import json
+import os
 import re
 from datetime import datetime, timezone
 from pathlib import Path
@@ -259,13 +260,16 @@ def register(app, connect, actor, actors, file_store=None, catalog_path=None):
 
     @app.get("/api/forms/templates")
     def templates(request: Request):
-        actor(request)
-        items = [{**summary(revisions[(tid, rev)])} for tid, rev in latest.items()]
+        user=actor(request)
+        voice=user['edition']=='enterprise' and os.getenv('WZOS_FIELD_VOICE_ENABLED')=='1'
+        items = [{**summary(revisions[(tid, rev)])} for tid, rev in latest.items() if tid!='daily-work-report' or voice]
         return {"items": sorted(items, key=lambda t: t["title"]), "saved_on_server": False}
 
     @app.get("/api/forms/templates/{template_id}/{revision}")
     def template_detail(template_id: str, revision: int, request: Request):
-        actor(request)
+        user=actor(request)
+        if template_id=='daily-work-report' and (user['edition']!='enterprise' or os.getenv('WZOS_FIELD_VOICE_ENABLED')!='1'):
+            raise HTTPException(404, 'Template revision not found')
         template = revisions.get((template_id, revision))
         if not template:
             raise HTTPException(404, "Template revision not found")

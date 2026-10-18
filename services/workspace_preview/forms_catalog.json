@@ -459,5 +459,20 @@
     }
    ]
   }
- ]
+ ,{
+   "id": "daily-work-report", "revision": 1, "title": "Daily Work Report",
+   "category": "wzos_printable", "summary": "Reviewed work description and production quantities.",
+   "provenance": "WZOS Smart Field Voice version1; internal daily work record.",
+   "print_notice": "WZOS internal record. Quantities and observations require human review; not field approval.",
+   "sections": [{"title":"Work performed","fields":[
+     {"key":"work_date","label":"Work date","type":"date"},
+     {"key":"reported_by","label":"Reported by","type":"text"},
+     {"key":"description","label":"Work description","type":"textarea","max_length":4000},
+     {"key":"quantities","label":"Production quantities","type":"rows","max_rows":30,"columns":[
+       {"key":"item","label":"Item","max_length":160},
+       {"key":"quantity","label":"Quantity","max_length":60},
+       {"key":"unit","label":"Unit","max_length":60}
+     ]}
+   ]}]
+ }]
 }

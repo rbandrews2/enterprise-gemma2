@@ -743,4 +743,6 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
     @app.get('/weather.css')
     def weather_style():
         return FileResponse(STATIC / 'weather.css', media_type='text/css')
+    from . import field_voice
+    field_voice.register(app, connect, actor, permitted_row, roster, accounts=account_workspace)
     return app

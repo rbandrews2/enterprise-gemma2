@@ -1,6 +1,7 @@
 """Immutable organization-scoped office submissions and review."""
 import hashlib
 import json
+import os
 import math
 from datetime import date, time
 from datetime import datetime, timezone
@@ -112,6 +113,8 @@ def register(app,connect,actor):
     @app.post('/api/form-submissions/completed')
     def send_completed(body:CompletedForm,request:Request,background:BackgroundTasks):
         user=actor(request);sid=str(body.request_id);org=user['organization_id']
+        if body.template_id=='daily-work-report' and (user['edition']!='enterprise' or os.getenv('WZOS_FIELD_VOICE_ENABLED')!='1'):
+            raise HTTPException(403, 'Daily Work Report requires enabled Enterprise access')
         payload=json.dumps(printable_snapshot(body,templates),sort_keys=True,separators=(',',':'))
         digest=hashlib.sha256(payload.encode()).hexdigest();queued=[]
         with connect() as db:
