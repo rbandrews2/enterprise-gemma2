@@ -1,0 +1,61 @@
+# Atlas application-path test preparation - October 18, 2026
+
+## Purpose and limits
+
+The completed operator pilot proved eight full-size model responses. It did not
+prove the application's metadata identity or saved-job retrieval path. The next
+test uses the real app factory, account authorization, storage, retrieval and
+VLLM adapter inside a disposable job. No HTTP listener or external test login.
+
+`scripts/check_atlas_app_workflow.py` uses temporary SQLite/files, injected test
+account claims, and a deliberately synthetic reference through normal ingestion.
+The reference has unreviewed provenance and a conspicuous synthetic label. This
+proves plumbing, not real agency coverage, source freshness or field accuracy.
+
+Local mocked orchestration passed: stale job 409, cross-organization job 404
+(non-disclosure), Core report 403, then exactly two app inference requests. Model
+response checks retain current job version, candidate revision/review status,
+unverified applicability, no performed actions and no field approval. Denials
+must occur before inference. Early fixture failures were repaired without
+weakening application behavior: valid HTML envelope, expected 404 denial and
+complete mock provider finish/usage fields.
+
+Live mode requires CLOUD_RUN_JOB=wzos-atlas-app-workflow and refuses serving-app,
+external database/bucket and emulator environments. A scoped environment marker
+lets the existing production metadata helper execute in a job; no token provider
+replacement in live mode. Tokens are neither printed nor stored. User auth is
+injected in-process; this does not test Firebase browser sign-in.
+
+## Prepared image
+
+Dockerfile.atlas-app-workflow derives from the exact current public image
+f347f6901acb223b412ae729aa52afc47a1210804b861916ecfc18f46f5e3873,
+copies only the repaired intelligence guide and test harness, and runs mocked
+orchestration at build time. It is a test image, never a customer deployment.
+
+## Proposed live scope - not authorized by the consumed operator pilot
+
+- Recreate one private full-size Gemma 4 31B service with the same pinned Google
+  image, retained GCS weights, dedicated model identity/network, one RTX PRO 6000,
+  20 CPU/80 GiB, min 0/max 1. Existing model-read permission only.
+- Grant only the existing WZOS app identity service-scoped invocation.
+- One new job wzos-atlas-app-workflow using that app identity: 1 task, 1 CPU,
+  512 MiB, five-minute task timeout, zero retries. Bind only the canonical model
+  origin; no secrets, production database/bucket, web endpoint or customer sends.
+  The app identity retains its existing permissions while attached to the job.
+- Two serial synthetic model requests, each at most 1024 output tokens; no retries
+  or keep-warm probes. Fixture authorization checks consume no inference.
+- $5 maximum test budget; independent one-hour model cleanup guard plus foreground
+  teardown on success/failure. Remove the job and model and independently verify
+  absence. Preserve logs/evidence and retained model files. Never delete customer
+  data, alter the public application, or enable production Atlas.
+
+At the previously verified resource rates, the model costs about $3.19/hour;
+the completed operator pilot's whole guard window estimated $0.31. Actual new
+duration is unknown. Build, job, logging, storage and network costs are separate;
+the guard limits runtime, not a guaranteed billing cap. Stop rather than retry on
+failure. Recheck current configuration and artifact digest before provisioning.
+Pricing basis: https://cloud.google.com/run/pricing
+
+New workload identity assignment and renewed private model access require action-
+time approval. No such live workload has been created by this preparation.

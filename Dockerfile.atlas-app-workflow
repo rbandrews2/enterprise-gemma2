@@ -1,0 +1,8 @@
+# Test-only derivative; never serve this image as the customer application.
+FROM us-central1-docker.pkg.dev/enterprise-gemma2/enterprise-gemma2/wzos-v2-accounts@sha256:f347f6901acb223b412ae729aa52afc47a1210804b861916ecfc18f46f5e3873
+COPY --chown=wzos:wzos services/workspace_preview/intelligence.py /app/services/workspace_preview/intelligence.py
+COPY --chown=wzos:wzos scripts/check_atlas_app_workflow.py /app/scripts/check_atlas_app_workflow.py
+USER wzos
+RUN python /app/scripts/check_atlas_app_workflow.py --mode mocked
+ENTRYPOINT ["python", "/app/scripts/check_atlas_app_workflow.py"]
+CMD ["--mode", "live"]
