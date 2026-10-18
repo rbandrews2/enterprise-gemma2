@@ -2,7 +2,7 @@
 # Approved synthetic pilot only. Production Atlas remains disabled.
 set -euo pipefail
 umask 077
-mode=${1:?Use run, guard or cleanup}
+mode=${1:?Use run, run-app, guard or cleanup}
 root=${2:?Private evidence directory required}
 project=enterprise-gemma2
 region=us-central1
@@ -38,6 +38,24 @@ p=Path(sys.argv[1]);assert json.loads((p/'cleanup-after.json').read_text())==[]
 (p/'cleanup.verified').write_text('0\n')
 print('ATLAS_PILOT_SERVICE_ABSENT_VERIFIED')
 PY
+ if test -f "$root/workflow-image.txt"; then
+  gcloud run jobs list --project="$project" --region="$region" --filter='metadata.name=wzos-atlas-app-workflow' --format=json > "$root/jobs-before-cleanup.json"
+  python3 - "$root" "$nonce" <<'PY'
+import json,sys
+from pathlib import Path
+p=Path(sys.argv[1]); jobs=json.loads((p/'jobs-before-cleanup.json').read_text())
+assert len(jobs)<=1
+if jobs:
+ j=jobs[0]; assert j['metadata']['name']=='wzos-atlas-app-workflow'
+ assert j['metadata']['labels']['wzos-pilot']==sys.argv[2], 'Job cleanup ownership mismatch'
+ assert j['spec']['template']['spec']['template']['spec']['serviceAccountName']=='wzos-v2-accounts@enterprise-gemma2.iam.gserviceaccount.com'
+PY
+  if test "$(python3 -c 'import json,sys;print(len(json.load(open(sys.argv[1]))))' "$root/jobs-before-cleanup.json")" = 1; then
+   gcloud run jobs delete wzos-atlas-app-workflow --project="$project" --region="$region" --quiet > "$root/job-delete.log" 2>&1
+  fi
+  gcloud run jobs list --project="$project" --region="$region" --filter='metadata.name=wzos-atlas-app-workflow' --format=json > "$root/jobs-after-cleanup.json"
+  python3 -c 'import json,sys;assert json.load(open(sys.argv[1]))==[];print("ATLAS_APP_JOB_ABSENT_VERIFIED")' "$root/jobs-after-cleanup.json"
+ fi
 }
 
 case "$mode" in
@@ -50,12 +68,18 @@ case "$mode" in
   done
   echo ATLAS_GUARD_CLEANUP_REQUIRES_ATTENTION
   exit 1;;
- run) ;;
+ run|run-app) ;;
  *) exit 2;;
 esac
 
 source_dir=$(cat "$root/source-path.txt")
 test "$(git -C "$source_dir" rev-parse --short=7 HEAD)" = bf9f524
+if test "$mode" = run-app; then
+ test "$(cat "$root/workflow-image.txt")" = 'us-central1-docker.pkg.dev/enterprise-gemma2/enterprise-gemma2/wzos-v2-atlas-app-workflow@sha256:eaa44f814c0917c2719ba0c09a1b34849145f2cc27ba9130a16153a094d4571d'
+ test -f "$root/job-workflow.sh"
+ gcloud run jobs list --project="$project" --region="$region" --filter='metadata.name=wzos-atlas-app-workflow' --format=json > "$root/jobs-preflight.json"
+ python3 -c 'import json,sys;assert json.load(open(sys.argv[1]))==[]' "$root/jobs-preflight.json"
+fi
 command -v setsid >/dev/null
 gcloud run services describe wzos-v2-accounts --project="$project" --region="$region" --format=json > "$root/app-before.json"
 gcloud run services list --project="$project" --region="$region" --filter="metadata.name=$service" --format=json > "$root/model-before.json"
@@ -122,6 +146,11 @@ assert any(b['role']=='roles/run.invoker' and 'serviceAccount:wzos-v2-accounts@e
 print('ATLAS_PRIVATE_MODEL_CONFIG_VERIFIED')
 PY
 cd "$source_dir"
+if test "$mode" = run-app; then
+ timeout 600 bash "$root/job-workflow.sh" "$root" > "$root/workflow.log" 2>&1
+ echo ATLAS_APP_WORKFLOW_FINISHED
+ exit 0
+fi
 timeout 650 .venv-accounts-test/bin/python scripts/evaluate_atlas_vllm.py --live \
  --url="$(cat "$root/model-url.txt")" --limit=8 --output="$root/evaluation.jsonl" > "$root/evaluation.log" 2>&1
 echo ATLAS_SYNTHETIC_EVALUATION_FINISHED

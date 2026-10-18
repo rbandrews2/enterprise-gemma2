@@ -79,5 +79,11 @@ the guard limits runtime, not a guaranteed billing cap. Stop rather than retry o
 failure. Recheck current configuration and artifact digest before provisioning.
 Pricing basis: https://cloud.google.com/run/pricing
 
-New workload identity assignment and renewed private model access require action-
-time approval. No such live workload has been created by this preparation.
+Ray approved this exact bounded test in chat after build completion. Approval is
+for one run with image eaa44f81… and two requests; no replay on failure.
+`run_atlas_private_pilot.sh run-app` reuses the proven model guard and now also
+removes only the nonce-labelled app job. Both foreground and one-hour guard
+cleanup verify ownership before deletion. `run_atlas_app_workflow_job.sh` verifies
+the exact image, identity, canonical audience, resources, timeout, no secrets or
+volumes and zero retries before execution. It records only the specific job
+execution's logs. No production application revision or configuration is changed.
