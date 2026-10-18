@@ -119,6 +119,8 @@ def run(audio_root, mode='live'):
     settings = {'WZOS_ACCOUNT_WORKSPACE':'1', 'WZOS_FIELD_VOICE_ENABLED':'1',
         'WZOS_FIELD_VOICE_SPEECH_ENABLED':'1', 'WZOS_FIELD_VOICE_MODEL_ENABLED':'1',
         'WZOS_ATLAS_VLLM_ENABLED':'0'}
+    if mode == 'mocked':
+        settings['WZOS_FIELD_VOICE_MODEL_URL'] = 'https://synthetic-atlas.run.app'
     checks, saved = [], 0
     with patch.dict(os.environ, settings), tempfile.TemporaryDirectory(prefix='wzos-voice-pilot-') as directory:
         root = Path(directory)
