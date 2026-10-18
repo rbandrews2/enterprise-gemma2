@@ -21,6 +21,7 @@ class UpgradeProvider(ProviderFixture):
         self.updates = []
         self.results = {}
         self.ambiguous = False
+        self.amount_due = 102900
         self.sub = {'id': 'sub_synthetic', 'customer': 'cus_synthetic', 'livemode': False,
                     'status': 'active', 'collection_method': 'charge_automatically',
                     'latest_invoice': {'id': 'in_core', 'status': 'paid', 'paid': True},
@@ -32,7 +33,7 @@ class UpgradeProvider(ProviderFixture):
 
     def preview_upgrade(self, subscription, customer, parameters):
         self.preview_parameters = copy.deepcopy(parameters)
-        return {'currency': 'usd', 'amount_due': 102900, 'total_discount_amounts': [{'amount': 2000}]}
+        return {'currency': 'usd', 'amount_due': self.amount_due, 'total_discount_amounts': [{'amount': 2000}]}
 
     def update_subscription(self, subscription, parameters, request_id):
         if request_id not in self.results:
@@ -240,6 +241,23 @@ class SubscriptionUpgradeTests(unittest.TestCase):
         self.assertEqual(self.confirm(q).status_code, 409)
         self.assertEqual(self.status()['edition'], 'core')
         self.assertEqual(len(self.provider.updates), 1)
+
+    def test_external_stripe_change_before_webhook_blocks_confirmation(self):
+        q = self.quote().json()
+        self.provider.sub['cancel_at_period_end'] = True
+        self.assertEqual(self.confirm(q).status_code, 409)
+        self.assertEqual(self.provider.updates, [])
+
+    def test_changed_tax_or_balance_estimate_cannot_charge_old_quote(self):
+        q = self.quote().json();self.provider.amount_due += 100
+        self.assertEqual(self.confirm(q).status_code, 409)
+        self.assertEqual(self.provider.updates, [])
+
+    def test_pending_core_expires_without_waiting_for_another_webhook(self):
+        q = self.quote().json();self.confirm(q);self.event()
+        self.assertEqual(self.status()['edition'], 'core')
+        with patch('services.workspace_preview.subscription_upgrades.time.time', return_value=time.time()+7200):
+            self.assertEqual(self.client.get('/api/account/license', headers=self.headers()).status_code, 403)
 
 
 @unittest.skipUnless(os.getenv('WZOS_TEST_DATABASE_URL'), 'Dedicated PostgreSQL test database not configured')

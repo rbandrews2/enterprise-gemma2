@@ -4,6 +4,7 @@ Provider writes occur only after an explicit admin confirmation. No second
 subscription, browser-owned entitlements, or payment-success redirect fulfillment.
 """
 import json
+import hashlib
 import time
 from uuid import uuid4
 from urllib.parse import urlsplit
@@ -30,6 +31,17 @@ def item_set(sub):
         raise ValueError('Subscription item review required')
     return sorted([{'price': resource_id(i.get('price')), 'quantity': i.get('quantity')}
                    for i in items.get('data', [])], key=lambda i: i['price'])
+
+
+def billing_fingerprint(sub):
+    """Reject changes made in Stripe before their webhook reaches WZOS."""
+    fields = {key: sub.get(key) for key in ('id', 'customer', 'status', 'collection_method',
+        'pending_update', 'schedule', 'cancel_at_period_end', 'cancel_at', 'pause_collection',
+        'discounts', 'automatic_tax', 'default_payment_method', 'default_source')}
+    fields['invoice'] = resource_id(sub.get('latest_invoice'))
+    fields['items'] = [{key: item.get(key) for key in ('id', 'quantity', 'current_period_end')}
+                       | {'price': resource_id(item.get('price'))} for item in sub.get('items', {}).get('data', [])]
+    return hashlib.sha256(json.dumps(fields, sort_keys=True).encode()).hexdigest()
 
 
 class SubscriptionUpgrades:
@@ -128,7 +140,7 @@ class SubscriptionUpgrades:
             raise ValueError('Current paid service period is required')
         payload = {'parameters': params, 'quote': quote, 'old_invoice': invoice['id'],
                    'old_period_end': period_end, 'expected_items': recurring(target, seats),
-                   'billing_version': owned['billing_version']}
+                   'billing_version': owned['billing_version'], 'billing_fingerprint': billing_fingerprint(sub)}
         with self.accounts.connect() as db:
             db.execute('BEGIN IMMEDIATE')
             latest = self.owned(db, user)
@@ -146,6 +158,19 @@ class SubscriptionUpgrades:
         return {'status': 'quoted', 'request_id': request_id, 'quote': quote}
 
     def confirm(self, user, request_id):
+        with self.accounts.connect() as db:
+            candidate = db.execute('SELECT * FROM organization_upgrades WHERE organization_id=? AND request_id=?',
+                                   (user['organization_id'], request_id)).fetchone()
+        if candidate and candidate['status'] == 'quoted':
+            data = json.loads(candidate['payload'])
+            current_sub = self.provider.retrieve_subscription(candidate['subscription_id'])
+            if billing_fingerprint(current_sub) != data['billing_fingerprint']:
+                raise HTTPException(409, 'Billing changed in Stripe; request a fresh estimate')
+            fresh = self.provider.preview_upgrade(candidate['subscription_id'], candidate['customer_id'], data['parameters'])
+            if (fresh.get('currency') != 'usd' or fresh.get('amount_due') != data['quote']['amount_due_cents']
+                    or sum(d['amount'] for d in fresh.get('total_discount_amounts', [])) != 2000
+                    or (self.purchases.require_automatic_tax and fresh.get('automatic_tax', {}).get('status') != 'complete')):
+                raise HTTPException(409, 'The payment estimate changed; request a fresh estimate')
         with self.accounts.connect() as db:
             db.execute('BEGIN IMMEDIATE')
             row = db.execute('SELECT * FROM organization_upgrades WHERE organization_id=? AND request_id=?',

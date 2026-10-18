@@ -57,3 +57,11 @@ initially retained the old local stylesheet; a fresh preview origin confirmed th
 Full cloud gate started on2febb92 using a disposable Unix-socket database; outcome
 pending. Subsequent source delta is frontend consent classes/CSS only; Python
 backend and test sources are unchanged. No live release or activation yet.
+
+Additional review repairs: confirmation re-reads Stripe and checks the quote's
+billing fingerprint, then re-previews tax/balance before making a provider write.
+A changed quote requires fresh consent/estimate. Pending paid-Core exceptions are
+bounded at read time by the original paid period, even without a later webhook.
+19 final focused SQLite cases PASS (67.556s);6 Node cases PASS. A new exact-source
+cloud gate is required for these backend guards; the earlier2febb92 full gate is
+baseline evidence only. Live upgrade flag remains OFF.

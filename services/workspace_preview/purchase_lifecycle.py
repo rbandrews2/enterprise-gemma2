@@ -39,7 +39,10 @@ class PurchaseLifecycle:
         invoice = sub.get('latest_invoice')
         paid = isinstance(invoice, dict) and invoice.get('status') == 'paid' and invoice.get('paid') is True
         status = str(sub.get('status', 'unknown'))[:40] if matching else 'price_review_required'
-        return status, int(matching and status == 'active' and (paid or keep_core)), upgrade
+        access = int(matching and status == 'active' and (paid or keep_core))
+        if access and keep_core and not paid:
+            status = 'upgrade_pending_core'
+        return status, access, upgrade
 
     def observe(self, subscription_id, customer_id, expected):
         status, access, _ = self.inspect(subscription_id, customer_id, expected)
@@ -89,9 +92,15 @@ class PurchaseLifecycle:
 
     @staticmethod
     def check_activation(db, activation_hash):
-        row = db.execute('SELECT s.access_enabled FROM purchase_subscriptions s JOIN purchase_requests p ON p.id=s.request_id WHERE p.activation_hash=?', (activation_hash,)).fetchone()
+        row = db.execute('SELECT s.access_enabled,s.status,s.request_id FROM purchase_subscriptions s JOIN purchase_requests p ON p.id=s.request_id WHERE p.activation_hash=?', (activation_hash,)).fetchone()
         if row and not row['access_enabled']:
             raise HTTPException(403, 'Your subscription needs attention. Contact WZOS support.')
+        if row and row['status'] == 'upgrade_pending_core':
+            import json
+            import time
+            upgrade = db.execute('SELECT payload FROM organization_upgrades WHERE purchase_request_id=?', (row['request_id'],)).fetchone()
+            if not upgrade or json.loads(upgrade['payload'])['old_period_end'] <= time.time():
+                raise HTTPException(403, 'Your paid Core period has ended. Contact WZOS billing support.')
 
     def check_organization(self, db, organization):
         grant = db.execute('SELECT activation_hash FROM organization_entitlements WHERE organization_id=?', (organization,)).fetchone()
