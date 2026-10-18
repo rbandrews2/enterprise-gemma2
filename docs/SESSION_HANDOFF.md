@@ -181,3 +181,6 @@ Added scripts/start_mobile_preview.ps1, with hidden background launch, readiness
 
 ## Mobile Home clarification — October 18
 Implemented shared mobile Home for admins/members with authorized card content, module-only pages and Home return. Desktop unchanged. See MOBILE_HOME_20261018.md: 11 focused Node checks pass; actual browser Home/Time Tracker/return/Core member filtering verified. Simulator running; local only, no deployment. Preserve untracked voice fixtures/helper.
+
+## October 18 mobile Home / weather release — LIVE
+Ray authorized public update. Exact source c944173 passed cloud PostgreSQL831 and Node148, no failures/skips. Schema/recent-backup and immutable-image/config preservation checks PASS. Revision mobile-c944173 is100%; version4ac54119f08f1aea7fc1152f. Live mobile Home -> Navigation -> Home observed. See MOBILE_RELEASE_20261018.md for image, rollback and screenshot. Voice processing remains OFF pending separate service/pilot activation. Real Android permission/weather acceptance remains open. Simulator stays available; untracked voice fixtures/helper preserved.

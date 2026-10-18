@@ -136,3 +136,7 @@ Added scripts/start_mobile_preview.ps1, with hidden background launch, readiness
 ### Shared mobile Home
 - [x] Same styled full-page Home for both roles, authorized cards only; module pages retain Home return; desktop unchanged. Browser verified locally; see MOBILE_HOME_20261018.md.
 - [ ] User visual acceptance, then current integrated gates before public release. No live update in this increment.
+
+### October 18 live release closure
+- [x] User-authorized mobile Home/weather release deployed at100%; PostgreSQL831 + Node148 PASS, no skips, schema/backup/config/public checks PASS. See MOBILE_RELEASE_20261018.md. Earlier local-only gate/deployment items above are superseded for c944173.
+- [ ] Real Android retained/revoked permissions and location-weather movement checks; Smart Field Voice live speech/model activation and ten-recording pilot remain separate. Voice processing is disabled.
