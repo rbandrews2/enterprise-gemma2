@@ -76,7 +76,12 @@ on_exit() {
   if test "$group" = "$guard_pid"; then kill -- "-$guard_pid" 2>/dev/null; fi
   wait "$guard_pid" 2>/dev/null
  else result=1; echo CLEANUP_FAILED_GUARD_REMAINS; fi
- printf '%s\n' "$result" > "$root/pilot.exit"; exit "$result"
+ printf '%s\n' "$result" > "$root/pilot.exit"
+ # Keep small private evidence through Cloud Shell VM resets; no source/audio.
+ if tar --exclude='./source' --exclude='./audio' -czf "$HOME/wzos-field-voice-evidence-$nonce.tgz" -C "$root" .; then
+  printf '%s\n' "$HOME/wzos-field-voice-evidence-$nonce.tgz" > "$HOME/wzos-field-voice-evidence-latest.txt"
+ else echo FIELD_VOICE_EVIDENCE_ARCHIVE_FAILED; fi
+ exit "$result"
 }
 trap on_exit EXIT
 export ATLAS_TRIAL_LABEL=20261018 ATLAS_TRIAL_NONCE="$nonce"
