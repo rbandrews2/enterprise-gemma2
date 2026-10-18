@@ -68,10 +68,11 @@ for key in ['run.googleapis.com/ingress','run.googleapis.com/invoker-iam-disable
  assert staged['metadata']['annotations'].get(key)==before['metadata']['annotations'].get(key)
 assert [(t.get('revisionName'),t.get('percent')) for t in staged['status']['traffic'] if t.get('percent')]==[('wzos-v2-accounts-weather-hourly-1017',100)]
 assert staged['status']['latestCreatedRevisionName']=='wzos-v2-accounts-upgrade-live-bf9f524'
-assert staged['status']['latestReadyRevisionName']=='wzos-v2-accounts-upgrade-live-bf9f524'
+# Zero-traffic revisions may be Retired despite Ready=True. Start the paused
+# revision first and exercise the actual application before allowing upgrades.
 print('UPGRADE_STAGED_CONFIG_PRESERVED')
 PY
-gcloud run services update-traffic "$service" --project="$project" --region="$region" --to-revisions="$service-upgrade-live-bf9f524=100" --quiet > "$root/upgrade-cutover.log" 2>&1
+gcloud run services update-traffic "$service" --project="$project" --region="$region" --to-revisions="$service-upgrade-hold-bf9f524=100" --quiet > "$root/upgrade-hold-cutover.log" 2>&1
 if ! python3 - "$root" <<'PY'
 import hashlib,json,sys,urllib.request,urllib.error
 from pathlib import Path
@@ -94,6 +95,23 @@ with urllib.request.urlopen('https://app.workzoneos.org/',timeout=30) as r:
 with urllib.request.urlopen('https://app.workzoneos.org/api/app/version?upgrade=bf9f524',timeout=30) as r:
  (p/'upgrade-live-version.json').write_bytes(r.read())
 print('UPGRADE_PUBLIC_ASSETS_AUTH_MEDIA_PASS')
+PY
+then
+ # No new upgrades were enabled, so the pre-upgrade baseline remains safe here.
+ gcloud run services update-traffic "$service" --project="$project" --region="$region" --to-revisions="$service-weather-hourly-1017=100" --quiet
+ echo UPGRADE_PAUSED_STARTUP_ROLLED_BACK_BEFORE_ACTIVATION
+ exit 1
+fi
+gcloud run services update-traffic "$service" --project="$project" --region="$region" --to-revisions="$service-upgrade-live-bf9f524=100" --quiet > "$root/upgrade-cutover.log" 2>&1
+if ! python3 - <<'PY'
+import urllib.request,urllib.error
+with urllib.request.urlopen('https://app.workzoneos.org/api/app/version?upgrade=activated-bf9f524',timeout=45) as response:
+ assert response.status==200
+try:
+ urllib.request.urlopen('https://app.workzoneos.org/api/account/upgrade',timeout=30)
+ raise AssertionError('Anonymous upgrade data exposed')
+except urllib.error.HTTPError as error:assert error.code==401
+print('UPGRADE_ACTIVATED_AUTH_BOUNDARY_PASS')
 PY
 then
  gcloud run services update-traffic "$service" --project="$project" --region="$region" --to-revisions="$service-upgrade-hold-bf9f524=100" --quiet
