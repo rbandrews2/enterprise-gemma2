@@ -127,4 +127,8 @@ older evidence remain there; do not silently discard or re-open completed gates.
 
 
 ## Mobile simulator — October 18
-Local simulator implemented in scripts/run_mobile_preview.py and scripts/mobile_preview/. Open http://127.0.0.1:8083/__simulator; see MOBILE_PREVIEW.md for restart and isolation. Six focused checks PASS; actual iframe and rotation observed. Running owned exec session94769 (process18736); earlier voice preview stopped. Browser automation repeatedly timed out during final screenshot/interaction, so no final screenshot acceptance claim. Fixed dashboard single-column selector specificity after simulator revealed two columns. Public site unchanged; prior voice/audio fixtures remain separate unfinished work. Continue preview review before release gates/deployment.
+Local simulator implemented in scripts/run_mobile_preview.py and scripts/mobile_preview/. Open http://127.0.0.1:8083/__simulator; see MOBILE_PREVIEW.md for restart and isolation. Six focused checks PASS; actual iframe and rotation observed. Original foreground exec session94769 ended; earlier voice preview stopped. Browser automation repeatedly timed out during final screenshot/interaction, so no final screenshot acceptance claim. Fixed dashboard single-column selector specificity after simulator revealed two columns. Public site unchanged; prior voice/audio fixtures remain separate unfinished work. Continue preview review before release gates/deployment.
+
+
+### Simulator loading repair
+Added scripts/start_mobile_preview.ps1, with hidden background launch, readiness check, saved process/log pointers, and guarded -Stop. The new launcher returned SIMULATOR_READY and independent HTTP checks returned200 for simulator/app. State: .local-data/mobile-simulator/server-8083.json. Keep this process available for user preview. Browser URL policy blocked automated visual verification; ask user to refresh the existing simulator tab, do not bypass the block. Live site unchanged.
