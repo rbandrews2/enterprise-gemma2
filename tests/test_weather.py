@@ -37,11 +37,16 @@ class ProviderTests(unittest.TestCase):
                 return httpx.Response(503)
             path = request.url.path
             if path.startswith('/points/'):
-                return httpx.Response(200, json={'properties': {'forecastHourly': 'https://evil.test/secret' if malicious else 'https://api.weather.gov/gridpoints/AKQ/1,2/forecast/hourly', 'observationStations': 'https://api.weather.gov/gridpoints/AKQ/1,2/stations', 'relativeLocation': {'properties': {'city': 'Synthetic city', 'state': 'VA'}}}})
+                return httpx.Response(200, json={'properties': {'forecastHourly': 'https://evil.test/secret' if malicious else 'https://api.weather.gov/gridpoints/AKQ/1,2/forecast/hourly', 'forecast': 'https://api.weather.gov/gridpoints/AKQ/1,2/forecast', 'observationStations': 'https://api.weather.gov/gridpoints/AKQ/1,2/stations', 'relativeLocation': {'properties': {'city': 'Synthetic city', 'state': 'VA'}}}})
             if path.endswith('/hourly'):
                 if forecast_error:
                     return httpx.Response(503)
                 return httpx.Response(200, json={'properties': {'updateTime': now().isoformat(), 'periods': [{'startTime': (now()-timedelta(hours=1)).isoformat(), 'endTime': (now()+timedelta(hours=1)).isoformat(), 'temperature': 70, 'temperatureUnit': 'F', 'shortForecast': 'Cloudy'}]}})
+            if path.endswith('/forecast'):
+                day = now().replace(hour=12, minute=0, second=0, microsecond=0)
+                return httpx.Response(200, json={'properties': {'updateTime': now().isoformat(), 'periods': [
+                    {'startTime': (day+timedelta(days=i)).isoformat(), 'endTime': (day+timedelta(days=i,hours=12)).isoformat(), 'isDaytime': daytime, 'temperature': 72 if daytime else 48, 'temperatureUnit': 'F', 'shortForecast': 'Sunny' if daytime else 'Clear'}
+                    for i in range(4) for daytime in (True,False)]}})
             if path == '/alerts/active':
                 return httpx.Response(200, json={'features': [{'properties': {**a, 'status': 'Actual', 'scope': 'Public'}}]})
             if path.endswith('/stations'):
@@ -61,6 +66,14 @@ class ProviderTests(unittest.TestCase):
         count = len(calls)
         self.assertEqual(provider.current(36.8, -76.2), data)
         self.assertEqual(len(calls), count)
+
+    def test_daily_forecast_contains_real_high_low_and_four_local_dates(self):
+        provider, _ = self.provider()
+        data = provider.current(36.8, -76.2)
+        self.assertEqual(len(data['daily_forecast']), 4)
+        self.assertEqual(data['daily_forecast'][0]['high_f'], 72)
+        self.assertEqual(data['daily_forecast'][0]['low_f'], 48)
+        self.assertEqual(data['daily_forecast'][0]['condition'], 'Sunny')
 
     def test_outage_never_creates_readings_and_backs_off(self):
         provider, calls = self.provider(error=True)

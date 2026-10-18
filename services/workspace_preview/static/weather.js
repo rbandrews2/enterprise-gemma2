@@ -16,6 +16,7 @@ if(typeof document!=='undefined')(()=>{
  const label=(text,input)=>{const l=make('label',text);l.append(input);return l;};
  const field=(type,value='')=>{const n=make('input');n.type=type;n.value=value;return n;};
  const session=()=>window.wzosClock?.getSession(),scope=()=>{const s=session();return s?s.organization_id+':'+s.id:'';};
+ let watchGeneration=0;
  let owner='',epoch=0,sites=[],following=false,watch=null,fix=null,lastWeather=null,lastPoint=null,lastFetch=0,fetching=false,fetchPoint=null,queuedPoint=null,weatherEpoch=0,nearSince={},dismissed=new Set(),lastNotices=0,noticesBusy=false,backgroundEnabled=false;
  const heading=make('div','','weather-heading'),title=make('h2','Weather'),location=make('p','Choose your location','weather-location');
  const follow=button('Use location'),stop=button('Stop'),refresh=button('↻');refresh.setAttribute('aria-label','Refresh weather');refresh.title='Refresh weather';stop.hidden=true;
@@ -23,14 +24,20 @@ if(typeof document!=='undefined')(()=>{
  const summary=make('div','','weather-summary'),status=make('p','','fine'),hazards=make('div','','weather-hazards'),arrival=make('div','','weather-arrival'),notices=make('details'),noticeList=make('div');
  notices.append(make('summary','Job-site weather alerts'),noticeList);
  const config=make('details'),configBody=make('div','','weather-settings');config.append(make('summary','Job weather & arrival settings'),configBody);
- root.append(heading,location,summary,status,hazards,arrival,notices,config);
- function stopWatch(){if(watch!==null)navigator.geolocation?.clearWatch(watch);watch=null;fix=null;nearSince={};arrival.replaceChildren();}
+ root.append(heading,location,summary,status,hazards);
+ const jobTools=make('section','','weather-card weather-job-tools');jobTools.append(arrival,notices,config);root.after(jobTools);
+ function stopWatch(){watchGeneration++;if(watch!==null)navigator.geolocation?.clearWatch(watch);watch=null;fix=null;nearSince={};arrival.replaceChildren();}
  function stopFollow(){following=false;stopWatch();weatherEpoch++;queuedPoint=null;follow.hidden=false;stop.hidden=true;location.textContent=lastWeather?'Last location · following stopped':'Location following stopped';}
- function clear(){epoch++;weatherEpoch++;stopFollow();owner=scope();sites=[];backgroundEnabled=false;lastWeather=null;lastPoint=null;lastFetch=0;queuedPoint=null;nearSince={};dismissed.clear();summary.replaceChildren();hazards.replaceChildren();noticeList.replaceChildren();configBody.replaceChildren();root.querySelector('[data-weather-chooser]')?.remove();status.textContent='';location.textContent='Choose your location';root.hidden=!owner;config.hidden=session()?.role!=='admin';}
+ function clear(){epoch++;weatherEpoch++;stopFollow();owner=scope();sites=[];backgroundEnabled=false;lastWeather=null;lastPoint=null;lastFetch=0;queuedPoint=null;nearSince={};dismissed.clear();summary.replaceChildren();hazards.replaceChildren();noticeList.replaceChildren();configBody.replaceChildren();root.querySelector('[data-weather-chooser]')?.remove();status.textContent='';location.textContent='Choose your location';root.hidden=!owner;jobTools.hidden=!owner;config.hidden=session()?.role!=='admin';}
  function render(data,point){
   lastWeather=data;lastPoint=point;summary.replaceChildren();hazards.replaceChildren();
   location.textContent=point.title||data.location||'Selected location';
   const fmt=(n,suffix)=>Number.isFinite(n)?n+suffix:'—';
+  const outlook=make('div','','weather-outlook');
+  for(const day of (data.daily_forecast||[]).slice(0,4)){
+   const row=make('div','','weather-day');row.append(make('strong',day.label),make('span',day.condition||'Forecast unavailable'),make('strong',`${fmt(day.high_f,'°')} / ${fmt(day.low_f,'°')}`));outlook.append(row);
+  }
+  if(outlook.children.length)summary.append(outlook);
  for(const [name,value] of [['Temperature',fmt(data.temperature_f,'°F')],['Feels like',fmt(data.feels_like_f,'°F')],['Wind',Number.isFinite(data.wind_mph)?fmt(data.wind_mph,' mph'):(data.wind_text||'—')],['Gusts',fmt(data.gust_mph,' mph')],['Rain · past hour',fmt(data.precipitation_inches,' in')]]){
    const item=make('div');item.append(make('span',name),make('strong',value));summary.append(item);
   }
@@ -63,25 +70,26 @@ if(typeof document!=='undefined')(()=>{
    dismiss.onclick=()=>{dismissed.add(site.order_id);arrival.replaceChildren();};arrival.append(review,dismiss);break;
   }
  }
- function startWatch(){
-  stopWatch();if(!navigator.geolocation){status.textContent='Location is unavailable on this device. Choose a job location.';return;}
-  const current=owner;watch=navigator.geolocation.watchPosition(position=>{
+ async function startWatch(){
+  stopWatch();const current=owner,turn=epoch,watchTurn=watchGeneration;
+  let permission='unknown';try{permission=window.wzosDeviceSetup?await window.wzosDeviceSetup.status('geolocation'):(await navigator.permissions.query({name:'geolocation'})).state;}catch{}
+  if(owner!==current||turn!==epoch||watchTurn!==watchGeneration||document.hidden)return;
+  if(permission!=='granted'){following=false;follow.hidden=false;stop.hidden=true;status.textContent='Enable location in device setup or browser settings for local weather.';return;}
+  if(!navigator.geolocation){status.textContent='Location is unavailable on this device.';return;}
+  following=true;follow.hidden=true;stop.hidden=false;
+  watch=navigator.geolocation.watchPosition(position=>{
    if(owner!==current||!following||document.hidden)return;
    fix={latitude:position.coords.latitude,longitude:position.coords.longitude,accuracy:position.coords.accuracy,timestamp:position.timestamp};
    proximity();if(!lastPoint||weatherDistance(fix,lastPoint)>=1000||Date.now()-lastFetch>15*60000)loadWeather(fix);else if(lastWeather)render(lastWeather,lastPoint);
-  },error=>{if(owner===current){fix=null;nearSince={};arrival.replaceChildren();status.textContent=error.code===1?'Location permission denied. Choose a job location.':'Location fix unavailable. Previous weather may be stale.';if(error.code===1)stopFollow();}}, {enableHighAccuracy:false,maximumAge:30000,timeout:15000});
+  },error=>{if(owner===current){fix=null;nearSince={};arrival.replaceChildren();if(error.code===1)stopFollow();status.textContent=error.code===1?'Location permission changed. Enable it in browser settings.':'Location fix unavailable. Previous weather may be stale.';}}, {enableHighAccuracy:false,maximumAge:30000,timeout:15000});
  }
- follow.onclick=()=>{following=true;follow.hidden=true;stop.hidden=false;startWatch();};stop.onclick=stopFollow;
- refresh.onclick=()=>{if(fix)loadWeather(fix);else if(lastPoint)loadWeather(lastPoint);else status.textContent='Use my location or select a configured job below.';};
+ follow.onclick=async()=>{await startWatch();if(!following)window.wzosDeviceSetup?.open();};stop.onclick=stopFollow;
+ refresh.onclick=()=>{if(fix)loadWeather(fix);else if(lastPoint)loadWeather(lastPoint);else startWatch();};
  async function loadSites(){
   const current=owner,turn=epoch;try{const data=await api('/api/weather/sites');if(owner!==current||turn!==epoch)return;sites=data.items;renderSettings();proximity();}catch(error){if(owner===current)status.textContent=error.message;}
  }
  function renderSettings(){
-  configBody.replaceChildren();const picker=make('select');picker.append(Object.assign(make('option','Select job location'),{value:''}));
-  for(const site of sites)picker.append(Object.assign(make('option',site.title),{value:site.order_id}));
-  const use=button('Show job weather');use.onclick=()=>{const site=sites.find(s=>s.order_id===picker.value);if(!site){status.textContent='Choose a configured job.';return;}stopFollow();loadWeather({...site,title:'Job site · '+site.title});};
-  // Job selector is available to both roles without exposing admin settings.
-  let chooser=root.querySelector('[data-weather-chooser]');if(chooser)chooser.remove();chooser=make('details');chooser.dataset.weatherChooser='1';const chooseBody=make('div','','weather-chooser');chooseBody.append(label('Job location',picker),use);chooser.append(make('summary','Job weather locations'),chooseBody,make('p','Use location shares a foreground fix with WZOS and the National Weather Service to fetch weather. Stop following at any time.','fine'));notices.before(chooser);
+  configBody.replaceChildren();
   if(session()?.role!=='admin')return;
   const order=make('select');order.append(Object.assign(make('option','Select work order'),{value:''}));for(const job of window.wzosClock.getOrders())order.append(Object.assign(make('option',job.title),{value:job.id}));
   const lat=field('number'),lon=field('number'),radius=field('number','350'),enabled=field('checkbox'),start=field('datetime-local'),end=field('datetime-local'),save=button('Save site settings'),check=button('Check monitored job weather');
@@ -105,12 +113,12 @@ if(typeof document!=='undefined')(()=>{
    if(!noticeList.children.length)noticeList.append(make('p',backgroundEnabled?'No job-site weather notices.':'No job-site weather notices. Automatic monitoring is not active.'));
   }catch(error){if(owner===current)noticeList.replaceChildren(make('p','Job alerts unavailable.'));}finally{noticesBusy=false;}
  }
- document.addEventListener('wzos:session',()=>{if(scope()!==owner){clear();if(owner){loadSites();loadNotices();}}});
+ document.addEventListener('wzos:session',()=>{if(scope()!==owner){clear();if(owner){loadSites();loadNotices();startWatch();}}});
  document.addEventListener('wzos:view',()=>{if(owner)loadSites();});
- document.addEventListener('wzos:weather-job',event=>{const site=sites.find(s=>s.order_id===event.detail?.order_id);if(site){stopFollow();loadWeather({...site,title:'Job site · '+site.title});}else status.textContent='This job has no reviewed weather location yet.';root.scrollIntoView({behavior:'smooth',block:'start'});});
+ document.addEventListener('wzos:device-permissions',()=>{if(owner)startWatch();});
  document.addEventListener('visibilitychange',()=>{if(document.hidden)stopWatch();else if(owner){if(following){status.textContent='Finding your current location…';startWatch();}else if(lastPoint)loadWeather(lastPoint);loadSites();loadNotices();}});
  window.addEventListener('offline',()=>{if(lastWeather)render({...lastWeather,status:'stale'},lastPoint);});
  window.addEventListener('online',()=>{if(owner){loadSites();loadNotices();if(lastPoint)loadWeather(lastPoint);}});
  setInterval(()=>{if(!owner||document.hidden)return;proximity();if(lastWeather&&lastWeather.status!=='stale'&&(weatherStale(lastWeather)||!navigator.onLine))render({...lastWeather,status:'stale'},lastPoint);if(Date.now()-lastFetch>=15*60000&&lastPoint&&(!following||fix))loadWeather(fix||lastPoint);if(Date.now()-lastNotices>=60000)loadNotices();},10000);
- clear();if(owner){loadSites();loadNotices();}
+ clear();if(owner){loadSites();loadNotices();startWatch();}
 })();

@@ -44,9 +44,12 @@
    close.hidden=Boolean(job.manual);
    close.onclick=clear;let coordinates=null, configured=false, locating=false;
    origin.oninput=()=>{coordinates=null;};calculate.disabled=true;
-   locate.onclick=()=>{
+   locate.onclick=async()=>{
     if(locating||!navigator.geolocation)return;
-    locating=true;locate.disabled=true;calculate.disabled=true;origin.disabled=true;status.textContent='Requesting location permission…';
+    let permission='unknown';try{permission=window.wzosDeviceSetup?await window.wzosDeviceSetup.status('geolocation'):(await navigator.permissions.query({name:'geolocation'})).state;}catch{}
+    if(!active())return;
+    if(permission!=='granted'){status.textContent='Enable location in device setup or enter a starting address.';window.wzosDeviceSetup?.open();return;}
+    locating=true;locate.disabled=true;calculate.disabled=true;origin.disabled=true;status.textContent='Finding your location…';
     navigator.geolocation.getCurrentPosition(position=>{
      if(!active())return;coordinates={latitude:position.coords.latitude,longitude:position.coords.longitude};
      origin.value='Current location';status.textContent=`Reported location accuracy: approximately ${Math.round(position.coords.accuracy)} metres. Confirm the starting point before calculating.`;

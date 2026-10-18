@@ -6,9 +6,9 @@ function fixture(states={microphone:'prompt',geolocation:'prompt'},deny=false){
  const events={},storage=new Map(),calls={microphone:0,location:0,stopped:0};
  const element=tag=>({tag,children:[],hidden:false,append(...n){this.children.push(...n);},prepend(n){this.children.unshift(n);},replaceChildren(...n){this.children=n;},setAttribute(){},scrollIntoView(){}});
  const main=element('main'),window={wzosClock:{getSession:()=>({id:'member',organization_id:'org'})},addEventListener:(k,f)=>events[k]=f};
- const document={getElementById:()=>main,createElement:element,addEventListener:(k,f)=>events[k]=f};
+ const document={getElementById:()=>main,createElement:element,addEventListener:(k,f)=>events[k]=f,dispatchEvent:e=>events[e.type]?.()};
  const navigator={permissions:{query:async({name})=>({state:states[name]})},mediaDevices:{getUserMedia:async()=>{calls.microphone++;if(deny)throw Error('Denied');states.microphone='granted';return {getTracks:()=>[{stop(){calls.stopped++;}}]};}},geolocation:{getCurrentPosition(resolve,reject){calls.location++;if(deny)return reject(Error('Denied'));states.geolocation='granted';resolve({coords:{latitude:1,longitude:2}});}}};
- vm.runInNewContext(fs.readFileSync('services/workspace_preview/static/device-setup.js','utf8'),{window,document,navigator,localStorage:{getItem:k=>storage.get(k),setItem:(k,v)=>storage.set(k,v)}});
+ vm.runInNewContext(fs.readFileSync('services/workspace_preview/static/device-setup.js','utf8'),{CustomEvent:class{constructor(type){this.type=type;}},window,document,navigator,localStorage:{getItem:k=>storage.get(k),setItem:(k,v)=>storage.set(k,v)}});
  return {window,events,panel:main.children[0],calls,storage};
 }
 test('onboarding requests neither device automatically; one enable action checks both and stops mic',async()=>{

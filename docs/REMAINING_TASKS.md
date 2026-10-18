@@ -115,3 +115,12 @@ older evidence remain there; do not silently discard or re-open completed gates.
 - Preserve approved black/amber glass design; mobile landing uses its launch cards.
 - Later production target dates are unset. Work efficiently; do not manufacture
   readiness claims or repeat large suites for documentation-only changes.
+
+
+## October 18 current local candidate
+- [x] Personal weather independent of job selection; four-day NWS outlook and high/low values.
+- [x] Location permission checks before weather foreground restarts, navigation fixes and Time Tracker captures; setup remains the explicit prompt point.
+- [x] Reuse sidebar glass cards in a visible vertical mobile list; no duplicate landing-page menu.
+- [ ] Read earlier Smart Field Voice cloud exit files, then validate integrated current candidate. No claim that f176c53 gate covers later UI/weather changes.
+- [ ] Real Android retained/revoked location and mobile menu checks, forecast visual acceptance, then approved release. No deployment yet.
+- [ ] Plan confirmed PWA + Android first, then iOS; no native build started.

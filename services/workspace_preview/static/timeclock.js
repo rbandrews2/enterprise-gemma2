@@ -106,7 +106,9 @@
   const owner=actorId;if(!owner||(locationStopped&&!['clock_in','clock_out'].includes(event)))return;
   if(locations.length>=2000){locationStatus.textContent='Location storage full. Connect to upload saved evidence.';return;}
   const item={request_id:crypto.randomUUID(),command_id:commandId,shift_id:shiftId,event,task,captured_at:new Date().toISOString()};
+  let locationPermission='unknown';try{locationPermission=window.wzosDeviceSetup?await window.wzosDeviceSetup.status('geolocation'):(await navigator.permissions.query({name:'geolocation'})).state;}catch{}
   const position=await new Promise(resolve=>{
+   if(locationPermission!=='granted'){resolve({unavailable:'permission_denied'});return;}
    if(!navigator.geolocation){resolve({unavailable:'unavailable'});return;}
    navigator.geolocation.getCurrentPosition(p=>resolve({latitude:p.coords.latitude,longitude:p.coords.longitude,accuracy:p.coords.accuracy}),
     e=>resolve({unavailable:e.code===1?'permission_denied':e.code===3?'timeout':'unavailable'}),{enableHighAccuracy:true,maximumAge:0,timeout:10000});

@@ -19,7 +19,7 @@ function harness({fail=()=>false,gate=()=>null,storage,locks,confirm=()=>true,se
  const get=id=>{if(!nodes.has(id))nodes.set(id,element());return nodes.get(id)};
  const intervals=[];let now=Date.now();class DeviceDate extends Date{constructor(...args){super(...(args.length?args:[now]))}static now(){return now}};
  let session=initial||{id:'member',organization_id:'org-a',role:'member'},calls=[];
- const navigator={onLine:true,...(geo?{geolocation:{getCurrentPosition(ok,fail){if(denyGeo)fail({code:1});else ok({coords:{latitude:37,longitude:-79,accuracy:12}})}}}:{}),locks:locks===false?undefined:locks||(storage?lockManager(storage):undefined)};
+ const navigator={onLine:true,permissions:{query:async()=>({state:geo&&!denyGeo?'granted':'denied'})},...(geo?{geolocation:{getCurrentPosition(ok,fail){if(denyGeo)fail({code:1});else ok({coords:{latitude:37,longitude:-79,accuracy:12}})}}}:{}),locks:locks===false?undefined:locks||(storage?lockManager(storage):undefined)};
  const document={getElementById:get,createElement:element,addEventListener(k,v){events[k]=v},dispatchEvent(){}};
  const responses=(path,options)=>{
   if(path.includes('/status'))return {active:{id:'shift',version:1,work_seconds:100,status:'working',task:'job_site',note:''},tasks:{job_site:'Job Site'}};

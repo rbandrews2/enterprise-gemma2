@@ -166,3 +166,7 @@ Cloud evidence: directory referenced by $HOME/wzos-daily-frame-path.txt; deploy.
 Historical full handoff: history/SESSION_HANDOFF_before_sms_acceptance_20261017.md.
 Historical full checklist: history/REMAINING_TASKS_before_sms_acceptance_20261017.md.
 Archives preserve the complete earlier text; paths in them refer to the original docs root.
+
+
+## October 18 personal weather / permission / mobile menu increment
+See WEATHER_MOBILE_UPDATE_20261018.md. Current local changes separate location weather from job tools, add four-day high/low forecasts, guard geolocation calls in weather/navigation/time, and reuse desktop cards as a visible vertical mobile list (drawer rejected). Focused checks:23 Node +27 offline Node +11 Python PASS. Public app unchanged; integrated release gates and real mobile acceptance remain open. Smart Field Voice f176c53 cloud results not yet read: Cloud Shell page binding stale after reconnect/reload. Preserve existing fixture/audio helper files; they belong to earlier voice work. No native app packaging started; user chose PWA + Android first, then iOS.

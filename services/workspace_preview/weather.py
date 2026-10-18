@@ -157,6 +157,29 @@ class NWS:
                           'wind_mph': None, 'gust_mph': None, 'precipitation_inches': None,
                           'wind_text': str(period.get('windSpeed') or '')[:64],
                           'alerts': alerts_normalized(raw['features'])}
+                # Daily forecast uses the provider's local dates, never server timezone.
+                result['daily_forecast'] = []
+                try:
+                    daily = self.get(client, meta['forecast'])['properties']
+                    days = {}
+                    for entry in daily.get('periods', [])[:16]:
+                        end = instant(entry.get('endTime'))
+                        start = instant(entry.get('startTime'))
+                        if not end or not start or end <= now() or entry.get('temperatureUnit') != 'F':
+                            continue
+                        start = datetime.fromisoformat(str(entry['startTime']).replace('Z', '+00:00'))
+                        day = days.setdefault(start.date().isoformat(), {
+                            'date': start.date().isoformat(), 'label': start.strftime('%a'),
+                            'high_f': None, 'low_f': None, 'condition': ''})
+                        temperature = entry.get('temperature')
+                        if isinstance(temperature, (int, float)) and not isinstance(temperature, bool) and math.isfinite(temperature):
+                            day['high_f' if entry.get('isDaytime') else 'low_f'] = temperature
+                        if entry.get('isDaytime') or not day['condition']:
+                            day['condition'] = str(entry.get('shortForecast') or '')[:180]
+                    result['daily_forecast'] = list(days.values())[:4]
+                    result['forecast_source_time'] = daily.get('updateTime')
+                except (httpx.HTTPError, ValueError, KeyError, TypeError, AttributeError):
+                    pass
                 # Observation failure must not discard successfully retrieved official alerts.
                 try:
                     stations = self.get(client, meta['observationStations']).get('features') or []

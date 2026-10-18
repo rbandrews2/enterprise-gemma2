@@ -1,9 +1,9 @@
 const test=require('node:test'),assert=require('node:assert/strict'),vm=require('node:vm'),fs=require('node:fs');
-function harness({enabled=true,mapFailure=true,manual=false}={}){
+function harness({enabled=true,mapFailure=true,manual=false,permission='granted'}={}){
  const events={},windowEvents={},calls=[],gps=[],maps=[];let session={id:'member',organization_id:'org1',edition:'enterprise'},hold=null;
  function element(tag){return{tag,textContent:'',value:'',children:[],isConnected:true,append(...nodes){this.children.push(...nodes);},insertBefore(node,before){this.children.splice(this.children.indexOf(before),0,node);},replaceChildren(...nodes){this.children=nodes;},setAttribute(name,value){this[name]=value;},removeAttribute(name){delete this[name];},remove(){this.isConnected=false;}};}
  const document={createElement:element,addEventListener:(name,fn)=>events[name]=fn};
- const navigator={onLine:true,geolocation:{getCurrentPosition:(...args)=>gps.push(args)}};
+ const navigator={permissions:{query:async()=>({state:permission})},onLine:true,geolocation:{getCurrentPosition:(...args)=>gps.push(args)}};
  const response={status:'ready',distance_meters:2400,duration_seconds:300,calculated_at:new Date().toISOString(),destination:'Frozen site',destination_basis:'dispatched_snapshot',directions:[{instruction:'Head east <script>'}],encoded_polyline:'??'};
  const window={addEventListener:(name,fn)=>windowEvents[name]=fn,wzosClock:{getSession:()=>session,api:async(path,options)=>{
   calls.push({path,options});if(path.endsWith('/config'))return{routes_enabled:enabled};return hold||response;
@@ -43,7 +43,7 @@ test('No automatic location or route calls; manual calculation uses assignment, 
  assert.equal(body.origin.address,'Starting address');assert.match(h.text(),/Head east <script>/);assert.match(h.text(),/Map display unavailable/);
 });
 test('Geolocation requires a click and denial allows manual address',async()=>{
- const h=harness();await h.open();h.find('Use my current location').onclick();assert.equal(h.gps.length,1);
+ const h=harness();await h.open();await h.find('Use my current location').onclick();assert.equal(h.gps.length,1);
  assert.equal(h.calls.length,1);h.gps[0][1]();assert.match(h.text(),/permission was declined/);
  h.origin().value='Manual origin';await h.submit();assert.equal(h.calls.length,2);
 });
@@ -81,3 +81,5 @@ test('Overview map failure is explicit and does not remove destinations',async()
  const h=harness();await h.overview();assert.match(h.text(),/Map unavailable: Maps unavailable/);
  assert.ok(h.find('Get directions'));assert.equal(h.maps.length,0);
 });
+
+test('expired location grants do not re-prompt during navigation',async()=>{const h=harness({permission:'prompt'});await h.open();await h.find('Use my current location').onclick();assert.equal(h.gps.length,0);assert.match(h.text(),/Enable location in device setup/);h.origin().value='Manual origin';await h.submit();assert.equal(h.calls.length,2);});

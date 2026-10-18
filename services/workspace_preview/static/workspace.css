@@ -227,3 +227,11 @@ p{font-size:calc(var(--wzos-paragraph-font-size,1em) + 1pt)!important}
 
 /* Supplied WZOS artwork: preserve proportions and existing glass layout. */
 .brand .brand-logo{display:block;object-fit:contain;width:48px;height:54px;flex:0 0 48px;padding:0;background:transparent;border-radius:0;letter-spacing:normal}.account-brand-logo{display:block;width:80px;height:89px;object-fit:contain;margin:0 auto 16px}.dashboard-brand-logo{display:block;width:64px;height:71px;object-fit:contain;margin:0 0 12px}@media(max-width:600px){.brand .brand-logo{width:40px;height:45px;flex-basis:40px}.dashboard-brand-logo{width:54px;height:60px}}
+
+/* Phone workspace: visible vertical glass cards, matching the desktop sidebar. */
+@media(max-width:760px){
+ .sidebar nav{display:flex;flex-direction:column;gap:10px}
+ .sidebar .nav-item{display:flex;align-items:center;width:100%;min-height:64px;padding:16px;text-align:left;font-size:16px;border-radius:20px}
+ #dashboard-view .hub-grid{grid-template-columns:minmax(0,1fr)}
+ #dashboard-view .hub-card{min-height:64px;flex-direction:row;align-items:center;padding:16px;border-radius:20px}
+}
