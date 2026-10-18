@@ -37,6 +37,12 @@ First pilot stopped during model startup: vLLM rejected obsolete `--disable-log-
 
 Reference: https://docs.vllm.ai/en/v0.21.0/configuration/engine_args/ (request logging flags).
 
+## Repaired pilot result and invocation readiness follow-up
+
+Model startup repair79c332e succeeded. Private model, identity, resource and logging policy verified; synthetic job configuration verified. Execution wzos-field-voice-pilot-26998 failed at the first structured extraction after successful Speech transcription. Model request was rejected by Cloud Run's authentication/IAM layer (`run.routes.invoke`), before model generation. Saved model IAM binds exactly the WZOS runtime; saved job identity matches, and target is canonical status.url. These establish configuration but do not prove permission propagation at request time. Both workloads removed, absence independently verified, pilot.exit1. No customer data or SMS. Evidence /tmp/wzos-field-voice-repaired.BtRxb572, failed-job-all.json and extraction-model.log; original first failure retained separately.
+
+Harness-only follow-up adds bounded authenticated GET /health before paid provider calls, with token audience/runtime-identity checks that never print claims/token. Cloud Run still verifies signatures and IAM. Readiness retries only403, at most13 checks/180 seconds waiting;401/redirect/other errors stop. No transcription/inference retries. Test image changes; app image/runtime95bc0f8 stays frozen. Six local no-network guard checks PASS. Local mocked workflow is blocked by sandbox temporary persistence PermissionError; rerun in Cloud Shell before building. Request new exact-image job/model-pilot approval after build, same resource/$5/cleanup bounds; previous job approval was consumed by the failed execution.
+
 ## Production activation — NOT yet approved
 
 After real pilot acceptance and verified cleanup, deploy the immutable app image from runtime95bc0f8 with only four Field Voice environment changes. First stage a same-image disabled revision, then enabled revision without traffic; compare existing identity, secrets, database/storage configuration, resources and ingress. Preserve ordinary Atlas chat OFF and all unrelated integrations. Switch public traffic only after these checks; hash public assets and verify anonymous API denials. Rollback routes traffic to the same-image disabled revision and preserves drafts/submitted reports; no destructive DDL or new migration is included.

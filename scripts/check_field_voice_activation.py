@@ -18,6 +18,7 @@ if phase == 'pilot':
     assert value['status']=='PASS' and value['mode']=='live' and value['synthetic_only']
     assert value['speech_requests']==10 and 8<=value['model_requests']<=10
     assert value['sms_sent']==0 and value['raw_audio_or_transcript_logged'] is False
+    assert 1<=value['model_readiness_checks']<=13
 elif phase == 'baseline':
     before, actual = read('app-before.json'), read('activation-before.json')
     assert before['spec']==actual['spec'] and traffic(actual)==prior, 'Review live configuration drift'

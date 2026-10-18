@@ -134,6 +134,7 @@ values=[r['jsonPayload'] for r in rows if 'jsonPayload' in r]
 value=values[0] if len(values)==1 else json.loads('\n'.join(r.get('textPayload','') for r in rows))
 assert value['status']=='PASS' and value['mode']=='live' and value['synthetic_only']
 assert value['speech_requests']==10 and 8<=value['model_requests']<=10 and value['sms_sent']==0
+assert 1<=value['model_readiness_checks']<=13
 assert len(value['checks'])==10 and value['raw_audio_or_transcript_logged'] is False
 (p/'pilot-result.json').write_text(json.dumps(value,indent=2)); print('FIELD_VOICE_LIVE_PILOT_PASS speech=10 model='+str(value['model_requests'])+' sms=0')
 PY

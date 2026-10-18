@@ -4,6 +4,7 @@ No production DB/bucket binding, customer identity, listener or outbound SMS.
 Only structured check summaries are printed; never audio or raw transcripts.
 """
 import argparse
+import asyncio
 import base64
 import hashlib
 import json
@@ -20,6 +21,33 @@ JOB = 'wzos-field-voice-pilot'
 CASES = ['traffic-devices', 'explicit-no-incident', 'quantity-correction',
          'two-incidents', 'unknown-quantity', 'unrelated', 'injection',
          'ambiguous-time', 'silence', 'noise']
+
+
+async def private_model_ready(origin, identity, transport=None, attempts=13, pause=15):
+    """Bounded IAM propagation check before any paid speech or extraction call.
+
+    Decoding checks token routing only; Cloud Run still verifies signature/IAM.
+    Never print or retain the token or its claims. Retry only the readiness GET,
+    never transcription or inference. A 401 or other failure stops immediately.
+    """
+    import httpx
+    token = await identity(origin)
+    payload = token.split('.')[1]
+    claims = json.loads(base64.urlsafe_b64decode(payload + '=' * (-len(payload) % 4)))
+    require(claims.get('aud') == origin and bool(claims.get('sub')),
+            'metadata token routing mismatch')
+    require(claims.get('email') == 'wzos-v2-accounts@enterprise-gemma2.iam.gserviceaccount.com',
+            'metadata token runtime identity mismatch')
+    async with httpx.AsyncClient(transport=transport, trust_env=False,
+                               follow_redirects=False, timeout=20) as client:
+        for attempt in range(attempts):
+            response = await client.get(origin + '/health', headers={'Authorization':'Bearer '+token})
+            if response.status_code == 200:
+                return attempt + 1
+            require(response.status_code == 403, 'model readiness HTTP '+str(response.status_code))
+            if attempt + 1 < attempts:
+                await asyncio.sleep(pause)
+    raise RuntimeError('model invocation IAM not ready after bounded wait')
 
 
 def require(value, check):
@@ -73,6 +101,12 @@ def run(audio_root, mode='live'):
 
     async def speech_identity():
         return 'synthetic.adc.token'
+
+    ready_checks = 0
+    if mode == 'live':
+        from services.workspace_preview.cloud_intelligence import service_url
+        origin = service_url(os.getenv('WZOS_FIELD_VOICE_MODEL_URL', ''))
+        ready_checks = asyncio.run(private_model_ready(origin, identity))
 
     def fake_speech(request):
         digest = hashlib.sha256(base64.b64decode(json.loads(request.content)['content'])).digest()
@@ -189,7 +223,7 @@ def run(audio_root, mode='live'):
                     require(response.status_code == 422, case+' must not create work')
                     checks.append({'case':case, 'status':'rejected', 'seconds':round(time.monotonic()-started, 2)})
                     continue
-                require(response.status_code == 200, case+' structured extraction')
+                require(response.status_code == 200, case+' structured extraction HTTP '+str(response.status_code))
                 fields = response.json()['fields']; require(fields['work_date'] is None, 'no invented date')
                 assess(case, fields['report'])
                 with storage.connect() as db:
@@ -232,7 +266,7 @@ def run(audio_root, mode='live'):
                     require(set(json.loads(row['payload'])) == {'work_date', 'report'}, 'structured persistence only')
         require(len(speech_calls) == 10 and 8 <= len(model_calls) <= 10, 'paid request budget')
     result = {'status':'PASS', 'mode':mode, 'synthetic_only':True, 'identity':'Google metadata/ADC' if mode == 'live' else 'mocked',
-        'speech_requests':len(speech_calls), 'model_requests':len(model_calls),
+        'speech_requests':len(speech_calls), 'model_requests':len(model_calls), 'model_readiness_checks':ready_checks,
         'raw_audio_or_transcript_logged':False, 'sms_sent':0, 'checks':checks}
     print(json.dumps(result), flush=True)
 
