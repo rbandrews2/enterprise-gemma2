@@ -12,7 +12,9 @@ test "$(cat "$root/final-gate.exit")" = 0
 cd "$root/source-final"
 test "$(git rev-parse --short=7 HEAD)" = "$candidate"
 test "$(git rev-parse HEAD)" = "$(cat "$root/final-tested-source.txt")"
-test -z "$(git status --porcelain)"
+# The disposable test environment is an explicitly excluded symlink, not source.
+test -L .venv-accounts-test
+test -z "$(git status --porcelain -- . ':!.venv-accounts-test')"
 gcloud run services describe wzos-v2-accounts --region=us-central1 --project="$project" --format=json > "$root/build-before.json"
 python3 - "$root" "$base" <<'PY'
 import json,sys
