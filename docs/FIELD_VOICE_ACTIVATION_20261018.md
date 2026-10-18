@@ -2,11 +2,11 @@
 
 User goal: make the deployed Enterprise Smart Field Voice operational. Existing runtime source c944173 passed831 PostgreSQL/148 Node checks. Activation is separate from those mocked/provider-independent checks.
 
-## Speech setup — approval required
+## Speech setup — approved and verified
 
 In enterprise-gemma2, enable speech.googleapis.com. Create custom role wzosFieldVoiceSpeech with exactly speech.recognizers.recognize and bind it only to wzos-v2-accounts@enterprise-gemma2.iam.gserviceaccount.com. This is an ongoing project-scoped recognition permission, not secret, storage, database or administrator access. Use US Speech V2 synchronous short/en-US, no logging opt-in, no GCS audio objects. Rollback removes that one binding and disables the feature flags; do not disable shared APIs without impact review.
 
-## Private model pilot — approval required
+## Private model pilot — approved, not yet launched
 
 Restore only wzos-atlas-inference with the existing pinned Google vLLM image sha256:3fbc0e08c46e7736145c9effbcc8839682c80b15b413335146f4428fc3523c8a, retained checksum-verified GCS Gemma4 31B weights, dedicated wzos-atlas-inference identity and existing isolated network/subnet. One RTX PRO6000,20CPU/80GiB,min0/max1,concurrency2,no public invocation. Grant only the WZOS application identity service-scoped roles/run.invoker. No HF secret binding needed.
 
@@ -23,4 +23,8 @@ Live activation preserves ordinary Atlas chat configuration and existing databas
 Sources: https://cloud.google.com/run/pricing ; https://cloud.google.com/speech-to-text/pricing ; https://docs.cloud.google.com/iam/docs/roles-permissions/speech
 
 ## Prepared implementation
-Transport isolation and reviewed synthetic harness are committed in1b7c2b3. Local dry-run PASS:10 synthetic audio attempts/8 mocked extractions; role/tenant/stale denials, review, atomic DWR+incident receipt, idempotency, unknown quantities and zero SMS. Local focused Python16 ran:10 pass,6 PostgreSQL cases skipped pending cloud gate. Generated synthetic audio archiveSHA256 f70a0cdae930dc9b315d2a47660f3a7b8f54e17452b81e42373b0e545c200436; uploaded to Cloud Shell only, not Git or customer storage. Cloud validation pointer: $HOME/wzos-field-voice-path.txt. Speech and model approval questions sent; neither answer received as of this checkpoint. No API enablement, role binding, GPU creation, job identity assignment or production activation performed.
+Final runtime candidate95bc0f8 isolates voice from ordinary chat and adds processing notices. Prior candidate passed832 PostgreSQL/148 Node checks; final gates are running. Generated synthetic audio archiveSHA256 f70a0cdae930dc9b315d2a47660f3a7b8f54e17452b81e42373b0e545c200436; uploaded to Cloud Shell only, not Git or customer storage. Cloud validation pointer: $HOME/wzos-field-voice-path.txt. User approved scoped Speech setup and bounded private model pilot. Speech setup completed with FIELD_VOICE_SPEECH_SETUP_VERIFIED: enabled API and exact one-permission role/binding read back. No GPU/job creation or public activation yet.
+
+## Disposable pilot job — approval pending built image
+
+Prepared run_field_voice_pilot.sh creates only wzos-field-voice-pilot using the separately built synthetic harness image and existing WZOS app identity. One task,15minutes,1CPU/512MiB,no retries. Identity retains its existing effective permissions, although the reviewed harness uses no database, secret or bucket bindings and only temporary local persistence. Ten synthetic Speech attempts,8–10 structured extractions; no customer sends. Remove job and model with ownership checks and independent cleanup verification. Request exact-image approval after build; existing model approval does not authorize this job identity assignment.
