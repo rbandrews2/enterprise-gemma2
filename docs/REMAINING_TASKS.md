@@ -7,6 +7,11 @@ older evidence remain there; do not silently discard or re-open completed gates.
 
 ## Closed latest checkpoint
 
+- [x] Private full-size Atlas31B operator pilot:8/8 synthetic responses, mean2.86s
+  warm; verified service deletion/guard stop/production unchanged. No customer Atlas
+  activation. See ATLAS_PILOT_RESULTS_20261018.md. Context corrections local27 PASS;
+  release gates and app/source integration remain below.
+
 - [x] Core-admin Enterprise upgrade implementation deployed, sourcebf9f524/image
   f347f690…,100% upgrade-live-bf9f524. Final810 PostgreSQL/136 Node/7 SDK gates pass;
   persisted Stripe permissions, non-persisted credit/tax preview, schema, public
@@ -39,10 +44,13 @@ older evidence remain there; do not silently discard or re-open completed gates.
    devices see/hear each other inside WZOS; Leave stops camera/microphone; validate
    cancellation/expiry and participant revocation behavior. Recording/transcription off;
    approved initial session maximum two devices/five minutes. See DAILY_MEETINGS_INTEGRATION_20261014.md.
-4. [ ] Atlas actual Gemma inference: verify HF_TOKEN binding and current startup logs;
-   repair model startup/configuration, then bounded real module/source/security
-   evaluations. Do not equate Atlas UI/retrieval/scanner success with model inference.
-   Price resource changes before provisioning; refresh actual budget and limits.
+4. [ ] Atlas in-app integration: private31B operator inference passed8/8. GCS loading
+   needs no HF_TOKEN binding; no model service remains after bounded cleanup. Run
+   integrated gates for the prepared current-capability context patch, then validate
+   actual WZOS metadata-token invocation and grounded saved-job/source responses.
+   Real cold requests, security/source evaluations and ongoing hosting remain open.
+   Do not equate UI/retrieval/scanner or operator-token success with app acceptance.
+   Price further resource changes and obtain scoped workload access approval.
 5. [ ] User-led paid Core-to-Enterprise acceptance remains. Implementation is live,
    key permissions saved and non-persisted provider preview passed. No real payment
    attempted. See CORE_UPGRADE_RELEASE_20261018.md. Validate one-time $20

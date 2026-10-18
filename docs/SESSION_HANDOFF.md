@@ -17,11 +17,16 @@ compatible/missing[]/conflicts[]; proxy independently absent; browser admin ente
 Molecular Enterprise dashboard. Runtime/secrets/weather/media policy preserved.
 Rollback MUST use upgrade-hold-bf9f524 on the same image to preserve paid-upgrade
 webhooks. Paid existing-Core acceptance is still a user action, not yet passed.
-Next: ATLAS_RESTART_SCOPE_20261018.md, private31B bounded-pilot approval pending.
-Quota1000 milliGPU,10 retained objects with matching Google CRC/size metadata,
-existing private model-viewer binding and isolated PGA subnet verified. App deadline
-300s, existing dedicated model identity confirmed. No GPU/model service started.
-Atlas command rendered/checked only; never treat this as inference acceptance.
+Atlas private31B pilot COMPLETE:8/8 synthetic operator responses, warm2.064-4.017s,
+mean2.860;4823 input/466 output tokens. Guard->cleanup351.13s, compute-window estimate
+$0.311 (not verified billing). Model service absence, stopped guard, unchanged app
+spec and Atlas=0 independently verified. See ATLAS_PILOT_RESULTS_20261018.md.
+Local context correction prepared after the live replies exposed stale messaging
+help; updates embedded meetings/SMS/form delivery/navigation and fixes cross-page
+time matching.27 focused mocked context/transport checks pass. Not yet deployed;
+full integration gates required on the new source before release. Pilot did not
+prove real app metadata auth or source grounding; both are next bounded-test gates.
+No active model/GPU service remains; do not automatically replay the consumed pilot.
 The older development section below is historical; its deployment blocker is closed.
 
 ## Completed this session

@@ -103,7 +103,20 @@ class OperationalContextTests(unittest.TestCase):
     def test_guidance_describes_implemented_functions_without_autonomous_claims(self):
         self.assertIn('submit assessments', module_context('training', 'member')['guidance'])
         self.assertIn('not issue a certificate', module_context('training', 'admin')['guidance'])
-        self.assertIn('Google Meet link created in Google', module_context('messages', 'member')['guidance'])
+        self.assertIn('join inside WZOS', module_context('messages', 'member')['guidance'])
+        self.assertIn('members cannot compose organization SMS', module_context('messages', 'member')['guidance'])
+        self.assertIn('Send text notification', module_context('messages', 'admin')['guidance'])
+        self.assertIn('Send to office', module_context('forms', 'member')['guidance'])
+        self.assertIn('Start navigation in Google Maps', module_context('navigation', 'member')['guidance'])
         self.assertIn('private PDF', module_context('report', 'admin')['guidance'])
         self.assertIn('Do not infer compliance from record counts', GUIDE)
         self.assertFalse(module_context('training', 'admin')['autonomous_actions_enabled'])
+
+    def test_cross_page_questions_receive_current_time_and_meeting_help(self):
+        from services.workspace_preview.intelligence import related_module_context
+        time_help = related_module_context('Can you correct my timesheet?', 'forms', 'member', 'core')
+        self.assertEqual([item['module'] for item in time_help], ['time_clock'])
+        meeting_help = related_module_context('How do I join a video meeting?', 'forms', 'member', 'enterprise')
+        self.assertEqual([item['module'] for item in meeting_help], ['messages'])
+        self.assertIn('Members cannot create meetings', meeting_help[0]['guidance'])
+        self.assertFalse(meeting_help[0]['autonomous_actions_enabled'])
