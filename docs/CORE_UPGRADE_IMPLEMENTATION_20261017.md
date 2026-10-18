@@ -80,3 +80,39 @@ at clone/checkout before the last Git push completed; inspect source-final HEAD 
 validation-final.exit before restarting. Earlier baseline804 PASS is not the final
 backend guard gate. Current production remains weather-hourly-1017; no deployment
 or live upgrade/payment command was submitted. Synthetic preview is local only.
+
+## Reconnected final validation
+
+Cloud Shell project enterprise-gemma2 verified. The earlier multiline submission
+was truncated before checkout; source-final was still6f6f038 and no final gate had
+run. Recovered the clean owned source to bf9f524 and launched the saved script
+using one encoded line to avoid terminal paste corruption.
+
+Exact bf9f524 final gates PASS: PostgreSQL810 tests in392.190s, failures0/errors0/
+skipped0; Node136 tests, failures0/skipped0; Stripe SDK7 tests PASS; pip check reports
+no broken requirements. Installed SDK15.6.0 explicitly supports the preview
+invoice_items.price field used by the adapter. These checks do not prove live key
+permissions or successful provider payment; no real charge/subscription write made.
+
+Image build helper scripts/build_core_upgrade.sh reuses accepted production base
+edb4a3c4… and copies only services. It refuses a different source, failed/missing
+final gate, unexpected source changes, or live image/traffic drift. The first
+attempt stopped before submission on the disposable .venv-accounts-test symlink;
+the guard now excludes only that symlink and requires it to remain a symlink. The
+build upload excludes it explicitly. No dependency resolution occurs in the image.
+First build37d23fe9-6f6f-4687-b6d6-034a22a47871 was cancelled while queued to fix
+compile ordering before dropping to non-root runtime. Cancellation independently
+verified. Corrected helper5274351 submitted builda651a66a-82eb-43c9-8193-621029f2ab77;
+last observed QUEUED. Inspect upgrade-build-launch.log/upgrade-build-id.txt under
+$HOME/wzos-core-upgrade-path.txt before repeating. No live cutover/activation yet.
+
+Stripe permissions review is still blocked on dashboard sign-in: the in-app tab
+shows login, Chrome is absent from connected-browser inventory. Ray was asked to
+sign in in the Codex panel or connect Chrome. Never infer that a user saying ready
+means the inspected tab is authenticated. No broader key permissions granted.
+
+Read-only Atlas preflight: retained model prefix gemma-4-31B-it/ contains10 objects,
+62,578,670,545 bytes (58.28GiB); isolated wzos-atlas-us-central1 subnet retains Private
+Google Access and10.83.0.0/26. Object count/size is not a fresh integrity or inference
+acceptance result. Metadata and bucket policy saved in the same cloud evidence root.
+No GPU/model service was started, no IAM/network/model storage changed.

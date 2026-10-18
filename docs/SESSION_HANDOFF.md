@@ -57,21 +57,31 @@ Final focused local19 billing +6 Node UI cases PASS; synthetic desktop/mobile br
 flow passed. Baseline2febb92 cloud PostgreSQL804 PASS/no skips; SDK dependency install
 then blocked on an old commerce crypto declaration. Repaired to>=49,<51 to match the
 already validated accounts graph (webauthn3.0.1,cryptography50.0.2,pyOpenSSL26.4.0).
-Final cloud validation submission for bf9f524 is UNVERIFIED after browser timeout;
-read existing state before resubmitting. It may have stopped during clone/checkout.
-Pointer$HOME/wzos-core-upgrade-path.txt; expected final logs validation-final.exit,
-final-sdk.log,final-postgres.log,final-node.log; candidate source-final/. No deploy
-command was submitted. Public app remains weather-hourly-1017, same accepted image.
+Reconnected final bf9f524 gate PASS: PostgreSQL810 in392.190s,0 failures/errors/skips;
+Node136 PASS/no skips; Stripe SDK7 PASS; pip check clean. Earlier paste was truncated
+before checkout; recovered clean source-final and submitted an encoded script.
+Pointer$HOME/wzos-core-upgrade-path.txt; validation-final.exit=0,final-sdk.log,
+final-postgres.log,final-node.log. Image build helper prepared/pushed5274351. Initial
+attempt stopped on the disposable venv symlink; first submitted build37d23fe9… was
+cancelled to correct compile ordering before dropping to the non-root runtime.
+Corrected build resubmitted: read upgrade-build-id.txt/upgrade-build-launch.log and
+actual Cloud Build status before continuing. No deploy or Stripe write submitted.
+Public app remains weather-hourly-1017, same accepted image.
 
-Resume: reconnect Cloud Shell, inspect final source/gate files, finish SDK/full PG/
-Node gates, verify Stripe preview/key permissions without charging, then guarded
+Resume: inspect corrected build status, verify Stripe preview/key permissions
+without charging, then guarded
 rollout/activation. Live payment requires user action; never charge for acceptance.
+Stripe in-app tab still shows login; Chrome absent from browser inventory. Ray was
+asked to sign in in Codex browser or connect Chrome; no passwords/keys requested.
 Next Atlas finding: live app selects private_vllm but enabled=0; configured endpoint
 wzos-atlas-inference is absent from current Run service inventory. Legacy failed
 Gemma2-2B service is separate and is not the configured WZOS engine. HF_TOKEN secret
 exists; do not bind it indiscriminately. Existing31B GCS/Run:ai deployment script
 should be reused after fresh bucket/manifest/IAM/network/quota/budget verification.
 No GPU/model workload or new IAM grant created during this development increment.
+Read-only preflight confirmed retained31B directory10 objects/62,578,670,545 bytes;
+isolated subnet Private Google Access=true. Fresh object metadata/bucket policy
+saved in the same cloud evidence root. Counts alone are not integrity acceptance.
 Mobile-wide UI redesign remains deferred until the remaining integration list is done.
 
 ## Next work

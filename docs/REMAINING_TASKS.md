@@ -37,9 +37,11 @@ older evidence remain there; do not silently discard or re-open completed gates.
    evaluations. Do not equate Atlas UI/retrieval/scanner success with model inference.
    Price resource changes before provisioning; refresh actual budget and limits.
 5. [ ] IN PROGRESS - Core-to-Enterprise candidate bf9f524 built/pushed, not deployed.
-   Local19 billing/6 UI and synthetic browser checks pass; baseline cloud804 pass.
-   Final SDK/PostgreSQL/Node validation unverified after connection timeout; inspect
-   $HOME/wzos-core-upgrade-path.txt before retrying. See CORE_UPGRADE_IMPLEMENTATION_20261017.md.
+   Local19 billing/6 UI and synthetic browser checks pass. Final cloud810 PostgreSQL,
+   136 Node and7 Stripe SDK checks PASS/no skips; pip check clean. Corrected image
+   build submitted; inspect $HOME/wzos-core-upgrade-path.txt before retrying. Stripe
+   permissions/provider acceptance and guarded rollout remain open. Dashboard sign-in
+   requested; no live charge. See CORE_UPGRADE_IMPLEMENTATION_20261017.md.
    Complete Core-to-Enterprise existing-customer billing upgrade: one-time $20
    credit, existing Core subscription transition, seat/edition consistency and
    webhook retries/rollback. Upgrade prompts admin-only. New-customer checkout is
