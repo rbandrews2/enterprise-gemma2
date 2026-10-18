@@ -25,11 +25,17 @@ Sources: https://cloud.google.com/run/pricing ; https://cloud.google.com/speech-
 ## Prepared implementation
 Final runtime candidate95bc0f8 isolates voice from ordinary chat and adds processing notices. Prior candidate passed832 PostgreSQL/148 Node checks; final gates are running. Generated synthetic audio archiveSHA256 f70a0cdae930dc9b315d2a47660f3a7b8f54e17452b81e42373b0e545c200436; uploaded to Cloud Shell only, not Git or customer storage. Cloud validation pointer: $HOME/wzos-field-voice-path.txt. User approved scoped Speech setup and bounded private model pilot. Speech setup completed with FIELD_VOICE_SPEECH_SETUP_VERIFIED: enabled API and exact one-permission role/binding read back. No GPU/job creation or public activation yet.
 
-## Disposable pilot job — approval pending built image
+## Disposable pilot job — approved and launched
 
 Final runtime95bc0f8: PostgreSQL832/Node149 PASS, no failures/skips; mocked workflow PASS. Cloud Build0b19c5a6-5fbe-4700-88e5-bf2ee6d8b39b SUCCESS. App image sha256:798c479ccdae437d4929b0903379df598c26f7ac6e37f8977c9e5e354566ebf9. Pilot image us-central1-docker.pkg.dev/enterprise-gemma2/enterprise-gemma2/wzos-v2-field-voice-pilot@sha256:5f666853c3f6a8047e60f949d6e368abd3e4f6328e85fc7090ff7b925220276e. Immutable identities verified from build results, not mutable tags.
 
 Prepared run_field_voice_pilot.sh creates only wzos-field-voice-pilot using the separately built synthetic harness image and existing WZOS app identity. One task,15minutes,1CPU/512MiB,no retries. Identity retains its existing effective permissions, although the reviewed harness uses no database, secret or bucket bindings and only temporary local persistence. Ten synthetic Speech attempts,8–10 structured extractions; no customer sends. Remove job and model with ownership checks and independent cleanup verification. Request exact-image approval after build; existing model approval does not authorize this job identity assignment.
+
+User separately approved exact pilot5f666853… job identity assignment; guarded run launched in the existing Cloud Shell, PID41745. Outcomes and cleanup are not yet accepted. No automatic paid rerun if any case fails.
+
+First pilot stopped during model startup: vLLM rejected obsolete `--disable-log-requests`; no job was created and no Speech/extraction request ran. Owned model and job absence verified (`FIELD_VOICE_PILOT_CLEANUP_VERIFIED`, pilot.exit1). Repair uses supported `--no-enable-log-requests` and checks that exact argument. Deployment/pilot helpers copied from the reviewable repair commit outside the frozen95bc0f8 source, so app and synthetic job images remain unchanged. The previous job-identity approval remains unused; request a new bounded model pilot after reviewing this repair. Same resources, $5 target, one-hour cleanup, no automatic paid retry.
+
+Reference: https://docs.vllm.ai/en/v0.21.0/configuration/engine_args/ (request logging flags).
 
 ## Production activation — NOT yet approved
 

@@ -40,7 +40,7 @@ export ATLAS_TRIAL_LABEL=20261018 ATLAS_TRIAL_NONCE="$nonce"
 export ATLAS_MODEL_URI=gs://enterprise-gemma2-atlas-models-us-central1/gemma-4-31B-it/
 export ATLAS_RUNTIME_IDENTITY=wzos-atlas-inference@enterprise-gemma2.iam.gserviceaccount.com
 export ATLAS_NETWORK=wzos-atlas-vpc ATLAS_SUBNET=wzos-atlas-us-central1
-timeout 900 bash "$source_dir/scripts/deploy_atlas_vllm.sh" --apply > "$root/hosting-deploy.log" 2>&1
+timeout 900 bash "$root/deploy_model.sh" --apply > "$root/hosting-deploy.log" 2>&1
 gcloud run services add-iam-policy-binding wzos-atlas-inference --project="$project" --region="$region" \
  --member=serviceAccount:wzos-v2-accounts@enterprise-gemma2.iam.gserviceaccount.com --role=roles/run.invoker --condition=None --quiet > "$root/hosting-invoker.log" 2>&1
 gcloud run services describe wzos-atlas-inference --project="$project" --region="$region" --format=json > "$root/hosting-ready.json"

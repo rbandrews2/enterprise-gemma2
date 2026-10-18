@@ -81,7 +81,7 @@ export ATLAS_TRIAL_LABEL=20261018 ATLAS_TRIAL_NONCE="$nonce"
 export ATLAS_MODEL_URI=gs://enterprise-gemma2-atlas-models-us-central1/gemma-4-31B-it/
 export ATLAS_RUNTIME_IDENTITY=wzos-atlas-inference@enterprise-gemma2.iam.gserviceaccount.com
 export ATLAS_NETWORK=wzos-atlas-vpc ATLAS_SUBNET=wzos-atlas-us-central1
-timeout 900 bash "$source_dir/scripts/deploy_atlas_vllm.sh" --apply > "$root/model-deploy.log" 2>&1
+timeout 900 bash "$root/deploy_model.sh" --apply > "$root/model-deploy.log" 2>&1
 gcloud run services add-iam-policy-binding "$service" --project="$project" --region="$region" \
  --member=serviceAccount:wzos-v2-accounts@enterprise-gemma2.iam.gserviceaccount.com --role=roles/run.invoker --condition=None --quiet > "$root/model-invoker.log" 2>&1
 gcloud run services describe "$service" --project="$project" --region="$region" --format=json > "$root/model-ready.json"
@@ -95,7 +95,7 @@ spec=s['spec']['template']['spec'];c=spec['containers'][0]
 assert spec['serviceAccountName']=='wzos-atlas-inference@enterprise-gemma2.iam.gserviceaccount.com'
 assert c['image'].endswith('@sha256:3fbc0e08c46e7736145c9effbcc8839682c80b15b413335146f4428fc3523c8a')
 assert c['resources']['limits']=={'cpu':'20','memory':'80Gi','nvidia.com/gpu':'1'}
-assert '--disable-log-requests' in c['args']
+assert '--no-enable-log-requests' in c['args']
 assert not any(e.get('valueFrom') for e in c.get('env',[]))
 assert s['spec']['template']['metadata']['annotations']['autoscaling.knative.dev/maxScale']=='1'
 assert not any(m in ('allUsers','allAuthenticatedUsers') for b in iam.get('bindings',[]) for m in b.get('members',[]))
