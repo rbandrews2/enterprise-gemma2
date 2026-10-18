@@ -28,6 +28,8 @@ on_exit() {
   gcloud run services describe wzos-atlas-inference --project="$project" --region="$region" --format=json > "$root/hosting-cleanup-before.json" 2>/dev/null
   if python3 "$root/check_activation.py" cleanup-owner "$root"; then
    gcloud run services delete wzos-atlas-inference --project="$project" --region="$region" --quiet > "$root/hosting-cleanup.log" 2>&1
+   gcloud run services list --project="$project" --region="$region" --filter='metadata.name=wzos-atlas-inference' --format=json > "$root/hosting-cleanup-after.json"
+   python3 "$root/check_activation.py" cleanup-absent "$root" >> "$root/hosting-cleanup.log" 2>&1
   fi
   test "$result" != 0 || result=1
  fi

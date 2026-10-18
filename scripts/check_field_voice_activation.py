@@ -42,6 +42,8 @@ elif phase == 'cleanup-owner':
     s=read('hosting-cleanup-before.json')
     assert s['metadata']['labels']['wzos-pilot']==(root/'hosting-nonce.txt').read_text().strip()
     assert s['spec']['template']['spec']['serviceAccountName']=='wzos-atlas-inference@enterprise-gemma2.iam.gserviceaccount.com'
+elif phase == 'cleanup-absent':
+    assert read('hosting-cleanup-after.json')==[]
 elif phase == 'staged':
     before,staged=read('activation-before.json'),read('voice-staged.json')
     ignored={'run.googleapis.com/client-name','run.googleapis.com/client-version','run.googleapis.com/operation-id','serving.knative.dev/creator'}
