@@ -3,7 +3,9 @@
 # This creates only the approved private inference service; no V1 changes.
 set -euo pipefail
 mode="${1:---print}"
+trial_label="${ATLAS_TRIAL_LABEL:-20260926}"
 [[ "$mode" == --print || "$mode" == --apply ]] || { echo 'Use --print or --apply' >&2; exit 2; }
+[[ "$trial_label" =~ ^[0-9]{8}$ ]] || { echo 'Expected dated trial label' >&2; exit 2; }
 : "${ATLAS_MODEL_URI:?Set immutable prepared gs:// model directory}"
 : "${ATLAS_RUNTIME_IDENTITY:?Set dedicated inference service account email}"
 : "${ATLAS_NETWORK:?Set isolated network name}"
@@ -21,7 +23,7 @@ args=(serve "$ATLAS_MODEL_URI" --served-model-name=google/gemma-4-31B-it
   --tensor-parallel-size=1 --load-format=runai_streamer --port=8080 --host=0.0.0.0)
 joined=$(IFS=,; echo "${args[*]}")
 cmd=(gcloud beta run deploy wzos-atlas-inference --project enterprise-gemma2
-  --labels=wzos-trial=20260926
+  --labels="wzos-trial=$trial_label"
   --region us-central1 --image "$image" --service-account "$ATLAS_RUNTIME_IDENTITY"
   --execution-environment gen2 --no-allow-unauthenticated --cpu 20 --memory 80Gi
   --gpu 1 --gpu-type nvidia-rtx-pro-6000 --no-gpu-zonal-redundancy
