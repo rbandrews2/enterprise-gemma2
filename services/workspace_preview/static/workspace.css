@@ -232,6 +232,6 @@ p{font-size:calc(var(--wzos-paragraph-font-size,1em) + 1pt)!important}
 @media(max-width:760px){
  .sidebar nav{display:flex;flex-direction:column;gap:10px}
  .sidebar .nav-item{display:flex;align-items:center;width:100%;min-height:64px;padding:16px;text-align:left;font-size:16px;border-radius:20px}
- #dashboard-view .hub-grid{grid-template-columns:minmax(0,1fr)}
+ #dashboard-view .guided-content>.hub-grid{grid-template-columns:minmax(0,1fr)}
  #dashboard-view .hub-card{min-height:64px;flex-direction:row;align-items:center;padding:16px;border-radius:20px}
 }

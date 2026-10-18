@@ -170,3 +170,7 @@ Archives preserve the complete earlier text; paths in them refer to the original
 
 ## October 18 personal weather / permission / mobile menu increment
 See WEATHER_MOBILE_UPDATE_20261018.md. Current local changes separate location weather from job tools, add four-day high/low forecasts, guard geolocation calls in weather/navigation/time, and reuse desktop cards as a visible vertical mobile list (drawer rejected). Focused checks:23 Node +27 offline Node +11 Python PASS. Public app unchanged; integrated release gates and real mobile acceptance remain open. Smart Field Voice f176c53 cloud results not yet read: Cloud Shell page binding stale after reconnect/reload. Preserve existing fixture/audio helper files; they belong to earlier voice work. No native app packaging started; user chose PWA + Android first, then iOS.
+
+
+## Mobile simulator — October 18
+Local simulator implemented in scripts/run_mobile_preview.py and scripts/mobile_preview/. Open http://127.0.0.1:8083/__simulator; see MOBILE_PREVIEW.md for restart and isolation. Six focused checks PASS; actual iframe and rotation observed. Running owned exec session94769 (process18736); earlier voice preview stopped. Browser automation repeatedly timed out during final screenshot/interaction, so no final screenshot acceptance claim. Fixed dashboard single-column selector specificity after simulator revealed two columns. Public site unchanged; prior voice/audio fixtures remain separate unfinished work. Continue preview review before release gates/deployment.

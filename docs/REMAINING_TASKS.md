@@ -124,3 +124,7 @@ older evidence remain there; do not silently discard or re-open completed gates.
 - [ ] Read earlier Smart Field Voice cloud exit files, then validate integrated current candidate. No claim that f176c53 gate covers later UI/weather changes.
 - [ ] Real Android retained/revoked location and mobile menu checks, forecast visual acceptance, then approved release. No deployment yet.
 - [ ] Plan confirmed PWA + Android first, then iOS; no native build started.
+
+
+## Mobile simulator — October 18
+Local simulator implemented in scripts/run_mobile_preview.py and scripts/mobile_preview/. Open http://127.0.0.1:8083/__simulator; see MOBILE_PREVIEW.md for restart and isolation. Six focused checks PASS; actual iframe and rotation observed. Running owned exec session94769 (process18736); earlier voice preview stopped. Browser automation repeatedly timed out during final screenshot/interaction, so no final screenshot acceptance claim. Fixed dashboard single-column selector specificity after simulator revealed two columns. Public site unchanged; prior voice/audio fixtures remain separate unfinished work. Continue preview review before release gates/deployment.
