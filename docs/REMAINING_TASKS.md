@@ -162,3 +162,9 @@ Added scripts/start_mobile_preview.ps1, with hidden background launch, readiness
 - [x] Google CLI refresh, repaired exact build238ef05b/testb564dfa1 and originalRTX ongoing-hosting approval completed.
 - [x] One approved activation check ran:1Speech/1Gemma/0SMS; ambiguity warning present, exactequipment gateFAIL (4Aero boards vs4arrowboards). No repeat test.
 - [ ] Resolve recognition/acceptance issue before public Field Voice activation. Failed attempt removed model/job and did not cut over; see FIELD_VOICE_ACTIVATION_20261018.md. Do not treat earlier checklist approvals/build tasks as still pending or the failed live check as passed.
+
+## Smart Field Voice live closure (supersedes earlier pending items)
+- [x] User approved reviewable flagged drafts;7inertpolicychecks and focusedmockedworkflowPASS.
+- [x] Approved exact6346 livecheckPASS underreviewed-equipment-v1,1Speech1Gemma0SMS; temporaryjob removed/absenceverified.
+- [x] FieldVoice deployed100% voice-live-1d2da6b,version0d1aaad29aceb5c98c94772b; privateRTX31Bmin0max1 underapprovedongoinghosting. OrdinaryAtlaschatOFF. Stagedrollback/publicauth/assets/config/trafficchecksPASS; Enterprisebrowsercontrolsverified. No newDDL/customer sends. Priorfailurepreserved.
+- [ ] User-led installedAndroid microphone setup/retainedpermission/30secrecording/review/send andtrackshutdown checks. Never infer these from syntheticcloud acceptance. See FIELD_VOICE_ACTIVATION_20261018.md; do not repeat completed suites or deployment.
