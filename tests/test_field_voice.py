@@ -15,7 +15,7 @@ from services.v2.knowledge.store import Store
 from services.workspace_preview.app import create_app
 from services.workspace_preview.files import LocalFiles
 from services.workspace_preview.storage import SQLiteStorage
-from services.workspace_preview.field_voice import Report
+from services.workspace_preview.field_voice import Report, flag_equipment_ambiguity
 from services.workspace_preview.field_voice_transport import Speech, Extractor, validate_audio
 from services.workspace_preview.intelligence import ModelUnavailable
 
@@ -212,8 +212,10 @@ class VoiceTransportTests(unittest.TestCase):
         async def token():return 'synthetic-token'
         def handle(request):
             self.assertIn('us-speech.googleapis.com',str(request.url));self.assertNotIn('uri',json.loads(request.content))
+            self.assertEqual(json.loads(request.content)['config']['model'],'long')
             return httpx.Response(200,json={'results':[{'alternatives':[{'transcript':'Used 50 drums.'}]}]})
         with patch.dict(os.environ,{'WZOS_FIELD_VOICE_SPEECH_ENABLED':'1'}):
+            os.environ.pop('WZOS_FIELD_VOICE_SPEECH_MODEL',None)
             self.assertEqual(asyncio.run(Speech(httpx.MockTransport(handle),token).transcribe(audio())),'Used 50 drums.')
 
     def test_multi_sentence_speech_model_and_sequential_results(self):
@@ -225,8 +227,10 @@ class VoiceTransportTests(unittest.TestCase):
             hints=config['adaptation']['phraseSets']
             self.assertEqual(len(hints),1);self.assertEqual(set(hints[0]),{'inlinePhraseSet'})
             phrases=hints[0]['inlinePhraseSet']['phrases']
-            self.assertIn({'value':'arrow boards'},phrases)
-            self.assertTrue(all(set(p)=={'value'} and not any(c.isdigit() for c in p['value']) for p in phrases))
+            self.assertIn({'value':'arrow boards','boost':10},phrases)
+            self.assertIn({'value':'arrow board','boost':10},phrases)
+            self.assertTrue(all(not any(c.isdigit() for c in p['value']) for p in phrases))
+            self.assertTrue(all('boost' not in p for p in phrases if p['value'] not in ('arrow board','arrow boards')))
             calls.append(True)
             return httpx.Response(200,json={'results':[{'alternatives':[{'transcript':text}]} for text in (
                 'Lane closure completed.', 'Used 50 drums and four aero boards.', 'A car clipped a cone at 9:15 AM.')]})
@@ -239,6 +243,26 @@ class VoiceTransportTests(unittest.TestCase):
 
     def test_unreviewed_speech_model_refused_before_provider_request(self):
         async def token():raise AssertionError('No credential request expected')
-        with patch.dict(os.environ,{'WZOS_FIELD_VOICE_SPEECH_ENABLED':'1','WZOS_FIELD_VOICE_SPEECH_MODEL':'other'}):
-            with self.assertRaises(ModelUnavailable):
-                asyncio.run(Speech(token_provider=token).transcribe(audio()))
+        for model in ('short','other',''):
+            with self.subTest(model=model),patch.dict(os.environ,{'WZOS_FIELD_VOICE_SPEECH_ENABLED':'1','WZOS_FIELD_VOICE_SPEECH_MODEL':model}):
+                with self.assertRaises(ModelUnavailable):
+                    asyncio.run(Speech(token_provider=token).transcribe(audio()))
+
+
+class EquipmentReviewTests(unittest.TestCase):
+    def test_confusable_name_is_flagged_without_changing_reported_facts(self):
+        value=Report(is_relevant=True,production_quantities=[{'item_name':'Aero boards','quantity':4,'unit':'each'}],
+                     unresolved=['Confirm the work date.'])
+        flag_equipment_ambiguity(value)
+        self.assertEqual(value.production_quantities[0].model_dump(),{'item_name':'Aero boards','quantity':4,'unit':'each'})
+        self.assertIn('may mean "arrow boards"',value.unresolved[0])
+        self.assertIn('Confirm the work date.',value.unresolved)
+        flag_equipment_ambiguity(value)
+        self.assertEqual(len(value.unresolved),2)
+
+    def test_canonical_and_unrelated_names_are_not_guessed(self):
+        value=Report(is_relevant=True,production_quantities=[{'item_name':name,'quantity':None} for name in ('Arrow boards','Aero platform')])
+        flag_equipment_ambiguity(value)
+        self.assertEqual(value.unresolved,[])
+        self.assertEqual([q.item_name for q in value.production_quantities],['Arrow boards','Aero platform'])
+        self.assertTrue(all(q.quantity is None for q in value.production_quantities))

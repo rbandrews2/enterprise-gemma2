@@ -55,9 +55,9 @@ python3 "$root/check_runtime.py" "$root"
 source_dir="$root/source"
 test "$(git -C "$source_dir" rev-parse HEAD)" = "$(cat "$root/source-commit.txt")"
 image=$(cat "$root/job-image.txt")
-speech_model=short
+speech_model=long
 test ! -f "$root/speech-model.txt" || speech_model=$(cat "$root/speech-model.txt")
-[[ "$speech_model" = short || "$speech_model" = long ]]
+test "$speech_model" = long
 [[ "$image" =~ ^us-central1-docker.pkg.dev/enterprise-gemma2/enterprise-gemma2/wzos-v2-field-voice-pilot@sha256:[a-f0-9]{64}$ ]]
 gcloud run services list --project="$project" --region="$region" --filter="metadata.name=$service" --format=json > "$root/model-preflight.json"
 gcloud run jobs list --project="$project" --region="$region" --filter="metadata.name=$job" --format=json > "$root/job-preflight.json"

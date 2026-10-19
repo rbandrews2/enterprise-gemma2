@@ -84,7 +84,7 @@ elif phase == 'staged':
         assert env.pop(key)=={'name':key,'value':(root/'hosting-url.txt').read_text().strip()}
         key='WZOS_FIELD_VOICE_SPEECH_MODEL';old.pop(key,None)
         speech_model=(root/'speech-model.txt').read_text().strip()
-        assert speech_model in ('short','long')
+        assert speech_model == 'long'
         assert env.pop(key)=={'name':key,'value':speech_model}
         assert env==old and actual==expected, 'Runtime or existing secret/configuration change'
         assert annotation(r['metadata'])==annotation(before['spec']['template']['metadata'])

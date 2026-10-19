@@ -52,6 +52,18 @@ class Report(Strict):
     unresolved: list[Annotated[str, Field(max_length=300)]] = Field(default_factory=list, max_length=20)
 
 
+def flag_equipment_ambiguity(report: Report):
+    """Highlight observed ASR confusion without turning a guess into report data."""
+    confusables = {'aero board': 'arrow board', 'aero boards': 'arrow boards'}
+    warnings = []
+    for entry in report.production_quantities:
+        possible = confusables.get(' '.join(entry.item_name.casefold().split()))
+        if possible:
+            warnings.append(f'Confirm equipment: "{entry.item_name}" may mean "{possible}". Review the item name before sending.')
+    report.unresolved = list(dict.fromkeys(warnings + report.unresolved))[:20]
+    return report
+
+
 class Basis(Strict):
     job_id: str = Field(min_length=1, max_length=100, pattern=r'^[A-Za-z0-9_-]+$')
     expected_job_version: int = Field(ge=1, strict=True)
@@ -237,6 +249,7 @@ def register(app, connect, actor, permitted_row, roster, *, accounts=False):
                 raise HTTPException(503, 'Atlas could not produce a valid draft. Your text is unchanged.') from None
         if not result.is_relevant or not (result.work_description or result.production_quantities or result.incidents):
             raise HTTPException(422, 'No actionable field-work details were found. Nothing was saved.')
+        flag_equipment_ambiguity(result)
         if result.route_location and result.route_location.casefold() != selected['address'].casefold():
             result.unresolved = (result.unresolved + ['Compare the spoken location with the selected job.'])[:20]
         return {'job': selected, 'fields': {'work_date': None, 'report': result.model_dump()},

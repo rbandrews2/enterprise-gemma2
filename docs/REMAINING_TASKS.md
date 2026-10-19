@@ -149,3 +149,7 @@ Added scripts/start_mobile_preview.ps1, with hidden background launch, readiness
 
 - [x] Approved vocabulary Speech retestfzr47:3/4PASS; only literal arrow_boards cuefalse. CPU job deleted/absence verified, no GPU launched. Original conditional full-pilot approval was not consumed.
 - [ ] Fresh approval for unchanged full semantic workflow test, with explicit review of the single lexical mismatch; retain all report assertions and USD5/hour-cleanup limits. No new runtime build is needed; helper-only guard5checksPASS. Public/ongoing hosting remains unapproved.
+
+- [x] Final full pilotn9c5h completed9/10expected cases,10Speech/8Gemma/0SMS; one equipment-name failure:4Aero boards. All owned workloads removed/absence verified; guard stopped.
+- [x] Configuration repair implemented: require/defaultlong, specificarrowboardboost10, equipment ambiguity guidance/review warning; original quantities/name/transcript preserved. No migration/IAM/secret changes.
+- [ ] Retest repaired runtime ONLY after user resumes testing; regression cases are written but unrun. Prior834/149 results/images are pre-repair. Do not auto-repeat cloud pilots. Production activation remains pending and VoiceOFF.

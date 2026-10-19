@@ -18,6 +18,7 @@ MAX_AUDIO = 6 * 1024 * 1024
 ROAD_WORK_PHRASES = ('arrow board', 'arrow boards', 'traffic cones', 'cones',
                     'channelizing drums', 'drums', 'lane closure', 'flagger',
                     'attenuator', 'crash cushion', 'pavement marking', 'work zone')
+ARROW_BOARD_BOOST = 10
 SPEECH_URL = ('https://us-speech.googleapis.com/v2/projects/enterprise-gemma2/'
               'locations/us/recognizers/_:recognize')
 
@@ -54,8 +55,10 @@ class Speech:
         validate_audio(audio)
         if os.getenv('WZOS_FIELD_VOICE_SPEECH_ENABLED') != '1':
             raise ModelUnavailable('Voice transcription is not enabled. You can type your report.')
-        model = os.getenv('WZOS_FIELD_VOICE_SPEECH_MODEL', 'short')
-        if model not in ('short', 'long'):
+        # Field reports contain multiple utterances; the short-model pilot lost
+        # later-sentence details. Never silently fall back to that configuration.
+        model = os.getenv('WZOS_FIELD_VOICE_SPEECH_MODEL', 'long')
+        if model != 'long':
             raise ModelUnavailable('Voice transcription configuration needs admin review. You can type your report.')
         try:
             async with asyncio.timeout(45):
@@ -65,7 +68,9 @@ class Speech:
                     async with client.stream('POST', SPEECH_URL, headers={'Authorization': 'Bearer '+token}, json={
                         'config': {'autoDecodingConfig': {}, 'languageCodes': ['en-US'], 'model': model,
                             'adaptation': {'phraseSets': [{'inlinePhraseSet': {
-                                'phrases': [{'value': term} for term in ROAD_WORK_PHRASES]}}]}},
+                                'phrases': [({'value': term, 'boost': ARROW_BOARD_BOOST}
+                                    if term in ('arrow board', 'arrow boards') else {'value': term})
+                                    for term in ROAD_WORK_PHRASES]}}]}},
                         'content': base64.b64encode(audio).decode('ascii')}) as response:
                         body = await bounded_json(response, 65536)
             text = ' '.join(r['alternatives'][0]['transcript'] for r in body.get('results', [])).strip()
@@ -103,6 +108,10 @@ class Extractor:
                                 'Return schema_version=1. Use null for unknown facts, [] for unmentioned incidents/quantities. '
                                 'is_relevant=false for wholly unrelated speech. Preserve corrections and negations. '
                                 'Never invent units, quantities, dates, timezone, crew, MUTCD codes or severity facts. '
+                                'Common equipment terms include arrow boards, traffic cones and channelizing drums. '
+                                'Speech may confuse equipment names, for example aero boards versus arrow boards. '
+                                'If a name is ambiguous, preserve the heard name and quantity and add a confirmation '
+                                'question to unresolved; never silently replace uncertain equipment or its count. '
                                 'Priority is only a suggestion; use null if uncertain. Flag ambiguities in unresolved. '
                                 'route_location/work_description are nullable strings. Production quantities have item_name, '
                                 'quantity (number or null), unit (string or null). Incidents have details, time_mentioned '
