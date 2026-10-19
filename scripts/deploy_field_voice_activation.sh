@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Requires a separate ongoing-hosting/production activation approval after pilot acceptance.
+# Requires ongoing-hosting and conditional-production approval. One focused
+# acceptance recording must pass before public traffic changes.
 set -euo pipefail
 umask 077
 root=${1:?Private evidence directory}

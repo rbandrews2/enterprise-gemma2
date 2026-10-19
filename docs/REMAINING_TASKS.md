@@ -153,3 +153,7 @@ Added scripts/start_mobile_preview.ps1, with hidden background launch, readiness
 - [x] Final full pilotn9c5h completed9/10expected cases,10Speech/8Gemma/0SMS; one equipment-name failure:4Aero boards. All owned workloads removed/absence verified; guard stopped.
 - [x] Configuration repair implemented: require/defaultlong, specificarrowboardboost10, equipment ambiguity guidance/review warning; original quantities/name/transcript preserved. No migration/IAM/secret changes.
 - [ ] Retest repaired runtime ONLY after user resumes testing; regression cases are written but unrun. Prior834/149 results/images are pre-repair. Do not auto-repeat cloud pilots. Production activation remains pending and VoiceOFF.
+
+- [x] Repaired runtime1d2da6b: PostgreSQL836/Node149PASS, no failures/skips; focused8 and single-case mocked acceptancePASS. Preserve results; do not rerun suites.
+- [ ] Finish Google CLI credential refresh (user action in SDK tab/CloudShellterminal0), then build exact repaired images. CloudShellterminal1 for checks; do not paste commands into code prompt.
+- [ ] Obtain ongoing hosting + exact-image one-recording acceptance/conditional live activation approval after build. No repeat ten-clip pilot, no newDDL/credential grants. Production remainsunchanged/VoiceOFF.
