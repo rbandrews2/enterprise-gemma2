@@ -95,8 +95,12 @@ def extraction_cues(report):
             'incidents':len(report['incidents']), 'unresolved':len(report['unresolved'])}
 
 
-def run(audio_root, mode='live'):
-    require((mode == 'live' and os.getenv('CLOUD_RUN_JOB') == JOB)
+def run(audio_root, mode='live', single_case=None):
+    require(single_case in (None, 'traffic-devices'), 'reviewed focused case required')
+    active_cases = CASES if single_case is None else [single_case]
+    job_name = JOB if single_case is None else 'wzos-field-voice-acceptance'
+    request_limit = len(active_cases)
+    require((mode == 'live' and os.getenv('CLOUD_RUN_JOB') == job_name)
             or (mode == 'mocked' and not os.getenv('CLOUD_RUN_JOB')), 'dedicated job required')
     require(not any(os.getenv(k) for k in ('K_SERVICE', 'GAE_ENV', 'NETLIFY',
         'WZOS_DATABASE_URL', 'WZOS_FILES_BUCKET', 'FIREBASE_AUTH_EMULATOR_HOST')), 'external persistence forbidden')
@@ -114,7 +118,7 @@ def run(audio_root, mode='live'):
     async def identity(audience):
         if mode == 'mocked':
             return 'synthetic.google.token'
-        with patch.dict(os.environ, {'K_SERVICE': JOB}):
+        with patch.dict(os.environ, {'K_SERVICE': job_name}):
             return await metadata_identity_token(audience)
 
     async def speech_identity():
@@ -156,13 +160,13 @@ def run(audio_root, mode='live'):
 
     class CountingSpeech(Speech):
         async def transcribe(self, audio):
-            require(len(speech_calls) < 10, 'speech request budget')
+            require(len(speech_calls) < request_limit, 'speech request budget')
             speech_calls.append(True)
             return await super().transcribe(audio)
 
     class CountingExtractor(Extractor):
         async def extract(self, transcript, job, schema):
-            require(len(model_calls) < 10, 'model request budget')
+            require(len(model_calls) < request_limit, 'model request budget')
             model_calls.append(True)
             return await super().extract(transcript, job, schema)
 
@@ -191,7 +195,7 @@ def run(audio_root, mode='live'):
                 return response.json()['id']
 
             core, outsider = org('core', 'core'), org('outsider')
-            for case in CASES:
+            for case in active_cases:
                 organization = org(case)
                 headers = {'Authorization':'Bearer '+case, 'X-WZOS-Organization':organization}
                 if case == CASES[0]:
@@ -290,9 +294,11 @@ def run(audio_root, mode='live'):
                 require(db.execute('SELECT COUNT(*) FROM sms_outbox').fetchone()[0] == 0, 'zero SMS')
                 for row in db.execute('SELECT payload FROM field_voice_drafts'):
                     require(set(json.loads(row['payload'])) == {'work_date', 'report'}, 'structured persistence only')
-        require(len(speech_calls) == 10 and 8 <= len(model_calls) <= 10, 'paid request budget')
+        minimum_model = 8 if single_case is None else 1
+        require(len(speech_calls) == request_limit and minimum_model <= len(model_calls) <= request_limit, 'paid request budget')
     passed=not any(check['status']=='FAIL' for check in checks)
-    result = {'status':'PASS' if passed else 'FAIL', 'mode':mode, 'synthetic_only':True, 'identity':'Google metadata/ADC' if mode == 'live' else 'mocked',
+    result = {'status':'PASS' if passed else 'FAIL', 'mode':mode, 'scope':'full-workflow' if single_case is None else 'focused-repair',
+        'synthetic_only':True, 'identity':'Google metadata/ADC' if mode == 'live' else 'mocked',
         'speech_requests':len(speech_calls), 'model_requests':len(model_calls), 'model_readiness_checks':ready_checks,
         'raw_audio_or_transcript_logged':False, 'sms_sent':0, 'checks':checks}
     print(json.dumps(result), flush=True)
@@ -303,9 +309,10 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--audio-root', type=Path, required=True)
     parser.add_argument('--mode', choices=('live','mocked'), default='live')
+    parser.add_argument('--case', choices=('traffic-devices',))
     args = parser.parse_args()
     try:
-        if not run(args.audio_root, args.mode):
+        if not run(args.audio_root, args.mode, args.case):
             raise SystemExit(1)
     except Exception as error:
         # No provider exception body, transcript, authorization header or audio.

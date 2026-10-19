@@ -36,6 +36,9 @@ tag=$(git rev-parse --short=7 HEAD)
 appimage=us-central1-docker.pkg.dev/$project/$project/wzos-v2-accounts:field-voice-$tag
 jobimage=us-central1-docker.pkg.dev/$project/$project/wzos-v2-field-voice-pilot:$tag
 printf 'FROM %s\nUSER root\nCOPY services /app/services\nRUN python -m compileall -q /app/services && chmod -R a+rX /app/services\nUSER wzos\n' "$base" > Dockerfile.field-voice
+if test -f "$root/check_workflow.py"; then
+ cp "$root/check_workflow.py" scripts/check_field_voice_workflow.py
+fi
 mkdir pilot-audio
 cp "$root"/audio/*.wav pilot-audio/
 printf 'FROM %s\nUSER root\nCOPY scripts/check_field_voice_workflow.py /app/scripts/check_field_voice_workflow.py\nCOPY pilot-audio /app/pilot-audio\n' "$appimage" > Dockerfile.field-voice-pilot

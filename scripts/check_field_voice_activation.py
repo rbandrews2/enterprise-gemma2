@@ -36,15 +36,23 @@ elif phase == 'ready-job':
     assert j['metadata']['labels']['wzos-pilot']==(root/'hosting-nonce.txt').read_text().strip()
     assert outer['taskCount']==1 and outer.get('parallelism',1)==1
     assert task['serviceAccountName']=='wzos-v2-accounts@enterprise-gemma2.iam.gserviceaccount.com'
-    assert task['maxRetries']==0 and str(task['timeoutSeconds'])=='240'
-    assert c['image']=='us-central1-docker.pkg.dev/enterprise-gemma2/enterprise-gemma2/wzos-v2-field-voice-pilot@sha256:eb8cd6d7ea2230d48d1b0aee91f3f11d998fbbfada30ad81a7f3283cab17959a'
-    assert c['command']==['python'] and c['args']==['-c',(root/'check_identity.py').read_text().rstrip('\n')]
-    assert c.get('env')==[{'name':'WZOS_FIELD_VOICE_MODEL_URL','value':(root/'hosting-url.txt').read_text().strip()}]
+    assert task['maxRetries']==0 and str(task['timeoutSeconds'])=='600'
+    assert c['image']==(root/'job-image.txt').read_text().strip()
+    assert c['command']==['python'] and c['args']==['/app/scripts/check_field_voice_workflow.py','--audio-root','/app/pilot-audio','--case','traffic-devices']
+    assert {e['name']:e.get('value') for e in c.get('env',[])}=={'WZOS_FIELD_VOICE_MODEL_URL':(root/'hosting-url.txt').read_text().strip(),'WZOS_FIELD_VOICE_SPEECH_MODEL':'long'}
     assert not task.get('volumes') and not c.get('volumeMounts')
     assert c['resources']['limits']['cpu'] in ('1','1000m') and c['resources']['limits']['memory']=='512Mi'
 elif phase == 'ready-execution':
     e=read('ready-job-execution.json')
     assert e['status'].get('succeededCount')==1 and not e['status'].get('failedCount')
+    rows=[r for r in read('ready-job-logs.json') if r.get('labels',{}).get('run.googleapis.com/execution_name')==e['metadata']['name'] and r.get('logName','').endswith('stdout')]
+    values=[r['jsonPayload'] for r in rows if 'jsonPayload' in r]
+    result=values[0] if len(values)==1 else json.loads('\n'.join(r.get('textPayload','') for r in rows))
+    assert result['status']=='PASS' and result['mode']=='live' and result['scope']=='focused-repair'
+    assert result['synthetic_only'] is True and result['raw_audio_or_transcript_logged'] is False
+    assert result['speech_requests']==result['model_requests']==1 and result['sms_sent']==0
+    assert len(result['checks'])==1 and result['checks'][0]['case']=='traffic-devices' and result['checks'][0]['status']=='pass'
+    (root/'focused-acceptance.json').write_text(json.dumps(result,indent=2))
 elif phase == 'model':
     s,iam=read('hosting-ready.json'),read('hosting-iam.json')
     assert any(c['type']=='Ready' and c['status']=='True' for c in s['status']['conditions'])

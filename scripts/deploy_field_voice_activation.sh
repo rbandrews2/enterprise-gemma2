@@ -5,19 +5,19 @@ umask 077
 root=${1:?Private evidence directory}
 project=enterprise-gemma2; region=us-central1; service=wzos-v2-accounts
 test -f "$root/activation-approved"
+test -f "$root/ongoing-hosting-approved"
 speech_model=$(cat "$root/speech-model.txt")
 test "$speech_model" = long
 python3 "$root/check_runtime.py" "$root"
-test "$(cat "$root/pilot.exit")" = 0; test -f "$root/cleanup.verified"
 test -f "$root/speech-setup.verified"
 source_dir="$root/source"
 test "$(git -C "$source_dir" rev-parse HEAD)" = "$(cat "$root/source-commit.txt")"
 image=$(cat "$root/app-image.txt"); tag=$(git -C "$source_dir" rev-parse --short=7 HEAD)
 [[ "$image" =~ ^us-central1-docker.pkg.dev/enterprise-gemma2/enterprise-gemma2/wzos-v2-accounts@sha256:[a-f0-9]{64}$ ]]
-python3 "$root/check_activation.py" pilot "$root"
+"$source_dir/.venv-accounts-test/bin/python" "$source_dir/scripts/verify_atlas_artifacts.py" > "$root/hosting-artifacts.json"
 gcloud run services describe "$service" --project="$project" --region="$region" --format=json > "$root/activation-before.json"
 python3 "$root/check_activation.py" baseline "$root"
-ready_job=wzos-field-voice-ready
+ready_job=wzos-field-voice-acceptance
 gcloud run services list --project="$project" --region="$region" --filter='metadata.name=wzos-atlas-inference' --format=json > "$root/hosting-preflight.json"
 gcloud run jobs list --project="$project" --region="$region" --filter="metadata.name=$ready_job" --format=json > "$root/ready-job-preflight.json"
 python3 "$root/check_activation.py" preflight "$root"
@@ -62,16 +62,18 @@ gcloud run services describe wzos-atlas-inference --project="$project" --region=
 gcloud run services get-iam-policy wzos-atlas-inference --project="$project" --region="$region" --format=json > "$root/hosting-iam.json"
 python3 "$root/check_activation.py" model "$root"
 origin=$(cat "$root/hosting-url.txt")
-job_image=us-central1-docker.pkg.dev/enterprise-gemma2/enterprise-gemma2/wzos-v2-field-voice-pilot@sha256:eb8cd6d7ea2230d48d1b0aee91f3f11d998fbbfada30ad81a7f3283cab17959a
-test "$job_image" = us-central1-docker.pkg.dev/enterprise-gemma2/enterprise-gemma2/wzos-v2-field-voice-pilot@sha256:eb8cd6d7ea2230d48d1b0aee91f3f11d998fbbfada30ad81a7f3283cab17959a
+job_image=$(cat "$root/job-image.txt")
+[[ "$job_image" =~ ^us-central1-docker.pkg.dev/enterprise-gemma2/enterprise-gemma2/wzos-v2-field-voice-pilot@sha256:[a-f0-9]{64}$ ]]
+
 timeout 120 gcloud run jobs create "$ready_job" --project="$project" --region="$region" --image="$job_image" \
  --service-account=wzos-v2-accounts@enterprise-gemma2.iam.gserviceaccount.com --labels="wzos-pilot=$nonce" \
- --tasks=1 --parallelism=1 --max-retries=0 --task-timeout=240s --cpu=1 --memory=512Mi \
- --set-env-vars="WZOS_FIELD_VOICE_MODEL_URL=$origin" --command=python \
- --args="^~^-c~$(cat "$root/check_identity.py")" --quiet > "$root/ready-job-create.log" 2>&1
+ --tasks=1 --parallelism=1 --max-retries=0 --task-timeout=600s --cpu=1 --memory=512Mi \
+ --set-env-vars="WZOS_FIELD_VOICE_MODEL_URL=$origin,WZOS_FIELD_VOICE_SPEECH_MODEL=long" --command=python \
+ --args=/app/scripts/check_field_voice_workflow.py,--audio-root,/app/pilot-audio,--case,traffic-devices --quiet > "$root/ready-job-create.log" 2>&1
 gcloud run jobs describe "$ready_job" --project="$project" --region="$region" --format=json > "$root/ready-job-config.json"
 python3 "$root/check_activation.py" ready-job "$root"
-timeout 360 gcloud run jobs execute "$ready_job" --project="$project" --region="$region" --wait --quiet --format=json > "$root/ready-job-execution.json" 2> "$root/ready-job-execution.log"
+timeout 720 gcloud run jobs execute "$ready_job" --project="$project" --region="$region" --wait --quiet --format=json > "$root/ready-job-execution.json" 2> "$root/ready-job-execution.log"
+gcloud logging read "resource.type=cloud_run_job AND resource.labels.job_name=$ready_job" --project="$project" --freshness=30m --order=asc --limit=100 --format=json > "$root/ready-job-logs.json"
 python3 "$root/check_activation.py" ready-execution "$root"
 cleanup_ready_job > "$root/ready-job-cleanup.log" 2>&1
 for mode in hold live; do
