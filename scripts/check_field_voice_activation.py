@@ -49,6 +49,7 @@ elif phase == 'ready-execution':
     values=[r['jsonPayload'] for r in rows if 'jsonPayload' in r]
     result=values[0] if len(values)==1 else json.loads('\n'.join(r.get('textPayload','') for r in rows))
     assert result['status']=='PASS' and result['mode']=='live' and result['scope']=='focused-repair'
+    assert result['acceptance_policy']=='reviewed-equipment-v1'
     assert result['synthetic_only'] is True and result['raw_audio_or_transcript_logged'] is False
     assert result['speech_requests']==result['model_requests']==1 and result['sms_sent']==0
     assert len(result['checks'])==1 and result['checks'][0]['case']=='traffic-devices' and result['checks'][0]['status']=='pass'

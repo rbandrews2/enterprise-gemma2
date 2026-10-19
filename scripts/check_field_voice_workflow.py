@@ -56,12 +56,33 @@ def require(value, check):
         raise RuntimeError(check)
 
 
+def reviewed_board_quantity(report):
+    """Accept a known ASR ambiguity only with its explicit worker-review warning.
+
+    Ray approved flagged editable drafts after the original exact-name failure.
+    Keep the heard label/count unchanged; generic warnings do not satisfy this.
+    """
+    for entry in report['production_quantities']:
+        if entry['quantity'] != 4:
+            continue
+        name = ' '.join(entry['item_name'].casefold().split())
+        if name in ('arrow board', 'arrow boards'):
+            return True
+        possible = {'aero board': 'arrow board', 'aero boards': 'arrow boards'}.get(name)
+        if possible:
+            warning = (f'Confirm equipment: "{entry["item_name"]}" may mean "{possible}". '
+                       'Review the item name before sending.')
+            if warning in report['unresolved']:
+                return True
+    return False
+
+
 def assess(case, report):
     quantities, incidents = report['production_quantities'], report['incidents']
     values = [q['quantity'] for q in quantities]
     if case == 'traffic-devices':
         require(any(q['quantity'] == 50 and 'drum' in q['item_name'].lower() for q in quantities), '50 drums')
-        require(any(q['quantity'] == 4 and 'arrow' in q['item_name'].lower() for q in quantities), '4 arrow boards')
+        require(reviewed_board_quantity(report), '4 arrow boards or explicitly flagged equipment confirmation')
         require(len(incidents) == 1 and incidents[0]['time_mentioned'], 'one timed incident')
     elif case == 'explicit-no-incident':
         require(not incidents and 40 in values, 'negation')
@@ -92,7 +113,8 @@ def extraction_cues(report):
     return {'quantities':[{'quantity':q['quantity'], 'item_name':q['item_name'],
                 **{name:name in q['item_name'].casefold() for name in ('drum','arrow','cone')}}
             for q in report['production_quantities']],
-            'incidents':len(report['incidents']), 'unresolved':len(report['unresolved'])}
+            'incidents':len(report['incidents']), 'unresolved':len(report['unresolved']),
+            'reviewable_board_quantity':reviewed_board_quantity(report)}
 
 
 def run(audio_root, mode='live', single_case=None):
@@ -147,7 +169,8 @@ def run(audio_root, mode='live', single_case=None):
         def incident(time):
             return {'details':'Synthetic incident.', 'time_mentioned':time, 'priority':None}
         if case == 'traffic-devices':
-            report['production_quantities'] = [quantity('Drums',50), quantity('Arrow boards',4)]
+            # Mock the observed homophone so the real app must add its warning.
+            report['production_quantities'] = [quantity('Drums',50), quantity('Aero boards',4)]
             report['incidents'] = [incident('9:15 AM')]
         elif case in ('explicit-no-incident', 'quantity-correction', 'unknown-quantity'):
             report['production_quantities'] = [quantity('Drums', {'explicit-no-incident':40, 'quantity-correction':50, 'unknown-quantity':None}[case])]
@@ -273,9 +296,12 @@ def run(audio_root, mode='live', single_case=None):
                     require(client.post(path+'/send-to-office', headers=headers,
                         json={'expected_version':2, 'reviewed':True}).status_code == 422, 'unknown cannot send')
                 elif case == CASES[0]:
-                    # Confirm units as the explicit reviewer; model suggestions are not final.
+                    # The synthetic reviewer knows the authored fixture. Corrections
+                    # happen here, never in transcription/extraction or acceptance.
                     for quantity in fields['report']['production_quantities']:
                         quantity['unit'] = 'each'
+                        if ' '.join(quantity['item_name'].casefold().split()) in ('aero board', 'aero boards'):
+                            quantity['item_name'] = 'Arrow boards'
                     edited = client.patch(path, headers=headers, json={'expected_version':1, 'fields':fields})
                     require(edited.status_code == 200, 'review edit')
                     require(client.post(path+'/send-to-office', headers=headers,
@@ -298,6 +324,7 @@ def run(audio_root, mode='live', single_case=None):
         require(len(speech_calls) == request_limit and minimum_model <= len(model_calls) <= request_limit, 'paid request budget')
     passed=not any(check['status']=='FAIL' for check in checks)
     result = {'status':'PASS' if passed else 'FAIL', 'mode':mode, 'scope':'full-workflow' if single_case is None else 'focused-repair',
+        'acceptance_policy':'reviewed-equipment-v1',
         'synthetic_only':True, 'identity':'Google metadata/ADC' if mode == 'live' else 'mocked',
         'speech_requests':len(speech_calls), 'model_requests':len(model_calls), 'model_readiness_checks':ready_checks,
         'raw_audio_or_transcript_logged':False, 'sms_sent':0, 'checks':checks}
