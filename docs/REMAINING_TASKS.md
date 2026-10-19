@@ -146,3 +146,6 @@ Added scripts/start_mobile_preview.ps1, with hidden background launch, readiness
 - [x] Long Speech-only pilot finished:3/4PASS; arrow boards not recognized. Job cleanup independently verified,0model/0SMS.
 - [x] Vocabulary repairc7669cc passed834 PostgreSQL/149Node/mocked workflow; conditional CPU-to-GPU guard4checksPASS. Immutable appc6e687b8…/test86c814b8… built/verified.
 - [ ] Exact-image combined CPU4/conditionalGemma10 approval and real acceptance. No new pilot or public activation yet. Scope FIELD_VOICE_ACTIVATION_20261018.md; ongoing hosting and Android hardware acceptance remain open.
+
+- [x] Approved vocabulary Speech retestfzr47:3/4PASS; only literal arrow_boards cuefalse. CPU job deleted/absence verified, no GPU launched. Original conditional full-pilot approval was not consumed.
+- [ ] Fresh approval for unchanged full semantic workflow test, with explicit review of the single lexical mismatch; retain all report assertions and USD5/hour-cleanup limits. No new runtime build is needed; helper-only guard5checksPASS. Public/ongoing hosting remains unapproved.
