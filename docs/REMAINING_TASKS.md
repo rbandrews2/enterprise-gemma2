@@ -157,3 +157,8 @@ Added scripts/start_mobile_preview.ps1, with hidden background launch, readiness
 - [x] Repaired runtime1d2da6b: PostgreSQL836/Node149PASS, no failures/skips; focused8 and single-case mocked acceptancePASS. Preserve results; do not rerun suites.
 - [ ] Finish Google CLI credential refresh (user action in SDK tab/CloudShellterminal0), then build exact repaired images. CloudShellterminal1 for checks; do not paste commands into code prompt.
 - [ ] Obtain ongoing hosting + exact-image one-recording acceptance/conditional live activation approval after build. No repeat ten-clip pilot, no newDDL/credential grants. Production remainsunchanged/VoiceOFF.
+
+## Superseding Field Voice status
+- [x] Google CLI refresh, repaired exact build238ef05b/testb564dfa1 and originalRTX ongoing-hosting approval completed.
+- [x] One approved activation check ran:1Speech/1Gemma/0SMS; ambiguity warning present, exactequipment gateFAIL (4Aero boards vs4arrowboards). No repeat test.
+- [ ] Resolve recognition/acceptance issue before public Field Voice activation. Failed attempt removed model/job and did not cut over; see FIELD_VOICE_ACTIVATION_20261018.md. Do not treat earlier checklist approvals/build tasks as still pending or the failed live check as passed.
