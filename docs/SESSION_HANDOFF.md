@@ -1,5 +1,16 @@
 # WZOS current session handoff - October 18, 2026
 
+## Latest user steering - October20 Voice receipt
+
+User confirms correct Smart Field Voice objects/counts but no visible office receipt
+or admin notice. Local repair and exact validation: FIELD_VOICE_RECEIPTS_20261020.md.
+Reports go to organization Forms hub; notices are in-app, never email/SMS. Actual
+user submission state is not yet verified. Four Node receipt/alert checks and13
+Python checks passed; this repair is not deployed. Preserve separate uncommitted
+Ask Atlas source refinements. Full cloud gate at bc7394d:874 PostgreSQL tests PASS,
+zero skips/failures/errors; Node exit0. That gate predates the receipt repair.
+
+
 ## Start here
 
 Owned checkout: `.local-data/integration-release`, branch `codex/preproduction-modules`.

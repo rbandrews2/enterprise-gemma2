@@ -100,6 +100,26 @@ class FieldVoiceTests(unittest.TestCase):
         self.assertTrue(any(json.loads(r['payload'])['template_id']=='daily-work-report' for r in snapshots))
         self.assertEqual(daily['field_voice_review']['reviewed_by'], 'member')
 
+    def test_office_summary_and_admin_self_notification_are_tenant_scoped(self):
+        draft = self.create()
+        sent = self.client.post('/api/field-voice/drafts/'+draft['id']+'/send-to-office',
+            headers=self.h('admin'), json={'expected_version':1,'reviewed':True})
+        self.assertEqual(sent.status_code,200,sent.text)
+        self.assertEqual(self.client.get('/api/form-submissions/summary',headers=self.h('admin')).json(),{'pending_count':2})
+        self.assertEqual(self.client.get('/api/form-submissions/summary',headers=self.h('other',self.other)).json(),{'pending_count':0})
+        self.assertEqual(self.client.get('/api/form-submissions/summary',headers=self.h()).status_code,403)
+        messages=self.client.get('/api/messages',headers=self.h('admin')).json()['items']
+        self.assertEqual(len(messages),1)
+        self.assertEqual((messages[0]['sender_id'],messages[0]['recipient_id']),('admin','admin'))
+        ident=sent.json()['submission_ids'][0]
+        result=self.client.post('/api/form-submissions/'+ident+'/review',headers=self.h('admin'),
+            json={'expected_version':1,'status':'reviewed','note':''})
+        self.assertEqual(result.status_code,200,result.text)
+        self.assertEqual(self.client.get('/api/form-submissions/summary',headers=self.h('admin')).json(),{'pending_count':1})
+        self.assertEqual(self.client.get('/api/field-voice/drafts/'+draft['id'],headers=self.h()).json()['submission_ids'],sent.json()['submission_ids'])
+        with self.storage.connect() as db:
+            self.assertEqual(db.execute('SELECT COUNT(*) FROM sms_outbox').fetchone()[0],0)
+
     def test_edition_tenant_owner_stale_denials_before_inference(self):
         body = {**self.basis, 'transcript': 'Synthetic road work completed.'}
         for headers, payload, expected in [(self.h('core', self.core), body, 403),

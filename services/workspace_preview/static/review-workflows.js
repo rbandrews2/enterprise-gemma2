@@ -1,4 +1,23 @@
 "use strict";
+// A visible in-app office alert, including reports submitted by the admin themself.
+(() => {
+ const alert=document.createElement('section'),text=document.createElement('span'),open=document.createElement('button');
+ alert.className='panel report-section';alert.hidden=true;alert.setAttribute('role','status');alert.setAttribute('aria-live','polite');
+ open.type='button';open.className='secondary';open.textContent='Open office forms';open.onclick=()=>window.showWzosView('forms');
+ alert.append(text,open);document.getElementById('main').prepend(alert);
+ let generation=0,pending=null;
+ async function refresh(){
+  const user=window.wzosClock.getSession(),scope=generation;
+  if(user?.role!=='admin'||document.hidden){alert.hidden=true;return;}
+  if(pending===scope)return;pending=scope;
+  try{const data=await window.wzosClock.api('/api/form-submissions/summary');if(scope!==generation)return;
+   alert.hidden=!data.pending_count;text.textContent=`${data.pending_count} form${data.pending_count===1?'':'s'} received by office and awaiting review. `;
+  }catch{if(scope===generation)alert.hidden=true;}finally{if(pending===scope)pending=null;}
+ }
+ document.addEventListener('wzos:session',()=>{generation++;alert.hidden=true;refresh();});
+ for(const event of ['wzos:office-sent','wzos:office-reviewed','visibilitychange'])document.addEventListener(event,refresh);
+ setInterval(refresh,60000);
+})();
 // Shared review workflow integration; module editors remain responsible for drafts.
 (() => {
  const el=(tag,text='')=>{const n=document.createElement(tag);n.textContent=text;if(tag==='button')n.className='secondary';return n;};
@@ -32,7 +51,7 @@
      const label=el('label','Review note'),note=el('textarea');note.maxLength=2000;label.append(note);card.append(label);
      for(const [status,title] of [['reviewed','Mark reviewed'],['changes_requested','Request changes']]){
       const button=el('button',title);button.onclick=async()=>{if(busy)return;busy=true;button.disabled=true;
-       try{await api(`/api/form-submissions/${item.id}/review`,{method:'POST',body:JSON.stringify({expected_version:item.version,status,note:note.value})});if(generation===epoch)await show();}
+       try{await api(`/api/form-submissions/${item.id}/review`,{method:'POST',body:JSON.stringify({expected_version:item.version,status,note:note.value})});if(generation===epoch){document.dispatchEvent(new CustomEvent('wzos:office-reviewed'));await show();}}
        catch(error){if(generation===epoch)notice.textContent=error.message;}finally{busy=false;button.disabled=false;}
       };card.append(button);
      }

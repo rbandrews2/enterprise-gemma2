@@ -17,18 +17,20 @@
  const actions=node('div',undefined,'voice-actions');actions.append(record,stop,cancel,setup,clock);
  const edits=node('div');edits.append(label('Work date — confirm before sending',dateInput),label('Work description',description),label('Reported location — compare with selected job',locationInput));
  editor.append(edits,node('h2','Production quantities'),quantities,button('Add quantity',()=>{fields.report.production_quantities.push({item_name:'',quantity:null,unit:null});renderEditor();mark();}),node('h2','Incident drafts'),incidents,warnings,label('I reviewed these quantities, incident details, times and priorities.',review));
- const controls=node('div',undefined,'voice-actions');controls.append(save,send,newReport);editor.append(controls);editor.hidden=true;
+ const delivery=node('p','','voice-delivery');delivery.setAttribute('role','status');delivery.setAttribute('aria-live','polite');delivery.hidden=true;
+ const controls=node('div',undefined,'voice-actions');controls.append(save,send,newReport);editor.append(controls,delivery);editor.hidden=true;
  savedList.append(node('summary','Saved field reports'));root.append(button('Previous reports',()=>window.showWzosView('report')));
  root.append(title,node('p','Choose a job, then record or type your work update. Review Atlas’s drafts, correct any details, and select Send to office when ready.'),label('Selected job',choose),notice,actions,label('Transcript — kept only in this review session',transcript),generate,editor,savedList);
  transcript.oninput=()=>{mark();generate.textContent='Generate drafts from edited transcript';};
  for(const input of [dateInput,description,locationInput])input.oninput=mark;
  choose.onchange=()=>{if(fields&&!confirm('Clear the current unsaved report and switch jobs?')){choose.value=draft?.job_id||jobs[0]?.id||'';return;}reset();};
  function mark(){dirty=true;review.checked=false;}
- function message(text){notice.textContent=text;}
+ function message(text){notice.textContent=text;if(!editor.hidden&&draft?.state!=='sent'){delivery.hidden=!text;delivery.textContent=text;}}
+ function receipt(){if(draft?.state!=='sent')return;delivery.hidden=false;delivery.textContent=`Received by office · ${new Date(draft.updated_at).toLocaleString()}\n${draft.submission_ids.length} form(s) saved in Forms hub for your organization’s admins.\nReceipt: ${draft.id}`;send.textContent='Received by office';}
  function lock(value){busy=value;for(const b of [generate,save,send,record,newReport,choose,transcript])b.disabled=value;for(const input of editor.querySelectorAll('input,textarea,select,button'))input.disabled=value||draft?.state==='sent';newReport.disabled=value;generate.disabled=value||previewOnly;record.disabled=value||!speech;}
  function selected(){return jobs.find(j=>j.id===choose.value);}
  function basis(){const job=selected();if(!job)throw Error('Select an authorized job first.');return {job_id:job.id,expected_job_version:job.version};}
- function reset(clear=true){stopRecording(true);fields=null;draft=null;dirty=false;requestId=crypto.randomUUID();editor.hidden=true;review.checked=false;if(clear)transcript.value='';message('Select a job, record or type, then review before sending.');}
+ function reset(clear=true){stopRecording(true);fields=null;draft=null;dirty=false;requestId=crypto.randomUUID();editor.hidden=true;delivery.hidden=true;delivery.textContent='';send.textContent='Send to office';review.checked=false;if(clear)transcript.value='';message('Select a job, record or type, then review before sending.');}
  function stopTracks(){if(stream)stream.getTracks().forEach(t=>t.stop());stream=null;clearInterval(timer);timer=null;stop.disabled=cancel.disabled=true;}
  function stopRecording(discard){cancelled=discard;if(recorder?.state==='recording')recorder.stop();stopTracks();if(discard){chunks=[];message('Recording discarded.');}}
  async function wav(blob){
@@ -63,20 +65,20 @@
   catch(e){if(generation===epoch)message(e.message);}finally{if(generation===epoch)lock(false);if(!fromAudio)controller=null;}
  }
  function renderEditor(){
-  if(!fields)return;editor.hidden=false;dateInput.value=fields.work_date||'';description.value=fields.report.work_description||'';locationInput.value=fields.report.route_location||'';quantities.replaceChildren();incidents.replaceChildren();warnings.replaceChildren();
+  if(!fields)return;editor.hidden=false;delivery.hidden=true;send.textContent='Send to office';dateInput.value=fields.work_date||'';description.value=fields.report.work_description||'';locationInput.value=fields.report.route_location||'';quantities.replaceChildren();incidents.replaceChildren();warnings.replaceChildren();
   for(const q of fields.report.production_quantities){const row=node('div',undefined,'voice-row');for(const [key,title,type] of [['item_name','Item','text'],['quantity','Quantity','number'],['unit','Unit','text']]){const input=node('input');input.type=type;input.value=q[key]??'';if(type==='number'){input.min='0';input.step='any';}input.oninput=()=>{q[key]=type==='number'?(input.value===''?null:Number(input.value)):(input.value||null);mark();};row.append(label(title,input));}row.append(button('Remove',()=>{fields.report.production_quantities=fields.report.production_quantities.filter(v=>v!==q);renderEditor();mark();}));quantities.append(row);}
   for(const incident of fields.report.incidents){const card=node('section',undefined,'panel voice-incident'),details=node('textarea'),time=node('input'),priority=node('select');details.value=incident.details;time.value=incident.time_mentioned||'';for(const value of ['','low','medium','high']){const option=node('option',value||'Unconfirmed priority');option.value=value;priority.append(option);}priority.value=incident.priority||'';details.oninput=()=>{incident.details=details.value;mark();};time.oninput=()=>{incident.time_mentioned=time.value||null;mark();};priority.onchange=()=>{incident.priority=priority.value||null;mark();};card.append(label('Incident details',details),label('Time mentioned — do not guess a date/timezone',time),label('Priority suggestion — review',priority),button('Remove incident',()=>{fields.report.incidents=fields.report.incidents.filter(v=>v!==incident);renderEditor();mark();}));incidents.append(card);}
-  for(const warning of fields.report.unresolved)warnings.append(node('p',warning,'voice-warning'));
+  for(const warning of fields.report.unresolved)warnings.append(node('p',warning,'voice-warning'));receipt();lock(busy);
  }
  async function persist(toOffice){
   if(!fields)return;if(toOffice&&!review.checked){message('Review the report and check the confirmation before sending.');return;}
   fields.work_date=dateInput.value||null;fields.report.work_description=description.value||null;fields.report.route_location=locationInput.value||null;
-  const generation=epoch;lock(true);try{
-   if(draft?.state==='sent'){message('Already received by office.');return;}
+  const generation=epoch;lock(true);message(toOffice?'Sending to office…':'Saving draft…');try{
+   if(draft?.state==='sent'){receipt();return;}
    if(!draft)draft=await api('/api/field-voice/drafts',{method:'POST',body:JSON.stringify({...basis(),request_id:requestId,fields})});
    else if(dirty)draft=await api('/api/field-voice/drafts/'+draft.id,{method:'PATCH',body:JSON.stringify({expected_version:draft.version,fields})});
    if(generation!==epoch)return;dirty=false;
-   if(toOffice){draft=await api('/api/field-voice/drafts/'+draft.id+'/send-to-office',{method:'POST',body:JSON.stringify({expected_version:draft.version,reviewed:true})});if(generation!==epoch)return;transcript.value='';message(`Received by office: ${draft.submission_ids.length} form(s). No SMS sent.`);document.dispatchEvent(new CustomEvent('wzos:office-sent'));}
+   if(toOffice){draft=await api('/api/field-voice/drafts/'+draft.id+'/send-to-office',{method:'POST',body:JSON.stringify({expected_version:draft.version,reviewed:true})});if(generation!==epoch)return;transcript.value='';receipt();message('Received by office. Your receipt is below the Send button.');document.dispatchEvent(new CustomEvent('wzos:office-sent'));}
    else message('Structured draft saved. Audio and transcript were not saved.');await saved();
   }catch(e){if(generation===epoch)message(e.message);}finally{if(generation===epoch)lock(false);}
  }

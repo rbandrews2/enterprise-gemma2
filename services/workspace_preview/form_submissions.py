@@ -132,6 +132,14 @@ def register(app,connect,actor):
         service=getattr(app.state,'messaging',None)
         if queued and service: background.add_task(service.process,org,queued)
         return saved
+    @app.get('/api/form-submissions/summary')
+    def summary(request:Request):
+        user=actor(request)
+        if user['role']!='admin':raise HTTPException(403,'Administrator review required')
+        with connect() as db:
+            pending=db.execute("SELECT COUNT(*) FROM form_submissions WHERE organization_id=? AND status='received'",(user['organization_id'],)).fetchone()[0]
+        return {'pending_count':pending}
+
     @app.get('/api/form-submissions')
     def listing(request:Request,offset:int=Query(0,ge=0),limit:int=Query(25,ge=1,le=50)):
         user=actor(request);clause='organization_id=?';params=[user['organization_id']]
