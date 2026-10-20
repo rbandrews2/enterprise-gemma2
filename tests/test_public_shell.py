@@ -1,10 +1,26 @@
 """Public launch caching must never include authenticated workspace data."""
 import unittest
-from tests import test_workspace_preview as fixtures
+import os
+import tempfile
+from pathlib import Path
+from unittest.mock import patch
+from fastapi.testclient import TestClient
+from services.workspace_preview.app import create_app
+from services.v2.knowledge.store import Store
 
 class PublicShellTests(unittest.TestCase):
-    setUp = fixtures.WorkspacePreviewTests.setUp
-    headers = fixtures.WorkspacePreviewTests.headers
+    def setUp(self):
+        temporary=tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        directory=Path(temporary.name)
+        environment=patch.dict(os.environ, {'WZOS_WORKSPACE_PREVIEW':'1','K_SERVICE':'','GAE_ENV':'','NETLIFY':''})
+        environment.start()
+        self.addCleanup(environment.stop)
+        self.client=TestClient(create_app(directory/'preview.sqlite', Store(directory/'sources', {})))
+        self.addCleanup(self.client.close)
+
+    def headers(self):
+        return {'X-Preview-Actor':'enterprise-admin'}
     def test_public_shell_and_versioned_assets(self):
         page = self.client.get('/')
         version = self.client.get('/api/app/version').json()['version']
