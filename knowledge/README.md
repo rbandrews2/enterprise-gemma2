@@ -1,5 +1,14 @@
 # Virginia agency reference backend
 
+## Page-aware DOT knowledge foundation (October20)
+
+See [ATLAS_DOT_KNOWLEDGE_20261020.md](../docs/ATLAS_DOT_KNOWLEDGE_20261020.md)
+for the supplied MUTCD/Road and Bridge/TEDM imports, full-page search, diagram/sheet
+candidate discovery, provenance/review gates and disabled Enterprise API.
+Catalog entries marked `origin=user_import` require the `import-pdf` operator
+command with the exact pinned bytes; the official downloader does not fetch them.
+They are not automatically official/current or approved for field use.
+
 The approved catalog is `sources.json`. Original documents, extraction results, revision manifests, download attempts, and SQLite live under `.local-data/knowledge/` (excluded from Git and container uploads). This is a local reference library, not an applicability engine or complete safety corpus.
 
 ## Setup and operation

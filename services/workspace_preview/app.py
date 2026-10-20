@@ -730,6 +730,8 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
     def dispatch_script():
         return FileResponse(STATIC / "dispatch.js", media_type="text/javascript")
     report_history.register(app, connect, actor, report, knowledge_store)
+    from services.workspace_preview import dot_knowledge
+    dot_knowledge.register(app, actor, knowledge_store)
     def assigned_time_rows(conn, selected):
         if not account_workspace or selected['edition'] != 'enterprise':
             return []

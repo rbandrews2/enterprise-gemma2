@@ -1,5 +1,6 @@
 """Catalog metadata is curated; downloading never establishes applicability."""
 import json
+import re
 from datetime import date
 from pathlib import Path
 from typing import Literal
@@ -37,6 +38,10 @@ class Source(StrictModel):
     edition: str | None = None
     jurisdiction: str
     kind: Literal["pdf", "html", "docx"]
+    origin: Literal["official", "user_import"] = "official"
+    pinned_sha256: str | None = Field(default=None, pattern=r"^[a-f0-9]{64}$")
+    document_role: Literal["standard", "specification", "guidance", "training", "unknown"] = "unknown"
+    regions: list[str] = Field(default_factory=list, max_length=60)
     archive_member: str | None = None
     archive_sha256: str | None = Field(default=None, pattern=r"^[a-f0-9]{64}$")
     effective_from: date | None = None
@@ -55,8 +60,17 @@ class Source(StrictModel):
         if self.archive_member and (self.kind != "docx" or not self.archive_member.endswith(".docx")
                                     or any(x in self.archive_member for x in ("/", "\\", ":", ".."))):
             raise ValueError("Only approved top-level DOCX archive members are supported")
-        for url in [self.url, self.publication_page, *self.allowed_redirects]:
+        if self.origin == "user_import":
+            # Catalog-only, pinned operator imports. Never a downloader allowlist.
+            if (self.kind != "pdf" or not self.pinned_sha256 or self.allowed_redirects
+                    or not re.fullmatch(r"https://drive\.google\.com/file/d/[A-Za-z0-9_-]+/view", self.url)):
+                raise ValueError("User imports require a pinned PDF and canonical Drive file URL")
+        else:
+            approved_url(self.url)
+        for url in [self.publication_page, *self.allowed_redirects]:
             approved_url(url)
+        if any(not re.fullmatch(r"[A-Z]{2}", region) for region in self.regions):
+            raise ValueError("Regions must be two-letter state codes or US")
         if self.effective_from and self.effective_to and self.effective_to < self.effective_from:
             raise ValueError("Effective date range is reversed")
         return self

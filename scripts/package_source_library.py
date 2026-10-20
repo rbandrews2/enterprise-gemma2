@@ -62,6 +62,8 @@ def package(store, destination):
                 target = destination/'revisions'/source_id/revision/name
                 target.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copyfile(folder/name, target)
+            if (folder / 'page-annotations.json').exists():
+                shutil.copyfile(folder / 'page-annotations.json', destination/'revisions'/source_id/revision/'page-annotations.json')
         for section in ('current','attempts'):
             path = source/section/f'{source_id}.json'
             if path.exists():
@@ -70,6 +72,9 @@ def package(store, destination):
                 shutil.copyfile(path, target)
     snapshot = Store(destination, store.catalog)
     snapshot.rebuild()
+    if (source / 'manual-index.json').exists():
+        from services.v2.knowledge.manuals import ManualIndex
+        ManualIndex(snapshot).rebuild()
     files = {p.relative_to(destination).as_posix():hashlib.sha256(p.read_bytes()).hexdigest()
              for p in sorted(destination.rglob('*')) if p.is_file()}
     report = {'coverage':coverage, 'files':files, 'applicability_verified':False}

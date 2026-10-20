@@ -349,3 +349,35 @@ Cloud root/tmp/wzos-ui-20261020.XC9Of8g4; pointer$HOME/wzos-ui-release-path.txt.
 No automatic test/deploy replay. Remaining: installed-device splash/icon/update and
 pending-draft acceptance; user-led Voice recording/review/send checks. Simulator
 remains synthetic and cannot perform paid Voice processing. Live browser left open.
+
+## Latest local development - Atlas DOT knowledge foundation October20
+
+Ray requested manual-grounded Ask Atlas and report diagram discovery. Initially
+prioritized supplied Virginia MUTCD, then supplied Road and Bridge VolumesI/II and
+TEDM. Four pinned user-import PDFs ingested locally:2117pages/3361legacypassages.
+2019 pavement training presentation held outside ingestion. Source hashes, actual
+editions, official publication pages, Drive provenance and usage limits are curated
+in sources.json; no user copy is silently labeled verified official/current.
+
+Code extends existing knowledge Store/operator CLI with hash-pinned import; adds
+manuals.py/manual_cli.py page index, outline, literal keyword/diagram discovery,
+whole-page context, integrity checks, image review flags and revision-bound search
+tags. Disabled Enterprise DOT search/context/ask routes and private metadata-auth
+Gemma structured adapter added; existing chat/Voice/weather/report schema unchanged.
+No new dependencies, customer DDL, IAM, cloud resources or public activation.
+
+42 focused tests PASS (20.053s), including existing source/package/Atlas reference
+regressions; mocked model only. Workspace factory auth/entitlement/OFF smoke returns
+401/403/503 before inference. Real examples prioritize Figure3B-2 at MUTCDp621
+(printed585; visual caption tag) and PM-1 at VolumeIIp315.154 pages are blank/low-body
+text/image-heavy and remain review-needed; full index is not full visual/OCR review.
+VDOT usage policy requires standard references rather than insertion/modification
+in plan assemblies. Plan report citations/links; reuse-rights review before embedding.
+
+See docs/ATLAS_DOT_KNOWLEDGE_20261020.md for architecture, commands, provenance,
+validation and rollout. Ignored.local-data/knowledge and.local-data/dot-manuals hold
+originals/manifests/annotations/indexes/results. Preserve together. Production still
+ui-6047e5b100%, active Voice preserved; weather configuration remains on hold.
+Next: source/currency/diagram review, actual Ask Atlas/report UI and snapshot citation
+selection, release gates and separately approved bounded model acceptance/activation.
+No automatic paid calls, source approval or live cutover authorized by local success.

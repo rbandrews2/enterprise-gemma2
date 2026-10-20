@@ -95,6 +95,16 @@ older evidence remain there; do not silently discard or re-open completed gates.
 
 ## Planned integrations
 
+- [ ] Atlas DOT manual-grounded Ask Atlas and report references: local Python
+  foundation complete; four supplied VDOT PDFs2117pages indexed,42focused checks
+  PASS. Hash-pinned imports/full-page citations/section browsing/diagram candidates/
+  source and image-review gates/disabled Enterprise API/private Gemma adapter added.
+  See ATLAS_DOT_KNOWLEDGE_20261020.md. No live activation. Finish source currency,
+  applicability and visual/OCR review, VDOT reuse rights, user-facing Ask Atlas and
+  report citation selections, release gates and bounded real-model acceptance.
+ 2019 training presentation not ingested; NCDOT/Caltrans not populated. Do not treat
+  source indexing, exact quote checks or a diagram keyword hit as field approval.
+
 - [x] Weather/geofencing implementation c6adf9f deployed; hourly pilot activated.
   Ray chose a fixed compact weather card showing basic live conditions, following
   user location after permission; label source time/stale data and location fallback.

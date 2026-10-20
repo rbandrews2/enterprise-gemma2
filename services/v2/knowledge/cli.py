@@ -12,6 +12,9 @@ def main():
     archive = commands.add_parser("ingest-archive")
     archive.add_argument("path")
     archive.add_argument("sources", nargs="+")
+    local = commands.add_parser('import-pdf', help='Import only a hash-pinned catalog PDF')
+    local.add_argument('source')
+    local.add_argument('path')
     commands.add_parser("rebuild")
     retry = commands.add_parser("retry-extraction")
     retry.add_argument("source")
@@ -22,6 +25,15 @@ def main():
     check.add_argument("--note", required=True)
     args = parser.parse_args()
     store = Store()
+    if args.command == 'import-pdf':
+        if args.source not in store.catalog or store.catalog[args.source].origin != 'user_import':
+            parser.error('Source must be a catalog-pinned user import')
+        result = store.ingest(args.source, local_pdf=args.path)
+        print(json.dumps(result, indent=2))
+        if result['status'] not in {'extracted', 'unchanged'}:
+            return 1
+        print(json.dumps({'indexed_passages': store.rebuild()}))
+        return 0
     if args.command == "ingest-archive":
         if any(sid not in store.catalog or not store.catalog[sid].archive_member for sid in args.sources):
             parser.error("Every source must be a catalog-approved archive member")

@@ -58,11 +58,23 @@ class Store:
                 else {"status": "not_downloaded"},
                 "review_status": revisions[0]["review_status"] if revisions else "unreviewed"}
 
-    def ingest(self, source_id, client=None, archive_path=None):
+    def ingest(self, source_id, client=None, archive_path=None, *, local_pdf=None):
         source = self.catalog[source_id]
         attempt = {"attempted_at": now(), "status": "unavailable"}
         try:
-            if source.archive_member:
+            if local_pdf is not None:
+                if source.origin != 'user_import' or source.kind != 'pdf' or client or archive_path:
+                    raise ValueError('Only catalog-pinned user PDFs permit local import')
+                path = Path(local_pdf)
+                if path.stat().st_size > 100 * 1024 * 1024:
+                    raise ValueError('document_too_large')
+                content, final_url = path.read_bytes(), source.url
+                if (not content.startswith(b'%PDF-') or
+                        hashlib.sha256(content).hexdigest() != source.pinned_sha256):
+                    raise ValueError('Pinned PDF identity mismatch')
+            elif source.origin == 'user_import':
+                raise ValueError('User-supplied PDF requires operator import-pdf command')
+            elif source.archive_member:
                 from .word import member_bytes
                 if archive_path is None:
                     raise ValueError("Pinned archive requires operator ingest-archive command")
@@ -76,6 +88,8 @@ class Store:
             else:
                 content, final_url = download(source, client)
             digest = hashlib.sha256(content).hexdigest()
+            if source.pinned_sha256 and digest != source.pinned_sha256:
+                raise ValueError('Pinned document identity mismatch')
             folder = self.data / "revisions" / source_id / digest
             folder.mkdir(parents=True, exist_ok=True)
             manifest_path = folder / "manifest.json"
@@ -101,6 +115,8 @@ class Store:
                     "source": source.model_dump(mode="json"), "revision": digest,
                     "retrieved_at": now(), "final_url": final_url,
                     "downloaded": True, "extraction_state": extraction_state,
+                    "provenance": {"origin": source.origin, "url": final_url,
+                                   "official_identity_verified": source.origin == 'official'},
                     "extraction_checked": False, "applicability_reviewed": False,
                     "review_status": "unreviewed", "review_note": None,
                     "passage_count": len(result["passages"]), "warnings": result["warnings"],
