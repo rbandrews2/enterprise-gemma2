@@ -2,9 +2,15 @@
 // A visible in-app office alert, including reports submitted by the admin themself.
 (() => {
  const alert=document.createElement('section'),text=document.createElement('span'),open=document.createElement('button');
- alert.className='panel report-section';alert.hidden=true;alert.setAttribute('role','status');alert.setAttribute('aria-live','polite');
+ alert.id='office-review-alert';alert.className='panel report-section';alert.hidden=true;alert.setAttribute('role','status');alert.setAttribute('aria-live','polite');
  open.type='button';open.className='secondary';open.textContent='Open office forms';open.onclick=()=>window.showWzosView('forms');
- alert.append(text,open);document.getElementById('main').prepend(alert);
+ alert.append(text,open);
+ function place(){
+  const card=document.querySelector?.('.sidebar .org-card');
+  if(window.matchMedia?.('(max-width:760px)').matches&&document.body?.classList.contains('mobile-home-active')&&card)card.after(alert);
+  else document.getElementById('main').before(alert);
+ }
+ place();document.addEventListener('wzos:view',place);window.addEventListener?.('resize',place);
  let generation=0,pending=null;
  async function refresh(){
   const user=window.wzosClock.getSession(),scope=generation;

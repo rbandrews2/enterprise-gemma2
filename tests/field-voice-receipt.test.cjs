@@ -37,14 +37,14 @@ test('a failed send shows its error next to the button without a success receipt
  assert.match(receipt.textContent,/Connection failed/);assert.doesNotMatch(receipt.textContent,/Receipt:/);assert.equal(h.find('Send to office').disabled,false);
 });
 test('office alert refreshes after review and discards a reply after changing account',async()=>{
- class Node{constructor(){this.children=[];}append(...n){this.children.push(...n);}prepend(...n){this.children.unshift(...n);}setAttribute(){}}
+ class Node{constructor(){this.children=[];}append(...n){this.children.push(...n);}before(...n){this.children.unshift(...n);}setAttribute(){}}
  const main=new Node(),events={};let session={role:'admin'},count=2,reply=null,calls=0;
  const emit=async(type)=>Promise.all((events[type]||[]).map(f=>f()));
  const document={createElement:()=>new Node(),getElementById:()=>main,addEventListener:(type,f)=>(events[type]??=[]).push(f)};
  const window={wzosClock:{getSession:()=>session,api:async()=>{calls++;return reply?await reply:{pending_count:count};}},showWzosView(){}};
  const source=fs.readFileSync('services/workspace_preview/static/review-workflows.js','utf8').split('// Shared review workflow integration;')[0];
  vm.runInNewContext(source,{document,window,setInterval(){}});
- await emit('wzos:session');const alert=main.children[0];assert.equal(alert.hidden,false);assert.match(alert.children[0].textContent,/2 forms/);
+ await emit('wzos:session');const alert=main.children[0];assert.equal(alert.id,'office-review-alert');assert.equal(alert.hidden,false);assert.match(alert.children[0].textContent,/2 forms/);
  count=0;await emit('wzos:office-reviewed');assert.equal(alert.hidden,true);
  let resolve;reply=new Promise(r=>resolve=r);const pending=emit('wzos:office-sent');await Promise.resolve();
  session={role:'member'};await emit('wzos:session');resolve({pending_count:9});await pending;assert.equal(alert.hidden,true);
