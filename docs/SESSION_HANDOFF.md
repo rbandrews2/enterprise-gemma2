@@ -287,3 +287,22 @@ charcoal glass styling; no geolocation, polling, provider or permission changes.
 placement/darker background,375px no-overflow; Forms restores original app position
 and previous styling. Screenshot .local-data/ui-sweep-20261020/weather-home.png.
 Simulator ready and left at100% size for readable review. LOCAL ONLY, live unchanged.
+
+
+## My jobs preview, top account strip and Clock In copy - October 20
+Ray requested populated My jobs review, removal of text under Clock In, and account/
+test-identity strip consistently near page top. Home now places that same strip
+below the organization card; module/desktop restore it directly after topbar.
+Removed the specific explanatory paragraph below Clock In; device setup/offline
+behavior remains intact. No weather configuration changes: Ray explicitly put
+weather configuration on hold, and the discarded tracking experiment stays reverted.
+
+Cause of blank My jobs in simulator: dispatch registers only for verified account
+workspaces, while simulator is synthetic. Added read-only GET assignment/notification
+fixtures ONLY in loopback simulator wrapper, Enterprise/identity/origin constrained.
+One accepted synthetic assignment per identity; no live dispatch, mutation, SMS or
+production route/DDL change. Production empty-list state is not reclassified as a
+production defect.6Python simulator and7Node mobile checks PASS. Browser opened
+assignment details/navigation action, verified top strip on Home/My jobs/Time
+Tracker, removed paragraph absent and375px no horizontal overflow. Evidence ignored
+.local-data/ui-sweep-20261020/my-jobs.png. Local preview only; release gates remain.

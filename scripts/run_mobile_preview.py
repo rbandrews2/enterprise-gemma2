@@ -5,6 +5,8 @@ from pathlib import Path
 import re
 import sys
 from urllib.parse import urlsplit
+from urllib.parse import parse_qs
+from datetime import datetime, timedelta, timezone
 
 ROOT = Path(__file__).resolve().parents[1]
 ASSETS = ROOT / 'scripts' / 'mobile_preview'
@@ -25,6 +27,41 @@ class MobilePreview:
         peer = (scope.get('client') or ('', 0))[0]
         if host not in {'127.0.0.1', 'localhost', '::1'} or peer not in {'127.0.0.1', '::1'}:
             return await Response('Local preview only', status_code=403)(scope, receive, send)
+        # Read-only synthetic dispatch data belongs only to this loopback harness.
+        # Production dispatch remains account-backed and is not changed here.
+        if scope['path'] in {'/api/dispatch/my-assignments', '/api/dispatch/notifications'} and scope['method'] == 'GET':
+            from starlette.responses import JSONResponse
+            def result(body, status=200):
+                return JSONResponse(body, status_code=status, headers={'Cache-Control': 'no-store', 'X-WZOS-Synthetic-Preview': '1'})
+            origin = headers.get(b'origin')
+            if (origin and origin != b'http://' + headers.get(b'host', b'')) or headers.get(b'sec-fetch-site') == b'cross-site':
+                return await result({'detail': 'Same-origin preview only'}, 403)(scope, receive, send)
+            identity = headers.get(b'x-preview-actor', b'').decode('latin-1')
+            if identity not in {'core-admin', 'core-general', 'enterprise-admin', 'enterprise-general'}:
+                return await result({'detail': 'Select a synthetic preview identity'}, 401)(scope, receive, send)
+            if not identity.startswith('enterprise-'):
+                return await result({'detail': 'My jobs requires Enterprise'}, 403)(scope, receive, send)
+            if scope['path'].endswith('/notifications'):
+                return await result({'pending_count': 0})(scope, receive, send)
+            query = parse_qs(scope.get('query_string', b'').decode('latin-1'))
+            phase = query.get('phase', ['upcoming'])[0]
+            try:
+                offset = int(query.get('offset', ['0'])[0])
+                if offset < 0 or phase not in {'upcoming', 'finished', 'all'}:
+                    raise ValueError()
+            except ValueError:
+                return await result({'detail': 'Invalid assignment filter'}, 422)(scope, receive, send)
+            start = (datetime.now(timezone.utc) + timedelta(days=1)).replace(hour=12, minute=0, second=0, microsecond=0)
+            name = 'Jordan Lee' if identity.endswith('admin') else 'Casey Morgan'
+            item = {'id': 'preview-assignment-' + identity, 'order_id': 'enterprise-sample',
+                    'order_title': 'Granby Street markings', 'address': 'Granby Street, Norfolk, VA',
+                    'starts_at': start.isoformat(), 'ends_at': (start + timedelta(hours=8)).isoformat(),
+                    'status': 'accepted', 'role_title': 'Crew member', 'snapshot_state': 'dispatched',
+                    'crew': [{'name': name, 'role_title': 'Crew member'}],
+                    'notes': 'Synthetic preview assignment. No live dispatch or text is sent.'}
+            total = 0 if phase == 'finished' else 1
+            return await result({'items': [item] if total and offset == 0 else [], 'total': total,
+                                 'offset': offset, 'limit': 25})(scope, receive, send)
         assets = {'/__simulator': ('index.html', 'text/html'),
                   '/__simulator/preview.css': ('preview.css', 'text/css'),
                   '/__simulator/preview.js': ('preview.js', 'application/javascript')}

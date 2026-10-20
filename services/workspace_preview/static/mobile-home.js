@@ -17,6 +17,11 @@
  home.onclick=goHome;admin.onclick=()=>window.showWzosView('dashboard');
  function update(){
   const user=session();home.hidden=!user;admin.hidden=!user||user.role!=='admin';
+  const controls=document.querySelector('.preview-bar');
+  if(controls){
+   if(media.matches&&view==='home')side.querySelector('.org-card')?.after(controls);
+   else bar.after(controls);
+  }
   for(const [id,unavailable] of [['report-nav',!user?.can_prepare_atlas],['assignments-nav',user?.edition!=='enterprise']]){
    const card=document.getElementById(id);if(card)card.dataset.mobileUnavailable=String(unavailable);
   }

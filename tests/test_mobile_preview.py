@@ -44,3 +44,32 @@ class SimulatorTests(unittest.TestCase):
         with patch.dict(os.environ, {'K_SERVICE': 'production'}):
             with self.assertRaises(RuntimeError):
                 build_application()
+
+    def dispatch(self, path='/api/dispatch/my-assignments', actor='enterprise-admin', origin=None):
+        async def call():
+            transport=httpx.ASGITransport(app=MobilePreview(fixture), client=('127.0.0.1',8000))
+            headers={'X-Preview-Actor':actor}
+            if origin: headers['Origin']=origin
+            async with httpx.AsyncClient(transport=transport,base_url='http://127.0.0.1:8083') as client:
+                return await client.get(path,headers=headers)
+        return asyncio.run(call())
+
+    def test_preview_assignments_are_read_only_synthetic_and_identity_scoped(self):
+        admin=self.dispatch();member=self.dispatch(actor='enterprise-general')
+        self.assertEqual(admin.status_code,200)
+        self.assertEqual(admin.headers['cache-control'],'no-store')
+        self.assertEqual(admin.headers['x-wzos-synthetic-preview'],'1')
+        self.assertEqual(admin.json()['total'],1)
+        self.assertNotEqual(admin.json()['items'][0]['id'],member.json()['items'][0]['id'])
+        self.assertEqual(admin.json()['items'][0]['status'],'accepted')
+        self.assertIn('Synthetic preview',admin.json()['items'][0]['notes'])
+        self.assertEqual(self.dispatch('/api/dispatch/notifications').json(),{'pending_count':0})
+
+    def test_preview_assignment_filters_and_boundaries(self):
+        self.assertEqual(self.dispatch(actor='core-admin').status_code,403)
+        self.assertEqual(self.dispatch(actor='unknown').status_code,401)
+        self.assertEqual(self.dispatch(origin='https://example.com').status_code,403)
+        self.assertEqual(self.dispatch('/api/dispatch/my-assignments?phase=finished').json()['total'],0)
+        self.assertEqual(self.dispatch('/api/dispatch/my-assignments?offset=25').json()['items'],[])
+        self.assertEqual(self.dispatch('/api/dispatch/my-assignments?phase=invalid').status_code,422)
+        self.assertEqual(self.dispatch('/api/dispatch/my-assignments?offset=-1').status_code,422)
