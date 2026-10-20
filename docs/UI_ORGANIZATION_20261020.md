@@ -41,10 +41,13 @@ uninstall or app-data clearing is required.
   real media/location/install and production-account admin tools need their own
   existing acceptance rather than synthetic preview claims.
 - Screenshot: .local-data/ui-sweep-20261020/forms-desktop.png (ignored synthetic).
-- Final simulator screenshot interrupted: tab reloaded during owned-server restart
-  and stayed on its saved browser error page. Server subsequently returned
-  SIMULATOR_READY; user reports tab unresponsive. Reopen the localhost URL manually;
-  browser policy blocks controlling the error page. Do not bypass it.
+- Simulator recovered after Ray reopened the URL. Final follow-up inspected Home,
+  Forms hub, training and route planner at390px and compact Home at360px. Page
+  scrollWidth equals viewport width (375/375 and345/345 after scrollbar). Route
+  inputs are16px and equal306px widths. No standalone Home label. Correct logo
+  resolves with brand20261020. Core member hides Enterprise/report/admin options;
+  switching back restores Enterprise admin Home. No provider, recording, location
+  or send actions were run. Screenshot: .local-data/ui-sweep-20261020/mobile-home.png.
 
 ## Release / rollback
 LOCAL ONLY. No production cutover, cloud inference, SMS or schema change.

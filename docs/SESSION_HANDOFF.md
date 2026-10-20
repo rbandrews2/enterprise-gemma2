@@ -264,3 +264,15 @@ and remains available; do not bypass error-page policy. Reopen URL manually to f
 visual check. Preserve live Voice238ef05b flags/privateRTXmin0max1. Photo concept
 saved in FUTURE_PHOTO_REPORTS.md. Never infer installed-device splash acceptance
 from simulator or cache checks.
+
+
+## Simulator recovery / mobile review follow-up - October 20
+Ray reopened simulator; normal UI control restored. Inspected final1b3cca8 Home,
+Forms hub, training and route planner;390px and360px checks have no horizontal
+page overflow. Route fields16px/equalwidth. Core member Home filters Enterprise
+and admin options; restored Enterprise admin Home. Correct logo brand20261020
+and absent standalone Home label verified. Ignored screenshot mobile-home.png in
+.local-data/ui-sweep-20261020. No restart, sends, permission prompt or provider test.
+Simulator intentionally remains running. Browser recovery blocker cleared; full
+release gates/build/staging verification and installed-device splash/icon checks
+remain. No live deployment or cloud configuration change.

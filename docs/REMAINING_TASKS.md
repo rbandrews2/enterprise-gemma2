@@ -173,5 +173,6 @@ Added scripts/start_mobile_preview.ps1, with hidden background launch, readiness
 ## October 20 presentation update
 - [x] Save future photo-report concept: FUTURE_PHOTO_REPORTS.md (no implementation).
 - [x] Local layout/startup and supplied shortcut icon-reference updates; see UI_ORGANIZATION_20261020.md.
-- [ ] Finish final simulator/browser review after manually reopening the unresponsive error tab, then integrated release gates and deployment. Live remains unchanged.
+- [x] Simulator recovered; final mobile Home/Forms/training/routes and Core/member filtering inspected. No horizontal overflow at360/390px.
+- [ ] Integrated release gates, exact build/staging verification and deployment. Live remains unchanged.
 - [ ] Real installed Android repeat/cold launch and shortcut artwork refresh acceptance.
