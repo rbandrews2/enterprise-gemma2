@@ -26,6 +26,15 @@ if(typeof document!=='undefined')(()=>{
  const config=make('details'),configBody=make('div','','weather-settings');config.append(make('summary','Job weather & arrival settings'),configBody);
  root.append(heading,location,summary,status,hazards);
  const jobTools=make('section','','weather-card weather-job-tools');jobTools.append(arrival,notices,config);root.after(jobTools);
+ // Reuse the same live card on mobile Home; keep job tools and module placement
+ // in their original location. Moving the node preserves readings and controls.
+ const homeMedia=window.matchMedia?.('(max-width:760px)');
+ const homeMenu=homeMedia&&document.querySelector('nav[aria-label="Workspace navigation"]');
+ if(homeMenu){
+  const anchor=make('span');anchor.hidden=true;root.before(anchor);
+  const place=()=>{if(homeMedia.matches&&document.body.classList.contains('mobile-home-active'))homeMenu.before(root);else anchor.after(root);};
+  document.addEventListener('wzos:view',place);homeMedia.addEventListener('change',place);place();
+ }
  function stopWatch(){watchGeneration++;if(watch!==null)navigator.geolocation?.clearWatch(watch);watch=null;fix=null;nearSince={};arrival.replaceChildren();}
  function stopFollow(){following=false;stopWatch();weatherEpoch++;queuedPoint=null;follow.hidden=false;stop.hidden=true;location.textContent=lastWeather?'Last location · following stopped':'Location following stopped';}
  function clear(){epoch++;weatherEpoch++;stopFollow();owner=scope();sites=[];backgroundEnabled=false;lastWeather=null;lastPoint=null;lastFetch=0;queuedPoint=null;nearSince={};dismissed.clear();summary.replaceChildren();hazards.replaceChildren();noticeList.replaceChildren();configBody.replaceChildren();root.querySelector('[data-weather-chooser]')?.remove();status.textContent='';location.textContent='Choose your location';root.hidden=!owner;jobTools.hidden=!owner;config.hidden=session()?.role!=='admin';}

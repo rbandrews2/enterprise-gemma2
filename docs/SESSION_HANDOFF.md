@@ -276,3 +276,14 @@ and absent standalone Home label verified. Ignored screenshot mobile-home.png in
 Simulator intentionally remains running. Browser recovery blocker cleared; full
 release gates/build/staging verification and installed-device splash/icon checks
 remain. No live deployment or cloud configuration change.
+
+
+## Mobile Home weather placement - October 20
+Ray requested weather above menu options with darker glass. Same weather node now
+moves between organization card and nav on mobile Home; returns to its original
+app position on module/desktop views. Separate job tools stay in app. Home-only
+charcoal glass styling; no geolocation, polling, provider or permission changes.
+12 focused weather/mobileHome Node checks PASS. Browser confirms sidebar -> NAV
+placement/darker background,375px no-overflow; Forms restores original app position
+and previous styling. Screenshot .local-data/ui-sweep-20261020/weather-home.png.
+Simulator ready and left at100% size for readable review. LOCAL ONLY, live unchanged.
