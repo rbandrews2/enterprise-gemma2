@@ -27,9 +27,11 @@ class MobilePreview:
         peer = (scope.get('client') or ('', 0))[0]
         if host not in {'127.0.0.1', 'localhost', '::1'} or peer not in {'127.0.0.1', '::1'}:
             return await Response('Local preview only', status_code=403)(scope, receive, send)
-        # Read-only synthetic dispatch data belongs only to this loopback harness.
-        # Production dispatch remains account-backed and is not changed here.
-        if scope['path'] in {'/api/dispatch/my-assignments', '/api/dispatch/notifications'} and scope['method'] == 'GET':
+        # Read-only synthetic data belongs only to this loopback harness.
+        # Production account/Voice access and processing are not changed here.
+        preview_reads = {'/api/dispatch/my-assignments', '/api/dispatch/notifications',
+                         '/api/field-voice/config', '/api/field-voice/jobs', '/api/field-voice/drafts'}
+        if scope['path'] in preview_reads and scope['method'] == 'GET':
             from starlette.responses import JSONResponse
             def result(body, status=200):
                 return JSONResponse(body, status_code=status, headers={'Cache-Control': 'no-store', 'X-WZOS-Synthetic-Preview': '1'})
@@ -40,7 +42,14 @@ class MobilePreview:
             if identity not in {'core-admin', 'core-general', 'enterprise-admin', 'enterprise-general'}:
                 return await result({'detail': 'Select a synthetic preview identity'}, 401)(scope, receive, send)
             if not identity.startswith('enterprise-'):
-                return await result({'detail': 'My jobs requires Enterprise'}, 403)(scope, receive, send)
+                return await result({'detail': 'This feature requires Enterprise'}, 403)(scope, receive, send)
+            if scope['path'] == '/api/field-voice/config':
+                return await result({'enabled': True, 'speech_enabled': False, 'preview_only': True})(scope, receive, send)
+            if scope['path'] == '/api/field-voice/jobs':
+                return await result({'items': [{'id': 'enterprise-sample', 'version': 1,
+                    'title': 'Granby Street markings', 'address': 'Granby Street, Norfolk, VA'}]})(scope, receive, send)
+            if scope['path'] == '/api/field-voice/drafts':
+                return await result({'items': []})(scope, receive, send)
             if scope['path'].endswith('/notifications'):
                 return await result({'pending_count': 0})(scope, receive, send)
             query = parse_qs(scope.get('query_string', b'').decode('latin-1'))

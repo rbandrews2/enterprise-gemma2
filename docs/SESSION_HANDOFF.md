@@ -306,3 +306,15 @@ production defect.6Python simulator and7Node mobile checks PASS. Browser opened
 assignment details/navigation action, verified top strip on Home/My jobs/Time
 Tracker, removed paragraph absent and375px no horizontal overflow. Evidence ignored
 .local-data/ui-sweep-20261020/my-jobs.png. Local preview only; release gates remain.
+
+
+## Smart Field Voice preview visibility - October 20
+Voice was hidden by disabled local processing flags, not removed by layout work.
+Loopback simulator now serves Enterprise-only read-only config/jobs/drafts fixtures
+with preview_only=true and speech_enabled=false. UI exposes the menu/dashboard
+card and job selection, explicitly marks layout-only mode, disables microphone/
+permission setup/extraction controls. Live config/routes/hosting remain unchanged;
+no provider request or real recording.7simulator Python checks PASS;JS syntax PASS;
+browser opened card and verified job selection/disabled controls/preview notice.
+Evidence.local-data/ui-sweep-20261020/field-voice-preview.png. Weather config hold
+remains in force. Release gates/deployment still pending for the UI candidate.

@@ -73,3 +73,15 @@ class SimulatorTests(unittest.TestCase):
         self.assertEqual(self.dispatch('/api/dispatch/my-assignments?offset=25').json()['items'],[])
         self.assertEqual(self.dispatch('/api/dispatch/my-assignments?phase=invalid').status_code,422)
         self.assertEqual(self.dispatch('/api/dispatch/my-assignments?offset=-1').status_code,422)
+
+    def test_field_voice_preview_is_enterprise_only_without_processing(self):
+        config=self.dispatch('/api/field-voice/config').json()
+        self.assertTrue(config['enabled'])
+        self.assertTrue(config['preview_only'])
+        self.assertFalse(config['speech_enabled'])
+        for path in ('/api/field-voice/config','/api/field-voice/jobs','/api/field-voice/drafts'):
+            self.assertEqual(self.dispatch(path,actor='core-general').status_code,403)
+            self.assertEqual(self.dispatch(path,actor='unknown').status_code,401)
+            self.assertEqual(self.dispatch(path).headers['cache-control'],'no-store')
+        self.assertEqual(self.dispatch('/api/field-voice/jobs').json()['items'][0]['id'],'enterprise-sample')
+        self.assertEqual(self.dispatch('/api/field-voice/drafts').json()['items'],[])
