@@ -1,5 +1,16 @@
 # WZOS remaining tasks - current October 20, 2026
 
+## Latest release acceptance (supersedes earlier local-only release entries)
+
+- [x] Receipt/admin office alert deployed100% as ui-edd310b; PostgreSQL878/Node163PASS,
+  zero failures/errors/skips. Backup/schema/build/stage/public auth/assets/version/
+  traffic PASS. See OPERATIONS_RELEASE_20261020.md.
+- [x] User confirms real Voice report counts/objects; live read-only inspection finds
+  the October19 report in draft state. Do not treat it as delivered.
+- [ ] User sign-in for final authenticated live alert/draft receipt UI acceptance.
+- [ ] Ask Atlas DOT source/page/table/correction review and bounded provider pilot;
+  DOT flags remain off. Voice/weather/IAM/runtime policy preserved.
+
 Use SESSION_HANDOFF.md for source/live provenance and COLLABORATION_CONTRACT.md for
 ownership. This checklist supersedes historical status entries, which are preserved
 in history/REMAINING_TASKS_before_sms_acceptance_20261017.md. Product decisions and

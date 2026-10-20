@@ -40,6 +40,9 @@ passed: atomic/idempotent submission with zero SMS and admin self-notification,
 tenant/member summary isolation, review-count update and persisted submission IDs.
 Eleven DOT reasoning regressions also passed in the same 13-test Python run.
 
-These changes are local, not yet deployed. Previous full cloud gates at bc7394d
-do not validate this subsequent repair. Final PostgreSQL/Node release gates,
-browser acceptance and exact image deployment remain required.
+Deployed in runtime edd310b after PostgreSQL878/Node163PASS, no failures or skips.
+Build/stage/public asset/auth/version/traffic acceptance PASS,100% traffic.
+See OPERATIONS_RELEASE_20261020.md. Subsequent read-only live inspection confirms
+the user's October19 report remains a draft. Synthetic receipt rendering passed
+desktop/mobile checks. Post-deploy admin browser acceptance awaits user sign-in;
+no real report was sent on their behalf.

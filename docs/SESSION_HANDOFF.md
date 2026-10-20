@@ -1,5 +1,18 @@
 # WZOS current session handoff - October 18, 2026
 
+## LIVE operations release - October20 (supersedes local-only receipt status)
+
+Runtime edd310b deployed as wzos-v2-accounts-ui-edd310b100%, version
+2444c54a1b7aac271259373c. PostgreSQL878/Node163PASS, no failures/errors/skips.
+Backup/schema/preflight/build/drift/stage/public assets/auth/version/traffic PASS.
+See OPERATIONS_RELEASE_20261020.md for immutable image, logs and rollback baseline.
+Voice remains active; weather/runtime/IAM/secrets unchanged; DOT flags stay off.
+Read-only live check confirms the user's October19 Voice report remains a saved
+draft, not an office submission. No actual user report was edited or sent.
+Receipt UI verified with synthetic data on desktop and390px mobile iframe; no
+horizontal overflow. User sign-in is requested after reload for authenticated
+live browser acceptance. DOT source review and bounded provider pilot remain open.
+
 ## Latest user steering - October20 Voice receipt
 
 User confirms correct Smart Field Voice objects/counts but no visible office receipt
