@@ -6,8 +6,8 @@ phase=${1:?gate/build/deploy}; root=${2:?private evidence directory}
 candidate=$(cat "$root/source-commit.txt")
 tag="ui-${candidate:0:7}"
 project=enterprise-gemma2; service=wzos-v2-accounts; region=us-central1
-base=us-central1-docker.pkg.dev/enterprise-gemma2/enterprise-gemma2/wzos-v2-accounts@sha256:238ef05b223064ca0393f6ce99efb7cb392357671b619b4ff18d0e74705f218d
-prior=wzos-v2-accounts-voice-live-1d2da6b
+base=${WZOS_RELEASE_BASE:-us-central1-docker.pkg.dev/enterprise-gemma2/enterprise-gemma2/wzos-v2-accounts@sha256:238ef05b223064ca0393f6ce99efb7cb392357671b619b4ff18d0e74705f218d}
+prior=${WZOS_RELEASE_PRIOR:-wzos-v2-accounts-voice-live-1d2da6b}
 revision="wzos-v2-accounts-$tag"
 cd "$root/source"
 test "$(git rev-parse HEAD)" = "$candidate"
@@ -34,7 +34,7 @@ if [[ "$phase" == build ]]; then
  .venv-accounts-test/bin/python scripts/check_staging_schema.py --output "$root/schema.json" > "$root/schema.log" 2>&1
  python3 scripts/check_ui_release.py schema "$root"
  kill "$proxy_pid"; wait "$proxy_pid" 2>/dev/null || true; trap - EXIT
- printf 'FROM %s\nUSER root\nCOPY services /app/services\nRUN python -m compileall -q /app/services && chmod -R a+rX /app/services\nUSER wzos\n' "$base" > Dockerfile.ui-release
+ printf 'FROM %s\nUSER root\nCOPY services /app/services\nCOPY shared /app/shared\nCOPY knowledge /app/knowledge\nRUN python -m compileall -q /app/services && chmod -R a+rX /app/services /app/shared /app/knowledge\nUSER wzos\n' "$base" > Dockerfile.ui-release
  cat > cloudbuild.ui-release.yaml <<'YAML'
 steps:
 - name: gcr.io/cloud-builders/docker

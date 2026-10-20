@@ -20,12 +20,13 @@ from shared.contracts import StrictModel
 from .store import IndexUnavailable, Store, write_json
 
 
-VERSION = 5
+VERSION = 6
 # Whole-section assembly bound, not a claim about token capacity. The serving
 # adapter measures the real chat template with the pinned model tokenizer.
 MAX_CONTEXT_BYTES = 96000
 STOP = set('a an the and or to for in on of is are what which how do does under required '
-           'requirement requirements rule rules please tell me about at with from according'.split())
+           'requirement requirements rule rules please tell me about at with from according '
+           'must should would could can have has need needs needed be being'.split())
 ALIASES = {'flagging': ['flagger', 'flaggers'], 'four': ['4'], 'two': ['2'],
            'striping': ['markings'], 'centerline': ['center line']}
 CAPTION = re.compile(r'^\s*(Figure|Table|Typical Application)\s+([A-Z0-9][A-Z0-9.()–-]*)(?:[.\s]+)(.{2,180})$', re.I)
@@ -199,7 +200,7 @@ class ManualIndex:
                                 captions.append(annotation['caption'])
                                 captions.append('Search tags: ' + annotation['keywords'])
                             body_lines = [line for line in lines if not re.search(
-                                r'Virginia MUTCD|^\s*Part\s+\d+[A-Z]?\.|^\s*Page\s+\S+|^\s*(January|February|March|April|May|June|July|August|September|October|November|December)\s+20\d\d\s*$', line, re.I)]
+                                r'Virginia MUTCD|Virginia Work Area Protection Manual|VDOT Work Zone Field Guide|LIST OF KNOWN ERRORS IN VWAPM|^\s*Chapter\s+\d+[A-Z]?\.|^\s*Part\s+\d+[A-Z]?\.|^\s*Page\s+\S+|^\s*(January|February|March|April|May|June|July|August|September|October|November|December)\s+20\d\d\s*$', line, re.I)]
                             body_available = len(re.sub(r'\W', '', ' '.join(body_lines))) >= 20
                             if not body_available:
                                 gaps.append(index + 1)
@@ -267,6 +268,7 @@ class ManualIndex:
                    page_annotation=metadata.get('page_annotation'),
                    applicability_note=source.applicability_note,
                    page_reviewed=metadata.get('page_reviewed', False),
+                   headings=metadata.get('section_headings', []),
                    answer_eligible=eligible(source, manifest, as_of) and metadata.get('page_reviewed', False)
                                    and not metadata.get('image_review_required', True),
                    candidate_only=True, approved_for_field_use=False)
@@ -348,8 +350,17 @@ class ManualIndex:
                   'evidence': [], 'formulas': [], 'warnings': [], 'requirements_determined': False,
                   'approved_for_field_use': False}
         seen, incomplete = set(), False
+        heading_terms = list(dict.fromkeys(t.lower().rstrip('s') for t in re.findall(r'[A-Za-z]+', request.query)
+                                          if t.lower() not in STOP and len(t) > 3))[:8]
+        # Prefer a directly named governing section over unrelated pages merely
+        # repeating its terms. The model receives that complete section plus its
+        # references/corrections, rather than isolated ranked search snippets.
+        named_sections = [hit for hit in found['results'] if hit['document_role'] in {'standard', 'specification'}
+                          and heading_terms and any(all(term in heading.lower() for term in heading_terms)
+                                                   for heading in hit['headings'])]
+        seeds = named_sections or found['results'][:3]
         with closing(self.connect()) as db:
-            for hit in found['results']:
+            for hit in seeds:
                 if hit['document_role'] not in {'standard', 'specification'}:
                     continue  # Informal guides remain searchable, not governing answers.
                 # Expand the hit to its section, retaining whole pages, tables and
@@ -420,8 +431,7 @@ class ManualIndex:
         if packet['evidence']:
             packet['status'] = 'ready_for_reviewed_answer' if all(p['answer_eligible'] for p in packet['evidence']) else 'source_review_required'
             if found.get('match_quality') == 'partial_keywords':
-                packet['status'] = 'needs_clarification'
-                packet['warnings'].append('Only partial keyword matches were found; refine the operation or open the source pages.')
+                packet['warnings'].append('Search terms matched partially. Atlas must assess relevance from the complete source context and ask for clarification if it does not answer the question.')
             if any(p['image_review_required'] for p in packet['evidence']):
                 packet['status'] = 'image_review_required'
                 packet['warnings'].append('Some source pages contain images or little body text. Captions/tags do not replace visual review of the original diagram and notes.')

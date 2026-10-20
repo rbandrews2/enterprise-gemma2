@@ -52,6 +52,13 @@ class ReasoningTests(unittest.TestCase):
         self.assertEqual(packet['status'], 'ready_for_reviewed_answer')
         self.assertIn('Additional source notes continue', packet['evidence'][2]['text'])
 
+    def test_partial_lexical_match_does_not_replace_model_reasoning_with_a_keyword_gate(self):
+        self.reviewed()
+        packet = self.index.context(fixture.query(query='Explain synthetic markings uncertainty'))
+        self.assertEqual(packet['status'], 'ready_for_reviewed_answer')
+        self.assertIn('matched partially', str(packet['warnings']))
+        self.assertIn(3, [p['page'] for p in packet['evidence']])
+
     def test_missing_mandatory_correction_blocks_base_only_answer(self):
         self.reviewed()
         self.store.catalog[self.source.id] = self.source.model_copy(update={
@@ -108,6 +115,21 @@ class ReasoningTests(unittest.TestCase):
         packet = self.index.context(fixture.query(query='yellow centerline'))
         self.assertEqual(packet['status'], 'ready_for_reviewed_answer')
         self.assertIn(correction.id, [page['source_id'] for page in packet['evidence']])
+
+    def test_errata_running_title_is_not_extracted_table_content(self):
+        import io
+        from reportlab.pdfgen.canvas import Canvas
+        output = io.BytesIO(); canvas = Canvas(output)
+        canvas.drawString(20, 750, 'LIST OF KNOWN ERRORS IN VWAPM VERSION 11.0 (JANUARY 2026 EDITION)')
+        canvas.rect(40, 100, 500, 400); canvas.showPage(); canvas.save()
+        source = self.source.model_copy(update={'id': 'synthetic-image-errors', 'document_role': 'correction',
+                                                'url': 'https://www.vdot.virginia.gov/image-errors.pdf'})
+        self.store.catalog[source.id] = source
+        with httpx.Client(transport=httpx.MockTransport(lambda request: httpx.Response(
+                200, content=output.getvalue(), headers={'content-type': 'application/pdf'}))) as client:
+            self.store.ingest(source.id, client=client)
+        coverage = self.index.rebuild()['coverage']
+        self.assertEqual(next(row for row in coverage if row['source_id'] == source.id)['text_gap_pages'], [1])
 
     def test_token_overflow_stops_before_generation(self):
         self.reviewed()

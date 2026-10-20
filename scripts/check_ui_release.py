@@ -3,6 +3,7 @@ import copy
 from datetime import datetime, timezone
 import hashlib
 import json
+import os
 from pathlib import Path
 import sys
 import urllib.error
@@ -11,8 +12,8 @@ import urllib.request
 phase, directory = sys.argv[1:]
 root = Path(directory)
 read = lambda name: json.loads((root / name).read_text())
-base = 'us-central1-docker.pkg.dev/enterprise-gemma2/enterprise-gemma2/wzos-v2-accounts@sha256:238ef05b223064ca0393f6ce99efb7cb392357671b619b4ff18d0e74705f218d'
-prior = 'wzos-v2-accounts-voice-live-1d2da6b'
+base = os.getenv('WZOS_RELEASE_BASE', 'us-central1-docker.pkg.dev/enterprise-gemma2/enterprise-gemma2/wzos-v2-accounts@sha256:238ef05b223064ca0393f6ce99efb7cb392357671b619b4ff18d0e74705f218d')
+prior = os.getenv('WZOS_RELEASE_PRIOR', 'wzos-v2-accounts-voice-live-1d2da6b')
 tag = 'ui-' + (root/'source-commit.txt').read_text().strip()[:7]
 revision = 'wzos-v2-accounts-' + tag
 traffic = lambda service: [(t.get('revisionName'), t.get('percent')) for t in service['status']['traffic'] if t.get('percent')]
@@ -25,6 +26,8 @@ if phase == 'preflight':
     env = {e['name']: e for e in before['spec']['template']['spec']['containers'][0]['env']}
     for flag in ('WZOS_FIELD_VOICE_ENABLED', 'WZOS_FIELD_VOICE_SPEECH_ENABLED'):
         assert env.get(flag, {}).get('value', '0') == '1', 'Preserve the active Voice configuration'
+    for flag in ('WZOS_ATLAS_DOT_ENABLED', 'WZOS_ATLAS_DOT_INFERENCE_ENABLED'):
+        assert env.get(flag, {}).get('value', '0') != '1', 'DOT activation needs separate source and provider acceptance'
     assert env['WZOS_DATABASE_URL']['valueFrom']['secretKeyRef']['name'] == 'wzos-v2-staging-database-url'
     instances = before['spec']['template']['metadata']['annotations']['run.googleapis.com/cloudsql-instances'].split(',')
     assert len(instances) == 1
@@ -64,7 +67,7 @@ elif phase == 'staged':
     assert traffic(staged) == [(prior, 100)]
 elif phase == 'live':
     static = root / 'source/services/workspace_preview/static'
-    for name in ('startup.js', 'app-shell-worker.js', 'workspace-layout.css', 'manifest.webmanifest', 'install-icon-192.png', 'install-icon-512.png', 'install-maskable-192.png', 'install-maskable-512.png', 'mobile-home.js', 'workspace.js', 'workspace.css', 'weather.js', 'weather.css', 'device-setup.js', 'field-voice.js', 'field-voice.css', 'dispatch.js', 'navigation.js', 'timeclock.js', 'organization-hub.js', 'install.js', 'account.js', 'forms-hub.js', 'daily-meetings.js'):
+    for name in ('startup.js', 'app-shell-worker.js', 'workspace-layout.css', 'manifest.webmanifest', 'install-icon-192.png', 'install-icon-512.png', 'install-maskable-192.png', 'install-maskable-512.png', 'mobile-home.js', 'workspace.js', 'workspace.css', 'weather.js', 'weather.css', 'device-setup.js', 'field-voice.js', 'field-voice.css', 'review-workflows.js', 'ask-atlas.js', 'ask-atlas.css', 'dispatch.js', 'navigation.js', 'timeclock.js', 'organization-hub.js', 'install.js', 'account.js', 'forms-hub.js', 'daily-meetings.js'):
         with urllib.request.urlopen('https://app.workzoneos.org/' + name + '?release=ui-20261020', timeout=45) as response:
             assert response.status == 200
             payload=response.read()
@@ -79,7 +82,7 @@ elif phase == 'live':
         assert "frame-ancestors 'none'" in csp
         for host in ('wzos.daily.co', 'wzos.dailywebrtc.com', 'wzos.dailywebrtc.net'):
             assert 'https://' + host in csp
-    for path in ('/api/weather/notices', '/api/account/upgrade', '/api/field-voice/config', '/api/field-voice/drafts'):
+    for path in ('/api/weather/notices', '/api/account/upgrade', '/api/field-voice/config', '/api/field-voice/drafts', '/api/form-submissions/summary', '/api/atlas/dot/config'):
         try:
             urllib.request.urlopen('https://app.workzoneos.org' + path, timeout=30)
             raise AssertionError('Anonymous access to ' + path)
