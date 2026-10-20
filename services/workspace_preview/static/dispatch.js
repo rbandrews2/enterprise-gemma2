@@ -95,8 +95,8 @@
  }
 
  async function adminPanel(root,current){
-  const panel=node('section');panel.className='report-section panel';panel.append(node('h2','Dispatch (Enterprise)'));
-  panel.append(node('p','Choose a work order, set staffing needs, then propose assignments. Proposals use verified qualifications, recorded availability and existing assignments. Missing information is never treated as eligible. Nothing is sent until you approve.'));
+  const panel=node('details');panel.className='report-section panel workspace-details';panel.append(node('summary','Dispatch assignments'));
+  panel.append(node('p','Choose a work order and staffing needs. Review proposed assignments before sending; missing qualifications or availability never count as eligible.'));
   const orders=window.wzosClock.getOrders(),picker=node('select');picker.append(Object.assign(node('option','Select a work order'),{value:''}));
   for(const o of orders){const opt=node('option',o.title);opt.value=o.id;picker.append(opt);}picker.value=selected;
   panel.append(labelled('Work order',picker));const body=node('div');panel.append(body);

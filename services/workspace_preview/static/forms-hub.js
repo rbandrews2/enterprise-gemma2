@@ -136,7 +136,7 @@
    const items=shown.filter(i=>i.complete&&i.category===category);if(!items.length)continue;
    const group=node('section',null,'forms-group');group.append(node('h3',`${heading} (${items.length})`),...items.map(card));host.append(group);
   }
-  if(!host.children.length)host.append(node('p',library.items.length?'No team forms match that search.':library.can_manage?'No team forms yet. Add the forms your crews need, such as official agency forms or company forms.':'Your admin hasn\'t added any team forms yet.'));
+  if(!host.children.length)host.append(node('p',library.items.length?'No team forms match that search.':library.can_manage?'No team forms yet. Add a form above.':'Your admin hasn\'t added any team forms yet.'));
  }
  function manageControls(item,article){
   const controls=[];

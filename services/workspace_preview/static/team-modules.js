@@ -29,7 +29,7 @@
      destinationCache={scope,items:orders};
     }catch(error){if(error.status)throw error;cached=true;orders=destinationCache?.scope===scope?destinationCache.items:window.wzosClock.getOrders();}}
     if(epoch!==generation||JSON.stringify([window.wzosClock.getSession()?.organization_id,window.wzosClock.getSession()?.id,window.wzosClock.getSession()?.edition])!==scope)return;
-    if(assignmentsUnavailable)root.append(node('p','Assigned destinations are unavailable in this environment. Showing permitted work orders only.'));
+    if(assignmentsUnavailable)root.append(node('p','Assigned destinations are unavailable. Showing your work orders.'));
     if(cached)root.append(node('p','Offline / connection unavailable — showing previously loaded destinations. Confirm addresses and site access before travel.'));
     if(orders.length){const all=node('button','Save all destinations ('+orders.length+')');all.className='secondary';all.onclick=()=>saveSheet(orders,'wzos-destinations.txt');root.append(all);}
     const requested=window.WzosNavigation.take?.();let found=false;
@@ -40,7 +40,7 @@
     if(requested&&!found)$('team-notice').textContent='That destination is no longer available in your permitted active jobs.';return;
    }
    if(name==='training'){
-    root.append(node('p','Recovered V1 course catalog. Course content and accreditation are awaiting review. These are personal study plans, not completion records or certificates.'));
+    root.append(node('p','Study plans do not certify training completion. Follow your organization’s review process.'));
     const data=await api('/api/training');if(epoch!==generation)return;
     for(const course of data.items){const card=node('section','');card.className='report-section panel';card.append(node('h2',course.title),node('p',course.description));const label=node('label','Study status'),select=node('select','');for(const [value,title] of Object.entries({not_started:'Not started',studying:'Studying',review_requested:'Ready for review (not sent)'})){const option=node('option',title);option.value=value;select.append(option);}select.value=course.study_status;const save=node('button','Save study status');save.className='secondary';save.onclick=async()=>{save.disabled=true;try{await api('/api/training/'+course.id,{method:'PUT',body:JSON.stringify({status:select.value})});if(epoch===generation)$('team-notice').textContent='Study status saved. No certificate or notification issued.';}catch(error){if(epoch===generation)$('team-notice').textContent=error.message;}finally{save.disabled=false;}};label.append(select);card.append(label,save);root.append(card);}return;
    }

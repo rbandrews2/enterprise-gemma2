@@ -78,7 +78,7 @@
   window.WzosTrainingMedia.stopAll();
   const generation=++epoch;root.replaceChildren();root.hidden=view!=='training';if(root.hidden)return;
   const session=window.wzosClock.getSession(),admin=session?.role==='admin';
-  root.append(el('h2','Video training'),notice);
+  root.append(notice);
   if(admin){const tools=el('section'),host=el('div'),add=el('button','Add training video');tools.className='training-admin-tools';add.className='primary';add.onclick=()=>{editor(null,host,{videoFirst:true});host.scrollIntoView?.({block:'start'});};tools.append(add,host);root.append(tools);}
   try{
    const [modules,assignments,completions]=await Promise.all([api('/api/training-modules'),api('/api/training-assignments'),api('/api/training-completions')]);
@@ -100,12 +100,12 @@
    root.append(done);
    if(!admin)return;
    // Admin authoring, assignment and oversight for this organization only.
-   const authoring=el('section');authoring.append(el('h3','Training content (admin)'));
+   const authoring=el('details');authoring.className='workspace-details';authoring.append(el('summary','Manage training content'));
    const editorHost=el('div'),list=el('ul');
    for(const m of modules.items){const li=el('li',`${m.draft.title} (${m.id}) · ${m.status}${m.published_version?' · published v'+m.published_version:''}${m.draft_version?' · draft rev '+m.draft_version:''}`);const edit=el('button','Edit');edit.onclick=()=>editor(m,editorHost);li.append(' ',edit);list.append(li);}
    const create=el('button','New training module');create.onclick=()=>editor(null,editorHost);
    authoring.append(list,create,editorHost);root.append(authoring);
-   const assign=el('section');assign.append(el('h3','Assign training'));
+   const assign=el('details');assign.className='workspace-details';assign.append(el('summary','Assign training'));
    const pick=el('select');for(const m of modules.items.filter(m=>m.status==='published')){const o=el('option',`${m.draft.title} (v${m.published_version})`);o.value=m.id;pick.append(o);}
    const roster=(await api('/api/modules/roster')).items;if(generation!==epoch)return;
    const people=el('div');for(const p of roster){const lab=el('label'),box=el('input');box.type='checkbox';box.value=p.id;Object.assign(box.style,{width:'auto',display:'inline-block',marginRight:'.5rem'});lab.append(box,`${p.name} · ${p.role}`);people.append(lab);}

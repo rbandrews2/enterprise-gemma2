@@ -1,0 +1,47 @@
+"""Public launch caching must never include authenticated workspace data."""
+import unittest
+from tests import test_workspace_preview as fixtures
+
+class PublicShellTests(unittest.TestCase):
+    setUp = fixtures.WorkspacePreviewTests.setUp
+    headers = fixtures.WorkspacePreviewTests.headers
+    def test_public_shell_and_versioned_assets(self):
+        page = self.client.get('/')
+        version = self.client.get('/api/app/version').json()['version']
+        self.assertEqual(page.headers['cache-control'], 'no-store')
+        self.assertEqual(page.headers['x-wzos-public-shell'], '1')
+        self.assertIn('class="app-starting"', page.text)
+        self.assertIn('/startup.js?v='+version, page.text)
+        self.assertIn('/workspace-layout.css?v='+version, page.text)
+        self.assertNotIn('admin@workzoneos.org', page.text)
+        for path in ('/startup.js', '/workspace-layout.css', '/wzos-logo.png'):
+            asset = self.client.get(path+'?v='+version)
+            self.assertEqual(asset.status_code, 200)
+            self.assertEqual(asset.headers['x-wzos-public-asset'], '1')
+            self.assertIn('immutable', asset.headers['cache-control'])
+            self.assertEqual(self.client.get(path).headers['cache-control'], 'no-store')
+            self.assertEqual(self.client.get(path+'?v=stale').headers['cache-control'], 'no-store')
+
+    def test_private_routes_and_worker_are_never_public_assets(self):
+        version = self.client.get('/api/app/version').json()['version']
+        for path in ('/api/session','/api/orders','/api/app/version','/app-shell-worker.js'):
+            response=self.client.get(path+'?v='+version, headers=self.headers())
+            self.assertEqual(response.headers['cache-control'], 'no-store')
+            self.assertNotIn('x-wzos-public-asset', response.headers)
+        worker=self.client.get('/app-shell-worker.js').text
+        self.assertNotIn('__RELEASE__', worker)
+        self.assertIn(version, worker)
+
+
+    def test_shortcut_manifest_and_apple_icons_use_supplied_brand(self):
+        manifest = self.client.get('/manifest.webmanifest').json()
+        self.assertEqual(manifest['id'], '/')
+        self.assertEqual(manifest['display'], 'standalone')
+        self.assertEqual(manifest['start_url'], '/')
+        self.assertEqual({icon['purpose'] for icon in manifest['icons']}, {'any', 'maskable'})
+        for icon in manifest['icons']:
+            self.assertIn('brand=20261020', icon['src'])
+            response=self.client.get(icon['src'])
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.content[:8], b'\x89PNG\r\n\x1a\n')
+        self.assertIn('/install-icon-180.png?brand=20261020', self.client.get('/').text)

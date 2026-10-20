@@ -105,7 +105,7 @@ window.wzosAccount = (() => {
   const verify=element('button','Resend verification email');verify.type='button';verify.disabled=!key;
   const passkey=element('button','Sign in with a passkey');passkey.type='button';passkey.hidden=!passkeysAvailable;
   const message=element('p');message.setAttribute('role','status');
-  form.append(emailLabel,passwordLabel,rememberLabel,privacy,signin,passkey,signup,reset,verify);panel.append(title,note,form,message);document.body.append(panel);panel.addEventListener('cancel',e=>e.preventDefault());panel.showModal();
+  form.append(emailLabel,passwordLabel,rememberLabel,privacy,signin,passkey,signup,reset,verify);panel.append(title,note,form,message);document.body.append(panel);panel.addEventListener('cancel',e=>e.preventDefault());panel.showModal();window.wzosStartup?.signingIn();
   const session=await new Promise(resolve=>{
    if(window.wzosInstall)window.wzosInstall.mount(panel);
    let working=false;

@@ -45,12 +45,15 @@ async function switchIdentity(){
  lock(true);$("order-attachments")?.replaceChildren();resetChecklist();$("notice").hidden=true;
  try{session=null;session=await api("/api/session");selected=null;dirty=false;rows=[];$("atlas-output").replaceChildren();$("order-form").hidden=true;$("empty-detail").hidden=false;$("detail-title").textContent="Select a work order";
  if(session.restricted_staging){document.querySelector('.preview-bar>div').textContent='RESTRICTED CLOUD STAGING · Shared synthetic records reset on restart. Do not enter real attendance or customer data.';$("identity").closest('label').hidden=true;document.querySelector('.sidebar-foot').textContent='Restricted staging · WZOS V2';document.querySelector('.app-footer').textContent='WZOS V2 staging · Test data only · Storage and cloud AI integration pending.';}
- $("org-name").textContent=session.organization;$("edition").textContent=`${session.edition==="core"?"Core":"Enterprise"} edition · synthetic`;
+ $("org-name").textContent=session.organization;$("edition").textContent=`${session.edition==="core"?"Core":"Enterprise"} edition${session.production_authenticated?'':' · synthetic'}`;
  $("actor-name").textContent=session.name;document.querySelector(".avatar").textContent=session.name.split(" ").map(n=>n[0]).join("");$("role-pill").textContent=session.role==="admin"?"Admin":"Member";
- $("scope-note").textContent=session.can_manage_team?"Manage the team's draft work orders.":"Your assigned work orders and new drafts.";$("metric-scope").textContent=session.can_manage_team?"This test organization":"Assigned to this test user";
+ $("scope-note").textContent=session.can_manage_team?"Manage your team’s work orders.":"Your work orders and drafts.";$("metric-scope").textContent=session.can_manage_team?"Your organization":"Assigned to you";
  $("atlas-description").textContent=session.can_prepare_atlas?"Check a saved job for missing site details before planning.":"Advanced job preparation is available in Enterprise. Core assistant integration is still pending.";
+ // Show the authorized landing view without waiting for the work-order query.
+ window.showWzosView(window.matchMedia('(max-width:760px)').matches?'home':session.role==='admin'?'dashboard':'orders');
+ document.dispatchEvent(new CustomEvent("wzos:session"));window.wzosStartup?.ready();
  await loadRows();if(rows.length)openWorkOrder(rows[0]);
- }catch(error){notify(error.message,true);}finally{lock(false);document.dispatchEvent(new CustomEvent("wzos:session"));}
+ }catch(error){notify(error.message,true);window.wzosStartup?.fail();}finally{lock(false);}
 }
 $("identity").addEventListener("change",()=>{if(!canLeave() || (window.wzosModulesCanLeave && !window.wzosModulesCanLeave())){$("identity").value=session.id;return;}switchIdentity();});
 $("search").addEventListener("input",renderList);
@@ -82,7 +85,7 @@ $("prepare").addEventListener("click",async()=>{
 $("atlas-nav").addEventListener("click",()=>{document.dispatchEvent(new CustomEvent("wzos:assistant-open"));});
 $("jobs-nav").addEventListener("click",()=>{window.showWzosView("orders");$("list-title").scrollIntoView({behavior:"smooth",block:"start"});});
 window.addEventListener("beforeunload",event=>{if(dirty||checklistDirty){event.preventDefault();event.returnValue="";}});
-(async()=>{try{const config=await api("/api/identities");identities=config.identities;if(config.mode==="verified_accounts"){identities=[await window.wzosAccount.start(config)];}for(const identity of identities){const option=el("option",`${identity.edition==="core"?"Core":"Enterprise"} · ${identity.role} · ${identity.name}`);option.value=identity.id;$("identity").append(option);}$("identity").value=config.mode==="verified_accounts"?identities[0]?.id:"enterprise-admin";await switchIdentity();if(config.mode==="verified_accounts"){$("identity").disabled=true;$("identity").closest("label").hidden=true;}}catch(error){notify(error.message,true);}})();
+document.addEventListener("DOMContentLoaded",async()=>{try{const config=await api("/api/identities");identities=config.identities;if(config.mode==="verified_accounts"){identities=[await window.wzosAccount.start(config)];}for(const identity of identities){const option=el("option",`${identity.edition==="core"?"Core":"Enterprise"} · ${identity.role} · ${identity.name}`);option.value=identity.id;$("identity").append(option);}$("identity").value=config.mode==="verified_accounts"?identities[0]?.id:"enterprise-admin";await switchIdentity();if(config.mode==="verified_accounts"){$("identity").disabled=true;$("identity").closest("label").hidden=true;}}catch(error){notify(error.message,true);window.wzosStartup?.fail();}},{once:true});
 
 function lockChecklist(){
  const blocked=busy||checklistLoading||!checklistData;
@@ -187,6 +190,7 @@ window.showWzosView=view=>{
  if(view==='assignments'&&session?.edition!=='enterprise')return false;
  if(view==='report'&&!session?.can_prepare_atlas)return false;
  if(!canLeave() || (window.wzosModulesCanLeave && !window.wzosModulesCanLeave()) || (window.wzosFormsCanLeave && !window.wzosFormsCanLeave()))return false;
+ document.body.dataset.workspaceView=view;
  atlasPage=({orders:"work_orders",clock:"time_clock",forms:"forms",form_drafts:"forms",schedule:"schedule",training:"training",messages:"messages",navigation:"navigation",report:"report"})[view]||"work_orders";
  if($("dashboard-view"))$("dashboard-view").hidden=view!=="dashboard";
  if($("field-voice-view"))$("field-voice-view").hidden=view!=="field_voice";

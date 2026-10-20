@@ -21,7 +21,7 @@
    const card=document.getElementById(id);if(card)card.dataset.mobileUnavailable=String(unavailable);
   }
   const title=document.querySelector('.breadcrumb + strong');
-  const label=side.querySelector('.nav-label');if(label)label.textContent=media.matches?'Home':'WORKSPACE';
+  const label=side.querySelector('.nav-label');if(label){label.textContent=media.matches?'':'WORKSPACE';label.hidden=media.matches;}
   if(title){if(media.matches&&view==='home')title.textContent='Home';else if(view==='dashboard')title.textContent=media.matches?'Organization management':'Dashboard';}
  }
  const brand=side.querySelector('.brand');brand?.addEventListener('click',event=>{if(media.matches&&session()){event.preventDefault();goHome();}});

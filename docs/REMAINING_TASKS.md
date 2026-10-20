@@ -168,3 +168,10 @@ Added scripts/start_mobile_preview.ps1, with hidden background launch, readiness
 - [x] Approved exact6346 livecheckPASS underreviewed-equipment-v1,1Speech1Gemma0SMS; temporaryjob removed/absenceverified.
 - [x] FieldVoice deployed100% voice-live-1d2da6b,version0d1aaad29aceb5c98c94772b; privateRTX31Bmin0max1 underapprovedongoinghosting. OrdinaryAtlaschatOFF. Stagedrollback/publicauth/assets/config/trafficchecksPASS; Enterprisebrowsercontrolsverified. No newDDL/customer sends. Priorfailurepreserved.
 - [ ] User-led installedAndroid microphone setup/retainedpermission/30secrecording/review/send andtrackshutdown checks. Never infer these from syntheticcloud acceptance. See FIELD_VOICE_ACTIVATION_20261018.md; do not repeat completed suites or deployment.
+
+
+## October 20 presentation update
+- [x] Save future photo-report concept: FUTURE_PHOTO_REPORTS.md (no implementation).
+- [x] Local layout/startup and supplied shortcut icon-reference updates; see UI_ORGANIZATION_20261020.md.
+- [ ] Finish final simulator/browser review after manually reopening the unresponsive error tab, then integrated release gates and deployment. Live remains unchanged.
+- [ ] Real installed Android repeat/cold launch and shortcut artwork refresh acceptance.

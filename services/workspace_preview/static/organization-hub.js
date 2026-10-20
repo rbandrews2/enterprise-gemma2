@@ -15,7 +15,7 @@
   const retainedDraft=root.querySelector('textarea')?.value||'';
   clear();const generation=epoch;const state=window.wzosClock.getSession();if(state?.role!=='admin')return;
   const logo=node('img');logo.src='/wzos-logo.png?brand=20261017';logo.alt='Work Zone OS';logo.className='dashboard-brand-logo';logo.width=64;logo.height=71;root.append(logo);
-  const heading=node('h1','Organization dashboard','organization-heading');root.append(heading);const status=node('p');status.hidden=true;status.setAttribute('role','status');root.append(status);
+  const heading=node('h1',state.organization||'Your organization','organization-heading');root.append(heading);const status=node('p');status.hidden=true;status.setAttribute('role','status');root.append(status);
   const reportError=message=>{status.hidden=false;status.className='hub-error';status.textContent=message;};
   try{
    const data=await api('/api/admin/dashboard');if(generation!==epoch)return;

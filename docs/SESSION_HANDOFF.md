@@ -249,3 +249,18 @@ Ray approved exact6346e8f1 one-recording livecheck and conditional238ef05b activ
 ## LATEST — Smart Field Voice LIVE
 Userapproved6346review-policycheck/conditionalactivation completedPASS, execution5dt2w,1Speech1Gemma0SMS; app238ef05b/source1d2da6b now100% revisionwzos-v2-accounts-voice-live-1d2da6b. Version0d1aaad29aceb5c98c94772b; voiceflagsON/Speechlong. PrivateoriginalRTX31B remainsmin0max1 underongoingapproval, onlyappinvocation; ordinarychatOFF. Temporaryjobabsenceverified. Stagingconfig/publicassets/anonymousauth/trafficPASS; browserEnterpriseSmartFieldVoice controlsobserved, no usermic/location access. Runtime/DB/storage/secrets preserved, noDDL. Priorfailed5sq9snotreclassified; newreviewpolicyPASS. Do not rerun completedtests/activation.
 Evidence$HOME/wzos-field-voice-live-1d2da6b.tgz, pointer$HOME/wzos-field-voice-review-path.txt; sourceownershipunchanged. SameimageVoiceOFF rollbackrevisionwzos-v2-accounts-voice-hold-1d2da6b; scriptroot/voice-rollback.sh. Screenshot.local-data/field-voice-pilot/live-voice-enabled.png. NEXT: user-ledinstalledAndroid microphone-onboarding/30secrecording/review/send/stoptracks acceptance; no unsolicited recording or SMS. DocsFIELD_VOICE_ACTIVATION_20261018.md has fullprovenance.
+
+
+## Latest - October 20 local UI / launch / shortcut review
+Owned integration-release checkout, branch codex/preproduction-modules, started
+clean at dcc6052. See UI_ORGANIZATION_20261020.md. Layout/text organization, stray
+mobile Home removal, launch ordering/public-shell worker and supplied shortcut
+artwork reference refresh are LOCAL ONLY; no production/model/permission changes.
+152Node plus3startup checks and3publicshell/brand Python checks PASS;4simulator
+checks PASS. Full Python/PostgreSQL release gates not rerun. Browser synthetic
+mobile/desktop review partly complete; final simulator tab stuck on browser error
+after server restart, user says unresponsive. Owned server returned SIMULATOR_READY
+and remains available; do not bypass error-page policy. Reopen URL manually to finish
+visual check. Preserve live Voice238ef05b flags/privateRTXmin0max1. Photo concept
+saved in FUTURE_PHOTO_REPORTS.md. Never infer installed-device splash acceptance
+from simulator or cache checks.

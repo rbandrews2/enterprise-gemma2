@@ -55,11 +55,11 @@
  let view=null,epoch=0,offset=0,busy=false;
  const previous=window.wzosModulesCanLeave;
  window.wzosModulesCanLeave=()=>!busy&&(!previous||previous());
- const root=el('section');root.className='panel report-section';root.id='training-record-panel';
+ const root=el('details');root.className='panel report-section workspace-details';root.id='training-record-panel';
  document.getElementById('team-view').append(root);
  async function show(){
   const generation=++epoch;root.replaceChildren();root.hidden=view!=='training';if(root.hidden)return;
-  root.append(el('h2','Record completed study'),el('p','Report study you personally completed. These records and admin reviews do not issue a certificate or establish a qualification. Course content remains pending review.'));
+  root.append(el('summary','Study records and review'),el('p','Report completed study. These records do not issue certificates or verify qualifications.'));
   const notice=el('p');notice.setAttribute('role','status');root.append(notice);
   try{
    const [catalog,records]=await Promise.all([api('/api/training-records/catalog'),api(`/api/training-records?offset=${offset}`)]);

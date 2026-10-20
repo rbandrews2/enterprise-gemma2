@@ -13,7 +13,7 @@ function fixture({mobile=true,user={id:'worker',organization_id:'org-a',role:'me
  return {nodes,calls,scrolls,classes,events,home:nodes.bar.children[0],admin:nodes.menu.children[0],setUser(user){current=user;events['wzos:session']();},setAllowed(value){accept=value;},resize(value){media.matches=value;change();}};
 }
 test('Core members start at Home with edition restrictions and no admin controls',()=>{
- const f=fixture();assert.deepEqual(f.calls,['home']);assert.equal(f.nodes.title.textContent,'Home');assert.equal(f.nodes.label.textContent,'Home');assert.equal(f.admin.hidden,true);assert.equal(f.nodes['report-nav'].dataset.mobileUnavailable,'true');assert.equal(f.nodes['assignments-nav'].dataset.mobileUnavailable,'true');
+ const f=fixture();assert.deepEqual(f.calls,['home']);assert.equal(f.nodes.title.textContent,'Home');assert.equal(f.nodes.label.textContent,'');assert.equal(f.nodes.label.hidden,true);assert.equal(f.admin.hidden,true);assert.equal(f.nodes['report-nav'].dataset.mobileUnavailable,'true');assert.equal(f.nodes['assignments-nav'].dataset.mobileUnavailable,'true');
 });
 test('Enterprise admins use the same Home and retain authorized organization tools',()=>{
  const f=fixture();f.setUser({id:'admin',organization_id:'other-org',role:'admin',edition:'enterprise',can_prepare_atlas:true});

@@ -54,7 +54,7 @@
   if(!["schedule","form_drafts"].includes(view))return;
   $("module-attachments")?.replaceChildren();$("schedule-assignments")?.replaceChildren();const showGeneration=++epoch;kind=view==="form_drafts"?"forms":"schedule";offset=0;assignmentOffset=0;linkableJobs=[];dirty=false;current=null;$("module-new").disabled=true;$("module-form").hidden=true;notice("");$("module-meeting-join").hidden=true;$("module-meeting-join").removeAttribute("href");
   $("module-title").textContent=kind==="forms"?"Saved form drafts":"Schedule management";
-  $("module-description").textContent=kind==="forms"?"Save and reopen incident, vehicle inspection and JSA drafts linked to your jobs. Submit saved versions for internal review in Forms hub.":"Admins manage team schedule drafts; members can read. Dispatched assignments appear separately below. Saving a schedule draft does not dispatch or notify anyone.";
+  $("module-description").textContent=kind==="forms"?"Create, review and send job-linked reports to the office.":"Plan your team’s schedule. Save a draft, then dispatch separately to notify the crew.";
   $("module-library").hidden=kind!=="forms";
   $("module-day-label").hidden=kind!=="schedule";$("module-assignees-label").hidden=kind!=="schedule";$("module-history").replaceChildren();
   try{const result=await api("/api/modules/roster");if(showGeneration!==epoch)return;roster=result.items;

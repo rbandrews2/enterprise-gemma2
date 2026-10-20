@@ -195,6 +195,16 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
             except Exception:
                 logging.getLogger(__name__).warning('Application security observation could not be persisted')
         response.headers["Cache-Control"] = "no-store"
+        # Only public, versioned source assets may be cached. Account responses,
+        # uploads, exports and all API routes retain no-store.
+        asset_path = request.url.path.lstrip('/')
+        if (request.method == 'GET' and response.status_code == 200
+                and re.fullmatch(r'(?:[a-z0-9-]+\.(?:js|css|png|ico)|vendor/daily-iframe\.js)', asset_path)
+                and asset_path != 'app-shell-worker.js' and (STATIC / asset_path).is_file()):
+            from .app_updates import release_version
+            if request.query_params.get('v') == release_version():
+                response.headers['Cache-Control'] = 'public, max-age=31536000, immutable'
+                response.headers['X-WZOS-Public-Asset'] = '1'
         response.headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self' data:; frame-ancestors 'none'; base-uri 'none'; form-action 'self'"
         if request.state.maps_nonce and request.url.path == "/":
             nonce = request.state.maps_nonce
@@ -203,7 +213,7 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
                 "style-src 'self' 'nonce-" + nonce + "' https://fonts.googleapis.com; "
                 "img-src 'self' data: https://*.googleapis.com https://*.gstatic.com https://*.google.com https://*.googleusercontent.com; "
                 "connect-src 'self' https://*.googleapis.com https://*.google.com https://*.gstatic.com; "
-                "font-src 'self' https://fonts.gstatic.com; frame-src https://*.google.com; worker-src blob:; "
+                "font-src 'self' https://fonts.gstatic.com; frame-src https://*.google.com; worker-src 'self' blob:; "
                 "frame-ancestors 'none'; base-uri 'none'; form-action 'self'")
         if request.url.path == '/':
             csp = response.headers['Content-Security-Policy']
@@ -270,11 +280,29 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
         from .app_updates import release_version
         nonce = request.state.maps_nonce
         html = (STATIC / "index.html").read_text(encoding="utf-8")
+        version = release_version()
+        html = re.sub(r'((?:src|href)=")(/[^"\s]+\.(?:js|css|png|ico)(?:\?[^"\s]*)?)(")',
+                      lambda m: m[1] + m[2] + ('&amp;' if '?' in m[2] else '?') + 'v=' + version + m[3], html)
         html = html.replace('</head>', f'<meta name="wzos-release" content="{release_version()}"></head>')
         if nonce:
             html = html.replace("<script ", f'<script nonce="{nonce}" ')
             html = html.replace("</head>", f'<style nonce="{nonce}"></style></head>')
-        return HTMLResponse(html)
+        return HTMLResponse(html, headers={'X-WZOS-Public-Shell': '1'})
+
+    @app.get('/startup.js')
+    def startup_script():
+        return FileResponse(STATIC / 'startup.js', media_type='text/javascript')
+
+    @app.get('/workspace-layout.css')
+    def workspace_layout():
+        return FileResponse(STATIC / 'workspace-layout.css', media_type='text/css')
+
+    @app.get('/app-shell-worker.js')
+    def public_shell_worker():
+        from .app_updates import release_version
+        from fastapi.responses import Response
+        source = (STATIC / 'app-shell-worker.js').read_text(encoding='utf-8')
+        return Response(source.replace('__RELEASE__', release_version()), media_type='text/javascript')
 
     @app.get('/api/app/version')
     def app_version():
