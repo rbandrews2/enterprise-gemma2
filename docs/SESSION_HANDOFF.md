@@ -318,3 +318,12 @@ no provider request or real recording.7simulator Python checks PASS;JS syntax PA
 browser opened card and verified job selection/disabled controls/preview notice.
 Evidence.local-data/ui-sweep-20261020/field-voice-preview.png. Weather config hold
 remains in force. Release gates/deployment still pending for the UI candidate.
+
+
+## Smart Field Voice copy - October 20
+User requested basic instructions and removal of layout-only wording. Replaced
+intro with job -> record/type -> review/correct -> Send to office instructions,
+and removed the extra layout-preview status sentence. Preview-only disabled
+controls/backend guards remain unchanged. Provider/privacy disclosure remains
+in device onboarding. JS syntax/diff checks PASS; no provider/recording tests.
+Weather configuration remains on hold; live unchanged.
