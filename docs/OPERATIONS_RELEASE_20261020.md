@@ -57,3 +57,34 @@ and project-date exceptions. Existing indexed copies and local page renders rema
 preserved. No new extraction/page/formula approvals or paid model calls in this
 release step. Some prior Cloud Shell /tmp OCR evidence is no longer present on
 this host; do not treat a retained home pointer as proof those artifacts survive.
+
+## Final alert-placement follow-up
+
+Authenticated live acceptance on edd310b confirmed the admin alert and its Open
+office forms link work. It also exposed the dashboard initializer prepending its
+content ahead of the alert. Repaired in3737af7: anchor the alert before main; on
+mobile Home place it after the organization card in the sidebar-based Home list.
+This is an in-page office reminder, not an OS push, SMS or email notification.
+
+Final candidate3737af7bd93fda3c45913ffdf284fbefbb74a7a2 passed PostgreSQL878 tests
+in387.932seconds and Node163 tests, zero failures/errors/skips. Backup/schema
+preflight passed. Final build:e8e2f67d-f6f9-4123-b816-f04ad924d863. Evidence directory
+/tmp/wzos-office-alert-20261020.Y6Db8vH3, same home pointer as above. Rollback for
+this follow-up is ui-edd310b, preserving the already-live receipt repair.
+
+Cloud Shell's browser connection was lost after build submission; read-only
+recovery failed and the CUA runtime reset. No duplicate build/test/deploy was
+launched. Final public assets independently match3737af7, including the relocated
+alert. The full public live checker passed: asset hashes, unsigned API denial,
+Daily CSP origins, public HTML and app version06cb438e96196bd4b724c67b.
+Local evidence:.local-data/final-public-3737af7/live-version.json. Windows Git
+archive text used CRLF; canonical LF copies were required to compare with the
+Linux runtime. Preliminary raw Windows byte/fingerprint comparisons are not
+release failures and were not used to identify a revision. The version is opaque;
+do not infer its image digest from a local fingerprint reconstruction.
+
+The final image digest, final traffic JSON and final guarded-runner exit were not
+independently reread after the browser disconnect. Preserve that distinction from
+the directly verified serving code. Post-follow-up visual placement acceptance
+remains open; the prior authenticated alert/link acceptance and synthetic receipt
+screenshots remain valid for their stated scope. No actual user report was sent.

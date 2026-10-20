@@ -7,7 +7,11 @@
   traffic PASS. See OPERATIONS_RELEASE_20261020.md.
 - [x] User confirms real Voice report counts/objects; live read-only inspection finds
   the October19 report in draft state. Do not treat it as delivered.
-- [ ] User sign-in for final authenticated live alert/draft receipt UI acceptance.
+- [x] Authenticated office alert and Open office forms link accepted on ui-edd310b.
+- [x] Final placement repair3737af7: PostgreSQL878/Node163PASS; public serving assets,
+  API denial/CSP/version06cb438e96196bd4b724c67b independently PASS.
+- [ ] Recover Cloud Shell/browser to read final build/traffic/runner artifacts and
+  visually accept follow-up alert placement. Do not repeat completed gates/builds.
 - [ ] Ask Atlas DOT source/page/table/correction review and bounded provider pilot;
   DOT flags remain off. Voice/weather/IAM/runtime policy preserved.
 

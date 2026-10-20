@@ -1,5 +1,20 @@
 # WZOS current session handoff - October 18, 2026
 
+## Latest serving code - office alert placement follow-up
+
+Final3737af7 corrects dashboard content burying the office alert: above main on
+desktop/module pages and after the organization card on mobile Home. Final full
+PostgreSQL878/Node163PASS,0failures/errors/skips; schema/backup preflight PASS.
+Builde8e2f67d-f6f9-4123-b816-f04ad924d863 submitted. Final public code/assets/auth/
+CSP/version checks independently PASS; version06cb438e96196bd4b724c67b. The home
+pointer now targets/tmp/wzos-office-alert-20261020.Y6Db8vH3. Cloud Shell browser
+disconnected after submission and CUA recovery reset; final image/traffic/exit JSON
+not reread. Do not start duplicate jobs to recover logs. See OPERATIONS_RELEASE.
+Authenticated alert/link accepted on the first live update; final visual placement
+needs a recovered browser. User has confirmed sign-in ready. The October19 report
+remains a draft; do not submit it for the user. DOT source/model acceptance remains
+open and DOT flags off. Existing Voice/weather/security settings preserved.
+
 ## LIVE operations release - October20 (supersedes local-only receipt status)
 
 Runtime edd310b deployed as wzos-v2-accounts-ui-edd310b100%, version
