@@ -23,9 +23,16 @@ self.addEventListener('fetch',event=>{
   event.respondWith((async()=>{
    // A user-requested reload (including Install updates) must get fresh HTML.
    if(request.cache==='reload'||request.cache==='no-cache')return refreshShell();
+   const fresh=refreshShell();
+   event.waitUntil(fresh.catch(()=>{}));
    const cached=await (await caches.open(SHELL_CACHE)).match('/');
-   if(cached){event.waitUntil(refreshShell().catch(()=>{}));return cached;}
-   return fetch(request);
+   if(!cached)return fresh;
+   // Prefer the current release, including rollback. A slow/offline connection
+   // can still display the generic cached launch shell without a long OS splash.
+   let timer;
+   try{return await Promise.race([fresh,new Promise(resolve=>{timer=setTimeout(()=>resolve(cached),1500);})]);}
+   catch{return cached;}
+   finally{clearTimeout(timer);}
   })());return;
  }
  // An exact root-level static filename + release query is required. Never

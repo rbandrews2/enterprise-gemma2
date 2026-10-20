@@ -24,4 +24,8 @@ remain. Explicit install-update/reload and actual Android splash/icon acceptance
 remain device checks. If retiring the worker, serve a cleanup worker at its route;
 never clear private browser storage. Standard image/traffic rollback is prepared.
 
+Startup review: public navigation prefers current network HTML for update/rollback;
+falls back to generic cached shell after1.5seconds or an offline error. Focused
+startup/cache/update12checks PASS. No private/API cache expansion.
+
 Status: source and release helper prepared. Gate, build and deployment pending.
