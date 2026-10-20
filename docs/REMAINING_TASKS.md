@@ -7,6 +7,15 @@ older evidence remain there; do not silently discard or re-open completed gates.
 
 ## Closed latest checkpoint
 
+- [x] October20 UI organization/mobile Home/top account/Clock In/Voice copy and
+  public-shell startup/shortcut refresh deployed: source6047e5b, ui-6047e5b100%,
+  image2b194352..., version270e2a2ea96f733144a59d9b. Cloud155Node/849PostgreSQL,
+  backup/schema/runtime/public hashes/auth/traffic and browser review PASS.
+  Weather configuration unchanged under hold; Voice activation preserved.
+  User-approved cleanup reclaimed2.13GB from twelve old dependency environments,
+  preserving source/logs/credentials/evidence; Cloud Shell home52% used.
+  See UI_RELEASE_20261020.md. Actual installed-device launch/update acceptance open.
+
 - [x] Atlas real app metadata invocation and synthetic saved-job/reference plumbing:
   2/2 requests, stale409/cross-tenant404/Core403 denied before inference. Workloads
   deleted, guard stopped, production unchanged. See ATLAS_APP_WORKFLOW_RESULTS_20261018.md.

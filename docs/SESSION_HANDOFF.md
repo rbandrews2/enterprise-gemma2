@@ -327,3 +327,25 @@ and removed the extra layout-preview status sentence. Preview-only disabled
 controls/backend guards remain unchanged. Provider/privacy disclosure remains
 in device onboarding. JS syntax/diff checks PASS; no provider/recording tests.
 Weather configuration remains on hold; live unchanged.
+
+## LATEST - October20 UI release LIVE and approved Cloud Shell cleanup
+
+Source6047e5ba5a70e366088c88b280e23bf6f631e1dc is deployed as
+wzos-v2-accounts-ui-6047e5b100%, image2b1943521f78f9421d67003847b2723aaa24f84d69fab6a778f30761c1518561,
+version270e2a2ea96f733144a59d9b. Full cloud gates155Node/849PostgreSQL pass, no
+failures/skips. Backup/schema/build/staged runtime/public assets/auth/traffic PASS;
+existing organization dashboard and updated Smart Field Voice instructions observed.
+Voice remains enabled with existing private RTX31B min0/max1; ordinary Atlas chat
+unchanged. Weather configuration remains on hold. No new IAM/DDL/provider retests,
+microphone/location grant or customer sends. Rollback voice-live-1d2da6b100%.
+See UI_RELEASE_20261020.md for full build/image/evidence and device-acceptance limits.
+
+After deployment Ray approved safe2GB Cloud Shell cleanup. Removed twelve reviewed
+unused old .venv-accounts-test folders only; active-process/path/ownership guards
+passed. Actual2,128,019,456bytes reclaimed; home now52% used, about2.2GiB free.
+No source/log/credential/scanner database removal; laptop unchanged. Private archive
+$HOME/wzos-ui-6047e5b-evidence.tgz includes release+cleanup evidence (40KB).
+Cloud root/tmp/wzos-ui-20261020.XC9Of8g4; pointer$HOME/wzos-ui-release-path.txt.
+No automatic test/deploy replay. Remaining: installed-device splash/icon/update and
+pending-draft acceptance; user-led Voice recording/review/send checks. Simulator
+remains synthetic and cannot perform paid Voice processing. Live browser left open.
