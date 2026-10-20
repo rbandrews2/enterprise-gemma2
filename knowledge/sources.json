@@ -7,9 +7,14 @@
     "publication_page": "https://www.vdot.virginia.gov/doing-business/technical-guidance-and-support/technical-guidance-documents/road-and-bridge-standards/",
     "edition": "2016 Volume II; individual sheet revisions vary; June 2026 updates present",
     "jurisdiction": "VA; verify road authority, contract and individual sheet revisions",
-    "regions": ["VA"], "kind": "pdf", "origin": "user_import",
+    "regions": [
+      "VA"
+    ],
+    "kind": "pdf",
+    "origin": "user_import",
     "pinned_sha256": "695d081ea8d24792f4a787fed7af828a07b4a6d84dec1a4a434a19557c2124f7",
-    "document_role": "standard", "links_verified_on": "2026-10-20",
+    "document_role": "standard",
+    "links_verified_on": "2026-10-20",
     "publication_status": "unknown",
     "applicability_note": "Pinned user copy. Section 1300 contains pavement-marking PM-series drawings; verify each sheet and current revision letters. Reference standard drawings rather than modifying or inserting them into plan assemblies. Ingestion is not applicability review.",
     "usage_note": "VDOT copyrighted standard drawings. Original-page review and citations only; plan assembly insertion/modification is not authorized by VDOT's publication policy."
@@ -22,9 +27,14 @@
     "publication_page": "https://www.vdot.virginia.gov/doing-business/technical-guidance-and-support/technical-guidance-documents/traffic-engineering-design-manual/",
     "edition": "April 2020; Revision 1 March 2023",
     "jurisdiction": "VA; verify authority and current MUTCD cross-references",
-    "regions": ["VA"], "kind": "pdf", "origin": "user_import",
+    "regions": [
+      "VA"
+    ],
+    "kind": "pdf",
+    "origin": "user_import",
     "pinned_sha256": "b86a4906fc3002683bfb694f01bb44e23cc3370572c75702a829b1bfd303649c",
-    "document_role": "guidance", "links_verified_on": "2026-10-20",
+    "document_role": "guidance",
+    "links_verified_on": "2026-10-20",
     "publication_status": "unknown",
     "applicability_note": "Pinned user copy. VDOT publication page warns that some references predate the 2026 Virginia MUTCD; resolve conflicts against governing current material. A design manual is not the complete construction specification/contract set.",
     "usage_note": "VDOT copyrighted informational material; publication page restricts sale/distribution for profit. Use citations and source links; review product reuse rights before redistribution."
@@ -37,9 +47,14 @@
     "publication_page": "https://www.vdot.virginia.gov/doing-business/technical-guidance-and-support/technical-guidance-documents/road-and-bridge-standards/",
     "edition": "2016 Volume I; individual sheet revisions vary",
     "jurisdiction": "VA; verify road authority, contract and individual sheet revisions",
-    "regions": ["VA"], "kind": "pdf", "origin": "user_import",
+    "regions": [
+      "VA"
+    ],
+    "kind": "pdf",
+    "origin": "user_import",
     "pinned_sha256": "77b92701f2a24cc7825df20a18024dee7c8b0f79d05b5e284174a5c1c2f2e362",
-    "document_role": "standard", "links_verified_on": "2026-10-20",
+    "document_role": "standard",
+    "links_verified_on": "2026-10-20",
     "publication_status": "unknown",
     "applicability_note": "Pinned user copy. Preserve volume/sheet/revision identification; verify current revision letters and contract applicability. Reference standard drawings rather than modifying or inserting them into plan assemblies.",
     "usage_note": "VDOT copyrighted standard drawings. Original-page review and citations only; plan assembly insertion/modification is not authorized by VDOT's publication policy."
@@ -52,7 +67,9 @@
     "publication_page": "https://www.vdot.virginia.gov/doing-business/technical-guidance-and-support/technical-guidance-documents/virginia-mutcd/",
     "edition": "Version 11.0 January 2026",
     "jurisdiction": "VA; governing authority, local adoption, contract and amendments require review",
-    "regions": ["VA"],
+    "regions": [
+      "VA"
+    ],
     "kind": "pdf",
     "origin": "user_import",
     "pinned_sha256": "7d6277e9a3fdf0d5798b087025b340288663fbc2b6a812e306dc85602a43ae58",
@@ -70,9 +87,17 @@
     "edition": "11.0 January 2026",
     "jurisdiction": "VA: VDOT roadways",
     "kind": "pdf",
-    "links_verified_on": "2026-09-29",
+    "links_verified_on": "2026-10-20",
     "applicability_note": "VDOT publication page states January 2026 v11.0 applies after January 18, 2026, with exceptions for earlier advertised contracts or issued land use permits and district approvals. Resolve road authority, contract/permit dates, district conditions and amendments for each project. No automatic applicability approval.",
-    "publication_status": "current_at_verification"
+    "publication_status": "current_at_verification",
+    "regions": [
+      "VA"
+    ],
+    "document_role": "standard",
+    "effective_from": "2026-01-18",
+    "required_companions": {
+      "vdot-known-errors": "bec29b070d4cbe642761fd8a666331df6d48d220346a56d3c9ad2fc0e2a7f80b"
+    }
   },
   {
     "id": "vdot-field-guide-2026",
@@ -83,9 +108,13 @@
     "edition": "January 2026",
     "jurisdiction": "VA: VDOT roadways",
     "kind": "pdf",
-    "links_verified_on": "2026-09-29",
+    "links_verified_on": "2026-10-20",
     "applicability_note": "Informal companion to VWAPM, not official policy. Confirm governing manual, road authority, project dates, exceptions and current amendments before use.",
-    "publication_status": "current_at_verification"
+    "publication_status": "current_at_verification",
+    "regions": [
+      "VA"
+    ],
+    "document_role": "guidance"
   },
   {
     "id": "vdot-known-errors",
@@ -96,9 +125,13 @@
     "edition": "2026 VWAPM edition corrections; individual issue date not verified",
     "jurisdiction": "VA: VDOT roadways",
     "kind": "pdf",
-    "links_verified_on": "2026-09-29",
-    "applicability_note": "Discovery reference only. Confirm authority, project dates, exceptions, and current amendments before use.",
-    "publication_status": "unknown"
+    "links_verified_on": "2026-10-20",
+    "applicability_note": "Pinned correction companion for the January 2026 VWAPM. Official publication link and bytes verified October 20, 2026. Issue date is not verified: do not imply historical applicability before this verification date. Preserve provisional and unresolved items as questions; never silently replace the base manual.",
+    "publication_status": "current_at_verification",
+    "regions": [
+      "VA"
+    ],
+    "document_role": "correction"
   },
   {
     "id": "fhwa-mutcd-11-r1",

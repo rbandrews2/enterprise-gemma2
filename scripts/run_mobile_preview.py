@@ -27,6 +27,9 @@ class MobilePreview:
         peer = (scope.get('client') or ('', 0))[0]
         if host not in {'127.0.0.1', 'localhost', '::1'} or peer not in {'127.0.0.1', '::1'}:
             return await Response('Local preview only', status_code=403)(scope, receive, send)
+        if scope['path'] in {'/api/atlas/dot/ask', '/api/atlas/dot/transcribe'}:
+            from starlette.responses import JSONResponse
+            return await JSONResponse({'detail': 'Paid Atlas processing is disabled in the local preview.'}, status_code=503)(scope, receive, send)
         # Read-only synthetic data belongs only to this loopback harness.
         # Production account/Voice access and processing are not changed here.
         preview_reads = {'/api/dispatch/my-assignments', '/api/dispatch/notifications',
@@ -96,22 +99,26 @@ class MobilePreview:
         return await self.application(scope, receive, local_send)
 
 
-def build_application():
+def build_application(manuals=False):
     if os.environ.get('K_SERVICE') or os.environ.get('GAE_ENV'):
         raise RuntimeError('The simulator cannot run in a cloud runtime.')
     os.environ['WZOS_WORKSPACE_PREVIEW'] = '1'
+    os.environ['WZOS_ATLAS_DOT_INFERENCE_ENABLED'] = '0'
+    os.environ['WZOS_ATLAS_DOT_ENABLED'] = '1' if manuals else '0'
+    os.environ['WZOS_ATLAS_DOT_ORGANIZATIONS'] = 'enterprise-demo' if manuals else ''
     from services.workspace_preview.app import create_app
     from services.v2.knowledge.store import Store
     data = ROOT / '.local-data' / 'mobile-simulator'
     data.mkdir(parents=True, exist_ok=True)
-    app = create_app(data / 'preview.sqlite', Store(data / 'sources', {}))
+    app = create_app(data / 'preview.sqlite', Store() if manuals else Store(data / 'sources', {}))
     return MobilePreview(app)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--port', type=int, choices=(8081, 8083), default=8083)
+    parser.add_argument('--manuals', action='store_true', help='Read the local manual index; paid processing stays blocked')
     args = parser.parse_args()
     import uvicorn
     print(f'WZOS mobile preview: http://127.0.0.1:{args.port}/__simulator', flush=True)
-    uvicorn.run(build_application(), host='127.0.0.1', port=args.port, access_log=False)
+    uvicorn.run(build_application(args.manuals), host='127.0.0.1', port=args.port, access_log=False)

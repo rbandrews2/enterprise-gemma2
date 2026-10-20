@@ -73,6 +73,10 @@ class ManualTests(unittest.TestCase):
         self.store.check_extraction(self.source.id, self.result['revision'], 'Synthetic pages 1 through 3 checked for this fixture only.')
         self.index = ManualIndex(self.store)
         self.coverage = self.index.rebuild()
+        from services.v2.knowledge.manual_review import review
+        for page in (1, 2, 3):
+            review(self.store, self.source.id, self.result['revision'], page, 'Synthetic page text and notes checked against original fixture; no real engineering rules.')
+        self.coverage = self.index.rebuild()
 
     def tearDown(self):
         self.directory.cleanup()
@@ -230,18 +234,29 @@ class ManualTests(unittest.TestCase):
             return {'id': identity, 'organization_id': 'synthetic-org',
                     'edition': 'core' if identity == 'core' else 'enterprise'}
         register(app, actor, self.store, model)
-        payload = query().model_dump(mode='json')
+        payload = {**query().model_dump(mode='json'), 'request_id': '10000000-0000-4000-8000-000000000001'}
         with TestClient(app) as client, patch.dict(os.environ, {'WZOS_ATLAS_DOT_ENABLED': '0'}):
             self.assertEqual(client.post('/api/atlas/dot/ask', json=payload).status_code, 401)
             self.assertEqual(client.post('/api/atlas/dot/ask', json=payload, headers={'x-test-user': 'core'}).status_code, 403)
             self.assertEqual(client.post('/api/atlas/dot/ask', json=payload, headers={'x-test-user': 'enterprise'}).status_code, 503)
+        with TestClient(app) as client, patch.dict(os.environ, {'WZOS_ATLAS_DOT_ENABLED': '1', 'WZOS_ATLAS_DOT_ORGANIZATIONS': 'other-org'}):
+            self.assertFalse(client.get('/api/atlas/dot/config', headers={'x-test-user': 'enterprise'}).json()['enabled'])
+            self.assertEqual(client.post('/api/atlas/dot/ask', json=payload, headers={'x-test-user': 'enterprise'}).status_code, 503)
+            self.assertEqual(model.calls, 0)
         self.store.catalog[self.source.id] = self.source.model_copy(update={'publication_status': 'unknown'})
         self.index.rebuild()
-        with TestClient(app) as client, patch.dict(os.environ, {'WZOS_ATLAS_DOT_ENABLED': '1'}):
+        with TestClient(app) as client, patch.dict(os.environ, {'WZOS_ATLAS_DOT_ENABLED': '1', 'WZOS_ATLAS_DOT_ORGANIZATIONS': 'synthetic-org'}):
             result = client.post('/api/atlas/dot/ask', json=payload, headers={'x-test-user': 'enterprise'})
             self.assertEqual(result.status_code, 200)
             self.assertFalse(result.json()['provider_called'])
+            self.assertNotIn('context', result.json())
             self.assertEqual(model.calls, 0)
+            result = client.post('/api/atlas/dot/search', json=query().model_dump(mode='json'), headers={'x-test-user': 'enterprise'})
+            self.assertEqual(result.status_code, 200)
+            self.assertNotIn('text', result.json()['results'][0])
+            self.assertLessEqual(len(result.json()['results'][0]['excerpt']), 1200)
+            result = client.post('/api/atlas/dot/context', json=query().model_dump(mode='json'), headers={'x-test-user': 'enterprise'})
+            self.assertEqual(result.status_code, 404)
 
     def test_supplied_catalog_copy_is_pinned_and_not_training(self):
         source = load_catalog()['vdot-mutcd-user-20261020']
@@ -260,6 +275,8 @@ class ManualTests(unittest.TestCase):
         response_tools = []
         def handler(request):
             body = json.loads(request.content)
+            if request.url.path == '/tokenize':
+                return httpx.Response(200, json={'count': 100, 'max_model_len': 32767})
             calls.append(body)
             self.assertEqual(request.headers['authorization'], 'Bearer test.test.test')
             self.assertFalse(body['stream'])

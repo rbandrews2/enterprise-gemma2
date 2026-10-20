@@ -731,7 +731,13 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
         return FileResponse(STATIC / "dispatch.js", media_type="text/javascript")
     report_history.register(app, connect, actor, report, knowledge_store)
     from services.workspace_preview import dot_knowledge
-    dot_knowledge.register(app, actor, knowledge_store)
+    dot_knowledge.register(app, actor, knowledge_store, requests=atlas_requests)
+    @app.get('/ask-atlas.js')
+    def ask_atlas_script():
+        return FileResponse(STATIC / 'ask-atlas.js', media_type='text/javascript')
+    @app.get('/ask-atlas.css')
+    def ask_atlas_style():
+        return FileResponse(STATIC / 'ask-atlas.css', media_type='text/css')
     def assigned_time_rows(conn, selected):
         if not account_workspace or selected['edition'] != 'enterprise':
             return []

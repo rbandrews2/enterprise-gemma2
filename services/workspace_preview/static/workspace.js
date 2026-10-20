@@ -82,7 +82,7 @@ $("prepare").addEventListener("click",async()=>{
  const gaps=el("details");gaps.append(el("summary","Coverage gaps and review limits"));for(const gap of data.references.coverage_gaps)gaps.append(el("p",gap));output.append(gaps);}
  catch(error){$("atlas-output").replaceChildren();notify(error.message,true);}finally{lock(false);}
 });
-$("atlas-nav").addEventListener("click",()=>{document.dispatchEvent(new CustomEvent("wzos:assistant-open"));});
+$("atlas-nav").addEventListener("click",()=>{if(session?.edition==='enterprise')window.wzosAskAtlas?.open();else document.dispatchEvent(new CustomEvent("wzos:assistant-open"));});
 $("jobs-nav").addEventListener("click",()=>{window.showWzosView("orders");$("list-title").scrollIntoView({behavior:"smooth",block:"start"});});
 window.addEventListener("beforeunload",event=>{if(dirty||checklistDirty){event.preventDefault();event.returnValue="";}});
 document.addEventListener("DOMContentLoaded",async()=>{try{const config=await api("/api/identities");identities=config.identities;if(config.mode==="verified_accounts"){identities=[await window.wzosAccount.start(config)];}for(const identity of identities){const option=el("option",`${identity.edition==="core"?"Core":"Enterprise"} · ${identity.role} · ${identity.name}`);option.value=identity.id;$("identity").append(option);}$("identity").value=config.mode==="verified_accounts"?identities[0]?.id:"enterprise-admin";await switchIdentity();if(config.mode==="verified_accounts"){$("identity").disabled=true;$("identity").closest("label").hidden=true;}}catch(error){notify(error.message,true);window.wzosStartup?.fail();}},{once:true});
@@ -183,9 +183,10 @@ window.atlasNavigate=id=>{
 
 window.wzosClock={api,getSession:()=>session,getOrders:()=>rows,getSelected:()=>selected};
 window.showWzosView=view=>{
- if(!['home','dashboard','orders','assignments','clock','forms','form_drafts','meetings','schedule','training','messages','navigation','report','field_voice'].includes(view))return false;
+ if(!['home','dashboard','orders','assignments','clock','forms','form_drafts','meetings','schedule','training','messages','navigation','report','field_voice','ask_atlas'].includes(view))return false;
  if(view==='home'&&!session)return false;
  if(view==='field_voice'&&(session?.edition!=='enterprise'||!window.wzosFieldVoice?.available()))return false;
+ if(view==='ask_atlas'&&session?.edition!=='enterprise')return false;
  if(view==='dashboard'&&session?.role!=='admin')return false;
  if(view==='assignments'&&session?.edition!=='enterprise')return false;
  if(view==='report'&&!session?.can_prepare_atlas)return false;
@@ -194,14 +195,18 @@ window.showWzosView=view=>{
  atlasPage=({orders:"work_orders",clock:"time_clock",forms:"forms",form_drafts:"forms",schedule:"schedule",training:"training",messages:"messages",navigation:"navigation",report:"report"})[view]||"work_orders";
  if($("dashboard-view"))$("dashboard-view").hidden=view!=="dashboard";
  if($("field-voice-view"))$("field-voice-view").hidden=view!=="field_voice";
+ if($("ask-atlas-view"))$("ask-atlas-view").hidden=view!=="ask_atlas";
+ $("atlas-nav").classList.toggle('active',view==='ask_atlas');
+ if(view==='ask_atlas')$("atlas-nav").setAttribute('aria-current','page');else $("atlas-nav").removeAttribute('aria-current');
  if($("field-voice-nav"))$("field-voice-nav").classList.toggle('active',view==='field_voice');
  $("team-view").hidden=!["training","messages","navigation","assignments"].includes(view);
  $("meetings-view").hidden=view!=="meetings";
  $("report-view").hidden=view!=="report";
  $("orders-view").hidden=view!=="orders";$("clock-view").hidden=view!=="clock";$("modules-view").hidden=!["schedule","form_drafts"].includes(view);$("forms-view").hidden=view!=="forms";
  for(const [id,on] of [["dashboard-nav",view==="dashboard"],["assignments-nav",view==="assignments"],["meetings-nav",view==="meetings"],["training-nav",view==="training"],["messages-nav",view==="messages"],["navigation-nav",view==="navigation"],["report-nav",view==="report"],["jobs-nav",view==="orders"],["clock-nav",view==="clock"],["forms-nav",["forms","form_drafts"].includes(view)],["schedule-nav",view==="schedule"]]){ $(id).classList.toggle("active",on);if(on)$(id).setAttribute("aria-current","page");else $(id).removeAttribute("aria-current");}
- document.querySelector(".breadcrumb + strong").textContent=({dashboard:"Dashboard",assignments:"My jobs",meetings:"Video meetings",training:"Video training",messages:"Messaging",navigation:"Navigation",report:"Work Zone Report",clock:"⚡ Time Tracker",forms:"Forms hub",form_drafts:"Saved form drafts",schedule:"Schedule management"})[view]||"Work orders";
+ document.querySelector(".breadcrumb + strong").textContent=({dashboard:"Dashboard",assignments:"My jobs",meetings:"Video meetings",training:"Video training",messages:"Messaging",navigation:"Navigation",report:"Previous reports",clock:"⚡ Time Tracker",forms:"Forms hub",form_drafts:"Saved form drafts",schedule:"Schedule management"})[view]||"Work orders";
  if(view==='field_voice')document.querySelector('.breadcrumb + strong').textContent='Smart Field Voice';
+ if(view==='ask_atlas')document.querySelector('.breadcrumb + strong').textContent='Ask Atlas';
  document.body.classList.toggle('mobile-home-active',view==='home');
  document.dispatchEvent(new CustomEvent("wzos:view",{detail:view}));
  document.body.classList.toggle('navigation-active',view==='navigation');

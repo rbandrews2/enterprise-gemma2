@@ -64,6 +64,9 @@ def package(store, destination):
                 shutil.copyfile(folder/name, target)
             if (folder / 'page-annotations.json').exists():
                 shutil.copyfile(folder / 'page-annotations.json', destination/'revisions'/source_id/revision/'page-annotations.json')
+            for name in ('formula-rules.json', 'page-reviews.json', 'ocr-pages.json'):
+                if (folder / name).exists():
+                    shutil.copyfile(folder / name, destination/'revisions'/source_id/revision/name)
         for section in ('current','attempts'):
             path = source/section/f'{source_id}.json'
             if path.exists():

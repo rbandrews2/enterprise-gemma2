@@ -13,6 +13,8 @@ def main():
     parser.add_argument('--output', type=Path)
     commands = parser.add_subparsers(dest='command', required=True)
     commands.add_parser('rebuild')
+    formula = commands.add_parser('review-formula')
+    formula.add_argument('specification', type=Path)
     outline = commands.add_parser('outline')
     outline.add_argument('source')
     for action in ('search', 'context'):
@@ -40,6 +42,10 @@ def main():
     index = ManualIndex(Store(data=args.data) if args.data else Store())
     if args.command == 'rebuild':
         result = index.rebuild()
+    elif args.command == 'review-formula':
+        if args.specification.stat().st_size > 65536:
+            raise ValueError('Oversized formula review')
+        result = index.add_formula(json.loads(args.specification.read_text(encoding='utf-8')))
     elif args.command == 'outline':
         result = index.outline(args.source)
     elif args.command == 'render':

@@ -1,9 +1,31 @@
-# WZOS remaining tasks - current October 18, 2026
+# WZOS remaining tasks - current October 20, 2026
 
 Use SESSION_HANDOFF.md for source/live provenance and COLLABORATION_CONTRACT.md for
 ownership. This checklist supersedes historical status entries, which are preserved
 in history/REMAINING_TASKS_before_sms_acceptance_20261017.md. Product decisions and
 older evidence remain there; do not silently discard or re-open completed gates.
+
+## Latest priority - Ask Atlas Work Zone Guardian
+
+- [x] Local dedicated Enterprise page and featured mobile/desktop launch cards;
+  typed/recorded questions, cited replies, optional local Read aloud, cancellation.
+- [x] Local context-first Gemma transport, actual tokenizer budget check, source/
+  correction/page review gates, shared request controls and reviewed arithmetic.
+- [x] Three new work-zone originals matched to fresh official downloads; seven-PDF
+  local index covers2627physical pages. This is indexing, not full source review.
+- [x] Legacy visible report builder retired; historical reports/PDF access preserved.
+- [ ] Reconnect Cloud Shell and verify current account/project/live state.
+- [ ] Run bounded CPU OCR and visual review of initial traffic-control sources,
+  corrections, tables and formulas; pavement markings next. No full-coverage claim.
+- [ ] Package verified library; run frozen-candidate PostgreSQL release gate.
+- [ ] One bounded synthetic pilot within approved$5: max1Speech/3Gemma generations,
+  existing model only; no automatic repeats/new GPU/workload/permissions.
+- [ ] Verify installed-device permission reuse, audio shutdown and local Read aloud;
+  organization allowlist/roles/Core denial; staged rollback and limited activation.
+
+Keep Voice reporting separate/stable. Maps/navigation is unrelated. Weather
+configuration remains on hold. No new public release is claimed by these checks.
+Implementation, source hashes and exact restart steps: ASK_ATLAS_ENTERPRISE_20261020.md.
 
 ## Closed latest checkpoint
 

@@ -27,7 +27,10 @@ test('denial is recoverable without repeated automatic prompts or storing coordi
 
 test('Enterprise setup explains cloud transcription before requesting microphone access',async()=>{
  const f=fixture();await f.events['wzos:session']();
- assert.match(f.panel.children.map(n=>n.textContent||'').join(' '),/Google processes the audio for transcription and Atlas/);
+ const disclosure=f.panel.children.map(n=>n.textContent||'').join(' ');
+ assert.match(disclosure,/Google processes the audio for transcription/);
+ assert.match(disclosure,/Atlas uses the transcript/);
+ assert.match(disclosure,/answer your question/);
  assert.equal(f.calls.microphone,0);
  const core=fixture(undefined,false,'core');await core.events['wzos:session']();
  assert.doesNotMatch(core.panel.children.map(n=>n.textContent||'').join(' '),/Google processes the audio/);

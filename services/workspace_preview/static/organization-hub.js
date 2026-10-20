@@ -23,9 +23,9 @@
    const layout=node('div',undefined,'guided-layout'),story=node('section',undefined,'panel guided-story'),content=node('section',undefined,'guided-content');
    story.append(node('p','Built for the work ahead','guided-kicker'),node('h2','Your operation. In clear view.'),node('p','From the first assignment to the final report, keep every crew connected to the work that matters.'));
    const atlas=node('img');atlas.src='/atlas-assistant.png';atlas.alt='Atlas, your WZOS AI assistant';atlas.width=220;atlas.height=220;
-   story.append(atlas,button('Ask Atlas',()=>document.getElementById('assistant-open')?.click()));
+   story.append(atlas,button('Ask Atlas',()=>document.getElementById('atlas-nav')?.click()));
    content.append(node('h2','Where would you like to begin?'));layout.append(story,content);root.append(layout);
-   const grid=node('div',undefined,'hub-grid');for(const item of data.modules.filter(m=>m.visible)){
+   const grid=node('div',undefined,'hub-grid');for(const item of data.modules.filter(m=>m.visible&&m.id!=='report')){
     const b=button('',()=>document.getElementById(item.nav_id)?.click());b.className=item.id==='report'?'panel hub-card guided-feature':'panel hub-card';b.append(node('span',item.icon,'hub-icon'),node('strong',item.label));if(item.id==='report')content.append(b);else grid.append(b);
    }
    for(const [label,selector,icon] of [['Employees','.account-employees','♙'],['Team access','.account-team','♧'],['Passkeys','.account-passkeys','⚿']]){
@@ -35,7 +35,7 @@
    content.append(node('p','WZOS powered by Atlas AI Assistant','guided-footer'));
    if(window.wzosSecurity){const security=button('Atlas Security',()=>window.wzosSecurity.open());security.className='panel hub-card';content.append(security);}
    const options=node('details',undefined,'panel');options.append(node('summary','Dashboard preferences'));const selections=[];
-   for(const item of data.modules){const label=node('label'),check=node('input');check.type='checkbox';check.checked=item.visible;label.append(check,document.createTextNode(item.label));options.append(label);selections.push([item.id,check]);}
+   for(const item of data.modules.filter(m=>m.id!=='report')){const label=node('label'),check=node('input');check.type='checkbox';check.checked=item.visible;label.append(check,document.createTextNode(item.label));options.append(label);selections.push([item.id,check]);}
    options.append(node('small','Shared dashboard shortcuts only. Hiding a card does not change access permissions.'));
    options.append(button('Save preferences',async()=>{try{await api('/api/admin/dashboard/preferences',{method:'PUT',body:JSON.stringify({expected_version:data.preferences_version,hidden_modules:selections.filter(([,c])=>!c.checked).map(([id])=>id)})});if(generation===epoch)render();}catch(e){if(generation===epoch)reportError(e.message);}}));root.append(options);
    const notes=node('section',undefined,'panel');notes.append(node('h2','Admin notes'));const form=node('form'),input=node('textarea');input.maxLength=500;input.required=true;input.rows=3;input.setAttribute('aria-label','Short message for organization admins');input.placeholder='Leave a short message for your fellow admins';input.oninput=()=>{draft=!!input.value;};

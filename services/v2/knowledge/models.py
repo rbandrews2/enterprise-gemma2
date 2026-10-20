@@ -40,8 +40,10 @@ class Source(StrictModel):
     kind: Literal["pdf", "html", "docx"]
     origin: Literal["official", "user_import"] = "official"
     pinned_sha256: str | None = Field(default=None, pattern=r"^[a-f0-9]{64}$")
-    document_role: Literal["standard", "specification", "guidance", "training", "unknown"] = "unknown"
+    document_role: Literal["standard", "specification", "correction", "guidance", "training", "unknown"] = "unknown"
     regions: list[str] = Field(default_factory=list, max_length=60)
+    # Exact correction revisions required alongside this manual's context.
+    required_companions: dict[str, str] = Field(default_factory=dict, max_length=8)
     archive_member: str | None = None
     archive_sha256: str | None = Field(default=None, pattern=r"^[a-f0-9]{64}$")
     effective_from: date | None = None
@@ -71,6 +73,9 @@ class Source(StrictModel):
             approved_url(url)
         if any(not re.fullmatch(r"[A-Z]{2}", region) for region in self.regions):
             raise ValueError("Regions must be two-letter state codes or US")
+        if any(not re.fullmatch(r'[a-z][a-z0-9-]{1,79}', sid) or not re.fullmatch(r'[a-f0-9]{64}', sha)
+               or sid == self.id for sid, sha in self.required_companions.items()):
+            raise ValueError('Invalid pinned context companion')
         if self.effective_from and self.effective_to and self.effective_to < self.effective_from:
             raise ValueError("Effective date range is reversed")
         return self

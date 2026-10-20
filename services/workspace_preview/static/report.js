@@ -2,16 +2,15 @@
 (() => {
  const $=id=>document.getElementById(id), api=(...args)=>window.wzosClock.api(...args);
  let epoch=0, current=null, saveRequest=null, saving=false;
+ $("report-save").hidden=true;$("report-prepare").hidden=true;
  window.wzosReportAtlasBasis=()=>current?{order_id:current.order.id,expected_version:current.order.version}:null;
  const node=(tag,value)=>{const n=document.createElement(tag);n.textContent=value;return n;};
  function section(title){const s=node("section","");s.className="panel report-section";s.append(node("h2",title));$("report-content").append(s);return s;}
  function reset(){document.dispatchEvent(new Event("wzos:report-context"));window.WzosReportMap?.clear();epoch++;current=null;saveRequest=null;$("report-save").disabled=true;$("report-history").replaceChildren();$("report-content").replaceChildren();$("report-references").replaceChildren();$("report-prepare").disabled=true;}
  async function load(){
   reset();const generation=epoch,id=$("report-order").value;if(!id)return;
-  $("report-message").textContent="Loading saved report basis…";
-  try{const data=await api(`/api/orders/${encodeURIComponent(id)}/report`);if(generation!==epoch)return;current=data;
-   render(data);history(id,generation);
-  }catch(error){if(generation===epoch)$("report-message").textContent=error.message;}
+  $("report-message").textContent="Open a saved revision below. Previous reports are read only.";
+  await history(id,generation);
  }
  function render(data){window.WzosReportMap?.clear();$("report-content").replaceChildren();
    $("report-message").textContent=`Work-order revision ${data.order.version} · assembled ${new Date(data.generated_at).toLocaleString()}`;
@@ -44,7 +43,7 @@
    $("report-history").replaceChildren(node("p",`${data.total} saved drafts · showing latest ${data.items.length}`));
    for(const item of data.items){const button=node("button",`${new Date(item.saved_at).toLocaleString()} · job revision ${item.order_version}${item.basis_changed?" · inputs changed":""}`);button.className="job";button.type="button";
     button.onclick=async()=>{const generation=++epoch;$("report-save").disabled=true;$("report-prepare").disabled=true;$("report-references").replaceChildren();
-     try{const saved=await api(`/api/orders/${encodeURIComponent(id)}/reports/${item.id}`);if(generation!==epoch)return;current=null;document.dispatchEvent(new Event("wzos:report-context"));render(saved.report);renderReferences(saved.report.preparation);$("report-save").disabled=true;$("report-prepare").disabled=true;$("report-message").textContent=`SAVED DRAFT · ${new Date(saved.saved_at).toLocaleString()}${saved.basis_changed?" · Inputs have changed; refresh for the current job.":" · Read only. Refresh to return to current inputs."}`;}catch(error){if(generation===epoch)$("report-message").textContent=error.message;}
+     try{const saved=await api(`/api/orders/${encodeURIComponent(id)}/reports/${item.id}`);if(generation!==epoch)return;current=null;document.dispatchEvent(new Event("wzos:report-context"));render(saved.report);renderReferences(saved.report.preparation);$("report-save").disabled=true;$("report-prepare").disabled=true;$("report-message").textContent=`SAVED DRAFT · ${new Date(saved.saved_at).toLocaleString()}${saved.basis_changed?" · Job inputs have changed; this saved revision remains historical.":" · Read only. Refresh lists saved revisions."}`;}catch(error){if(generation===epoch)$("report-message").textContent=error.message;}
     };
     const download=node('button','Download draft PDF');download.type='button';download.className='secondary';
     download.onclick=async()=>{const selectedEpoch=epoch,session=window.wzosClock.getSession();if(!session)return;download.disabled=true;

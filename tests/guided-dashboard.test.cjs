@@ -14,7 +14,8 @@ test('guided landing uses authorized module data and working navigation',async()
  const h=setup();h.emit('wzos:session');await flush();assert.equal(h.calls.length,1);
  assert.ok(h.all(h.main).some(n=>n.textContent==='Synthetic organization'));
  assert.ok(h.all(h.main).some(n=>n.textContent==='Your operation. In clear view.'));
- const feature=h.all(h.main).find(n=>n.className==='panel hub-card guided-feature');assert.ok(feature);feature.onclick();assert.deepEqual(h.clicks,['report-nav']);
+ assert.equal(h.all(h.main).some(n=>n.textContent==='Work Zone Report'),false);
+ const clock=h.all(h.main).find(n=>n.children?.some(c=>c.textContent==='Time Tracker'));assert.ok(clock);clock.onclick();assert.deepEqual(h.clicks,['clock-nav']);
  assert.equal(h.all(h.main).some(n=>/Status checks incomplete|No current verified|Security signals/.test(n.textContent)),false);
  assert.equal(h.all(h.main).find(n=>n.textContent==='Synthetic organization').className,'organization-heading');
 });

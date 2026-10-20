@@ -381,3 +381,63 @@ ui-6047e5b100%, active Voice preserved; weather configuration remains on hold.
 Next: source/currency/diagram review, actual Ask Atlas/report UI and snapshot citation
 selection, release gates and separately approved bounded model acceptance/activation.
 No automatic paid calls, source approval or live cutover authorized by local success.
+
+## LATEST local development - Enterprise Ask Atlas context-first implementation
+
+User superseded the diagram/report idea: Smart Field Voice and Ask Atlas - Work
+Zone Guardian are the highlighted Enterprise features, kept separate. Voice report
+fields/submission are stable; maps/navigation is unrelated; weather hold remains.
+Legacy Work Zone Report launch cards/navigation are retired, with Previous reports
+and existing PDF/ownership checks preserved as read-only history under Voice.
+
+Local implementation adds a dedicated Ask Atlas page, typed/recorded questions,
+review-before-Ask, local-device optional Read aloud, cited text/source search and
+clear cancellation. Complete sections, continuations, explicit referenced pages
+and mandatory pinned corrections form model context. Gemma reasoning is enabled
+only on the new transport. Tokenizer measurement enforces the existing ~32K server
+window; no assumption of advertised 256K, model resize or ordinary-chat activation.
+Reviewed formula rules provide explicit units/ranges and server Decimal arithmetic;
+no model code/functions execute and no real engineering formula is registered yet.
+
+Fresh official VDOT downloads match all three new user PDFs exactly: VWAPM414pages,
+Field Guide93, known-errors3. Together with four existing copies the local index
+has2627pages. Sources remain individually unreviewed pending visual page/table/OCR
+checks. Known errors are mandatory context; undated/provisional items are not
+silently applied. A caption, complete index or matching official hash is not page
+review or field approval. See ASK_ATLAS_ENTERPRISE_20261020.md for hashes/commands.
+
+OCR/review/formula sidecars are original/text-hash-bound and included in verified
+source snapshots. OCR is an operator-only, bounded CPU/Tesseract workflow; not run
+in API requests. Global sampled extraction review no longer approves every page.
+No cloud OCR/model call has run in this increment. Source originals and evidence
+remain ignored under.local-data/knowledge and.local-data/dot-manuals.
+
+DOT routes enforce Enterprise and exact organization allowlisting through
+WZOS_ATLAS_DOT_ORGANIZATIONS in addition to independent search/inference flags.
+The existing atlas_requests table tracks IDs/state only, with shared duplicate/
+cancel/admission controls before expensive processing. LIKE patterns are bound
+parameters for PostgreSQL compatibility. No customer DDL, IAM, secret, resource,
+SMS/email send, public deployment or Voice activation change.
+
+Browser attachment to Cloud Shell failed twice with stale-page capture, then a
+fresh tab timed out. A remote reconnection question is pending. Do not claim the
+PostgreSQL gate, CPU OCR or real model pilot accepted from local mocked checks.
+User chose one bounded $5 synthetic pilot, no repeated paid testing or new GPU.
+Resume by reading the latest validation note below, verifying Git and fresh cloud
+account/project/live state, then completing source review and the frozen-candidate
+PostgreSQL gate before any model acceptance or organization-scoped activation.
+
+### Connection recovery / local checks
+
+Cloud Shell tab6 was authorized; direct DOM terminal fill with a leading space
+then Enter works, while AX input and sequential typing were unreliable. Fresh
+readback verifies admin@workzoneos.org, enterprise-gemma2, pg_config/python3/git,
+home52%used/2.2GiBfree and/tmp33GiBfree. Tesseract is not installed. Latest ready
+service revision is still wzos-v2-accounts-ui-6047e5b; no traffic change was made.
+The earlier reconnection question is superseded by this recovery.
+
+Local broader checks58Python/158Node PASS; subsequent affected11Python/17Node
+PASS, all synthetic/mocked, no skips/failures. Syntax/diff PASS. Real library
+rebuilt2627pages. Current next step is disposable cloud release gates and bounded
+CPU OCR, not replaying the local suites or issuing paid requests. See ignored
+.local-data/dot-manuals/{final-focused,final-node,frozen-backend,frozen-node}.log.

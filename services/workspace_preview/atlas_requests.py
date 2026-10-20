@@ -37,6 +37,14 @@ class AtlasRequests:
                                    (actor['id'], actor['organization_id'])).fetchone()[0]
                 if count >= 64:
                     raise HTTPException(429, 'Too many recent Atlas requests; please wait')
+                if action == 'start' and request_id.startswith('dot:'):
+                    # Shared admission across app replicas, using metadata only.
+                    recent = db.execute("SELECT COUNT(*) FROM atlas_requests WHERE id LIKE ? AND actor_id=? AND organization_id=? AND expires_at>=?",
+                                        ('dot:%', actor['id'], actor['organization_id'], now + 540)).fetchone()[0]
+                    active = db.execute("SELECT actor_id,organization_id FROM atlas_requests WHERE id LIKE ? AND state IN ('running','cancel_requested') AND expires_at>=?",
+                                        ('dot:%', now + 300)).fetchall()
+                    if recent >= 6 or len(active) >= 2 or any(r['actor_id'] == actor['id'] and r['organization_id'] == actor['organization_id'] for r in active):
+                        raise HTTPException(429, 'Atlas is busy. Please wait before asking again.')
                 state = 'running' if action == 'start' else 'cancel_requested'
                 db.execute('INSERT INTO atlas_requests VALUES(?,?,?,?,?)',
                            (request_id, actor['organization_id'], actor['id'], state, now + 600))

@@ -1,0 +1,11 @@
+.ask-atlas{max-width:1040px;margin:0 auto;padding:clamp(18px,3vw,32px)}
+.ask-atlas h1{margin:0 0 10px}.ask-atlas>p{max-width:68ch}
+.ask-atlas label{display:grid;gap:8px;margin:18px 0}.ask-atlas textarea{width:100%;min-height:140px;box-sizing:border-box;resize:vertical}
+.ask-atlas details{padding:12px 0}.ask-atlas input[type=date]{max-width:240px}
+.atlas-actions{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin:16px 0}.atlas-actions button{min-height:48px}
+.atlas-answer:empty,.atlas-references:empty{display:none}.atlas-answer{line-height:1.65;border-top:1px solid #ffffff20;padding-top:18px}
+.atlas-references{display:grid;gap:14px}.atlas-references .panel{padding:18px}.atlas-references p{overflow-wrap:anywhere}.atlas-references a{color:#efc570}.atlas-clarify{border-left:3px solid #e8b452;padding-left:12px}
+.atlas-launch,.voice-launch{border-color:#b58b4266!important;box-shadow:inset 0 1px 0 #ffffff18}
+#report-nav{display:none!important}
+#field-voice-nav::before{display:none}
+@media(max-width:760px){.ask-atlas{padding:18px 14px}.atlas-actions button{flex:1 1 44%}.atlas-references .panel{padding:14px}}

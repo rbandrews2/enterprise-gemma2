@@ -2,12 +2,17 @@
 
 ## Product direction
 
-Ask Atlas uses governing evidence, with manual/edition/page citations. The proposed
-Work Zone Report workflow is keywords + jurisdiction + project date -> official
-diagram candidates -> preparer reviews the original pages/notes -> saved report.
-Official diagrams replace generated map overlays as the proposed reference basis;
-they are not automatically selected or approved traffic-control plans. Existing
-live report generation is unchanged in this foundation increment.
+Latest direction supersedes the earlier diagram/report proposal: highlight
+Smart Field Voice and Ask Atlas - Work Zone Guardian as separate Enterprise
+features. Gemma reasons over complete source context, with citations, conditions,
+clarifications and reviewed formula arithmetic. Guidance is not attached to Voice
+reports in this release; maps/navigation is separate. Retire the visible legacy
+report builder while preserving read-only historical reports/PDFs.
+
+See ASK_ATLAS_ENTERPRISE_20261020.md for the current implementation, seven-source
+library, page/OCR/correction review controls, APIs, activation and rollback.
+The remainder of this file records the earlier foundation increment and evidence;
+its older proposed report workflow is historical, not the current product scope.
 
 ## Actual supplied documents
 
