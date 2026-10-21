@@ -49,6 +49,7 @@
     if(item.form.form_type==='printable'){
      if(item.form.order)details.append(el('p','Work order: '+item.form.order));
      for(const section of item.form.template?.sections||[]){details.append(el('h4',section.title));for(const field of section.fields){const value=item.form.fields[field.key];if(value!==undefined&&value!=='')details.append(el('p',field.label+': '+(typeof value==='object'?JSON.stringify(value):value)));}}
+     if(item.form.signature&&window.WzosForms)details.append(window.WzosForms.signatureImage(item.form.signature));
      const print=el('button','Print received form or save as PDF');print.onclick=()=>window.WzosForms?.printReceived(item.form);details.append(print);
     }
     details.append(el('p',`Submitted by: ${item.submitted_by}`));card.append(details);

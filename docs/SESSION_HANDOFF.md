@@ -1,5 +1,17 @@
 # WZOS current session handoff - October 18, 2026
 
+## Local forms signing pad - ready for review
+
+Optional drawn/typed signature added to all WZOS printable forms, with signer name,
+Clear, bounded vector capture and print/download/office-review presentation.
+CompletedForm has a validated optional signature stored in existing JSON payload;
+no schema/startup migration. Existing unsigned records and submission retries work.
+Four Node + eight SQLite-backed submission tests PASS; syntax/diff PASS. Simulator
+shows signing area and successful synthetic typed submission receipt. Browser SVG
+hidden attribute issue repaired. Actual phone handwriting/exported PDF visual and
+focused PostgreSQL submission checks remain before deployment. Not deployed.
+See FORM_SIGNATURES_20261020.md. Current live design release remains unchanged.
+
 ## LIVE design update - October20
 
 Design candidate bc0f30aa440e69ca84fec056fcf3bfbe5e57f0de deployed as

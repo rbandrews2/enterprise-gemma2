@@ -320,6 +320,54 @@
   const element=labelled(field.label,input);if(field.type==='textarea')element.className='forms-wide';
   return {element,read:()=>input.value.trim(),clear:()=>{input.value='';}};
  }
+ function signatureImage(signature){
+  const box=node('div',null,'form-signature-output');
+  box.append(node('strong','Signature'));
+  if(!signature){box.append(node('div','', 'signature-blank'));return box;}
+  if(signature.mode==='typed')box.append(node('p',signature.signer_name,'signature-typed'));
+  else{
+   const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');svg.setAttribute('viewBox','0 0 600 180');svg.setAttribute('width','600');svg.setAttribute('height','180');svg.setAttribute('role','img');svg.setAttribute('aria-label','Drawn signature');
+   for(const stroke of (signature.strokes||[]).slice(0,40)){
+    if(!Array.isArray(stroke)||!stroke.length||stroke.length>128||stroke.some(p=>!Number.isFinite(p.x)||!Number.isFinite(p.y)||p.x<0||p.x>1||p.y<0||p.y>1))continue;
+    if(stroke.length===1){const dot=document.createElementNS(svg.namespaceURI,'circle');dot.setAttribute('cx',stroke[0].x*600);dot.setAttribute('cy',stroke[0].y*180);dot.setAttribute('r','1.25');dot.setAttribute('fill','#111');svg.append(dot);continue;}
+    const path=document.createElementNS(svg.namespaceURI,'polyline');const points=stroke.map(p=>`${p.x*600},${p.y*180}`);
+    path.setAttribute('points',points.join(' '));path.setAttribute('fill','none');path.setAttribute('stroke','#111');path.setAttribute('stroke-width','2.5');path.setAttribute('stroke-linecap','round');path.setAttribute('stroke-linejoin','round');svg.append(path);
+   }box.append(svg);
+  }
+  box.append(node('p',signature.signer_name,'signature-signer'));return box;
+ }
+ function signaturePad(){
+  const element=node('fieldset',null,'forms-signature');element.append(node('legend','Signature (optional)'));
+  const name=node('input');name.maxLength=200;name.autocomplete='name';
+  const typed=node('input');typed.type='checkbox';
+  const help=node('p','Sign with your finger, pen or mouse, or use a typed signature.','fine');
+  const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');svg.setAttribute('viewBox','0 0 600 180');svg.setAttribute('role','img');svg.setAttribute('aria-label','Signature drawing area');svg.classList.add('signature-pad');
+  const clear=button('Clear signature'),status=node('p','','fine');status.setAttribute('role','status');
+  element.append(labelled('Signer name',name),labelled('Use typed signature',typed),help,svg,clear,status);
+  let strokes=[],active=null,pointer=null;
+  const changed=()=>element.dispatchEvent(new Event('input',{bubbles:true}));
+  function paint(){const image=signatureImage({mode:'drawn',signer_name:'',strokes});const drawn=image.querySelector('svg');svg.replaceChildren(...drawn.childNodes);}
+  function point(event){const r=svg.getBoundingClientRect();return {x:Math.round(Math.min(1,Math.max(0,(event.clientX-r.left)/r.width))*10000)/10000,y:Math.round(Math.min(1,Math.max(0,(event.clientY-r.top)/r.height))*10000)/10000};}
+  svg.addEventListener('pointerdown',event=>{
+   if(name.disabled||typed.checked||pointer!==null||event.button!==0)return;
+   if(strokes.length>=40||strokes.reduce((n,s)=>n+s.length,0)>=2872){status.textContent='Signature area is full. Clear it to sign again.';return;}
+   event.preventDefault();pointer=event.pointerId;active=[point(event)];strokes.push(active);svg.setPointerCapture(pointer);paint();
+  });
+  svg.addEventListener('pointermove',event=>{if(event.pointerId!==pointer||!active||name.disabled)return;event.preventDefault();if(active.length<128)active.push(point(event));else active[127]=point(event);paint();});
+  function finish(event){if(event.pointerId!==pointer)return;const id=pointer;pointer=null;active=null;if(svg.hasPointerCapture(id))svg.releasePointerCapture(id);changed();status.textContent='Signature added.';}
+  svg.addEventListener('pointerup',finish);
+  svg.addEventListener('pointercancel',event=>{if(event.pointerId!==pointer)return;strokes.pop();finish(event);paint();status.textContent='Signing interrupted. Please finish your signature.';});
+  svg.addEventListener('lostpointercapture',event=>{if(event.pointerId===pointer){strokes.pop();pointer=null;active=null;paint();changed();status.textContent='Signing interrupted. Please finish your signature.';}});
+  typed.onchange=()=>{svg.toggleAttribute('hidden',typed.checked);status.textContent=typed.checked?'Your entered name will be used as your signature.':'';};
+  const reset=()=>{pointer=null;active=null;strokes=[];name.value='';typed.checked=false;svg.removeAttribute('hidden');svg.replaceChildren();status.textContent='';};
+  clear.onclick=()=>{reset();changed();name.focus();};
+  return {element,clear:reset,read:()=>{
+   if(pointer!==null)throw new Error('Finish signing before continuing.');
+   if(!typed.checked&&!strokes.length)return null;
+   if(!name.value.trim())throw new Error('Enter the signer name before printing, downloading or sending.');
+   return {version:1,mode:typed.checked?'typed':'drawn',signer_name:name.value.trim(),strokes:typed.checked?[]:structuredClone(strokes)};
+  }};
+ }
  async function openForm(summary,opener){
   let t;try{t=await template(summary);}catch(error){notice(error.message);return;}
   const editor=$('forms-editor');editor.replaceChildren();editor.hidden=false;dirty=false;
@@ -331,13 +379,14 @@
   const location=node('input');location.id='forms-location';location.maxLength=500;
   const common=node('fieldset');common.append(node('legend','Job'),labelled('Work order (optional)',order),labelled('Location',location));form.append(common);
   for(const section of t.sections){const set=node('fieldset');set.append(node('legend',section.title));for(const field of section.fields){const c=control(field);inputs.set(field.key,c);set.append(c.element);}form.append(set);}
+  const signature=signaturePad();form.append(signature.element);
   const actions=node('div',null,'forms-actions');
-  const values=()=>({fields:Object.fromEntries([...inputs].map(([k,c])=>[k,c.read()])),order:order.value,location:location.value.trim()});
-  const print=button('Print or save as PDF','primary');print.onclick=()=>printDocument(t,values());
+  const values=()=>({fields:Object.fromEntries([...inputs].map(([k,c])=>[k,c.read()])),order:order.value,location:location.value.trim(),signature:signature.read()});
+  const print=button('Print or save as PDF','primary');print.onclick=()=>{try{printDocument(t,values());}catch(error){delivery.textContent=error.message;}};
   const send=button('Send to office','primary'),delivery=node('p','','forms-delivery-status');delivery.setAttribute('role','status');
   let officeRequest=null;const generation=epoch;
   send.onclick=async()=>{
-   if(officeSending)return;officeRequest=officeRequest||{request_id:crypto.randomUUID(),template_id:t.id,template_revision:t.revision,...values()};
+   if(officeSending)return;try{officeRequest=officeRequest||{request_id:crypto.randomUUID(),template_id:t.id,template_revision:t.revision,...values()};}catch(error){delivery.textContent=error.message;return;}
    const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),30000);
    officeSending=true;for(const input of form.querySelectorAll('input,select,textarea,button'))input.disabled=true;delivery.textContent='Sending completed form to office…';
    try{await api('/api/form-submissions/completed',{method:'POST',body:JSON.stringify(officeRequest),signal:controller.signal});if(generation!==epoch)return;
@@ -345,8 +394,8 @@
    }catch(error){if(generation===epoch)delivery.textContent=error.name==='AbortError'?'Could not confirm receipt. Retry to check the same submission; your entries are still here.':'Not sent: '+error.message;}
    finally{clearTimeout(timeout);officeSending=false;for(const input of form.querySelectorAll('input,select,textarea,button'))input.disabled=false;}
   };
-  const save=button('Download filled form');save.onclick=()=>downloadDocument(t,values());
-  const clear=button('Clear entries');clear.onclick=()=>{if(!confirm('Clear everything you entered on this form?'))return;for(const c of inputs.values())c.clear();order.value='';location.value='';dirty=false;officeRequest=null;delivery.textContent='';heading.focus();};
+  const save=button('Download filled form');save.onclick=()=>{try{downloadDocument(t,values());}catch(error){delivery.textContent=error.message;}};
+  const clear=button('Clear entries');clear.onclick=()=>{if(!confirm('Clear everything you entered on this form?'))return;for(const c of inputs.values())c.clear();signature.clear();order.value='';location.value='';dirty=false;officeRequest=null;delivery.textContent='';heading.focus();};
   const close=button('Close');close.onclick=()=>{if(!canDiscard())return;dirty=false;editor.hidden=true;editor.replaceChildren();if(opener?.isConnected)opener.focus();};
   const primaryActions=node('div',null,'forms-primary-actions');primaryActions.append(print,send);actions.append(primaryActions,save,clear,close);form.append(actions,delivery);editor.append(form);
   form.addEventListener('input',()=>{dirty=true;officeRequest=null;delivery.textContent='';});form.onsubmit=event=>event.preventDefault();
@@ -367,6 +416,7 @@
     else f.append(line(v));
     grid.append(f);}
   }
+  doc.append(signatureImage(data?.signature));
   doc.append(node('p',`WZOS printable form · ${t.title} · template revision ${t.revision} · ${data?'filled form':'blank'}`,'footer'));
   return doc;
  }
@@ -379,12 +429,12 @@
  const DOC_CSS='body{margin:24px;font:11pt/1.45 "Segoe UI",Arial,sans-serif;color:#000;background:#fff}.brand,.footer{font-size:9pt;color:#444}h1{font-size:17pt;margin:4px 0}h2{font-size:12pt;border-bottom:1px solid #888;margin:18px 0 6px}.notice{border:1.5px solid #000;padding:6px 8px;font-weight:600}.field-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px 18px}.field.wide{grid-column:1/-1}.label{display:block;font-weight:600;font-size:9.5pt}.value{display:block;min-height:1.4em;border-bottom:1px solid #666}.box{min-height:4.5em;border:1px solid #666;padding:4px;white-space:pre-wrap}.choices{display:flex;flex-wrap:wrap;gap:2px 14px}table{width:100%;border-collapse:collapse;margin:10px 0;font-size:9.5pt}caption{text-align:left;font-weight:600;padding-bottom:3px}th,td{border:1px solid #666;padding:4px 6px;height:1.4em;text-align:left}@media print{body{margin:0}}';
  function downloadDocument(t,data){
   const title=node('title',`${t.title}${data?'':' (blank)'}`);
-  const html=`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">${title.outerHTML}<style>${DOC_CSS}</style></head><body>${buildDocument(t,data).outerHTML}</body></html>`;
+  const html=`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">${title.outerHTML}<style>${DOC_CSS}.form-signature-output{break-inside:avoid;margin-top:18px}.form-signature-output svg{display:block;width:100%;max-width:600px;height:auto;background:#fff}.signature-typed{font:italic 26px Georgia,serif}.signature-blank{height:65px;border-bottom:1px solid #666}</style></head><body>${buildDocument(t,data).outerHTML}</body></html>`;
   const url=URL.createObjectURL(new Blob([html],{type:'text/html'})),a=node('a');a.href=url;a.download=`wzos-${t.id}-${data?'filled':'blank'}-${today()}.html`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
   notice(`Download requested for ${t.title}${data?' with your entries':' (blank)'}. Check your browser downloads before leaving. Open the file in any browser to print it or save it as a PDF.`);
  }
 
- window.WzosForms={printReceived:record=>{if(record.form_type==='printable'&&record.template)printDocument(record.template,record);}};
+ window.WzosForms={signatureImage,printReceived:record=>{if(record.form_type==='printable'&&record.template)printDocument(record.template,record);}};
  async function show(){
   const generation=++epoch;notice('');
   try{const catalog=await api('/api/forms/templates');if(generation!==epoch)return;templates=catalog.items;renderBuiltins();}catch(error){notice(error.message);}

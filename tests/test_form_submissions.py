@@ -78,6 +78,37 @@ class FormSubmissionTests(unittest.TestCase):
             self.assertEqual(response.status_code,422,response.text)
         self.assertEqual(self.items().json()['total'],0)
 
+    def test_signature_snapshot_review_scope_and_retry_conflict(self):
+        signature={'version':1,'mode':'drawn','signer_name':'Synthetic Worker','strokes':[[{'x':0.1,'y':0.2},{'x':0.6,'y':0.8}]]}
+        body={'request_id':str(uuid4()),'template_id':'jsa','template_revision':1,'fields':{'competent_person':'Synthetic supervisor'},'signature':signature}
+        endpoint='/api/form-submissions/completed'
+        response=self.client.post(endpoint,headers=self.h(),json=body)
+        self.assertEqual(response.status_code,200,response.text)
+        self.assertEqual(response.json()['form']['signature'],signature)
+        self.assertEqual(self.client.post(endpoint,headers=self.h(),json=body).json(),response.json())
+        saved=self.items('enterprise-admin').json()['items'][0]
+        self.assertEqual(saved['form']['signature'],signature)
+        self.assertEqual(self.items('core-admin').json()['items'],[])
+        changed={**body,'signature':{**signature,'signer_name':'Different signer'}}
+        self.assertEqual(self.client.post(endpoint,headers=self.h(),json=changed).status_code,409)
+
+    def test_signature_rejects_markup_bad_geometry_and_oversized_strokes(self):
+        body={'request_id':str(uuid4()),'template_id':'jsa','template_revision':1,'fields':{'competent_person':'Synthetic supervisor'}}
+        signature={'version':1,'mode':'drawn','signer_name':'Synthetic Worker','strokes':[[{'x':0.1,'y':0.2}]]}
+        invalid=[{**signature,'svg':'<script>bad</script>'},{**signature,'signer_name':' '},
+                 {**signature,'strokes':[]},{**signature,'mode':'typed'},
+                 {**signature,'strokes':[[{'x':1.1,'y':0.2}]]},
+                 {**signature,'strokes':[[{'x':'0.1','y':0.2}]]},
+                 {**signature,'strokes':[[{'x':0.1,'y':0.2}]*129]},
+                 {**signature,'strokes':[[{'x':0.1,'y':0.2}]]*41}]
+        for value in invalid:
+            response=self.client.post('/api/form-submissions/completed',headers=self.h(),json={**body,'signature':value})
+            self.assertEqual(response.status_code,422,response.text)
+        typed={**signature,'mode':'typed','strokes':[]}
+        response=self.client.post('/api/form-submissions/completed',headers=self.h(),json={**body,'signature':typed})
+        self.assertEqual(response.status_code,200,response.text)
+        self.assertEqual(response.json()['form']['signature'],typed)
+
 @unittest.skipUnless(os.getenv('WZOS_TEST_DATABASE_URL'),'Dedicated PostgreSQL database not configured')
 class PostgreSQLFormSubmissionTests(FormSubmissionTests):
     def make_storage(self,root):

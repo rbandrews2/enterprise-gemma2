@@ -62,3 +62,13 @@
 }
 
 .forms-primary-actions{display:flex;flex-direction:column;gap:10px;align-items:stretch}.forms-primary-actions button{min-height:46px}.forms-delivery-status{margin-top:12px}
+
+.forms-signature{grid-column:1/-1;min-width:0}
+.forms-signature .signature-pad{display:block;width:100%;height:auto;aspect-ratio:10/3;min-height:130px;background:#fff;border:1px solid #c6b891;border-radius:12px;touch-action:none;user-select:none;cursor:crosshair}
+.forms-signature .signature-pad[hidden]{display:none}
+.forms-signature>label:has(input[type=checkbox]){display:flex;align-items:center;gap:10px}
+.form-signature-output{break-inside:avoid;margin:18px 0;color:#111;background:#fff;border-radius:8px;padding:12px}
+.form-signature-output svg{display:block;width:100%;max-width:600px;height:auto;background:#fff}
+.form-signature-output .signature-typed{font:italic 26px Georgia,serif;overflow-wrap:anywhere}
+.form-signature-output .signature-signer{font-size:14px;margin:4px 0}
+.signature-blank{height:65px;border-bottom:1px solid #666}

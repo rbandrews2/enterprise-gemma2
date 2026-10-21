@@ -16,6 +16,27 @@ class Submission(BaseModel):
     form_id: UUID
     expected_form_version: int=Field(ge=1,strict=True)
 
+class SignaturePoint(BaseModel):
+    model_config = ConfigDict(extra='forbid', allow_inf_nan=False)
+    x: float = Field(ge=0, le=1, strict=True)
+    y: float = Field(ge=0, le=1, strict=True)
+
+
+class FormSignature(BaseModel):
+    model_config = ConfigDict(extra='forbid', str_strip_whitespace=True)
+    version: Literal[1] = 1
+    mode: Literal['drawn', 'typed']
+    signer_name: str = Field(min_length=1, max_length=200)
+    strokes: list[list[SignaturePoint]] = Field(default_factory=list, max_length=40)
+
+    @model_validator(mode='after')
+    def bounded_strokes(self):
+        if any(not stroke or len(stroke)>128 for stroke in self.strokes) or sum(map(len,self.strokes))>3000:
+            raise ValueError('Signature has too many points or an empty stroke')
+        if (self.mode=='drawn' and not self.strokes) or (self.mode=='typed' and self.strokes):
+            raise ValueError('Signature mode does not match its strokes')
+        return self
+
 class CompletedForm(BaseModel):
     model_config = ConfigDict(extra='forbid', str_strip_whitespace=True)
     request_id: UUID
@@ -24,6 +45,7 @@ class CompletedForm(BaseModel):
     fields: dict = Field(max_length=100)
     order: str = Field(default='', max_length=200)
     location: str = Field(default='', max_length=500)
+    signature: FormSignature | None = None
 
 
 def printable_snapshot(body, templates):
@@ -74,7 +96,8 @@ def printable_snapshot(body, templates):
         raise HTTPException(422, 'Complete at least one form field before sending to office')
     return {'title': template['title'], 'form_type':'printable', 'status':'completed',
             'template_id':body.template_id, 'template_revision':body.template_revision,
-            'template':template, 'fields':cleaned, 'order':body.order, 'location':body.location}
+            'template':template, 'fields':cleaned, 'order':body.order, 'location':body.location,
+            **({'signature':body.signature.model_dump()} if body.signature is not None else {})}
 
 
 class Review(BaseModel):

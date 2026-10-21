@@ -1,5 +1,12 @@
 # WZOS remaining tasks - current October 20, 2026
 
+## Form signature follow-up
+
+- [x] Local printable-form signing pad, typed alternative, safe persistence and
+  office/print/download rendering;12focused checks pass (4Node,8SQLite).
+- [ ] Real-phone handwriting and PDF visual check; affected PostgreSQL submission
+  tests before deployment. No schema migration or service permissions required.
+
 ## Latest release acceptance (supersedes earlier local-only release entries)
 
 - [x] Receipt/admin office alert deployed100% as ui-edd310b; PostgreSQL878/Node163PASS,
