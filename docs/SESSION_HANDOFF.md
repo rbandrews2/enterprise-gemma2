@@ -1,5 +1,19 @@
 # WZOS current session handoff - October 18, 2026
 
+## LIVE design update - October20
+
+Design candidate bc0f30aa440e69ca84fec056fcf3bfbe5e57f0de deployed as
+wzos-v2-accounts-ui-bc0f30a100%. Cloud Build e35b254f-0cf0-400b-9cab-406e9454d92f;
+immutable digest a730f7f0f7b3d6a6a43a88f07a915ad8c07856687e02f5e0619afab3b5d8b178.
+Public version f1def98aa29861b9697daeba. Preflight/build/drift/staged/public5asset
+hashes/CSP/version/traffic PASS, deploy.exit0. Only5static files overlaid on prior
+live image; runtime spec unchanged. Rollback prior wzos-v2-accounts-ui-3737af7.
+Evidence /tmp/wzos-design-20261020.PGnPtVIs; home pointer wzos-design-release-path.txt.
+Authenticated live browser confirms black glass, filled icons, badges and ordering;
+Messaging focus animates atlas-orbit while ordinary Forms remains unanimated.
+Focused16Node checks PASS; no broad Postgres/provider suites rerun per user scope.
+User sign-in restored; do not repeat auth/tests/build. See DESIGN_RELEASE_20261020.md.
+
 ## Design deployment prepared - CLI sign-in pending
 
 User authorized live design deployment with focused tests only. Candidate
