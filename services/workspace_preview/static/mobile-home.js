@@ -5,6 +5,21 @@
  const bar=document.querySelector('.topbar'),menu=document.querySelector('nav[aria-label="Workspace navigation"]');
  if(!side||!bar||!menu)return;
  const session=()=>window.wzosClock?.getSession();
+ // Reorder the real controls so visual and keyboard order agree. Never grant access.
+ function groupCards(){
+  const premium=['field-voice-nav','atlas-nav','assignments-nav','report-nav'];
+  const enterpriseOptions=[...premium,'messages-nav','meetings-nav'];
+  const enterprise=session()?.edition==='enterprise';
+  const cards=[...menu.children];
+  for(const card of cards)card.dataset.enterpriseCard=String(enterprise&&enterpriseOptions.includes(card.id));
+  const sorted=[...cards].sort((a,b)=>{
+   const rank=c=>enterprise&&premium.includes(c.id)?premium.indexOf(c.id):-1;
+   const x=rank(a),y=rank(b);return x<0?(y<0?0:1):(y<0?-1:x-y);
+  });
+  if(sorted.some((card,i)=>card!==cards[i]))menu.append(...sorted);
+ }
+ new MutationObserver(groupCards).observe(menu,{childList:true});
+
  let view=document.body.classList.contains('landing-active')?'dashboard':'orders';
  const home=document.createElement('button');home.type='button';home.id='mobile-home-return';home.className='secondary';home.textContent='⌂ Home';bar.prepend(home);
  const admin=document.createElement('button');admin.type='button';admin.id='mobile-admin-tools';admin.className='nav-item';admin.textContent='Organization management';admin.hidden=true;menu.append(admin);
@@ -16,6 +31,7 @@
  }
  home.onclick=goHome;admin.onclick=()=>window.showWzosView('dashboard');
  function update(){
+  groupCards();
   const user=session();home.hidden=!user;admin.hidden=!user||user.role!=='admin';
   const controls=document.querySelector('.preview-bar');
   if(controls){

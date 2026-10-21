@@ -1,5 +1,74 @@
 # WZOS current session handoff - October 18, 2026
 
+## Local follow-up - Messaging and Video meetings badges
+
+User confirms Messaging and Video meetings are Enterprise options and requests
+the Enterprise pill plus existing hover/edge glow, retaining their positions.
+They now receive the Enterprise decoration marker independently of the sort list.
+Existing shared hover and Enterprise orbit/pill CSS supplies the appearance.
+Local-only styling update; no access/backend/weather changes or live deployment.
+
+## Latest local preview - black glass restored
+
+User rejected bronze surfaces. All cards are black glass again, with the first
+three Enterprise mobile launch cards (Voice, Guardian, My jobs) full width; shared
+cards inset6px each side. Filled module icons are shared through project icon
+tokens and desktop dashboard launch cards. Amber hover/focus glow applies across
+interactive controls. Moving edges are limited to Enterprise-marked navigation
+options and Enterprise AI hub cards; Core assistant has no edge animation. Atlas
+circle retains its Enterprise-only idle/hover effect. Reduced motion respected.
+Browser verified black mobile cards, focus glow, Enterprise badges and Core-member
+absence of Enterprise controls. Local server ready on8083, launcher1308/worker5124.
+No live deployment, weather, permission or backend changes. Earlier bronze-menu
+CSS archived in design/theme-previews/bronze-menu-orbit.css. Syntax/diff checks pass.
+See BLACK_GLASS_REVIEW_20261020.md. Enterprise admin preview restored for review.
+
+## Latest local preview - bronze menu and orbit glow
+
+All vertical navigation cards now share bronze glass, silver-white labels and
+filled icons. Actual DOM order groups Enterprise-only Voice, Guardian, My jobs
+and legacy report (if available) first. Only Voice/Guardian use Enterprise AI;
+other Enterprise controls use Enterprise. Access/role checks remain unchanged.
+Only those two AI cards animate an amber edge with a green-gold highlight on
+hover/focus. Atlas circle also orbits on hover/focus and gently pulses occasionally
+while idle. Reduced motion disables animation. Decorative Guardian dot removed;
+this is not a verified security/protection status. Original bronze is archived
+with cyan/platinum under design/theme-previews. No live/backend/weather changes.
+Browser confirms grouping, badges and shared bronze cards; JS syntax/diff checks
+pass. See BRONZE_MENU_ORBIT_20261020.md. Preview remains on port8083.
+
+## Local UI experiment - Midnight Amber (active)
+
+Theme 3 is the current local preview: dark bronze glass with 5%-alpha gold mesh
+layers, silver-white text/pills, amber-to-platinum interaction glow and filled
+icons with subtle shadow. Guardian has an aria-hidden decorative breathing dot;
+not a claim of continuous protection. Reduced motion disables animation.
+Platinum preserved at design/theme-previews/enterprise-ai-platinum.css; cyan
+also retained. No live deployment, feature activation, permission or weather
+changes. Preview launcher PID20168, port8083. Browser refreshed and bronze card
+rendered; JS syntax and diff checks pass. See AI_BRONZE_PREVIEW_20261020.md.
+
+## Local UI experiment - Reflective Silver and Platinum (active)
+
+Theme 2 replaces the cyan preview locally: thin silver borders, gray-to-white
+hover/focus text, restrained white glow, filled microphone/shield masks, and
+silver Enterprise AI badges/ring. Black glass and amber utility controls retained.
+Cyan preserved in design/theme-previews/enterprise-ai-cyan.css, not loaded.
+No live deployment, backend, permissions or weather changes. Preview restarted
+on port 8083 (owned launcher PID9668). Browser simulator loaded updated labels
+and silver cards; mobile wrapping adjusted with a two-column icon/label grid.
+JS syntax and diff checks pass. See AI_PLATINUM_PREVIEW_20261020.md.
+
+## Local UI experiment - High-Viz Safety Cyan
+
+User requested cyan styling for the two Enterprise AI launch controls, ENTERPRISE
+AI pills and the floating Atlas ring. Additive workspace-layout.css changes only;
+no live deployment or feature/permission/weather changes. Simulator restarted on
+8083 (ownedPID20008), HTTP/assets/diff checks pass. Browser control reset again;
+visual acceptance remains pending. See AI_CYAN_PREVIEW_20261020.md. Preserve this
+local preview diff for user review; do not describe it as deployed or visually
+accepted, and do not rerun the completed cloud release gates for this preview.
+
 ## Latest serving code - office alert placement follow-up
 
 Final3737af7 corrects dashboard content burying the office alert: above main on

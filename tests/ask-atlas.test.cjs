@@ -16,7 +16,7 @@ function setup({getMedia}={}){
 }
 test('Enterprise opens the separate page; Core cannot open or fetch its config',async()=>{
  const h=setup();await h.emit('wzos:session');assert.match(h.nav.textContent,/Work Zone Guardian/);assert.equal(h.window.wzosAskAtlas.open(),true);assert.equal(h.question().maxLength,500);
- h.setSession({id:'b',edition:'core'});await h.emit('wzos:session');const count=h.calls.length;assert.equal(h.window.wzosAskAtlas.open(),false);assert.equal(h.calls.length,count);assert.equal(h.nav.textContent,'✦ Atlas assistant');
+ h.setSession({id:'b',edition:'core'});await h.emit('wzos:session');const count=h.calls.length;assert.equal(h.window.wzosAskAtlas.open(),false);assert.equal(h.calls.length,count);assert.equal(h.nav.textContent,'Atlas assistant');
 });
 test('answers render as text with citations; reading is explicit and uses a local voice',async()=>{
  const h=setup();await h.emit('wzos:session');h.window.wzosAskAtlas.open();h.question().value='Synthetic question';

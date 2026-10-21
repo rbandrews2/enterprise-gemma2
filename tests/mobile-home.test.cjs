@@ -1,16 +1,16 @@
 const test=require('node:test'),assert=require('node:assert/strict'),vm=require('node:vm'),fs=require('node:fs');
 function fixture({mobile=true,user={id:'worker',organization_id:'org-a',role:'member',edition:'core',can_prepare_atlas:false},allowed=true}={}){
- const events={},nodes={},calls=[],scrolls=[];let current=user,accept=allowed,change;
+ const events={},nodes={},calls=[],scrolls=[];let current=user,accept=allowed,change,observe;
  const classes=new Set();
- const element=()=>({hidden:false,dataset:{},children:[],textContent:'',append(n){this.children.push(n);},prepend(n){this.children.unshift(n);},addEventListener(name,fn){this[name]=fn;}});
+ const element=()=>({hidden:false,dataset:{},children:[],textContent:'',append(...items){for(const n of items){this.children=this.children.filter(c=>c!==n);this.children.push(n);}},prepend(n){this.children.unshift(n);},addEventListener(name,fn){this[name]=fn;}});
  for(const name of ['side','bar','menu','title','brand','label','report-nav','assignments-nav'])nodes[name]=element();
  nodes.side.querySelector=s=>s==='.brand'?nodes.brand:s==='.nav-label'?nodes.label:null;
  const document={body:{classList:{contains:n=>classes.has(n),remove:n=>classes.delete(n)}},createElement:element,
   getElementById:id=>nodes[id],querySelector:s=>({'.sidebar':nodes.side,'.topbar':nodes.bar,'nav[aria-label="Workspace navigation"]':nodes.menu,'.breadcrumb + strong':nodes.title})[s],addEventListener:(name,fn)=>events[name]=fn};
  const media={matches:mobile,addEventListener:(name,fn)=>change=fn};
  const window={matchMedia:()=>media,wzosClock:{getSession:()=>current},scrollTo:options=>scrolls.push(options),showWzosView(view){calls.push(view);if(!accept)return false;if(view==='home')classes.add('mobile-home-active');else classes.delete('mobile-home-active');events['wzos:view']?.({detail:view});return true;}};
- vm.runInNewContext(fs.readFileSync('services/workspace_preview/static/mobile-home.js','utf8'),{window,document});
- return {nodes,calls,scrolls,classes,events,home:nodes.bar.children[0],admin:nodes.menu.children[0],setUser(user){current=user;events['wzos:session']();},setAllowed(value){accept=value;},resize(value){media.matches=value;change();}};
+ vm.runInNewContext(fs.readFileSync('services/workspace_preview/static/mobile-home.js','utf8'),{window,document,MutationObserver:class{constructor(fn){observe=fn;}observe(){}}});
+ return {nodes,calls,scrolls,classes,events,regroup:()=>observe(),element,home:nodes.bar.children[0],admin:nodes.menu.children[0],setUser(user){current=user;events['wzos:session']();},setAllowed(value){accept=value;},resize(value){media.matches=value;change();}};
 }
 test('Core members start at Home with edition restrictions and no admin controls',()=>{
  const f=fixture();assert.deepEqual(f.calls,['home']);assert.equal(f.nodes.title.textContent,'Home');assert.equal(f.nodes.label.textContent,'');assert.equal(f.nodes.label.hidden,true);assert.equal(f.admin.hidden,true);assert.equal(f.nodes['report-nav'].dataset.mobileUnavailable,'true');assert.equal(f.nodes['assignments-nav'].dataset.mobileUnavailable,'true');
@@ -31,4 +31,16 @@ test('desktop keeps its existing start view and a width change does not discard 
 });
 test('desktop admin dashboard transitions to mobile Home, then returns to dashboard',()=>{
  const f=fixture({mobile:false,user:{id:'a',role:'admin',edition:'enterprise',can_prepare_atlas:true}});f.events['wzos:view']({detail:'dashboard'});f.resize(true);assert.equal(f.calls.at(-1),'home');f.resize(false);assert.equal(f.calls.at(-1),'dashboard');
+});
+
+test('Enterprise decoration preserves lower-card positions and grouping is stable',()=>{
+ const f=fixture({user:{id:'a',role:'admin',edition:'enterprise',can_prepare_atlas:true}});
+ const ids=['jobs-nav','messages-nav','meetings-nav','forms-nav','assignments-nav','atlas-nav','field-voice-nav'];
+ f.nodes.menu.children=ids.map(id=>Object.assign(f.element(),{id}));f.regroup();
+ const ordered=Array.from(f.nodes.menu.children,n=>n.id);
+ assert.deepEqual(ordered,['field-voice-nav','atlas-nav','assignments-nav','jobs-nav','messages-nav','meetings-nav','forms-nav']);
+ for(const id of ['field-voice-nav','atlas-nav','assignments-nav','messages-nav','meetings-nav'])assert.equal(f.nodes.menu.children.find(n=>n.id===id).dataset.enterpriseCard,'true');
+ f.regroup();assert.deepEqual(Array.from(f.nodes.menu.children,n=>n.id),ordered);
+ f.setUser({id:'c',role:'member',edition:'core'});
+ assert.ok(f.nodes.menu.children.every(n=>n.dataset.enterpriseCard==='false'));
 });

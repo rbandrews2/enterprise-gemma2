@@ -2,7 +2,7 @@
 'use strict';
 (()=>{
  const node=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
- const nav=node('button','◈ Dashboard','nav-item');nav.id='dashboard-nav';nav.hidden=true;
+ const nav=node('button','Dashboard','nav-item');nav.id='dashboard-nav';nav.hidden=true;
  document.querySelector('nav[aria-label="Workspace navigation"]').prepend(nav);
  const root=node('section',undefined,'report-section guided-dashboard');root.id='dashboard-view';root.hidden=true;document.getElementById('main').prepend(root);
  let epoch=0,draft=false,active=false,upgradeDialog=null;
@@ -26,10 +26,10 @@
    story.append(atlas,button('Ask Atlas',()=>document.getElementById('atlas-nav')?.click()));
    content.append(node('h2','Where would you like to begin?'));layout.append(story,content);root.append(layout);
    const grid=node('div',undefined,'hub-grid');for(const item of data.modules.filter(m=>m.visible&&m.id!=='report')){
-    const b=button('',()=>document.getElementById(item.nav_id)?.click());b.className=item.id==='report'?'panel hub-card guided-feature':'panel hub-card';b.append(node('span',item.icon,'hub-icon'),node('strong',item.label));if(item.id==='report')content.append(b);else grid.append(b);
+    const b=button('',()=>document.getElementById(item.nav_id)?.click());b.className=item.id==='report'?'panel hub-card guided-feature':'panel hub-card';b.dataset.moduleNav=item.nav_id;b.append(node('span',item.icon,'hub-icon'),node('strong',item.label));if(item.id==='report')content.append(b);else grid.append(b);
    }
    for(const [label,selector,icon] of [['Employees','.account-employees','♙'],['Team access','.account-team','♧'],['Passkeys','.account-passkeys','⚿']]){
-    if(document.querySelector(selector)){const b=button('',()=>document.querySelector(selector)?.click());b.className='panel hub-card';b.append(node('span',icon,'hub-icon'),node('strong',label));grid.append(b);}
+    if(document.querySelector(selector)){const b=button('',()=>document.querySelector(selector)?.click());b.className='panel hub-card';b.dataset.moduleNav=selector.slice(1);b.append(node('span',icon,'hub-icon'),node('strong',label));grid.append(b);}
    }content.append(grid);
    if(state.edition==='core'){const offer=button('',()=>upgrade.click());offer.className='panel hub-card';offer.append(node('span','✦','hub-icon'),node('strong','Explore Enterprise'),node('small','One-time $20 upgrade credit for established Core customers'));content.append(offer);}
    content.append(node('p','WZOS powered by Atlas AI Assistant','guided-footer'));

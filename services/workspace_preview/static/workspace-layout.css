@@ -114,3 +114,104 @@
  #forms-view>.panel{margin-bottom:20px}.forms-layout{gap:20px;align-items:start}
  @media(max-width:760px){.forms-layout{grid-template-columns:minmax(0,1fr)}.forms-search{max-width:none}.forms-card-list .forms-actions>*{flex-basis:100%}}
 }
+
+/* Local preview: black glass, shared filled icons and amber interactions. */
+@media screen{
+ body:has(#ask-atlas-card,#field-voice-nav:not([hidden])){
+  --enterprise-ai-silver:#e0e0e0;
+ }
+ :is(.sidebar .nav-item,#field-voice-card,#ask-atlas-card){
+  display:grid;grid-template-columns:22px minmax(0,1fr);align-items:center;gap:8px 12px;min-width:0;
+  position:relative;color:#edf0f2;text-align:left;font-weight:600;
+  border:1px solid #ffffff29;
+  background:linear-gradient(135deg,#181a1bd9,#060707e8);
+  box-shadow:inset 0 1px #ffffff0a,0 3px 12px #0003;
+  transition:color .22s ease,border-color .22s ease,box-shadow .22s ease;
+ }
+ body:has(#ask-atlas-card,#field-voice-nav:not([hidden])) :is(#field-voice-nav,#atlas-nav,#field-voice-card,#ask-atlas-card)::before{
+  content:'';display:block;flex:0 0 22px;width:22px;height:22px;background:currentColor;
+  -webkit-mask:var(--enterprise-ai-icon) center/contain no-repeat;
+  mask:var(--enterprise-ai-icon) center/contain no-repeat;filter:drop-shadow(0 2px 3px #0008);
+ }
+ body:has(#ask-atlas-card,#field-voice-nav:not([hidden])) :is(#field-voice-nav,#field-voice-card){--enterprise-ai-icon:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M12%2015a3%203%200%200%200%203-3V5a3%203%200%200%200-6%200v7a3%203%200%200%200%203%203Zm-5-3H5a7%207%200%200%200%206%206.93V22h2v-3.07A7%207%200%200%200%2019%2012h-2a5%205%200%200%201-10%200Z%22%2F%3E%3C%2Fsvg%3E")}
+ body:has(#ask-atlas-card,#field-voice-nav:not([hidden])) :is(#atlas-nav,#ask-atlas-card){--enterprise-ai-icon:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill-rule%3D%22evenodd%22%20d%3D%22M12%202%203%206v6c0%205.2%209%2010%209%2010s9-4.8%209-10V6L12%202Zm0%204-1.3%203.7L7%2011l3.7%201.3L12%2016l1.3-3.7L17%2011l-3.7-1.3L12%206Z%22%2F%3E%3C%2Fsvg%3E")}
+ body:has(#ask-atlas-card,#field-voice-nav:not([hidden])) :is(#field-voice-nav,#atlas-nav,#field-voice-card,#ask-atlas-card)::after{
+  content:'ENTERPRISE AI';display:inline-flex;align-items:center;grid-column:2;
+  width:max-content;max-width:100%;padding:4px 7px;border-radius:999px;
+  color:#f5f5f5;background:linear-gradient(135deg,#ffffff29,#b0bec519);
+  border:1px solid #ffffff30;font-size:10px;font-weight:750;
+  letter-spacing:.075em;line-height:1.3;white-space:nowrap;
+ }
+ @media(prefers-reduced-motion:reduce){
+
+  :is(.sidebar .nav-item,#field-voice-card,#ask-atlas-card){transition:none}
+ }
+}
+
+
+/* Shared black-glass cards; moving edge reserved for Enterprise controls. */
+@property --atlas-orbit{syntax:'<angle>';initial-value:0deg;inherits:false}
+@keyframes atlas-orbit{to{--atlas-orbit:360deg}}
+@keyframes atlas-idle-pulse{0%,76%,92%,100%{box-shadow:0 0 10px #ffb30012}82%{box-shadow:0 0 0 5px #ffb30015,0 0 24px #ffb30065}87%{box-shadow:0 0 12px #ffb30022}}
+@media screen{
+ :is(.panel,.hub-card,.forms-card,.assignment-card,.meeting-glass-card,.org-card,.account-glass,.atlas-card){background:linear-gradient(135deg,#181a1bd9,#060707e8)}
+ .sidebar .nav-item[hidden]{display:none!important}
+ .sidebar .nav-item::before{content:'';display:block;width:22px;height:22px;margin:0;flex:0 0 22px;background:currentColor;mask:var(--enterprise-ai-icon,var(--menu-solid-icon)) center/contain no-repeat;filter:drop-shadow(0 2px 3px #0008)}
+ .sidebar .nav-item>span[aria-hidden=true]{display:none}
+ .sidebar .nav-item .nav-count{grid-column:3;grid-row:1;width:auto;margin-left:auto}
+ .sidebar .nav-item:has(.nav-count){grid-template-columns:22px minmax(0,1fr) auto}
+ .sidebar .nav-item[data-enterprise-card=true]::after{content:'ENTERPRISE';grid-column:2;display:inline-flex;width:max-content;padding:4px 7px;border-radius:999px;border:1px solid #ffffff30;background:linear-gradient(135deg,#ffffff29,#b0bec519);color:#f5f5f5;font-size:10px;font-weight:750;letter-spacing:.075em;line-height:1.3}
+ .sidebar :is(#field-voice-nav,#atlas-nav)[data-enterprise-card=true]::after{content:'ENTERPRISE AI'}
+ /* Every actionable control uses the same amber glow, without recoloring its face. */
+ :is(button,a.primary,a.secondary,a.hub-card,.forms-card,.assignment-card,.meeting-glass-card,.account-glass):not(:disabled):not([aria-disabled=true]):is(:hover,:focus-visible){box-shadow:inset 0 1px #ffffff18,0 0 16px #ffb30045;border-color:#d3a95e;color:#fff}
+ :is(.sidebar .nav-item,#field-voice-card,#ask-atlas-card):is(:hover,.active,:focus-visible){background:linear-gradient(135deg,#181a1bd9,#060707e8);color:#fff;box-shadow:inset 0 1px #ffffff18,0 0 16px #ffb30045;border-color:#d3a95e}
+ :is(.sidebar .nav-item[data-enterprise-card=true],#field-voice-card,#ask-atlas-card):is(:hover,:focus-visible),body:has(#ask-atlas-card,#field-voice-nav:not([hidden])) #assistant-open:is(:hover,:focus-visible){
+  border:1px solid transparent;
+  background:linear-gradient(135deg,#151718,#060707) padding-box,conic-gradient(from var(--atlas-orbit),#80602b 0deg,#ffd54f 30deg,#fff2a6 48deg,#82b98a 60deg,#ffb300 78deg,#80602b 110deg,#392c19 230deg,#80602b 360deg) border-box;
+  animation:atlas-orbit 2.8s linear infinite;box-shadow:0 0 16px #ffb30045;
+ }
+ body:has(#ask-atlas-card,#field-voice-nav:not([hidden])) #assistant-open{border:2px solid #bc8a36;animation:atlas-idle-pulse 13s ease-in-out infinite}
+ body:has(#ask-atlas-card,#field-voice-nav:not([hidden])) #assistant-open:is(:hover,:focus-visible){animation:atlas-orbit 2.8s linear infinite;border-width:2px}
+ @media(max-width:760px){
+  body.mobile-home-active .sidebar .nav-item{width:calc(100% - 12px);margin-inline:auto}
+  body.mobile-home-active .sidebar :is(#field-voice-nav,#atlas-nav[data-enterprise-card=true],#assignments-nav){width:100%}
+ }
+ @media(prefers-reduced-motion:reduce){
+  :is(.nav-item,#field-voice-card,#ask-atlas-card,#assistant-open){animation:none!important;transition:none!important}
+ }
+}
+
+#jobs-nav{--menu-solid-icon:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill-rule%3D%22evenodd%22%20d%3D%22M5%202h10l4%204v16H5V2Zm8%202v4h4l-4-4ZM8%2011v2h8v-2H8Zm0%204v2h8v-2H8Z%22%2F%3E%3C%2Fsvg%3E")}
+#assignments-nav{--menu-solid-icon:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill-rule%3D%22evenodd%22%20d%3D%22M8%203a4%204%200%201%201%200%208%204%204%200%200%201%200-8Zm8%201a3%203%200%201%201%200%206%203%203%200%200%201%200-6ZM1%2021v-4a7%205%200%200%201%2014%200v4H1Zm15-8c4%200%207%202%207%205v3h-6v-4c0-1.5-.5-3-1-4Z%22%2F%3E%3C%2Fsvg%3E")}
+#forms-nav{--menu-solid-icon:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill-rule%3D%22evenodd%22%20d%3D%22M4%202h16v20H4V2Zm3%205v2h10V7H7Zm0%205v2h10v-2H7Zm0%205v2h7v-2H7Z%22%2F%3E%3C%2Fsvg%3E")}
+#report-nav{--menu-solid-icon:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill-rule%3D%22evenodd%22%20d%3D%22M4%202h16v20H4V2Zm3%205v2h10V7H7Zm0%205v2h10v-2H7Zm0%205v2h7v-2H7Z%22%2F%3E%3C%2Fsvg%3E")}
+#clock-nav{--menu-solid-icon:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill-rule%3D%22evenodd%22%20d%3D%22M14%201%203%2014h7l-1%209%2012-14h-8l1-8Z%22%2F%3E%3C%2Fsvg%3E")}
+#schedule-nav{--menu-solid-icon:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill-rule%3D%22evenodd%22%20d%3D%22M6%201h2v3h8V1h2v3h4v18H2V4h4V1ZM4%209v11h16V9H4Zm3%203h3v3H7v-3Zm7%200h3v3h-3v-3Z%22%2F%3E%3C%2Fsvg%3E")}
+#navigation-nav{--menu-solid-icon:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill-rule%3D%22evenodd%22%20d%3D%22m12%202%2010%2020-10-5-10%205L12%202Z%22%2F%3E%3C%2Fsvg%3E")}
+#messages-nav{--menu-solid-icon:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill-rule%3D%22evenodd%22%20d%3D%22M2%203h20v15H8l-6%205V3Zm4%204v2h12V7H6Zm0%205v2h9v-2H6Z%22%2F%3E%3C%2Fsvg%3E")}
+#meetings-nav{--menu-solid-icon:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill-rule%3D%22evenodd%22%20d%3D%22M2%205h14v14H2V5Zm15%205%206-4v12l-6-4v-4Z%22%2F%3E%3C%2Fsvg%3E")}
+#training-nav{--menu-solid-icon:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill-rule%3D%22evenodd%22%20d%3D%22M3%202h18v20H3V2Zm6%205v10l8-5-8-5Z%22%2F%3E%3C%2Fsvg%3E")}
+#mobile-admin-tools{--menu-solid-icon:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill-rule%3D%22evenodd%22%20d%3D%22M12%202a5%205%200%201%201%200%2010%205%205%200%200%201%200-10ZM2%2022v-3a10%206%200%200%201%2020%200v3H2Z%22%2F%3E%3C%2Fsvg%3E")}
+#dashboard-nav{--menu-solid-icon:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill-rule%3D%22evenodd%22%20d%3D%22m12%202%2011%209h-3v11h-6v-7h-4v7H4V11H1l11-9Z%22%2F%3E%3C%2Fsvg%3E")}
+.sidebar #atlas-nav{--menu-solid-icon:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill-rule%3D%22evenodd%22%20d%3D%22M12%202%203%206v6c0%205.2%209%2010%209%2010s9-4.8%209-10V6L12%202Zm0%204-1.3%203.7L7%2011l3.7%201.3L12%2016l1.3-3.7L17%2011l-3.7-1.3L12%206Z%22%2F%3E%3C%2Fsvg%3E")}
+
+:root{--icon-document:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill-rule%3D%22evenodd%22%20d%3D%22M4%202h16v20H4V2Zm3%205v2h10V7H7Zm0%205v2h10v-2H7Zm0%205v2h7v-2H7Z%22%2F%3E%3C%2Fsvg%3E");--icon-people:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill-rule%3D%22evenodd%22%20d%3D%22M8%203a4%204%200%201%201%200%208%204%204%200%200%201%200-8Zm8%201a3%203%200%201%201%200%206%203%203%200%200%201%200-6ZM1%2021v-4a7%205%200%200%201%2014%200v4H1Zm15-8c4%200%207%202%207%205v3h-6v-4c0-1.5-.5-3-1-4Z%22%2F%3E%3C%2Fsvg%3E");--icon-calendar:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill-rule%3D%22evenodd%22%20d%3D%22M6%201h2v3h8V1h2v3h4v18H2V4h4V1ZM4%209v11h16V9H4Zm3%203h3v3H7v-3Zm7%200h3v3h-3v-3Z%22%2F%3E%3C%2Fsvg%3E");--icon-compass:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill-rule%3D%22evenodd%22%20d%3D%22m12%202%2010%2020-10-5-10%205L12%202Z%22%2F%3E%3C%2Fsvg%3E");--icon-message:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill-rule%3D%22evenodd%22%20d%3D%22M2%203h20v15H8l-6%205V3Zm4%204v2h12V7H6Zm0%205v2h9v-2H6Z%22%2F%3E%3C%2Fsvg%3E");--icon-video:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill-rule%3D%22evenodd%22%20d%3D%22M2%205h14v14H2V5Zm15%205%206-4v12l-6-4v-4Z%22%2F%3E%3C%2Fsvg%3E");--icon-play:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill-rule%3D%22evenodd%22%20d%3D%22M3%202h18v20H3V2Zm6%205v10l8-5-8-5Z%22%2F%3E%3C%2Fsvg%3E");--icon-shield:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill-rule%3D%22evenodd%22%20d%3D%22M12%202%203%206v6c0%205.2%209%2010%209%2010s9-4.8%209-10V6L12%202Zm0%204-1.3%203.7L7%2011l3.7%201.3L12%2016l1.3-3.7L17%2011l-3.7-1.3L12%206Z%22%2F%3E%3C%2Fsvg%3E");}
+
+/* Shared module artwork also applies to desktop launch cards. */
+@media screen{
+ .hub-card .hub-icon{display:inline-block;width:24px;height:24px;flex:0 0 24px;font-size:0;background:#e0e0e0;mask:var(--card-icon,var(--icon-shield)) center/contain no-repeat;filter:drop-shadow(0 2px 3px #0008)}
+}
+[data-module-nav="jobs-nav"]{--card-icon:var(--icon-document)}
+[data-module-nav="forms-nav"]{--card-icon:var(--icon-document)}
+[data-module-nav="assignments-nav"]{--card-icon:var(--icon-people)}
+[data-module-nav="clock-nav"]{--card-icon:var(--icon-lightning)}
+[data-module-nav="schedule-nav"]{--card-icon:var(--icon-calendar)}
+[data-module-nav="navigation-nav"]{--card-icon:var(--icon-compass)}
+[data-module-nav="messages-nav"]{--card-icon:var(--icon-message)}
+[data-module-nav="meetings-nav"]{--card-icon:var(--icon-video)}
+[data-module-nav="training-nav"]{--card-icon:var(--icon-play)}
+[data-module-nav="atlas-nav"]{--card-icon:var(--icon-shield)}
+[data-module-nav="account-employees"]{--card-icon:var(--icon-people)}
+[data-module-nav="account-team"]{--card-icon:var(--icon-shield)}
+[data-module-nav="account-passkeys"]{--card-icon:var(--icon-key)}
+:root{--icon-lightning:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill-rule%3D%22evenodd%22%20d%3D%22M14%201%203%2014h7l-1%209%2012-14h-8l1-8Z%22%2F%3E%3C%2Fsvg%3E")}
