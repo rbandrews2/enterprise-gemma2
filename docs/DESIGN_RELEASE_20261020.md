@@ -22,3 +22,7 @@ context contains five assets, Dockerfile and build YAML only. Stage with no traf
 verify unchanged runtime policy; cut over, verify asset hashes/public shell/version.
 Rollback returns100% to the captured prior revision if public asset checks fail.
 Final image/revision/version/evidence are recorded after actual deployment.
+
+Current status: candidate bc0f30aa440e69ca84fec056fcf3bfbe5e57f0de pushed. Release
+script Bash/Python syntax checks PASS. Cloud Shell needs restored CLI sign-in;
+SDK tab opened for the user. No build/deployment launched; live unchanged.

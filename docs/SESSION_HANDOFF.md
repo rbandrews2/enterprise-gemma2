@@ -1,5 +1,22 @@
 # WZOS current session handoff - October 18, 2026
 
+## Design deployment prepared - CLI sign-in pending
+
+User authorized live design deployment with focused tests only. Candidate
+bc0f30aa440e69ca84fec056fcf3bfbe5e57f0de is committed/pushed.16focused Node
+checks PASS; JS/release Python/Bash syntax and diff checks PASS. See DESIGN_RELEASE.
+New release_design_update.sh overlays only5frontend assets on the current live
+immutable image, preserves runtime policy and stages before traffic/asset checks.
+No full Postgres/provider suites needed or rerun for static-only replacement.
+Cloud Shell reconnected but active CLI account is absent. Google Cloud SDK sign-in
+opened in browser tab11; waiting terminal tab4 for user-entered verification code.
+User was asked asynchronously to finish directly in terminal. Do not read/repeat
+the code. No build or deploy launched; live remains unchanged this turn.
+Resume: verify CLI project/account and actual current revision. Create private
+evidence dir with source clone at bc0f30a, write source-commit.txt; run the new
+build phase, then deploy only after successful build. Do not reuse stale cloud
+baseline assumptions. Weather/backend/model/IAM remain untouched.
+
 ## Local follow-up - Messaging and Video meetings badges
 
 User confirms Messaging and Video meetings are Enterprise options and requests
