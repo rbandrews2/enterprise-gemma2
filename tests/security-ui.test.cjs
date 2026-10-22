@@ -4,9 +4,9 @@ function setup(role='admin',handler=()=>Promise.resolve({open_incidents:1,items:
  class Node{constructor(tag){this.tagName=tag;this.children=[];this.textContent='';this.open=false;this.hidden=false;}
   append(...items){this.children.push(...items);}prepend(...items){this.children.unshift(...items);}replaceChildren(...items){this.children=items;}setAttribute(name,value){this[name]=value;}showModal(){this.open=true;}close(){this.open=false;}}
  const main=new Node('main'),body=new Node('body'),events={},calls=[];let current={role};
- const window={wzosClock:{getSession:()=>current,api:(...args)=>{calls.push(args);return handler(...args);}}};
+ const window={WzosNotifications:{mount:n=>main.append(n),update(){}},wzosClock:{getSession:()=>current,api:(...args)=>{calls.push(args);return handler(...args);}}};
  const document={body,hidden:false,getElementById:()=>main,createElement:tag=>new Node(tag),createTextNode:text=>({textContent:text,children:[]}),addEventListener:(name,fn)=>events[name]=fn};
- vm.runInNewContext(fs.readFileSync('services/workspace_preview/static/security.js','utf8'),{window,document,crypto:{randomUUID:()=> 'synthetic-id'},setInterval:()=>{},confirm:()=>true});
+ vm.runInNewContext(fs.readFileSync('services/workspace_preview/static/security.js','utf8'),{window,document,MutationObserver:class{observe(){}},crypto:{randomUUID:()=> 'synthetic-id'},setInterval:()=>{},confirm:()=>true});
  const all=(n,tag)=>[...(n.tagName===tag?[n]:[]),...n.children.filter(x=>x&&typeof x==='object').flatMap(x=>all(x,tag))];
  return {window,main,body,events,calls,all,change:role=>{current={role};events['wzos:session']();}};
 }

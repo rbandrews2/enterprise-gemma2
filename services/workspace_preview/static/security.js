@@ -6,7 +6,8 @@
  const isAdmin=()=>window.wzosClock.getSession()?.role==='admin';
  const banner=node('aside');banner.className='atlas-security-alert';banner.hidden=true;
  banner.setAttribute('aria-label','Organization security notifications');
- document.getElementById('main').prepend(banner);
+ window.WzosNotifications.mount(banner);
+ new MutationObserver(()=>window.WzosNotifications.update(banner,banner.textContent)).observe(banner,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:['hidden']});
  const dialog=node('dialog');dialog.className='account-dialog security-dialog';document.body.append(dialog);
  let epoch=0,busy=false,listState='open';
  const button=(text,click)=>{const b=node('button',text);b.type='button';b.className='secondary';b.onclick=click;return b;};

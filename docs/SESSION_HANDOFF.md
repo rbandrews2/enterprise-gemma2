@@ -1,5 +1,15 @@
 # WZOS current session handoff - October 18, 2026
 
+## LOCAL shared header notifications — October22
+
+Dedicated responsive header area replaces floating/content-level form alert;
+assignment and Atlas Security notices share it. Amber beacon runs without hover
+until clicked, retains required review actions; reduced motion is static amber.
+Navigation/polling preserve visual acknowledgement; account/page restart resets it.
+21 focused Node PASS, no skips; mobile Home/training, desktop and Review forms
+navigation/pulse-stop browser checks PASS. No backend/schema/customer-record changes.
+Not deployed; live remainsui-16d0905. See HEADER_NOTIFICATIONS_20261022.md.
+
 ## LIVE training and footer — October22
 
 Source16d09056ccf31ee8f144b70353b0b657a527dd63 deployed100% as

@@ -1,24 +1,33 @@
 "use strict";
 // A visible in-app office alert, including reports submitted by the admin themself.
 (() => {
- const alert=document.createElement('section'),text=document.createElement('span'),open=document.createElement('button');
- alert.id='office-review-alert';alert.className='panel report-section';alert.hidden=true;alert.setAttribute('role','status');alert.setAttribute('aria-live','polite');
- open.type='button';open.className='secondary';open.textContent='Open office forms';open.onclick=()=>{if(window.showWzosView('forms')!==false)document.dispatchEvent(new CustomEvent('wzos:office-open'));};
- alert.append(text,open);
+ const area=document.getElementById('header-notifications'),items=document.getElementById('header-notification-items');
+ const states=new Map();
+ function visibility(){area.hidden=![...states.keys()].some(n=>!n.hidden);}
+ function mount(node){items.append(node);node.classList.add('header-notification');states.set(node,null);node.addEventListener('click',()=>acknowledge(node));}
+ function update(node,key){if(states.get(node)!==key){states.set(node,key);node.setAttribute('data-unread','true');}visibility();}
+ function acknowledge(node){node.setAttribute('data-unread','false');}
  function place(){
-  const card=document.querySelector?.('.sidebar .org-card');
-  if(window.matchMedia?.('(max-width:760px)').matches&&document.body?.classList.contains('mobile-home-active')&&card)card.after(alert);
-  else document.getElementById('main').before(alert);
+  const home=document.body.classList.contains('mobile-home-active'),card=document.querySelector('.sidebar .org-card');
+  if(home&&card)card.after(area);else document.querySelector('.topbar').append(area);
  }
- place();document.addEventListener('wzos:view',place);window.addEventListener?.('resize',place);
+ window.WzosNotifications={mount,update,acknowledge};
+ document.addEventListener('wzos:view',place);
+ document.addEventListener('wzos:session',()=>{for(const node of states.keys()){states.set(node,null);node.hidden=true;node.setAttribute('data-unread','false');}visibility();place();});
+ place();
+ const alert=document.createElement('section'),text=document.createElement('span'),open=document.createElement('button');
+ alert.id='office-review-alert';alert.hidden=true;alert.setAttribute('role','status');alert.setAttribute('aria-live','polite');
+ open.type='button';open.className='secondary';open.textContent='Review forms';open.onclick=()=>{if(window.showWzosView('forms')!==false){acknowledge(alert);document.dispatchEvent(new CustomEvent('wzos:office-open'));}};
+ alert.append(text,open);
+ mount(alert);
  let generation=0,pending=null;
  async function refresh(){
   const user=window.wzosClock.getSession(),scope=generation;
-  if(user?.role!=='admin'||document.hidden){alert.hidden=true;return;}
+  if(user?.role!=='admin'||document.hidden){alert.hidden=true;visibility();return;}
   if(pending===scope)return;pending=scope;
   try{const data=await window.wzosClock.api('/api/form-submissions/summary');if(scope!==generation)return;
-   alert.hidden=!data.pending_count;text.textContent=`${data.pending_count} form${data.pending_count===1?'':'s'} received by office and awaiting review. `;
-  }catch{if(scope===generation)alert.hidden=true;}finally{if(pending===scope)pending=null;}
+   alert.hidden=!data.pending_count;text.textContent=`${data.pending_count} form${data.pending_count===1?'':'s'} awaiting review. `;update(alert,data.pending_count);
+  }catch{if(scope===generation){alert.hidden=true;visibility();}}finally{if(pending===scope)pending=null;}
  }
  document.addEventListener('wzos:session',()=>{generation++;alert.hidden=true;refresh();});
  for(const event of ['wzos:office-sent','wzos:office-reviewed','visibilitychange'])document.addEventListener(event,refresh);

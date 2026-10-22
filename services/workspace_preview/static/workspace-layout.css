@@ -2,7 +2,19 @@
 .app-footer.global-footer{max-width:none;width:100%;margin:0;padding:22px 20px calc(88px + env(safe-area-inset-bottom,0px));display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:10px 24px;background:#000;color:#d7b16a;border-top:1px solid #d7b16a30;font-family:inherit;--wzos-paragraph-font-size:13px;font-size:13px;line-height:1.6;text-align:center}
 .global-footer span{max-width:100%;overflow-wrap:anywhere}.global-footer a{color:inherit;text-decoration:underline;text-underline-offset:3px;display:inline-flex;align-items:center;min-height:44px;white-space:nowrap}
 .global-footer a:hover{color:#ffe0a3}.global-footer a:focus-visible{outline:2px solid #e8bc67;outline-offset:4px;border-radius:4px}
-body[data-workspace-view=training] #office-review-alert{display:none!important}
+/* Shared, in-flow header notices. Reading a notice never marks a form reviewed. */
+.topbar{flex-wrap:wrap;height:auto;min-height:76px;padding-block:14px;gap:12px}
+.header-notifications{flex:0 0 100%;min-width:0;padding-top:10px;border-top:1px solid #d7b16a30;color:#e7bd70}
+.header-notifications[hidden],.header-notification[hidden]{display:none!important}
+.notification-heading{display:block;font-size:11px;font-weight:650;letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px;color:#c6b491}
+#header-notification-items{display:grid;gap:8px}
+.header-notifications .header-notification{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:0;padding:9px 12px;background:#100e08;border:1px solid #89632b;border-radius:10px;color:#e8bc67;font-size:14px;line-height:1.5;box-shadow:none;position:static}
+.header-notification>span,.header-notification>strong{flex:1 1 180px}
+.header-notifications .header-notification button{min-height:40px;padding:8px 12px;white-space:normal;color:inherit}
+.header-notification[data-unread=true]{animation:notification-amber-beacon 1.8s ease-in-out infinite}
+@keyframes notification-amber-beacon{0%,100%{color:#d9a449;border-color:#89632b;text-shadow:none;box-shadow:inset 0 0 0 1px #ffb30010}45%,60%{color:#ffe5a0;border-color:#ffc34f;text-shadow:0 0 9px #ffb300b3;box-shadow:0 0 10px #ffb30040,inset 0 0 12px #ffb30018}}
+@media(prefers-reduced-motion:reduce){.header-notification[data-unread=true]{animation:none;border-color:#ffc34f;color:#ffe5a0;box-shadow:inset 3px 0 #ffb300}}
+@media(max-width:760px){body.mobile-home-active .sidebar>#header-notifications{margin:0 0 14px;padding:10px 0 0}.header-notifications .header-notification{font-size:14px}}
 @media screen{
  body[data-workspace-view=training] .app main{padding-bottom:24px}
  body[data-workspace-view=training] #team-content{gap:12px;align-items:start}

@@ -44,15 +44,18 @@ test('a failed send shows its error next to the button without a success receipt
  assert.match(receipt.textContent,/Connection failed/);assert.doesNotMatch(receipt.textContent,/Receipt:/);assert.equal(h.find('Send to office').disabled,false);
 });
 test('office alert refreshes after review and discards a reply after changing account',async()=>{
- class Node{constructor(){this.children=[];}append(...n){this.children.push(...n);}before(...n){this.children.unshift(...n);}setAttribute(){}}
- const main=new Node(),events={};let session={role:'admin'},count=2,reply=null,calls=0;
+ class Node{constructor(){this.children=[];this.attrs={};this.listeners={};this.classList={add(){}};}append(...n){this.children.push(...n);}before(...n){this.children.unshift(...n);}setAttribute(k,v){this.attrs[k]=v;}addEventListener(k,v){this.listeners[k]=v;}}
+ const main=new Node(),area=new Node(),items=new Node(),events={};let session={role:'admin'},count=2,reply=null,calls=0;
  const emit=async(type)=>Promise.all((events[type]||[]).map(f=>f()));
- const document={createElement:()=>new Node(),getElementById:()=>main,addEventListener:(type,f)=>(events[type]??=[]).push(f)};
+ const document={body:{classList:{contains:()=>false}},querySelector:()=>main,createElement:()=>new Node(),getElementById:id=>id==='header-notifications'?area:id==='header-notification-items'?items:main,addEventListener:(type,f)=>(events[type]??=[]).push(f)};
  const window={wzosClock:{getSession:()=>session,api:async()=>{calls++;return reply?await reply:{pending_count:count};}},showWzosView(){}};
  const source=fs.readFileSync('services/workspace_preview/static/review-workflows.js','utf8').split('// Shared review workflow integration;')[0];
  vm.runInNewContext(source,{document,window,setInterval(){}});
- await emit('wzos:session');const alert=main.children[0];assert.equal(alert.id,'office-review-alert');assert.equal(alert.hidden,false);assert.match(alert.children[0].textContent,/2 forms/);
- count=0;await emit('wzos:office-reviewed');assert.equal(alert.hidden,true);
+ await emit('wzos:session');const alert=items.children[0];assert.equal(alert.id,'office-review-alert');assert.equal(alert.hidden,false);assert.match(alert.children[0].textContent,/2 forms/);assert.equal(area.hidden,false);assert.equal(alert.attrs['data-unread'],'true');
+ alert.listeners.click();assert.equal(alert.attrs['data-unread'],'false');
+ await emit('visibilitychange');assert.equal(alert.attrs['data-unread'],'false');
+ count=3;await emit('wzos:office-sent');assert.equal(alert.attrs['data-unread'],'true');
+ count=0;await emit('wzos:office-reviewed');assert.equal(alert.hidden,true);assert.equal(area.hidden,true);
  let resolve;reply=new Promise(r=>resolve=r);const pending=emit('wzos:office-sent');await Promise.resolve();
  session={role:'member'};await emit('wzos:session');resolve({pending_count:9});await pending;assert.equal(alert.hidden,true);
  const prior=calls;await emit('visibilitychange');assert.equal(calls,prior);

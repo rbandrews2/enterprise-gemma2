@@ -127,6 +127,9 @@
   try{const panel=await memberPanel(root,current);if(panel&&current()){host.append(panel);say('Open a job, review the details and confirm receipt.');}}catch(error){if(current())say(error.message);}
  }
  let polling=false,notificationScope='',lastPending=-1;
+ const notification=document.getElementById('assignment-alert');
+ window.WzosNotifications?.mount(notification);
+ if(window.WzosNotifications)new MutationObserver(()=>window.WzosNotifications.update(notification,notification.textContent)).observe(notification,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:['hidden']});
  async function updateNotifications(){
   const session=window.wzosClock.getSession(),nav=document.getElementById('assignments-nav'),count=document.getElementById('assignment-count'),alert=document.getElementById('assignment-alert');
   const scope=session?.organization_id+':'+session?.id;
