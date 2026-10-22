@@ -38,3 +38,6 @@ Actual gate/build/revision/version results will be recorded after deployment.
   pointer: $HOME/wzos-training-footer-release-path.txt.
 - No customer course, study record, form, subscription or message was changed by
   release checks. Real video-provider playback remains a human acceptance item.
+- Authenticated live read-only browser acceptance: ten admin URL fields, ten
+  numbered cards, no office-review alert on Training, shared copyright/contact
+  footer. Live screenshot: .local-data/live-training-footer-20261022.png (ignored).
