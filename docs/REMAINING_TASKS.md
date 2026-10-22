@@ -4,8 +4,10 @@
 
 - [x] Local printable-form signing pad, typed alternative, safe persistence and
   office/print/download rendering;12focused checks pass (4Node,8SQLite).
-- [ ] Real-phone handwriting and PDF visual check; affected PostgreSQL submission
-  tests before deployment. No schema migration or service permissions required.
+- [x] Affected PostgreSQL submission/signature tests8PASS; deployed with compact
+  weather and visible report review as ui-358cf45. See FORMS_WEATHER_RELEASE_20261022.md.
+- [ ] Real-phone handwriting and actual PDF visual check. Full consolidated launch
+  acceptance list: PRELAUNCH_REQUIREMENTS_20261022.md.
 
 ## Latest release acceptance (supersedes earlier local-only release entries)
 

@@ -1,5 +1,9 @@
 # Form signatures
 
+Deployed October22 as wzos-v2-accounts-ui-358cf45 with eight focused PostgreSQL
+checks passing. This supersedes the historical local-only status below. See
+FORMS_WEATHER_RELEASE_20261022.md; phone handwriting/PDF acceptance remains open.
+
 Scope: optional signing pad on WZOS printable forms, with signer name, Clear,
 touch/mouse/pen input and typed-name alternative. Printed/downloaded forms and
 immutable office review display the same signature. Does not edit uploaded PDFs.

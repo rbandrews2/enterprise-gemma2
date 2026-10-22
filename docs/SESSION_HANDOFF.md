@@ -1,5 +1,25 @@
 # WZOS current session handoff - October 18, 2026
 
+## LIVE signatures, compact weather and explicit review - October22
+
+Final358cf452cf465c8727687d204f167f526fb6ec8a is serving100% as
+wzos-v2-accounts-ui-358cf45. Build0e7a95d0-e79d-4818-aabc-700c218c0f5f;
+image digest d1f7e2009eb186e2d9b9c36be732c7ed8baada8be93bdd50b66f2fe4646705a1;
+version bd666b58478cbe553f66dd85. Preflight/build/drift/staged/public6asset hashes/
+CSP/version/traffic PASS, deploy.exit0. Evidence /tmp/wzos-office-focus-20261022.cONJeqXR;
+home pointer wzos-forms-weather-release-path.txt. Immediate rollback ui-60f7b99;
+original design ui-bc0f30a retained. Final adds office-alert scroll/focus/feedback
+after initial60f7b99 release (buildbfc5dd98-7269-4ffc-ba11-0a106646e535).
+18unique focused Node +8SQLite +8PostgreSQL checks PASS, no skips. Final frontend
+focus adjustment reran6related Node checks; PostgreSQL evidence reused only after
+byte comparison of the unchanged backend and submission tests (provenance saved).
+No broad model/SMS tests or customer sends. No schema, IAM, secret, GPU or monitor
+changes. Weather permission/watch behavior unchanged. Authenticated browser confirms
+signing controls, received-form modal and office alert focus at list top with message.
+Prelaunch checklist: PRELAUNCH_REQUIREMENTS_20261022.md. Actual-phone handwriting/PDF
+acceptance remains for user testing now that the pad is deployed. Do not submit or
+mark reviewed any customer draft as part of acceptance. Synthetic local test only.
+
 ## Local forms signing pad - ready for review
 
 Optional drawn/typed signature added to all WZOS printable forms, with signer name,

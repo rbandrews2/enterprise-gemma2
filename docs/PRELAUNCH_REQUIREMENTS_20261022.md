@@ -4,6 +4,10 @@ Updated October22,2026. Unchecked items require acceptance; a screen or integrat
 being present does not establish end-to-end readiness. Owners: Product = Ray;
 Engineering = WZOS development. Keep evidence and the tested release identifier.
 
+Latest release: signatures/compact weather/report review deployed as ui-358cf45;
+focused Node18,SQLite8,PostgreSQL8PASS. Phone handwriting and exported PDF still
+need field acceptance. See FORMS_WEATHER_RELEASE_20261022.md for live evidence.
+
 ## Release blockers for general customer onboarding
 
 - [ ] Product + Engineering: complete one Core-admin, Core-member, Enterprise-admin
