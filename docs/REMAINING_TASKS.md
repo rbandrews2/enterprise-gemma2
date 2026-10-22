@@ -1,5 +1,19 @@
 # WZOS remaining tasks - current October 20, 2026
 
+## October22 unassisted prelaunch testing
+
+See PRELAUNCH_ENGINEERING_RESULTS_20261022.md and the updated Codex/human lists.
+Node174PASS; broad PostgreSQL890run found one stale synthetic demo error; repaired
+full gate891PASS,zero skips at8d29bbf. Dependency advisory repairdfef889 has separate
+affected checks. Synthetic signed-form dump/restore PASS; native
+cluster cleaned up. Core communications entitlement and browser CSP repairs are
+committed on the development branch, not deployed. Latest live remainsui-16d0905.
+Read-only runtime checks verified hourly weather successes, SMS test mode,
+Voice model target/scaling, backup/storage safeguards and existing budget alerts.
+Local DOT index rebuilt; content review/activation not established. Device,
+provider, managed recovery, privacy/business decisions and final release gates
+remain. Do not repeat paid pilots or treat activity as guaranteed CLI sign-in.
+
 ## Form signature follow-up
 
 - [x] Local printable-form signing pad, typed alternative, safe persistence and

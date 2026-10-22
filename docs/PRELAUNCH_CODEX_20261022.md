@@ -10,6 +10,39 @@ hand only that dependency to the human list. Record evidence and release identif
 This list does not authorize new charges, access grants or customer communications.
 Reorganizing requirements does not start tests or establish acceptance.
 
+## Completed unassisted work — October 22
+
+[Results, exact counts, repaired findings and evidence](PRELAUNCH_ENGINEERING_RESULTS_20261022.md).
+The items below close only their stated technical scope. Remaining mixed tasks
+below stay open until the missing provider/device/release evidence exists.
+
+- [x] Complete Node sweep: 174 passed on Windows and Linux, no skips.
+- [x] Broad disposable PostgreSQL sweep found one stale demo error. Corrected it,
+  then full gate at8d29bbf passed891tests with zero failures/errors/skips. Later
+  dependency-only updates have separate affected checks; see the results note.
+- [x] Repair Core Messaging/Video meetings access in dashboard/navigation and
+  server guards; preserve SMS opt-out after downgrade. 38 focused backend checks.
+- [x] Inspect synthetic Core admin/member and Enterprise member menus; verify
+  subscriptions, hidden admin/upgrade actions and Enterprise communications cards.
+- [x] Rehearse native PostgreSQL dump/restore of synthetic received form and drawn
+  signature; verify hashes, anonymous/foreign-org denial and cluster cleanup.
+- [x] Read live private API denial, cross-origin denial, no-store, manifest/icon
+  dimensions, release/footer/version markers without customer writes.
+- [x] Add explicit object/plugin blocking and check policy with/without Maps.
+- [x] Match installed Python dependencies to published advisories:30findings in
+  three packages. Update app/scanner pins;119affected cloud checks PASS,zero skips,
+  and repaired Python advisory scan reports no known vulnerabilities. This does
+  not close OS/container-image, browser-vendor or effective IAM review.
+- [x] Read live hourly schedule and three successful weather job executions;
+  preserve the weather configuration hold.
+- [x] Inspect active Voice GPU target/max-instance configuration, existing budget
+  alert thresholds, successful SQL backup and bucket protection metadata.
+- [x] Rebuild outdated local DOT derivative index; verify schema/fingerprints,
+  unchanged source hashes, integrity and bounded local retrieval. No inference.
+- [x] Draft privacy/retention/support/billing decisions for Product approval:
+  [unpublished draft](PRELAUNCH_PRIVACY_DECISIONS_DRAFT_20261022.md).
+- [x] Save/push source repairs and durable private evidence; production unchanged.
+
 ## General onboarding blockers — technical work
 
 - [ ] Validate Core-admin, Core-member, Enterprise-admin and Enterprise-member
@@ -29,12 +62,17 @@ Reorganizing requirements does not start tests or establish acceptance.
 - [ ] Prepare and perform an isolated backup restore within existing authorization;
   verify a submitted form/signature, retention, monitoring and rollback steps.
   Obtain the named restore owner from the human list.
+  Native signed-form database rehearsal passed; managed Cloud SQL and uploaded
+  object recovery, monitoring/ownership and recovery targets still need acceptance.
 - [ ] Review retention implementation; draft privacy/retention documentation for
   reports, signatures, location and media. Prepare support/billing/cancellation/
   incident pages and onboarding permission/cloud-processing explanations for approval.
 - [ ] Review security boundaries, runtime secrets/IAM, upload quarantine/recovery
   and dependency findings; track remaining lower-severity findings. Do not claim
   SOC2 compliance without the required review.
+  Synthetic boundary/security tests pass in the broad sweep; fresh effective IAM,
+  runtime/image and browser-vendor findings and deployed scanner acceptance remain
+  open; Python environment advisory repair is accepted separately above.
 
 ## Feature-specific technical acceptance
 
@@ -61,6 +99,8 @@ Reorganizing requirements does not start tests or establish acceptance.
   pages/tables/corrections and applicability questions. Verify inference flag status
   before availability claims. Prepare bounded pinned-model acceptance; paid
   inference requires applicable approval and budget.
+  Local index repaired: seven sources/2,627 pages; all visual page reviews remain
+  false. Fresh qualified content/applicability and pinned-model acceptance pending.
 - [ ] Integration API: check scopes, revocation, rate limits, audit trail and tenant
   isolation. Prepare QuickBooks/Workday connector acceptance before support claims.
 

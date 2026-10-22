@@ -8,6 +8,16 @@ Codex prepares screens, steps and evidence first. Human participation is for
 physical-device results, business decisions, secure sign-in or necessary approvals.
 Record results and the tested release. No open item is completed by this split.
 
+Engineering testing has now started. See
+[October22 results](PRELAUNCH_ENGINEERING_RESULTS_20261022.md) and
+[privacy/retention decisions to approve](PRELAUNCH_PRIVACY_DECISIONS_DRAFT_20261022.md).
+No participation is needed to repeat passing automated checks. The concise next
+device checks are signature/PDF and Voice receipt on Android, one consenting SMS
+delivery/opt-out, two-device meeting media and installed-update preservation.
+SMS is still in test mode; qualified DOT review and actual connector acceptance
+remain prerequisites before customer availability claims. Existing budget is
+USD50 with alerts; name its recipient/owner and approve an operating budget.
+
 ## General onboarding blockers — human acceptance
 
 - [ ] Accept the Core/Enterprise and admin/member feature matrix and prepared

@@ -1,5 +1,46 @@
 # WZOS current session handoff - October 18, 2026
 
+## Unassisted prelaunch sweep — October22 (latest)
+
+Source repairs pushed through8d29bbf on codex/preproduction-modules: enforce
+Enterprise messages/meetings/SMS controls while retaining opt-out on downgrade;
+fix stale Node fakeDOM/unified-demo fixtures; explicit CSP object-src none.
+Shared header notification change remains local/development only. Live unchanged:
+ui-16d0905 at100%, public version5821810b858f1f58b45af012.
+
+Node174PASS on Windows/Linux; focused backend38PASS. Full disposable PostgreSQL
+at90fdc43 ran890:889passed,one stale Core-message demo error,zero skips. Corrected
+fixture and header delta six checks PASS locally/cloud at8d29bbf. Do not claim a
+failed gate passed: subsequent full gate at8d29bbf passed891zero-skips in399.936s.
+Dependency-only pins updated separately indfef889 after audit found30advisories
+in3packages; affected checks/advisory recheck recorded in results note. Native
+synthetic signed-form dump/restore PASS, hashes
+and tenant/auth denials preserved; disposable cluster cleanup verified.
+
+Read-only runtime/public checks: hourly weather last3executions succeeded;
+SMS remains test mode; Voice targetwzos-atlas-inference20CPU/80Gi/1GPU,max1,
+no min-instance annotation; existingUSD50budget alerts50/80/100%,not a cap.
+SQL backup success07:05UTC Oct22,7retained; bucket public-access prevention,
+uniform access/versioning/7day soft delete. No live sends/charges/inference,
+IAM/secret/weather changes or deployment. DOT derivative schema5->6 rebuilt
+from unchanged7sources/2627pages; every page visually unreviewed,flags defaultoff.
+
+Evidence: local.local-data/prelaunch-20261022; cloud/tmp/wzos-prelaunch-20261022.aRppkWeT,
+home pointerwzos-prelaunch-latest-path.txt and private durable copy
+$HOME/wzos-prelaunch-evidence-20261022. Verify auth/project/live on resume;
+activity does not guarantee persistent authentication. Results/remaining gates:
+PRELAUNCH_ENGINEERING_RESULTS_20261022.md; updated Codex/human checklists and
+unpublished PRELAUNCH_PRIVACY_DECISIONS_DRAFT_20261022.md. Fresh vulnerability/
+effective IAM review, managed/object restore, device/provider/business acceptance
+and immutable candidate release gates remain; do not repeat paid model pilots.
+
+Dependency follow-up accepted atdfef889:119affected PostgreSQL checks PASS,zero
+skips in49.621s; repaired pip-audit exit0/no known vulnerabilities in inspected
+Python environment. certifi2026.10.19(app/scanner),Pillow13.0.0,pypdf6.21.1(app).
+No OS/container/browser-vendor clearance claim. Final891fullgate at8d29bbf
+precedes these dependency-only updates; next release requires exact-candidate
+gates/staging/image review. All runners completed; private evidence copied home.
+
 ## LOCAL shared header notifications — October22
 
 Dedicated responsive header area replaces floating/content-level form alert;
