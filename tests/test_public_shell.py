@@ -21,6 +21,15 @@ class PublicShellTests(unittest.TestCase):
 
     def headers(self):
         return {'X-Preview-Actor':'enterprise-admin'}
+
+    def test_embedded_plugins_blocked_with_and_without_maps(self):
+        for key in ('', 'synthetic-public-browser-key'):
+            with patch.dict(os.environ, {'WZOS_GOOGLE_MAPS_BROWSER_KEY':key}):
+                for path in ('/', '/api/app/version'):
+                    response = self.client.get(path)
+                    self.assertEqual(response.status_code, 200)
+                    self.assertIn("object-src 'none'", response.headers['content-security-policy'])
+                    self.assertIn("frame-ancestors 'none'", response.headers['content-security-policy'])
     def test_public_shell_and_versioned_assets(self):
         page = self.client.get('/')
         version = self.client.get('/api/app/version').json()['version']

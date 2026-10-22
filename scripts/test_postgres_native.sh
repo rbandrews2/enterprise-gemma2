@@ -18,6 +18,12 @@ test -x .venv-accounts-test/bin/python || python3 -m venv .venv-accounts-test
 .venv-accounts-test/bin/python -m pip -q install --upgrade pip==26.2.1
 .venv-accounts-test/bin/python -m pip -q install -r requirements-accounts.txt
 export WZOS_TEST_DATABASE_URL="postgresql:///wzos_test?host=$cluster/socket"
-.venv-accounts-test/bin/python scripts/run_postgres_gate.py
+if [ "$#" -gt 0 ]; then
+  # Focused repairs can reuse the same disposable cluster without rerunning
+  # unrelated tests. This is not the full zero-skip PostgreSQL release gate.
+  .venv-accounts-test/bin/python -m unittest -v "$@"
+else
+  .venv-accounts-test/bin/python scripts/run_postgres_gate.py
+fi
 unset WZOS_TEST_DATABASE_URL
 

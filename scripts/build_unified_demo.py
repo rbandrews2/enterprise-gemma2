@@ -54,8 +54,9 @@ def build(destination):
                     'request_id': uid(edition+'/schedule-save'), 'title': 'Demo crew briefing',
                     'order_id': order, 'assignees': [member],
                     'start': '2026-09-30T12:00:00Z', 'end': '2026-09-30T13:00:00Z'})
-                call('POST', '/api/messages', admin, {'request_id': uid(edition+'/message'),
-                    'recipient_id': member, 'text': 'Demo only: review the saved job and planning worksheet.'})
+                if edition == 'enterprise':
+                    call('POST', '/api/messages', admin, {'request_id': uid(edition+'/message'),
+                        'recipient_id': member, 'text': 'Demo only: review the saved job and planning worksheet.'})
                 courses = call('GET', '/api/training', member)['items']
                 call('PUT', '/api/training/'+courses[0]['id'], member, {'status': 'studying'})
                 # Fixed synthetic timestamps make attendance evidence reproducible.

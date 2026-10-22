@@ -238,6 +238,9 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
             response.headers['Content-Security-Policy'] = csp
             media_origins = ' '.join('"' + origin + '"' for origin in origins)
             response.headers['Permissions-Policy'] = 'camera=(self ' + media_origins + '), microphone=(self ' + media_origins + ')'
+        # No application flow uses legacy object/embed plugins. Keep this directive
+        # after Maps/Daily policy assembly so every shell variant retains it.
+        response.headers['Content-Security-Policy'] += "; object-src 'none'"
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers['X-Frame-Options'] = 'DENY'
         response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'

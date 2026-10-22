@@ -29,6 +29,12 @@ class UnifiedDemoTests(unittest.TestCase):
                     self.assertEqual(entries[0]['work_seconds'], 3600)
                     self.assertEqual(entries[0]['status'], 'closed')
                     self.assertEqual(client.get('/api/time/entries?team=true', headers=headers).status_code, 403)
+                    messages = client.get('/api/messages', headers=headers)
+                    if scenario['edition'] == 'core':
+                        self.assertEqual(messages.status_code, 403)
+                    else:
+                        self.assertEqual(messages.status_code, 200)
+                        self.assertEqual(len(messages.json()['items']), 1)
                     other = 'core-admin' if scenario['edition']=='enterprise' else 'enterprise-admin'
                     self.assertEqual(client.get('/api/orders/'+order, headers={'X-Preview-Actor': other}).status_code, 404)
                     if 'report_id' in scenario:
