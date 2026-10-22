@@ -1,6 +1,6 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 function harness(){
- class Node{constructor(tag,text=''){this.tag=tag;this.textContent=text;this.children=[];this.hidden=false;this.value='';}append(...items){this.children.push(...items);}prepend(...items){this.children.unshift(...items);}replaceChildren(...items){this.children=items;}setAttribute(){}querySelectorAll(){return all(this).filter(n=>['input','textarea','select','button'].includes(n.tag));}}
+ class Node{constructor(tag,text=''){this.tag=tag;this.textContent=text;this.children=[];this.hidden=false;this.value='';}append(...items){this.children.push(...items);}prepend(...items){this.children.unshift(...items);}replaceChildren(...items){this.children=items;}setAttribute(){}scrollIntoView(){this.scrolled=true;}focus(){this.focused=true;}querySelectorAll(){return all(this).filter(n=>['input','textarea','select','button'].includes(n.tag));}}
  const all=n=>[n,...n.children.flatMap(all)],main=new Node('main'),menu=new Node('nav'),events={},calls=[];
  const document={createElement:t=>new Node(t),getElementById:id=>id==='main'?main:all(main).find(n=>n.id===id),querySelector:s=>s.startsWith('nav[')?menu:null,addEventListener:(n,f)=>(events[n]??=[]).push(f),dispatchEvent:e=>emit(e.type,e.detail)};
  const emit=async(type,detail)=>{await Promise.all((events[type]||[]).map(f=>f({detail})));};
@@ -30,6 +30,13 @@ test('reopening a submitted report restores receipt and prevents resending',asyn
  const h=harness();h.draft.state='sent';h.draft.submission_ids=['a','b'];await h.emit('wzos:session');await h.open();
  h.find('2026-10-20 · sent · Synthetic work').onclick();
  assert.match(h.all(h.main).find(n=>n.className==='voice-delivery').textContent,/2 form\(s\)/);assert.equal(h.find('Received by office').disabled,true);
+});
+
+test('saved report review moves focus to visible editor and explains what opened',async()=>{
+ const h=harness();await h.emit('wzos:session');await h.open();
+ await h.find('Review saved field reports').onclick();assert.match(h.all(h.main).find(n=>n.className==='voice-notice').textContent,/Choose a saved/);
+ h.find('2026-10-20 · draft · Synthetic work').onclick();
+ assert.equal(h.find('Review field report').focused,true);assert.match(h.all(h.main).find(n=>n.className==='voice-delivery').textContent,/Report opened below for review/);
 });
 test('a failed send shows its error next to the button without a success receipt',async()=>{
  const h=harness();h.setFailSend();await h.emit('wzos:session');await h.open();h.find('2026-10-20 · draft · Synthetic work').onclick();h.all(h.main).find(n=>n.type==='checkbox').checked=true;

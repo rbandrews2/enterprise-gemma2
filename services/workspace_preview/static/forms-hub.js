@@ -434,7 +434,24 @@
   notice(`Download requested for ${t.title}${data?' with your entries':' (blank)'}. Check your browser downloads before leaving. Open the file in any browser to print it or save it as a PDF.`);
  }
 
- window.WzosForms={signatureImage,printReceived:record=>{if(record.form_type==='printable'&&record.template)printDocument(record.template,record);}};
+ let receivedPreview=null;
+ function closeReceived(){if(!receivedPreview)return;const dialog=receivedPreview;receivedPreview=null;dialog.close?.();dialog.remove();}
+ function reviewReceived(record){
+  if(record.form_type!=='printable'||!record.template)throw new Error('This form has no printable preview. Open its submitted content instead.');
+  closeReceived();
+  const dialog=node('dialog',null,'forms-received-preview'),heading=node('h2','Review received form');heading.id='received-preview-title';
+  dialog.setAttribute('aria-labelledby',heading.id);
+  const status=node('p','Saved office copy. Review it here, then print or download if needed.');status.setAttribute('role','status');
+  const controls=node('div',null,'forms-actions'),print=button('Print or save as PDF'),download=button('Download received form'),close=button('Close preview');
+  print.onclick=()=>{try{printDocument(record.template,record);}catch(error){status.textContent='Print did not open: '+error.message;}};
+  download.onclick=()=>downloadDocument(record.template,record);close.onclick=closeReceived;
+  controls.append(print,download,close);dialog.append(heading,status,controls,buildDocument(record.template,record));
+  dialog.addEventListener('close',()=>{dialog.remove();if(receivedPreview===dialog)receivedPreview=null;});
+  document.body.append(dialog);receivedPreview=dialog;dialog.showModal();close.focus();
+ }
+ document.addEventListener('wzos:session',closeReceived);
+ document.addEventListener('wzos:view',closeReceived);
+ window.WzosForms={signatureImage,reviewReceived,printReceived:record=>{if(record.form_type==='printable'&&record.template)printDocument(record.template,record);}};
  async function show(){
   const generation=++epoch;notice('');
   try{const catalog=await api('/api/forms/templates');if(generation!==epoch)return;templates=catalog.items;renderBuiltins();}catch(error){notice(error.message);}

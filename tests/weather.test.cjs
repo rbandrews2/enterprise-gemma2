@@ -64,3 +64,12 @@ test('old location responses cannot overwrite a newer movement or another sessio
 test('missing grants never start location or request permission on foreground refresh',async()=>{
  for(const state of ['prompt','denied']){const h=ui(state);await settle();await h.flat().find(n=>n.textContent==='Use location').onclick();h.events.visibilitychange();await settle();assert.equal(h.calls.includes('watch'),false);assert.equal(h.flat().some(n=>n.textContent==='Show job weather'),false);}
 });
+
+test('compact card keeps current weather and hazards visible while collapsing detailed metrics',async()=>{
+ const h=ui();await settle();h.watch(37,-80);h.pending.shift()({status:'ready',temperature_f:46.4,wind_mph:0,condition:'Clear',source_time:new Date().toISOString(),alerts:[{severity:'Severe',headline:'Synthetic warning',expires:new Date(Date.now()+3600000).toISOString()}]});await settle();
+ const summary=h.flat().find(n=>n.className==='weather-summary'),extra=h.flat().find(n=>n.className==='weather-more'),hazards=h.flat().find(n=>n.className==='weather-hazards');
+ const text=n=>[n.textContent,...n.children.flatMap(c=>text(c))].join(' ');
+ assert.match(text(summary),/46.4°F/);assert.match(text(summary),/0 mph/);assert.match(text(summary),/Clear/);
+ assert.doesNotMatch(text(summary),/Feels like|Gusts|Rain/);assert.equal(!!extra.open,false);assert.equal(extra.hidden,false);
+ assert.match(text(hazards),/Synthetic warning/);assert.equal(extra.children.some(c=>c===hazards),false);
+});

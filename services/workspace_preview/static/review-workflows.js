@@ -33,9 +33,9 @@
  window.wzosModulesCanLeave=()=>!busy&&(!previous||previous());
  const root=el('section');root.className='panel report-section';root.id='form-submission-panel';
  document.getElementById('forms-view').append(root);
- async function show(){
+ async function show(feedback=''){
   const generation=++epoch;root.replaceChildren();if(view!=='forms')return;
-  const notice=el('p');notice.setAttribute('role','status');root.append(notice);
+  const notice=el('p',feedback);notice.setAttribute('role','status');root.append(notice);
   try{
    const submissions=await api(`/api/form-submissions?offset=${offset}`);
    if(generation!==epoch)return;
@@ -50,7 +50,8 @@
      if(item.form.order)details.append(el('p','Work order: '+item.form.order));
      for(const section of item.form.template?.sections||[]){details.append(el('h4',section.title));for(const field of section.fields){const value=item.form.fields[field.key];if(value!==undefined&&value!=='')details.append(el('p',field.label+': '+(typeof value==='object'?JSON.stringify(value):value)));}}
      if(item.form.signature&&window.WzosForms)details.append(window.WzosForms.signatureImage(item.form.signature));
-     const print=el('button','Print received form or save as PDF');print.onclick=()=>window.WzosForms?.printReceived(item.form);details.append(print);
+     const preview=el('button','Review received form');preview.onclick=()=>{try{if(!window.WzosForms?.reviewReceived)throw new Error('Form preview is still loading. Refresh and try again.');window.WzosForms.reviewReceived(item.form);}catch(error){notice.textContent=error.message;notice.scrollIntoView?.({block:'center'});}};
+     card.append(preview);
     }
     details.append(el('p',`Submitted by: ${item.submitted_by}`));card.append(details);
     if(item.note)card.append(el('p',`Admin note: ${item.note}`));
@@ -58,7 +59,7 @@
      const label=el('label','Review note'),note=el('textarea');note.maxLength=2000;label.append(note);card.append(label);
      for(const [status,title] of [['reviewed','Mark reviewed'],['changes_requested','Request changes']]){
       const button=el('button',title);button.onclick=async()=>{if(busy)return;busy=true;button.disabled=true;
-       try{await api(`/api/form-submissions/${item.id}/review`,{method:'POST',body:JSON.stringify({expected_version:item.version,status,note:note.value})});if(generation===epoch){document.dispatchEvent(new CustomEvent('wzos:office-reviewed'));await show();}}
+       try{await api(`/api/form-submissions/${item.id}/review`,{method:'POST',body:JSON.stringify({expected_version:item.version,status,note:note.value})});if(generation===epoch){document.dispatchEvent(new CustomEvent('wzos:office-reviewed'));await show(status==='reviewed'?'Form marked reviewed.':'Changes requested. The review note has been saved.');}}
        catch(error){if(generation===epoch)notice.textContent=error.message;}finally{busy=false;button.disabled=false;}
       };card.append(button);
      }

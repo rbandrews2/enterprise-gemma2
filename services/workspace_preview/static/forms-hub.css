@@ -72,3 +72,13 @@
 .form-signature-output .signature-typed{font:italic 26px Georgia,serif;overflow-wrap:anywhere}
 .form-signature-output .signature-signer{font-size:14px;margin:4px 0}
 .signature-blank{height:65px;border-bottom:1px solid #666}
+.forms-received-preview{width:min(900px,calc(100% - 24px));max-height:90dvh;overflow:auto;border:1px solid #d3a95e77;border-radius:16px;padding:20px;background:#101213;color:#eee}
+.forms-received-preview::backdrop{background:#000b}
+.forms-received-preview>.wzos-form-doc{color:#111;background:#fff;padding:20px;margin-top:16px}
+.forms-received-preview .wzos-form-doc :is(.field-grid){display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 16px}
+.forms-received-preview .wzos-form-doc .wide{grid-column:1/-1}
+.forms-received-preview .wzos-form-doc .label{display:block;font-weight:600}
+.forms-received-preview .wzos-form-doc .value{display:block;min-height:1.4em;border-bottom:1px solid #999}
+.forms-received-preview .wzos-form-doc table{width:100%;border-collapse:collapse}.forms-received-preview .wzos-form-doc :is(td,th){border:1px solid #999;padding:5px;overflow-wrap:anywhere}
+@media(max-width:600px){.forms-received-preview{padding:12px}.forms-received-preview>.wzos-form-doc{padding:12px}.forms-received-preview .wzos-form-doc .field-grid{grid-template-columns:minmax(0,1fr)}}
+@media print{.forms-received-preview{display:none!important}}

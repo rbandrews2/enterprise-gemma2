@@ -21,10 +21,11 @@ if(typeof document!=='undefined')(()=>{
  const heading=make('div','','weather-heading'),title=make('h2','Weather'),location=make('p','Choose your location','weather-location');
  const follow=button('Use location'),stop=button('Stop'),refresh=button('↻');refresh.setAttribute('aria-label','Refresh weather');refresh.title='Refresh weather';stop.hidden=true;
  heading.append(make('span','☀','weather-symbol'),title,follow,stop,refresh);
+ const extra=make('details','','weather-more'),extraBody=make('div','','weather-more-body');extra.append(make('summary','Forecast & details'),extraBody);extra.hidden=true;
  const summary=make('div','','weather-summary'),status=make('p','','fine'),hazards=make('div','','weather-hazards'),arrival=make('div','','weather-arrival'),notices=make('details'),noticeList=make('div');
  notices.append(make('summary','Job-site weather alerts'),noticeList);
  const config=make('details'),configBody=make('div','','weather-settings');config.append(make('summary','Job weather & arrival settings'),configBody);
- root.append(heading,location,summary,status,hazards);
+ root.append(heading,location,summary,status,extra,hazards);
  const jobTools=make('section','','weather-card weather-job-tools');jobTools.append(arrival,notices,config);root.after(jobTools);
  // Reuse the same live card on mobile Home; keep job tools and module placement
  // in their original location. Moving the node preserves readings and controls.
@@ -37,22 +38,24 @@ if(typeof document!=='undefined')(()=>{
  }
  function stopWatch(){watchGeneration++;if(watch!==null)navigator.geolocation?.clearWatch(watch);watch=null;fix=null;nearSince={};arrival.replaceChildren();}
  function stopFollow(){following=false;stopWatch();weatherEpoch++;queuedPoint=null;follow.hidden=false;stop.hidden=true;location.textContent=lastWeather?'Last location · following stopped':'Location following stopped';}
- function clear(){epoch++;weatherEpoch++;stopFollow();owner=scope();sites=[];backgroundEnabled=false;lastWeather=null;lastPoint=null;lastFetch=0;queuedPoint=null;nearSince={};dismissed.clear();summary.replaceChildren();hazards.replaceChildren();noticeList.replaceChildren();configBody.replaceChildren();root.querySelector('[data-weather-chooser]')?.remove();status.textContent='';location.textContent='Choose your location';root.hidden=!owner;jobTools.hidden=!owner;config.hidden=session()?.role!=='admin';}
+ function clear(){epoch++;weatherEpoch++;stopFollow();owner=scope();sites=[];backgroundEnabled=false;lastWeather=null;lastPoint=null;lastFetch=0;queuedPoint=null;nearSince={};dismissed.clear();summary.replaceChildren();extraBody.replaceChildren();extra.open=false;extra.hidden=true;hazards.replaceChildren();noticeList.replaceChildren();configBody.replaceChildren();root.querySelector('[data-weather-chooser]')?.remove();status.textContent='';location.textContent='Choose your location';root.hidden=!owner;jobTools.hidden=!owner;config.hidden=session()?.role!=='admin';}
  function render(data,point){
-  lastWeather=data;lastPoint=point;summary.replaceChildren();hazards.replaceChildren();
+  lastWeather=data;lastPoint=point;extra.hidden=false;summary.replaceChildren();extraBody.replaceChildren();hazards.replaceChildren();
   location.textContent=point.title||data.location||'Selected location';
   const fmt=(n,suffix)=>Number.isFinite(n)?n+suffix:'—';
   const outlook=make('div','','weather-outlook');
   for(const day of (data.daily_forecast||[]).slice(0,4)){
    const row=make('div','','weather-day');row.append(make('strong',day.label),make('span',day.condition||'Forecast unavailable'),make('strong',`${fmt(day.high_f,'°')} / ${fmt(day.low_f,'°')}`));outlook.append(row);
   }
-  if(outlook.children.length)summary.append(outlook);
+  if(outlook.children.length)extraBody.append(outlook);
  for(const [name,value] of [['Temperature',fmt(data.temperature_f,'°F')],['Feels like',fmt(data.feels_like_f,'°F')],['Wind',Number.isFinite(data.wind_mph)?fmt(data.wind_mph,' mph'):(data.wind_text||'—')],['Gusts',fmt(data.gust_mph,' mph')],['Rain · past hour',fmt(data.precipitation_inches,' in')]]){
-   const item=make('div');item.append(make('span',name),make('strong',value));summary.append(item);
+   if(value==='—'&&name!=='Temperature'&&name!=='Wind')continue;
+   const item=make('div');item.append(make('span',name),make('strong',value));(name==='Temperature'||name==='Wind'?summary:extraBody).append(item);
   }
   summary.append(make('p',data.condition||'Conditions unavailable'));
   const sourceDate=new Date(data.source_time),old=weatherStale(data);
-  status.textContent=data.status==='unavailable'?'Weather unavailable. No current all-clear is available.':`${data.status==='stale'||!navigator.onLine||old?'Stale · ':''}${data.source||'National Weather Service'} · ${data.basis==='forecast'?'Forecast':'Observation'} · ${Number.isFinite(sourceDate.getTime())?sourceDate.toLocaleString():'source time unavailable'}`;
+  const source=make('p','','fine');extraBody.append(source);source.textContent=data.status==='unavailable'?'Weather unavailable. No current all-clear is available.':`${data.status==='stale'||!navigator.onLine||old?'Stale · ':''}${data.source||'National Weather Service'} · ${data.basis==='forecast'?'Forecast':'Observation'} · ${Number.isFinite(sourceDate.getTime())?sourceDate.toLocaleString():'source time unavailable'}`;
+  status.textContent=data.status==='unavailable'?'Weather unavailable.':data.status==='stale'||!navigator.onLine||old?'Weather may be out of date.':'';
   for(const alert of data.alerts||[]){if(Date.parse(alert.expires)<=Date.now())continue;const d=make('details','','weather-hazard');d.dataset.severity=alert.severity;
    d.append(make('summary',`${alert.severity} · ${alert.headline}`),make('p',alert.description),make('p',alert.instruction),make('p','Valid until '+new Date(alert.expires).toLocaleString(),'fine'));hazards.append(d);}
  }
