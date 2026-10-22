@@ -1,5 +1,20 @@
 # WZOS prelaunch requirements
 
+## Checklists by owner
+
+The actionable requirements are now split into two lists:
+
+1. [Codex — technical preparation and validation](PRELAUNCH_CODEX_20261022.md)
+2. [Human involvement — device acceptance, decisions and approvals](PRELAUNCH_HUMAN_20261022.md)
+
+Mixed tasks are divided between preparation and human acceptance. No open item
+was marked complete by reorganizing this document. The original requirements
+below remain the scope reference; track completion in the two linked lists.
+General onboarding blockers must be resolved before customer onboarding;
+feature-specific checks apply before enabling or promoting that feature.
+
+## Original requirements and release context
+
 Updated October22,2026. Unchecked items require acceptance; a screen or integration
 being present does not establish end-to-end readiness. Owners: Product = Ray;
 Engineering = WZOS development. Keep evidence and the tested release identifier.
