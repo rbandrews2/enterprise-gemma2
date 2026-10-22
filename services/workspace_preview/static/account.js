@@ -239,7 +239,6 @@ window.wzosAccount = (() => {
   }
   const logout=element('button','Sign out');logout.onclick=async()=>{logout.disabled=true;try{if(config.persistent_sessions)await api('/api/account/logout',{});token=null;refresh=null;expires=0;location.reload();}catch(e){logout.textContent='Sign out failed — retry';logout.disabled=false;}};logout.className='account-glass account-signout';actions.append(logout);
   if(config.persistent_sessions){const all=element('button','Forget remembered devices');all.onclick=async()=>{all.disabled=true;try{await api('/api/account/logout-all',{});token=null;refresh=null;expires=0;location.reload();}catch(e){all.textContent='Could not forget devices — retry';all.disabled=false;}};all.className='account-glass account-devices';actions.append(all);}
-  document.querySelector('.app-footer span:last-child').textContent='Private organization workspace';
   return session;
  }
  return {headers,start};

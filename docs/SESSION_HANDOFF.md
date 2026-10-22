@@ -1,5 +1,14 @@
 # WZOS current session handoff - October 18, 2026
 
+## LOCAL global footer — October22
+
+Shared black footer outside the app content includes copyright, Molecular Project
+Development LLC ownership and tap-to-call 844-685-7207. Uses theme font/amber text,
+wraps on mobile and remains on mobile Home; account/staging scripts no longer
+replace its content. Bottom clearance protects the phone link from Atlas's dock.
+Browser verified visible black footer at 390px mobile and 1150px desktop; syntax
+and diff checks passed. Evidence .local-data/global-footer-mobile.png. Local only.
+
 ## LOCAL numbered course links — October22
 
 Ten admin-only numbered course URL fields/cards, direct per-course Save link with

@@ -1,4 +1,7 @@
 /* Layout refinement only: preserve the established palette, glass and menus. */
+.app-footer.global-footer{max-width:none;width:100%;margin:0;padding:22px 20px calc(88px + env(safe-area-inset-bottom,0px));display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:10px 24px;background:#000;color:#d7b16a;border-top:1px solid #d7b16a30;font-family:inherit;--wzos-paragraph-font-size:13px;font-size:13px;line-height:1.6;text-align:center}
+.global-footer span{max-width:100%;overflow-wrap:anywhere}.global-footer a{color:inherit;text-decoration:underline;text-underline-offset:3px;display:inline-flex;align-items:center;min-height:44px;white-space:nowrap}
+.global-footer a:hover{color:#ffe0a3}.global-footer a:focus-visible{outline:2px solid #e8bc67;outline-offset:4px;border-radius:4px}
 body[data-workspace-view=training] #office-review-alert{display:none!important}
 @media screen{
  body[data-workspace-view=training] .app main{padding-bottom:24px}

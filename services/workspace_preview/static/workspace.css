@@ -251,7 +251,7 @@ p{font-size:calc(var(--wzos-paragraph-font-size,1em) + 1pt)!important}
  body.mobile-home-active .sidebar .nav-item{width:100%;min-height:72px;padding:18px 22px;flex-shrink:0;font-size:17px;font-weight:500;border-radius:20px;margin:0;white-space:normal}
  body.mobile-home-active #mobile-admin-tools:not([hidden]){display:flex}
  body.mobile-home-active #dashboard-nav,body.mobile-home-active .nav-item[data-mobile-unavailable=true],body.mobile-home-active .nav-item:disabled{display:none!important}
- body.mobile-home-active .sidebar-foot,body.mobile-home-active .topbar,body.mobile-home-active .app-footer,body.mobile-home-active #assignment-alert,body.mobile-home-active .weather-job-tools{display:none!important}
+ body.mobile-home-active .sidebar-foot,body.mobile-home-active .topbar,body.mobile-home-active #assignment-alert,body.mobile-home-active .weather-job-tools{display:none!important}
  body.mobile-home-active #main{padding-top:0;padding-bottom:0}
  body:not(.mobile-home-active) #mobile-home-return:not([hidden]){display:inline-flex;align-items:center;min-height:44px;padding:10px 14px;border-radius:12px;color:#f0d293;background:linear-gradient(135deg,#242625b8,#070808d9);border:1px solid #cda75c55;white-space:nowrap}
  body:not(.mobile-home-active) .topbar{position:sticky;top:0;z-index:25;gap:10px}
