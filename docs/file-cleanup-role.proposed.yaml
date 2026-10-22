@@ -1,0 +1,5 @@
+title: WZOS retired file cleanup
+description: Proposed only; bucket-scoped object deletion for approved WZOS cleanup.
+stage: GA
+includedPermissions:
+  - storage.objects.delete

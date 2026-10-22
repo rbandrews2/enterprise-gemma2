@@ -12,6 +12,11 @@ Reorganizing requirements does not start tests or establish acceptance.
 
 ## Completed unassisted work — October 22
 
+Sweep 2: [access/cache/recovery readiness findings](PRELAUNCH_SWEEP2_20261022.md).
+18 focused checks passed; direct runtime/secret/private-service policies inspected,
+Daily package bytes verified. Alert destinations, effective cleanup access and
+numeric secret pinning need follow-through as recorded there. Production unchanged.
+
 [Results, exact counts, repaired findings and evidence](PRELAUNCH_ENGINEERING_RESULTS_20261022.md).
 The items below close only their stated technical scope. Remaining mixed tasks
 below stay open until the missing provider/device/release evidence exists.

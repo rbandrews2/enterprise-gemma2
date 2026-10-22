@@ -70,6 +70,13 @@ USD50 with alerts; name its recipient/owner and approve an operating budget.
 
 ## Launch decisions and availability
 
+- [ ] Supply a monitored operational-alert email/owner. Four enabled policies
+  currently have no delivery channel; no test notification has been sent.
+- [ ] Review any needed retired-file cleanup permission repair after effective
+  access is checked. [Prepared scope and rollback](FILE_CLEANUP_ACCESS_PROPOSAL_20261022.md)
+  adds delete capability across the shared file bucket; it is not applied and
+  must account for existing cleanup queues, holds and agreed retention.
+
 - [ ] Approve accepted launch features and treatment of unfinished integrations.
 - [ ] Confirm on-call/support, restore and budget-alert owners are available;
   resolve business decisions surfaced by technical review.

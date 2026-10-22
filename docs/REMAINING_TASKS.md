@@ -1,5 +1,21 @@
 # WZOS remaining tasks - current October 20, 2026
 
+## October 22 sweep 2 follow-ups
+
+- [x] Focused cloud-file adapter/cache/update checks: 18 passed, zero skips.
+- [x] Read direct runtime IAM, bound-secret scope, private model/scanner invocation,
+  operational policies, redacted error metadata and bucket lifecycle configuration.
+- [x] Match vendored Daily SDK to official npm bytes; package advisory query empty.
+- [ ] Attach an approved monitored destination to the four existing alert policies.
+  Email question is pending; no channel or test alert created/sent.
+- [ ] Pin the two latest secret references to freshly verified numeric versions
+  during the next approved release (both currently only enabled version1).
+- [ ] Finish effective object-delete permission diagnosis and any approved narrow
+  repair. See FILE_CLEANUP_ACCESS_PROPOSAL_20261022.md; not applied.
+
+Evidence/limits: PRELAUNCH_SWEEP2_20261022.md. No new full-suite rerun or deployment;
+direct principal checks do not close effective group access or OS/bundle review.
+
 ## October22 unassisted prelaunch testing
 
 See PRELAUNCH_ENGINEERING_RESULTS_20261022.md and the updated Codex/human lists.

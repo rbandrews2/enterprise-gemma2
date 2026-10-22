@@ -1,6 +1,38 @@
 # WZOS current session handoff - October 18, 2026
 
-## Unassisted prelaunch sweep — October22 (latest)
+## Unassisted sweep 2 — October 22 (latest)
+
+18 focused checks passed, zero skips: seven GoogleFiles adapter checks and
+eleven cache/update-flow checks (five new). Only tests, read-only audit tooling
+and documentation changed; production remains ui-16d0905 at 100% traffic.
+Source e8d455e and b16ed82; no runtime code or migration changes this sweep.
+
+Read-only direct-principal audit: runtime has SQL client and single-permission
+auth lookup/session/Speech project roles; ten bound secrets have secret-scoped
+read access. Scanner/model invocation checks remain enabled with runtime-only
+service-level invocation bindings. No public principal grants found in captured
+policies; effective group/deny/conditional/resource access is not fully attested.
+
+Three follow-ups: four enabled operational policies have no notification channels
+(monitored-email question pending); two secrets use latest (each currently has
+only enabled version1); bucket roles lack delete permission used by Forms cleanup.
+Policy Troubleshooter is disabled, so effective delete evaluation remains open.
+No IAM/API/config changes or customer deletion performed. Narrow proposal saved
+in FILE_CLEANUP_ACCESS_PROPOSAL_20261022.md, not applied. Failed cleanup stays
+hidden/queued; never promise completed physical erasure from that result.
+
+Daily0.93.0 matches published npm bytes/integrity, direct-package advisory query
+empty; full bundled/transitive and container/OS review remain open. Redacted
+24h ERROR/5xx app log query returned zero. Bucket lifecycle: noncurrent30days,
+soft delete7days; timing asynchronous, no real managed-object restore accepted.
+
+Cloud Shell reconnected and existing credential authorization restored; fresh
+admin@workzoneos.org / enterprise-gemma2 verified. Private evidence
+`/tmp/wzos-sweep2-20261022.M8CLjJ0U` and $HOME/wzos-sweep2-evidence-20261022; pointer
+wzos-sweep2-latest-path.txt. Local .local-data/prelaunch-sweep2-20261022 has SDK
+audit JSON/script. See PRELAUNCH_SWEEP2_20261022.md; prior full gates stay below.
+
+## Unassisted prelaunch sweep 1 — October22
 
 Source repairs pushed through8d29bbf on codex/preproduction-modules: enforce
 Enterprise messages/meetings/SMS controls while retaining opt-out on downgrade;
