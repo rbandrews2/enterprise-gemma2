@@ -8,6 +8,7 @@ import copy
 import hashlib
 import json
 from pathlib import Path
+import re
 import subprocess
 import time
 import urllib.error
@@ -20,15 +21,24 @@ PINS = {'WZOS_DATABASE_URL': 'wzos-v2-staging-database-url',
         'WZOS_AUTH_WEB_API_KEY': 'wzos-v2-staging-auth-web-key'}
 
 
+def stable_public_content(result):
+    # K_REVISION intentionally participates in the app's deployment marker.
+    return {k:v for k,v in result.items() if k != 'version'}
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('evidence', type=Path)
     parser.add_argument('--apply', action='store_true')
+    parser.add_argument('--resume', action='store_true', help='Reuse the already-staged immutable candidate after verified rollback')
     args = parser.parse_args()
     root = args.evidence
     assert root.is_dir()
-    assert not (root/'pins-plan.json').exists(), 'Use a fresh evidence directory.'
+    assert args.apply or not args.resume
+    assert args.resume or not (root/'pins-plan.json').exists(), 'Use a fresh evidence directory.'
     def call(name, command):
+        if args.resume:
+            name = 'resume-'+name
         result = subprocess.run(['gcloud', *command, '--project='+PROJECT, '--quiet', '--format=json'],
                                 capture_output=True, text=True, timeout=300)
         (root/(name+'.stderr')).write_text(result.stderr)
@@ -52,7 +62,19 @@ def main():
             with urllib.request.urlopen(request, timeout=25) as response:
                 assert response.status == 200
                 data = json.loads(response.read(1024*1024))
-                out[path] = hashlib.sha256(json.dumps(data, sort_keys=True).encode()).hexdigest()
+                if path == '/api/app/version':
+                    assert re.fullmatch(r'[a-f0-9]{24}', data['version'])
+                    out['version'] = data['version']
+                else:
+                    out[path] = hashlib.sha256(json.dumps(data, sort_keys=True).encode()).hexdigest()
+        with urllib.request.urlopen('https://app.workzoneos.org/', timeout=25) as response:
+            html = response.read(2*1024*1024).decode()
+            assert f'<meta name="wzos-release" content="{out["version"]}">' in html
+            out['csp'] = hashlib.sha256(response.headers.get('Content-Security-Policy','').encode()).hexdigest()
+        for path in ('/startup.js','/workspace-layout.css','/wzos-logo.png'):
+            with urllib.request.urlopen('https://app.workzoneos.org'+path, timeout=25) as response:
+                assert response.status == 200
+                out[path] = hashlib.sha256(response.read(4*1024*1024)).hexdigest()
         try:
             urllib.request.urlopen('https://app.workzoneos.org/api/session', timeout=25)
             raise AssertionError('Anonymous workspace access allowed')
@@ -60,9 +82,10 @@ def main():
             assert error.code == 401
             out['anonymous_session_status'] = 401
         return out
-    before = describe('pins-before')
+    before = json.loads((root/'pins-before.json').read_text()) if args.resume else describe('pins-before')
     baseline = active(before)
-    assert before['status']['latestReadyRevisionName'] == baseline, 'Existing staged revision needs review'
+    if not args.resume:
+        assert before['status']['latestReadyRevisionName'] == baseline, 'Existing staged revision needs review'
     revision = call('baseline-revision', ['run', 'revisions', 'describe', baseline, '--region='+REGION])
     image = revision['status']['imageDigest']
     assert '@sha256:' in image
@@ -74,19 +97,26 @@ def main():
         assert len(versions) == 1 and versions[0]['name'].endswith('/versions/1')
         assert versions[0]['state'] == 'ENABLED'
     public_before = smoke()
-    suffix = 'pins-'+time.strftime('%m%d%H%M%S', time.gmtime())
-    candidate = SERVICE+'-'+suffix
-    plan = {'baseline':baseline, 'candidate':candidate, 'image':image,
-            'pins':{k:{'secret':v,'version':'1'} for k,v in PINS.items()},
-            'public_before_hashes':public_before}
-    (root/'pins-plan.json').write_text(json.dumps(plan, indent=2))
+    if args.resume:
+        plan = json.loads((root/'pins-plan.json').read_text())
+        assert plan['baseline'] == baseline and plan['image'] == image
+        assert public_before['/api/identities'] == plan['public_before_hashes']['/api/identities']
+        candidate = plan['candidate']
+    else:
+        suffix = 'pins-'+time.strftime('%m%d%H%M%S', time.gmtime())
+        candidate = SERVICE+'-'+suffix
+        plan = {'baseline':baseline, 'candidate':candidate, 'image':image,
+                'pins':{k:{'secret':v,'version':'1'} for k,v in PINS.items()},
+                'public_before_hashes':public_before}
+        (root/'pins-plan.json').write_text(json.dumps(plan, indent=2))
     print('PIN_PLAN_READY '+json.dumps({'baseline':baseline,'candidate':candidate}), flush=True)
     if not args.apply:
         return
-    assert describe('pins-drift')['spec'] == before['spec'], 'Service changed after preflight'
-    call('pins-stage', ['run', 'deploy', SERVICE, '--region='+REGION, '--image='+image,
-         '--update-secrets='+','.join(k+'='+v+':1' for k,v in PINS.items()),
-         '--revision-suffix='+suffix, '--no-traffic'])
+    if not args.resume:
+        assert describe('pins-drift')['spec'] == before['spec'], 'Service changed after preflight'
+        call('pins-stage', ['run', 'deploy', SERVICE, '--region='+REGION, '--image='+image,
+             '--update-secrets='+','.join(k+'='+v+':1' for k,v in PINS.items()),
+             '--revision-suffix='+suffix, '--no-traffic'])
     staged = describe('pins-staged')
     assert active(staged) == baseline, 'Staging unexpectedly changed traffic'
     ready = call('candidate-revision', ['run','revisions','describe',candidate,'--region='+REGION])
@@ -121,14 +151,16 @@ def main():
                             '--to-revisions='+candidate+'=100'])
         after = describe('pins-after')
         assert active(after) == candidate
-        assert smoke() == public_before, 'Public version/auth configuration changed'
+        public_after = smoke()
+        (root/'pins-public-comparison.json').write_text(json.dumps({'before':public_before,'after':public_after}, indent=2))
+        assert stable_public_content(public_after) == stable_public_content(public_before), 'Public assets/auth/security changed'
     except Exception:
         if cutover_attempted:
             call('pins-rollback', ['run','services','update-traffic',SERVICE,'--region='+REGION,
                                  '--to-revisions='+baseline+'=100'])
             assert active(describe('pins-rollback-verified')) == baseline
         raise
-    (root/'pins-result.json').write_text(json.dumps({'passed':True, **plan}, indent=2))
+    (root/'pins-result.json').write_text(json.dumps({'passed':True, **plan, 'public_after':public_after}, indent=2))
     print('RUNTIME_SECRET_PINS_PASS baseline='+baseline+' live='+candidate, flush=True)
 
 
