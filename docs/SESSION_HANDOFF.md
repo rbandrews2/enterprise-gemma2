@@ -1,5 +1,18 @@
 # WZOS current session handoff - October 18, 2026
 
+## LIVE training and footer — October22
+
+Source16d09056ccf31ee8f144b70353b0b657a527dd63 deployed100% as
+wzos-v2-accounts-ui-16d0905. Build083d777a-73cc-4f6e-9f39-cc7a803b27ed SUCCESS;
+digest80c3819aa9e8d3ce38ccf47e87bd4015b40875768a54604e994da9674cb3c054;
+public version5821810b858f1f58b45af012. 16PostgreSQL +10Node focused checks PASS,
+zero skips/failures. Preflight/build/drift/staged-runtime/public six asset hashes,
+footer/update-marker/auth denial/traffic PASS; deploy.exit0. Priorui-358cf45 retained.
+No schema, identity, secret, weather, model or customer-record changes. Evidence
+/tmp/wzos-training-footer-20261022.y7ej7c0f; home pointer
+wzos-training-footer-release-path.txt. See TRAINING_FOOTER_RELEASE_20261022.md.
+Earlier LOCAL entries below are superseded by this deployment.
+
 ## LOCAL global footer — October22
 
 Shared black footer outside the app content includes copyright, Molecular Project
