@@ -34,6 +34,7 @@ def main():
     os.environ['WZOS_WORKSPACE_PREVIEW'] = '1'
     storage = PostgreSQLStorage(dsn)
     try:
+        storage.initialize()
         app = create_app(storage=storage, knowledge_store=Store(args.evidence.parent/'sources', {}))
         with TestClient(app) as client:
             headers = {'X-Preview-Actor': 'enterprise-admin'}
