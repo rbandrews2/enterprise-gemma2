@@ -10,7 +10,7 @@
  const previous=window.wzosModulesCanLeave;
  window.wzosModulesCanLeave=()=>!busy&&(!dirty||confirm('Leave unsaved training changes?'))&&(!previous||previous());
  const root=el('section');root.className='panel report-section';root.id='training-content-panel';
- document.getElementById('team-view').insertBefore(root,document.getElementById('team-content'));
+ document.getElementById('team-content').after(root);
  const notice=el('p');notice.setAttribute('role','status');
  const say=t=>{notice.textContent=t;};
  async function run(control,work,done){if(busy)return;busy=true;control.disabled=true;try{const result=await work();dirty=false;await show();say(typeof done==='function'?done(result):done);}catch(e){say(e.message);}finally{busy=false;control.disabled=false;}}
@@ -79,7 +79,6 @@
   const generation=++epoch;root.replaceChildren();root.hidden=view!=='training';if(root.hidden)return;
   const session=window.wzosClock.getSession(),admin=session?.role==='admin';
   root.append(notice);
-  if(admin){const tools=el('section'),host=el('div'),add=el('button','Add training video');tools.className='training-admin-tools';add.className='primary';add.onclick=()=>{editor(null,host,{videoFirst:true});host.scrollIntoView?.({block:'start'});};tools.append(add,host);root.append(tools);}
   try{
    const [modules,assignments,completions]=await Promise.all([api('/api/training-modules'),api('/api/training-assignments'),api('/api/training-completions')]);
    if(generation!==epoch)return;

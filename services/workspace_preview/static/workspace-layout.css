@@ -1,4 +1,20 @@
 /* Layout refinement only: preserve the established palette, glass and menus. */
+body[data-workspace-view=training] #office-review-alert{display:none!important}
+@media screen{
+ body[data-workspace-view=training] .app main{padding-bottom:24px}
+ body[data-workspace-view=training] #team-content{gap:12px;align-items:start}
+ body[data-workspace-view=training] #team-content>.training-course-links{grid-column:1/-1}
+ body[data-workspace-view=training] #team-content>.training-course-card{padding:18px;margin:0}
+ .training-course-number{display:block;font-size:13px;color:#e4b75e;margin-bottom:6px}
+ .training-course-link-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px 12px;align-items:end;margin:10px 0}
+ .app main .training-course-link-row label{margin-bottom:0}
+ .training-course-link-row>button{margin-bottom:0}
+ .training-link-feedback{grid-column:1/-1}
+ .training-rights label{display:flex;align-items:center;gap:8px}
+ #training-content-panel{margin:12px 0!important}
+ #training-content-panel>section{margin:12px 0}
+ @media(max-width:760px){.training-course-link-row{grid-template-columns:minmax(0,1fr)}.training-course-link-row>button{justify-self:start}}
+}
 .app-starting>.sidebar,.app-starting>.app,.app-starting>.assistant-dock{display:none!important}
 .app-boot{min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:28px;background:#08090b;color:#e9e8e3;text-align:center}
 .app-boot img{width:68px;height:76px;object-fit:contain}.app-boot p{margin:0;max-width:32ch;line-height:1.6}.app-boot strong{font-size:22px;letter-spacing:.02em}

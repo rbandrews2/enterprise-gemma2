@@ -1,5 +1,17 @@
 # WZOS current session handoff - October 18, 2026
 
+## LOCAL numbered course links — October22
+
+Ten admin-only numbered course URL fields/cards, direct per-course Save link with
+feedback, organization-scoped versioned persistence in existing training tables;
+reserved links stay separate from assessments. Catalog had nine courses; tenth
+Organization Training added. Unrelated office alert/disclaimer hidden/removed on
+Training; smaller gaps/bottom padding. 16 focused SQLite +10 Node PASS, no skips;
+browser synthetic admin save/member visibility accepted. No schema/IAM/weather
+configuration change or deployment. PostgreSQL/release gates remain pending.
+Details and rollback: TRAINING_COURSE_LINKS_20261022.md. Prior prelaunch checklist
+split remains an independent uncommitted documentation change; preserve it.
+
 ## LIVE signatures, compact weather and explicit review - October22
 
 Final358cf452cf465c8727687d204f167f526fb6ec8a is serving100% as

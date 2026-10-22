@@ -30,6 +30,42 @@ class TrainingContentTests(unittest.TestCase):
     def ready(self):
         self.assertEqual(self.save().status_code, 200); self.assertEqual(self.publish().status_code, 200)
 
+    def test_catalog_video_save_retry_replace_clear_and_tenant_scope(self):
+        path = '/api/training-course-videos'
+        catalog = self.client.get('/api/training', headers=self.h()).json()['items']
+        self.assertEqual(len(catalog), 10)
+        self.assertEqual([c['id'] for c in catalog], [c['course_id'] for c in self.client.get(path, headers=self.h()).json()['items']])
+        body = {'expected_version': 0, 'media': module()['media'][0]}
+        save = lambda payload: self.client.put(path+'/pmt', headers=self.h('enterprise-admin'), json=payload)
+        first = save(body)
+        self.assertEqual(first.status_code, 200, first.text)
+        self.assertEqual(save(body).json(), first.json())
+        member = self.client.get(path, headers=self.h()).json()['items'][0]
+        self.assertEqual(member['media'], [body['media']])
+        self.assertEqual(self.client.get(path, headers=self.h('core-admin')).json()['items'][0]['media'], [])
+        self.assertEqual(save({**body, 'media': {**body['media'], 'url':'https://example.test/new.mp4'}}).status_code, 409)
+        replacement = {**body, 'expected_version': 1, 'media': {**body['media'], 'url':'https://example.test/new.mp4'}}
+        self.assertEqual(save(replacement).json()['version'], 2)
+        self.assertEqual(save({'expected_version': 2, 'media': None}).json()['media'], [])
+        self.assertEqual(self.client.get(path, headers=self.h()).json()['items'][0]['media'], [])
+
+    def test_catalog_video_admin_validation_and_no_assessment_side_effects(self):
+        path = '/api/training-course-videos/pmt'
+        body = {'expected_version': 0, 'media': module()['media'][0]}
+        self.assertEqual(self.client.put(path, headers=self.h(), json=body).status_code, 403)
+        self.assertEqual(self.client.put(path, json=body).status_code, 401)
+        for media in ({**body['media'], 'rights_confirmed':False}, {**body['media'], 'url':'http://x.test/a'}, {**body['media'], 'rights_note':''}):
+            self.assertEqual(self.client.put(path, headers=self.h('enterprise-admin'), json={**body,'media':media}).status_code, 422)
+        self.assertEqual(self.client.put(path, headers=self.h('enterprise-admin'), json=body).status_code, 200)
+        self.assertEqual(self.client.get('/api/training-modules', headers=self.h('enterprise-admin')).json()['items'], [])
+        self.assertEqual(self.client.get('/api/training-modules', headers=self.h()).json()['items'], [])
+        for who in ('enterprise-admin', 'enterprise-general'):
+            for endpoint in ('training-assignments', 'training-completions'):
+                self.assertEqual(self.client.get('/api/'+endpoint, headers=self.h(who)).json()['items'], [])
+        self.assertEqual(self.client.get('/api/training-modules/course-video-pmt/versions/1', headers=self.h()).status_code, 404)
+        self.assertEqual(self.save(module_id='course-video-pmt').status_code, 422)
+        self.assertEqual(self.client.put('/api/training-course-videos/unknown', headers=self.h('enterprise-admin'), json=body).status_code, 404)
+
     def test_only_admins_author_and_media_rights_are_required(self):
         self.assertEqual(self.save('enterprise-general').status_code, 403)
         self.assertEqual(self.save(media=[{'title': 'Clip', 'url': 'https://x.test/v', 'rights_confirmed': False, 'rights_note': 'Found online'}]).status_code, 422)

@@ -109,5 +109,13 @@
     ],
     "status": "content_review_pending",
     "certificate_available": false
+  },
+  {
+    "id": "organization_training",
+    "title": "Organization Training",
+    "description": "Additional lessons and materials selected by your organization.",
+    "topics": ["organization", "training"],
+    "status": "content_review_pending",
+    "certificate_available": false
   }
 ]

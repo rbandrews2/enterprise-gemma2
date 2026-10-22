@@ -9,6 +9,7 @@ attests it may use; WZOS does not host third-party video. The browser can open
 supported media in an inline player after an explicit learner action.
 """
 import json
+from pathlib import Path
 from datetime import date, datetime, timezone
 from typing import Literal
 from uuid import UUID, uuid4
@@ -88,6 +89,12 @@ class Publish(BaseModel):
     expected_version: int = Field(ge=1)
 
 
+class CourseVideo(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    expected_version: int = Field(ge=0)
+    media: Media | None = None
+
+
 class Assign(BaseModel):
     model_config = ConfigDict(extra='forbid')
     module_id: str = Field(pattern=MODULE_ID)
@@ -108,6 +115,9 @@ class Attempt(BaseModel):
 
 
 def register(app, connect, actor, actors):
+    courses = json.loads(Path(__file__).with_name('training_catalog.json').read_text(encoding='utf-8'))
+    course_ids = {course['id'] for course in courses}
+    video_prefix = 'course-video-'
     with connect() as db:
         for sql in DDL:
             db.execute(sql)
@@ -126,6 +136,8 @@ def register(app, connect, actor, actors):
         return user
 
     def module_row(db, org, module_id):
+        if module_id.startswith(video_prefix):
+            raise HTTPException(404, 'Training module not found')
         row = db.execute('SELECT * FROM training_modules WHERE organization_id=? AND id=?', (org, module_id)).fetchone()
         if not row:
             raise HTTPException(404, 'Training module not found')
@@ -152,17 +164,56 @@ def register(app, connect, actor, actors):
         user = actor(request)
         with connect() as db:
             rows = db.execute('SELECT * FROM training_modules WHERE organization_id=? ORDER BY id', (user['organization_id'],)).fetchall()
+            rows = [r for r in rows if not r['id'].startswith(video_prefix)]
             if user['role'] == 'admin':
                 return {'items': [admin_view(r) for r in rows]}
             items = [learner_view(published(db, user['organization_id'], r['id'], r['published_version']), r['id'], r['published_version'])
                      for r in rows if r['status'] == 'published']
         return {'items': items}
 
+    # Catalog videos reuse versioned organization storage, separately from assessments.
+    @app.get('/api/training-course-videos')
+    def course_videos(request: Request):
+        user = actor(request)
+        with connect() as db:
+            rows = db.execute('SELECT * FROM training_modules WHERE organization_id=?', (user['organization_id'],)).fetchall()
+            by_id = {r['id']: r for r in rows}
+            return {'items': [{'course_id': c['id'], 'version': by_id[video_prefix+c['id']]['draft_version'] if video_prefix+c['id'] in by_id else 0,
+                               'media': json.loads(by_id[video_prefix+c['id']]['draft']).get('media', []) if video_prefix+c['id'] in by_id else []} for c in courses]}
+
+    @app.put('/api/training-course-videos/{course_id}')
+    def save_course_video(course_id: str, body: CourseVideo, request: Request):
+        user = admin(request)
+        if course_id not in course_ids:
+            raise HTTPException(404, 'Course not found')
+        module_id = video_prefix + course_id
+        course = next(c for c in courses if c['id'] == course_id)
+        payload = json.dumps({'title': course['title'], 'summary': '', 'sections': [],
+                              'questions': [], 'passing_score': 80, 'max_attempts': 3,
+                              'media': [body.media.model_dump()] if body.media else []}, sort_keys=True)
+        with connect() as db:
+            db.execute('BEGIN IMMEDIATE')
+            row = db.execute('SELECT * FROM training_modules WHERE organization_id=? AND id=?', (user['organization_id'], module_id)).fetchone()
+            version = row['draft_version'] if row else 0
+            if version != body.expected_version:
+                if not (row and version == body.expected_version + 1 and row['draft'] == payload):
+                    raise HTTPException(409, 'This course link changed. Reload before saving.')
+            else:
+                version += 1
+                stamp = now()
+                db.execute('INSERT INTO training_module_versions VALUES (?,?,?,?,?,?)', (user['organization_id'], module_id, version, payload, user['id'], stamp))
+                if row:
+                    db.execute("UPDATE training_modules SET status='catalog_video',draft=?,draft_version=?,published_version=0,updated_by=?,updated_at=? WHERE organization_id=? AND id=?",
+                               (payload, version, user['id'], stamp, user['organization_id'], module_id))
+                else:
+                    db.execute('INSERT INTO training_modules VALUES (?,?,?,?,?,?,?,?)', (user['organization_id'], module_id, 'catalog_video', 0, payload, version, user['id'], stamp))
+            return {'course_id': course_id, 'version': version, 'media': json.loads(payload)['media']}
+
     @app.put('/api/training-modules/{module_id}')
     def save_draft(module_id: str, body: Draft, request: Request):
         user = admin(request)
         import re
-        if not re.fullmatch(MODULE_ID, module_id):
+        if module_id.startswith(video_prefix) or not re.fullmatch(MODULE_ID, module_id):
             raise HTTPException(422, 'Module identifiers use lowercase letters, digits, hyphens or underscores')
         draft = json.dumps(body.model_dump(exclude={'expected_version'}), sort_keys=True)
         with connect() as db:

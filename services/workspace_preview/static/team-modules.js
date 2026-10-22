@@ -2,8 +2,9 @@
 (() => {
  const $=id=>document.getElementById(id),api=(...a)=>window.wzosClock.api(...a),node=(tag,text)=>{const n=document.createElement(tag);n.textContent=text;return n;};
  let generation=0, view=null, dirty=false, sending=false, destinationCache=null;
+ const trainingEdits=new Set();
  const previous=window.wzosModulesCanLeave;
- window.wzosModulesCanLeave=()=>previous()&&!sending&&(!dirty||confirm('Leave the unsaved message?'));
+ window.wzosModulesCanLeave=()=>previous()&&!sending&&(!dirty||confirm(view==='training'?'Leave unsaved course links?':'Leave the unsaved message?'));
  async function show(name){
   generation++;view=name;dirty=false;const epoch=generation,root=$('team-content');root.replaceChildren();$('team-notice').textContent='';
   if(!['training','messages','navigation'].includes(name))return;
@@ -40,9 +41,41 @@
     if(requested&&!found)$('team-notice').textContent='That destination is no longer available in your permitted active jobs.';return;
    }
    if(name==='training'){
-    root.append(node('p','Study plans do not certify training completion. Follow your organization’s review process.'));
-    const data=await api('/api/training');if(epoch!==generation)return;
-    for(const course of data.items){const card=node('section','');card.className='report-section panel';card.append(node('h2',course.title),node('p',course.description));const label=node('label','Study status'),select=node('select','');for(const [value,title] of Object.entries({not_started:'Not started',studying:'Studying',review_requested:'Ready for review (not sent)'})){const option=node('option',title);option.value=value;select.append(option);}select.value=course.study_status;const save=node('button','Save study status');save.className='secondary';save.onclick=async()=>{save.disabled=true;try{await api('/api/training/'+course.id,{method:'PUT',body:JSON.stringify({status:select.value})});if(epoch===generation)$('team-notice').textContent='Study status saved. No certificate or notification issued.';}catch(error){if(epoch===generation)$('team-notice').textContent=error.message;}finally{save.disabled=false;}};label.append(select);card.append(label,save);root.append(card);}return;
+    trainingEdits.clear();
+    const [data,videos]=await Promise.all([api('/api/training'),api('/api/training-course-videos')]);if(epoch!==generation)return;
+    const admin=window.wzosClock.getSession()?.role==='admin',byId=new Map(videos.items.map(v=>[v.course_id,v]));
+    let links,rights,source;
+    if(admin){
+     links=node('section','');links.className='panel training-course-links';links.append(node('h2','Course video links'));
+     const permission=node('label',''),copy=node('span','My organization owns or is licensed to use the videos I save.');rights=node('input','');rights.type='checkbox';permission.append(rights,copy);
+     const origin=node('label','Source, license or owner');source=node('input','');source.type='text';source.placeholder='For new or replacement videos';origin.append(source);
+     const details=node('details','');details.className='training-rights';details.append(node('summary','Video usage permission'),permission,origin);links.append(details);root.append(links);
+    }
+    data.items.forEach((course,index)=>{
+     let saved=byId.get(course.id)||{version:0,media:[]};
+     const card=node('section','');card.className='report-section panel training-course-card';card.id='training-course-'+course.id;
+     if(admin){const number=node('span','Course '+(index+1));number.className='training-course-number';card.append(number);}
+     card.append(node('h2',course.title),node('p',course.description));
+     const player=node('div','');const render=()=>{player.replaceChildren();for(const media of saved.media)player.append(window.WzosTrainingMedia.render(media));};render();card.append(player);
+     if(admin){
+      const row=node('div','');row.className='training-course-link-row';const lab=node('label',`${index+1}. ${course.title}`),url=node('input','');url.type='url';url.placeholder='Paste video link for course '+(index+1);url.value=saved.media[0]?.url||'';lab.append(url);
+      const save=node('button','Save link'),feedback=node('p','');save.type='button';save.className='primary';feedback.setAttribute('role','status');feedback.className='training-link-feedback';
+      url.oninput=()=>{trainingEdits.add(course.id);dirty=true;feedback.textContent='Unsaved link';};
+      save.onclick=async()=>{
+       const value=url.value.trim(),old=saved.media[0];
+       if(value&&!window.WzosTrainingMedia.safeURL(value)){feedback.textContent='Enter a public HTTPS video link.';return;}
+       const unchanged=value===old?.url;
+       if(value&&!unchanged&&(!rights.checked||source.value.trim().length<5)){feedback.textContent='Open Video usage permission, confirm permission and enter the source or owner (at least 5 characters).';return;}
+       if(sending)return;sending=true;save.disabled=true;save.textContent='Saving…';
+       try{const result=await api('/api/training-course-videos/'+encodeURIComponent(course.id),{method:'PUT',body:JSON.stringify({expected_version:saved.version,media:value?(unchanged?old:{title:course.title,url:value,rights_confirmed:true,rights_note:source.value.trim()}):null})});
+        if(epoch!==generation)return;saved=result;trainingEdits.delete(course.id);dirty=trainingEdits.size>0;window.WzosTrainingMedia.stopAll();render();feedback.textContent=value?'Saved. Video is available in this course.':'Saved. Video link removed.';
+       }catch(error){if(epoch===generation)feedback.textContent=error.message;}finally{sending=false;save.disabled=false;save.textContent='Save link';}
+      };
+      row.append(lab,save,feedback);links.append(row);
+     }
+     const label=node('label','Study status'),select=node('select','');for(const [value,title] of Object.entries({not_started:'Not started',studying:'Studying',review_requested:'Ready for review (not sent)'})){const option=node('option',title);option.value=value;select.append(option);}select.value=course.study_status;
+     const save=node('button','Save study status');save.type='button';save.className='secondary';save.onclick=async()=>{save.disabled=true;try{await api('/api/training/'+course.id,{method:'PUT',body:JSON.stringify({status:select.value})});if(epoch===generation)$('team-notice').textContent='Study status saved.';}catch(error){if(epoch===generation)$('team-notice').textContent=error.message;}finally{save.disabled=false;}};label.append(select);card.append(label,save);root.append(card);
+    });return;
    }
    await messagesView(root,epoch);
   }catch(error){if(epoch===generation)$('team-notice').textContent=error.message;}
