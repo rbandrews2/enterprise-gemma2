@@ -1,5 +1,20 @@
 # WZOS prelaunch requirements
 
+## Completed acceptance / test reuse
+
+- [x] Unassisted engineering sweeps1and2 completed; findings and accepted evidence
+  recorded. This closes the sweeps, not the unresolved operational findings.
+- [x] Smart Field Voice incident flow: Ray confirms correct numbers and wording,
+  in-app notification delivery, form review and notification clearance after review
+  (October22). Do not repeat this accepted scenario without a change or new issue.
+- [x] Passing tests, repaired failures, source/image provenance and reuse rules
+  consolidated in [the validation ledger](VALIDATION_LEDGER_20261022.md).
+- [x] Pin database/auth secret references to verified numeric versions on the same
+  app image; readiness/configuration/public checks passed. Live pins-1022181839.
+
+Three operational repairs and their actual completion evidence are tracked in
+[OPERATIONAL_FOLLOWUPS_20261022.md](OPERATIONAL_FOLLOWUPS_20261022.md).
+
 ## Checklists by owner
 
 The actionable requirements are now split into two lists:
@@ -19,9 +34,11 @@ Updated October22,2026. Unchecked items require acceptance; a screen or integrat
 being present does not establish end-to-end readiness. Owners: Product = Ray;
 Engineering = WZOS development. Keep evidence and the tested release identifier.
 
-Latest release: signatures/compact weather/report review deployed as ui-358cf45;
-focused Node18,SQLite8,PostgreSQL8PASS. Phone handwriting and exported PDF still
-need field acceptance. See FORMS_WEATHER_RELEASE_20261022.md for live evidence.
+Latest app image: training/footer source16d0905, deployed as ui-16d0905 before
+configuration-only secret pinning. Its16focusedPostgreSQL/10Node and public
+release checks passed. Phone handwriting/exported PDF still need field acceptance.
+See TRAINING_FOOTER_RELEASE_20261022.md and the operational repair note for
+current configuration revision/rollback evidence.
 
 ## Release blockers for general customer onboarding
 
@@ -30,8 +47,8 @@ need field acceptance. See FORMS_WEATHER_RELEASE_20261022.md for live evidence.
   Verify org isolation, seat limits (all active logins including admins), roles and
   the final Core/Enterprise feature matrix, including Messaging/Video meetings.
 - [ ] Product: accept installed Android phone workflows: handwritten signature,
-  Clear/typed alternative, saved office copy and printed/downloaded PDF; verify a
-  Smart Field Voice draft opens visibly and office review produces confirmation.
+  Clear/typed alternative, saved office copy and printed/downloaded PDF. The
+  accepted Smart Field Voice incident notification/review scenario is checked above.
 - [ ] Engineering: verify deployed signature persistence with PostgreSQL, safe
   retries, cross-org denial and old unsigned records. Record the deployment result.
 - [ ] Product + Engineering: Stripe live-account acceptance for purchase, activation,
@@ -53,10 +70,12 @@ need field acceptance. See FORMS_WEATHER_RELEASE_20261022.md for live evidence.
 
 ## Feature-specific acceptance before enabling or promoting
 
-- [ ] Smart Field Voice: actual-phone recording/revocation/offline behavior; quantities
-  and incidents reviewed by worker; duplicate Send produces one office submission;
-  raw audio/transcripts remain transient. Existing synthetic passes do not replace
-  field acceptance. Confirm model budget/alerts and scale-to-zero configuration.
+- [x] Smart Field Voice incident/report contents, in-app notification and
+  review-clear behavior accepted by Ray; see completed acceptance above.
+- [ ] Remaining Smart Field Voice acceptance: phone permission/revocation/offline
+  behavior, duplicate-send protection and transient audio/transcript handling.
+  Reuse passing automated evidence where applicable. Confirm budget/alert ownership
+  separately; do not repeat the accepted incident notification scenario by default.
 - [ ] Weather: accept compact local card with populated and missing values; verify
   changing location, permission denied, stale/unavailable states and active alerts.
   Confirm hourly monitoring's actual schedule and notices. Keep critical warnings

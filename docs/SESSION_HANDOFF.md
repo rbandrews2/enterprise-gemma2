@@ -1,6 +1,43 @@
 # WZOS current session handoff - October 18, 2026
 
-## Unassisted sweep 2 — October 22 (latest)
+## Operational follow-ups / Voice human acceptance — October 22 (latest)
+
+User confirms Smart Field Voice incident numbers/wording correct, notification
+delivered inside WZOS, form reviewed and notification cleared afterward. Checked
+off this exact scenario in main/human/Codex prelaunch lists. Do not repeat it
+without a changed component/new concern; phone permission/offline/PDF acceptance
+remain distinct. See VALIDATION_LEDGER_20261022.md for all accepted suite evidence,
+repaired failures, source/image provenance and reuse rules. Durable cloud sweep1
+folder has validation-index.json with log hashes,891full/119affected named cases
+and Node174 totals. Never sum overlapping/repeated checks as unique coverage.
+
+Numeric secret pinning is LIVE: wzos-v2-accounts-pins-1022181839 at100%, image
+80c3819aa9e8d3ce38ccf47e87bd4015b40875768a54604e994da9674cb3c054 unchanged;
+public marker7e5e09892935f9d2ba1ba6d6. Database/auth refs now1, with same runtime
+spec except those keys, same policy/scaling, assets/auth/security/public401PASS.
+Prior ui-16d0905 retained. This is a config-only repair, not deployment of the
+development branch's UI/security/dependency code. New source tool50557db.
+
+Initial marker literal comparison and first nonce literal comparison conservatively
+rolled back. Both receipts retained; corrected guard allows K_REVISION marker and
+per-request nonce changes while preserving all security directives/content checks.
+Five focused guard checks PASS. Reused the same staged revision; no image build,
+broad suite, paid inference or customer-report rerun. Independent readback PASS.
+
+Other two requested repairs are prepared, NOT complete: alert destination email
+question pending; specific bucket-scoped storage.objects.delete access approval
+question pending. Browser policy requires confirmation for this new access. No
+channel/test alert, IAM grant, API enablement or customer backlog cleanup occurred.
+Do not check these two completion boxes until actual application/readback.
+
+Evidence root /tmp/wzos-followups-20261022.dBAoYjzD, home pointer
+wzos-followups-latest-path.txt, durable $HOME/wzos-followups-evidence-20261022.
+pins-resume2.exit0/pins-result.json/public comparison/independent-final-service.json
+confirm final state; resume-attempt1-evidence archives the failed guard attempt.
+See OPERATIONAL_FOLLOWUPS_20261022.md. Verify fresh auth/project on resume;
+continue pending email/access actions without replaying passed app suites.
+
+## Unassisted sweep 2 — October 22
 
 18 focused checks passed, zero skips: seven GoogleFiles adapter checks and
 eleven cache/update-flow checks (five new). Only tests, read-only audit tooling

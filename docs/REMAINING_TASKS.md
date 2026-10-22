@@ -1,5 +1,20 @@
 # WZOS remaining tasks - current October 20, 2026
 
+## October 22 operational completion / accepted Voice flow
+
+- [x] Ray accepted Voice incident contents, in-app notification and review-clear
+  behavior; prelaunch requirement checked. Do not repeat this accepted scenario.
+- [x] Preserve all accepted tests/repairs/reuse rules in VALIDATION_LEDGER_20261022.md.
+- [x] Live numeric secret pinning at pins-1022181839, same80c3819aimage; bounded
+  config/readiness/public acceptance and independent readback PASS. Rollback ui-16d0905.
+- [ ] Alert routing: monitored email requested; four existing routes prepared.
+- [ ] Cleanup access: specific approval requested for the prepared single-permission
+  bucket-scoped grant; no actual grant/customer cleanup performed.
+
+Exact outcomes/receipts: OPERATIONAL_FOLLOWUPS_20261022.md. Five targeted guard
+checks passed; no broad suite rerun or new application image. Earlier sweep
+snapshots below are historical; use this checkpoint for current live state.
+
 ## October 22 sweep 2 follow-ups
 
 - [x] Focused cloud-file adapter/cache/update checks: 18 passed, zero skips.
@@ -8,8 +23,8 @@
 - [x] Match vendored Daily SDK to official npm bytes; package advisory query empty.
 - [ ] Attach an approved monitored destination to the four existing alert policies.
   Email question is pending; no channel or test alert created/sent.
-- [ ] Pin the two latest secret references to freshly verified numeric versions
-  during the next approved release (both currently only enabled version1).
+- [x] Pin the two latest secret references to verified version1 on the same image;
+  live pins-1022181839. See OPERATIONAL_FOLLOWUPS_20261022.md for checks/rollback.
 - [ ] Finish effective object-delete permission diagnosis and any approved narrow
   repair. See FILE_CLEANUP_ACCESS_PROPOSAL_20261022.md; not applied.
 

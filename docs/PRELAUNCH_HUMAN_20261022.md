@@ -20,11 +20,15 @@ USD50 with alerts; name its recipient/owner and approve an operating budget.
 
 ## General onboarding blockers — human acceptance
 
+- [x] Smart Field Voice incident acceptance (Ray, October22): correct quantities/
+  wording, notification received inside WZOS, form reviewed and notification
+  cleared afterward. Recorded in VALIDATION_LEDGER_20261022.md; no retest needed
+  without a relevant change/new issue.
+
 - [ ] Accept the Core/Enterprise and admin/member feature matrix and prepared
   onboarding journeys against the intended customer experience.
 - [ ] On installed Android WZOS, draw a signature, Clear it, try the typed alternative
-  and inspect the office copy and actual printed/downloaded PDF. Confirm Smart
-  Field Voice review opens the draft and office review produces confirmation.
+  and inspect the office copy and actual printed/downloaded PDF.
 - [ ] Authorize and participate in prepared Stripe live-account acceptance:
   purchase/activation, upgrade/one-time $20 credit, seats, failed payment,
   cancellation and applicable tax. Agree on real charges/subscription changes
@@ -44,9 +48,9 @@ USD50 with alerts; name its recipient/owner and approve an operating budget.
 ## Feature-specific human acceptance — before enabling or promoting
 
 - [ ] Smart Field Voice: test actual-phone recording, retained/denied/revoked
-  microphone permission and offline recovery. Review spoken quantities/incidents
-  and confirm receipt/admin notification with an agreed test report. Confirm the
-  model operating budget and alert owner.
+  microphone permission and offline recovery. The incident-generation/notification/
+  review-clear scenario passed above; do not repeat it unnecessarily. Confirm
+  model operating budget/alert ownership separately.
 - [ ] Weather: accept the compact card with actual location changes, denied
   permission and prepared stale/alert scenarios. No weather configuration change
   is implied; hourly monitoring is not continuous emergency protection.

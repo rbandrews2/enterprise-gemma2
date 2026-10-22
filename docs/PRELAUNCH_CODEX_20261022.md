@@ -12,6 +12,13 @@ Reorganizing requirements does not start tests or establish acceptance.
 
 ## Completed unassisted work — October 22
 
+- [x] Preserve accepted tests and failed-run repair history in
+  VALIDATION_LEDGER_20261022.md; select affected/configuration checks for follow-ups.
+- [x] Record Ray's live Voice incident notification/review-clear acceptance in
+  both prelaunch lists; no repeat requested for this accepted flow.
+- [x] Complete unchanged-image numeric secret selector repair and bounded runtime/
+  public acceptance. See OPERATIONAL_FOLLOWUPS_20261022.md; broad suites reused.
+
 Sweep 2: [access/cache/recovery readiness findings](PRELAUNCH_SWEEP2_20261022.md).
 18 focused checks passed; direct runtime/secret/private-service policies inspected,
 Daily package bytes verified. Alert destinations, effective cleanup access and

@@ -36,6 +36,8 @@ conversation or Cloud Shell restarted. Verify applicability first.
 | CACHE-UPDATES | Five new privacy/cache +six existing update checks,b16ed82 | Eleven PASS, zero skips | `node --test tests/public-cache.test.cjs tests/app-updates.test.cjs`; sweep2 report |
 | DAILY-ARTIFACT | Vendored0.93.0 | Exact upstream bytes, verified tarball integrity; direct-package advisory response empty | local `.local-data/prelaunch-sweep2-20261022/daily-sdk-audit.json`; **not complete bundle or media acceptance** |
 | ACCESS-METADATA | Sweep2 live app/secret/project/bucket/private-service policies | Direct grants captured; private invocation checks confirmed; effective access limitations recorded | PRELAUNCH_SWEEP2_20261022.md; private cloud sweep2 artifacts |
+| PIN-CHECK-GUARD | Tooling-only50557db | Five focused PASS: revision marker/nonce may change; auth, asset, security directives and denial changes still fail comparison | `python -m unittest tests.test_secret_pin_guard`; actual config result in operational repair note |
+| LIVE-SECRET-PINS | Same image80c3819a…, live pins-1022181839 | Numeric refs1, same runtime/image, Ready, HTML/API marker, unchanged assets/auth/security and anonymous401 PASS; prior revision retained | OPERATIONAL_FOLLOWUPS_20261022.md; private pins-result.json, pins-resume2.exit0 and independent readback |
 
 Sweep1 private cloud artifacts were copied into
 `$HOME/wzos-prelaunch-evidence-20261022`; sweep2 into
@@ -43,6 +45,10 @@ Sweep1 private cloud artifacts were copied into
 the owned integration checkout. Raw runtime metadata, originals and credentials
 are not Git-backed. A missing temporary folder does not mean the tests need to
 be repeated: first check the durable copy and recorded source/image identifiers.
+The durable sweep1 folder now also contains `validation-index.json`: raw log
+SHA256, named Python cases, outcomes and reported suite totals. Full-gate891 and
+affected119 cases reconcile with their summaries. Node174 and restore markers
+are indexed as their own artifact types, not invented Python test cases.
 
 ## Failures repaired — retain history
 
@@ -54,6 +60,8 @@ be repeated: first check the durable copy and recorded source/image identifiers.
 | Local dependency checks93:69pass/23skip/1 import error | No local PG configured; test_source_package required tests on PYTHONPATH | Corrected source-package2PASS; cloud119PASS/0skip |
 | Initial pip-audit invocation error | Unsupported flag combination, invocation corrected | Actual audit artifacts and repaired scan retained |
 | Policy Troubleshooter unavailable | API disabled; not enabled during read-only audit | Not a passing effective-permission check; remains a limitation |
+| Initial secret-pin cutover rolled back | Tooling incorrectly expected version marker unchanged; app intentionally includes K_REVISION. Corrected comparison preserves asset/auth/security checks | Three focused guard tests PASS; resume reuses the same staged candidate, no rebuild or broad rerun. Keep original pins.exit1 and rollback receipts. |
+| First pin resume rolled back | CSP hash included a per-response Maps nonce. Recorded diff showed only marker/nonce hash changes; auth/assets unchanged. Normalize only nonce bytes, preserving directives, and validate stable baseline before routing | Five focused guard tests PASS. Archived resume-attempt1-evidence preserves receipts; later resume uses the same candidate. |
 
 ## Human acceptance — do not repeat without a change or new concern
 
