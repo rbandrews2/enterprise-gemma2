@@ -26,6 +26,11 @@ def stable_public_content(result):
     return {k:v for k,v in result.items() if k != 'version'}
 
 
+def normalized_csp(value):
+    # Per-response Maps nonces rotate intentionally; preserve every directive.
+    return re.sub(r"'nonce-[A-Za-z0-9_-]+'", "'nonce-PER_REQUEST'", value)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('evidence', type=Path)
@@ -70,7 +75,7 @@ def main():
         with urllib.request.urlopen('https://app.workzoneos.org/', timeout=25) as response:
             html = response.read(2*1024*1024).decode()
             assert f'<meta name="wzos-release" content="{out["version"]}">' in html
-            out['csp'] = hashlib.sha256(response.headers.get('Content-Security-Policy','').encode()).hexdigest()
+            out['csp'] = hashlib.sha256(normalized_csp(response.headers.get('Content-Security-Policy','')).encode()).hexdigest()
         for path in ('/startup.js','/workspace-layout.css','/wzos-logo.png'):
             with urllib.request.urlopen('https://app.workzoneos.org'+path, timeout=25) as response:
                 assert response.status == 200
@@ -97,6 +102,8 @@ def main():
         assert len(versions) == 1 and versions[0]['name'].endswith('/versions/1')
         assert versions[0]['state'] == 'ENABLED'
     public_before = smoke()
+    # A read-only stability check catches per-response differences before routing.
+    assert stable_public_content(smoke()) == stable_public_content(public_before), 'Baseline public comparison is not stable'
     if args.resume:
         plan = json.loads((root/'pins-plan.json').read_text())
         assert plan['baseline'] == baseline and plan['image'] == image
