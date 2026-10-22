@@ -3,7 +3,7 @@
 (() => {
  const alert=document.createElement('section'),text=document.createElement('span'),open=document.createElement('button');
  alert.id='office-review-alert';alert.className='panel report-section';alert.hidden=true;alert.setAttribute('role','status');alert.setAttribute('aria-live','polite');
- open.type='button';open.className='secondary';open.textContent='Open office forms';open.onclick=()=>window.showWzosView('forms');
+ open.type='button';open.className='secondary';open.textContent='Open office forms';open.onclick=()=>{if(window.showWzosView('forms')!==false)document.dispatchEvent(new CustomEvent('wzos:office-open'));};
  alert.append(text,open);
  function place(){
   const card=document.querySelector?.('.sidebar .org-card');
@@ -28,17 +28,20 @@
 (() => {
  const el=(tag,text='')=>{const n=document.createElement(tag);n.textContent=text;if(tag==='button')n.className='secondary';return n;};
  const api=(...args)=>window.wzosClock.api(...args);
- let view=null,epoch=0,offset=0,draftOffset=0,busy=false;
+ let view=null,epoch=0,offset=0,draftOffset=0,busy=false,focusOffice=false;
  const previous=window.wzosModulesCanLeave;
  window.wzosModulesCanLeave=()=>!busy&&(!previous||previous());
  const root=el('section');root.className='panel report-section';root.id='form-submission-panel';
  document.getElementById('forms-view').append(root);
+ root.tabIndex=-1;
+ document.addEventListener('wzos:office-open',()=>{focusOffice=true;});
  async function show(feedback=''){
   const generation=++epoch;root.replaceChildren();if(view!=='forms')return;
-  const notice=el('p',feedback);notice.setAttribute('role','status');root.append(notice);
+  const notice=el('p',feedback||'Loading office forms…');notice.setAttribute('role','status');root.append(notice);
   try{
    const submissions=await api(`/api/form-submissions?offset=${offset}`);
    if(generation!==epoch)return;
+   notice.textContent=feedback||(focusOffice?'Office forms opened. Select Review received form below.':'');
    root.append(el('h2',submissions.can_review?'Office received forms':'Your sent forms'));
    for(const item of submissions.items){
     const card=el('article');card.className='report-section panel';
@@ -68,7 +71,8 @@
    }
    root.append(el('p',`${submissions.total} submissions · page ${Math.floor(offset/25)+1}. Internal review does not establish regulatory approval.`));
    for(const [title,step,disabled] of [['Previous',-25,offset===0],['Next',25,offset+25>=submissions.total]]){const button=el('button',title);button.disabled=disabled;button.onclick=()=>{if(!busy){offset=Math.max(0,offset+step);show();}};root.append(button);}
-  }catch(error){if(generation===epoch)notice.textContent=error.message;}
+   if(focusOffice){focusOffice=false;root.scrollIntoView?.({block:'start',behavior:'auto'});root.focus?.({preventScroll:true});}
+  }catch(error){if(generation===epoch){notice.textContent=error.message;if(focusOffice){focusOffice=false;root.scrollIntoView?.({block:'start'});root.focus?.();}}}
  }
  document.addEventListener('wzos:office-sent',()=>{offset=0;show();});
  document.addEventListener('wzos:view',event=>{view=event.detail;offset=0;draftOffset=0;show();});
