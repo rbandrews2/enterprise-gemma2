@@ -101,7 +101,7 @@ class ModuleTests(unittest.TestCase):
         self.assertEqual(self.client.post('/api/messages',headers=admin,json=body).status_code,200)
         self.assertEqual(self.client.post('/api/messages',headers=admin,json=body).status_code,200)
         self.assertEqual(len(self.client.get('/api/messages',headers=general).json()['items']),1)
-        self.assertEqual(self.client.get('/api/messages',headers=self.headers('core-admin')).json()['items'],[])
+        self.assertEqual(self.client.get('/api/messages',headers=self.headers('core-admin')).status_code,403)
         body.update(request_id=str(uuid4()),recipient_id='core-general')
         self.assertEqual(self.client.post('/api/messages',headers=admin,json=body).status_code,404)
         catalog=self.client.get('/api/training',headers=admin).json();course=catalog['items'][0]['id']

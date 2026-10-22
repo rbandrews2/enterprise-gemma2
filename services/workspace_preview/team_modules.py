@@ -31,6 +31,10 @@ def register(app,connect,actor,actors,synthetic=True):
         db.execute('CREATE TABLE IF NOT EXISTS study_plans (organization_id TEXT,owner_id TEXT,course_id TEXT,status TEXT,updated_at TEXT,PRIMARY KEY(organization_id,owner_id,course_id))')
         db.execute('CREATE TABLE IF NOT EXISTS fixture_messages (id TEXT PRIMARY KEY,organization_id TEXT,sender_id TEXT,recipient_id TEXT,body TEXT,created_at TEXT)')
     service=sms.register(app,connect,actor,actors,live_permitted=not synthetic)
+    def message_actor(request):
+        user=actor(request)
+        if user['edition']!='enterprise':raise HTTPException(403,'Messaging requires Enterprise.')
+        return user
     def notify_office(db,user,submission_id):
         queued=[];created=datetime.now(timezone.utc).isoformat()
         for recipient in actors(user).values():
@@ -62,7 +66,7 @@ def register(app,connect,actor,actors,synthetic=True):
         return {'status':body.status,'certificate_issued':False,'review_notification_sent':False}
     @app.get('/api/messages')
     def messages(request:Request,offset:int=Query(0,ge=0)):
-        user=actor(request)
+        user=message_actor(request)
         with connect() as db:
             rows=db.execute('SELECT * FROM fixture_messages WHERE organization_id=? AND (sender_id=? OR recipient_id=?) ORDER BY created_at DESC,id LIMIT 50 OFFSET ?',(user['organization_id'],user['id'],user['id'],offset)).fetchall()
             ids=[r['id'] for r in rows];marks=','.join('?'*len(ids))
@@ -76,7 +80,7 @@ def register(app,connect,actor,actors,synthetic=True):
         return {'items':[item(r) for r in rows],'synthetic_only':synthetic,'external_delivery':service.readiness()['ready']}
     @app.post('/api/messages')
     def send(body:Message,request:Request,background:BackgroundTasks):
-        user=actor(request);recipient=actors(user).get(body.recipient_id)
+        user=message_actor(request);recipient=actors(user).get(body.recipient_id)
         if not recipient or recipient['organization_id']!=user['organization_id']:raise HTTPException(404,'Test member not found' if synthetic else 'Member not found')
         if body.sms_copy and user['role']!='admin':raise HTTPException(403,'Only admins can send text message copies')
         message_id=str(body.request_id);queued=None
@@ -100,7 +104,7 @@ def register(app,connect,actor,actors,synthetic=True):
                 'acknowledgement_requested':body.request_acknowledgement,'sms':sms.public(queued,include_body=False) if queued else None}
     @app.post('/api/messages/{message_id}/acknowledge')
     def acknowledge(message_id:UUID,request:Request):
-        user=actor(request)
+        user=message_actor(request)
         with connect() as db:
             db.execute('BEGIN IMMEDIATE')
             row=db.execute('SELECT r.* FROM message_receipts r JOIN fixture_messages m ON m.id=r.message_id WHERE r.message_id=? AND r.organization_id=? AND m.organization_id=? AND r.recipient_id=?',(str(message_id),user['organization_id'],user['organization_id'],user['id'])).fetchone()

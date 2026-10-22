@@ -365,6 +365,12 @@ def signed(request, params):
 
 
 def register(app, connect, actor, actors, live_permitted):
+    base_actor = actor
+    def actor(request):
+        user = base_actor(request)
+        if user['edition'] != 'enterprise':
+            raise HTTPException(403, 'Messaging requires Enterprise.')
+        return user
     service = Messaging(app, connect, live_permitted)
     app.state.messaging = service
 
@@ -473,7 +479,8 @@ def register(app, connect, actor, actors, live_permitted):
 
     @app.post('/api/messaging/sms/contact/opt-out')
     def member_opt_out(body: VersionInput, request: Request):
-        user = actor(request)
+        # Consent withdrawal must still work after an edition downgrade.
+        user = base_actor(request)
         org, uid = user['organization_id'], user['id']
         with connect() as db:
             db.execute('BEGIN IMMEDIATE')

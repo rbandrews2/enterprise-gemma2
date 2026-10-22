@@ -46,6 +46,7 @@ async function switchIdentity(){
  try{session=null;session=await api("/api/session");selected=null;dirty=false;rows=[];$("atlas-output").replaceChildren();$("order-form").hidden=true;$("empty-detail").hidden=false;$("detail-title").textContent="Select a work order";
  if(session.restricted_staging){document.querySelector('.preview-bar>div').textContent='RESTRICTED CLOUD STAGING · Shared synthetic records reset on restart. Do not enter real attendance or customer data.';$("identity").closest('label').hidden=true;document.querySelector('.sidebar-foot').textContent='Restricted staging · WZOS V2';}
  $("org-name").textContent=session.organization;$("edition").textContent=`${session.edition==="core"?"Core":"Enterprise"} edition${session.production_authenticated?'':' · synthetic'}`;
+ for(const id of ['messages-nav','meetings-nav'])$(id).hidden=session.edition!=='enterprise';
  $("actor-name").textContent=session.name;document.querySelector(".avatar").textContent=session.name.split(" ").map(n=>n[0]).join("");$("role-pill").textContent=session.role==="admin"?"Admin":"Member";
  $("scope-note").textContent=session.can_manage_team?"Manage your team’s work orders.":"Your work orders and drafts.";$("metric-scope").textContent=session.can_manage_team?"Your organization":"Assigned to you";
  $("atlas-description").textContent=session.can_prepare_atlas?"Check a saved job for missing site details before planning.":"Advanced job preparation is available in Enterprise. Core assistant integration is still pending.";
@@ -189,6 +190,7 @@ window.showWzosView=view=>{
  if(view==='ask_atlas'&&session?.edition!=='enterprise')return false;
  if(view==='dashboard'&&session?.role!=='admin')return false;
  if(view==='assignments'&&session?.edition!=='enterprise')return false;
+ if(['messages','meetings'].includes(view)&&session?.edition!=='enterprise')return false;
  if(view==='report'&&!session?.can_prepare_atlas)return false;
  if(!canLeave() || (window.wzosModulesCanLeave && !window.wzosModulesCanLeave()) || (window.wzosFormsCanLeave && !window.wzosFormsCanLeave()))return false;
  document.body.dataset.workspaceView=view;

@@ -103,6 +103,12 @@ class DailyProvider:
 
 
 def register(app, connect, actor, provider=None):
+    base_actor = actor
+    def actor(request):
+        user = base_actor(request)
+        if user['edition'] != 'enterprise':
+            raise HTTPException(403, 'Video meetings require Enterprise.')
+        return user
     provider = provider or DailyProvider()
     app.state.daily_meetings = provider
     with connect() as db:

@@ -33,8 +33,8 @@ MODULES = (
     ('clock', 'Time Tracker', '⚡', 'clock-nav', False),
     ('schedule', 'Schedule management', '▦', 'schedule-nav', False),
     ('navigation', 'Navigation', '⌖', 'navigation-nav', False),
-    ('messages', 'Messaging / dispatch', '✉', 'messages-nav', False),
-    ('meetings', 'Video meetings', '▣', 'meetings-nav', False),
+    ('messages', 'Messaging / dispatch', '✉', 'messages-nav', True),
+    ('meetings', 'Video meetings', '▣', 'meetings-nav', True),
     ('training', 'Video training', '▷', 'training-nav', False),
 )
 MODULE_IDS = {item[0] for item in MODULES}

@@ -63,15 +63,15 @@ class DailyMeetingTests(unittest.TestCase):
         self.assertEqual(self.provider.users[-1]['role'],'member')
         self.assertIn('/wzos-',joined.json()['url']);self.assertNotIn('token=',joined.json()['url'])
     def test_tenant_assignment_core_and_auth_boundaries(self):
-        self.assertEqual(self.post('prepare','core-admin').status_code,404)
+        self.assertEqual(self.post('prepare','core-admin').status_code,403)
         self.assertEqual(self.client.get('/api/meetings/config').status_code,401)
         self.assertEqual(self.save({**self.body,'assignees':['enterprise-admin'],'expected_version':1}).status_code,200)
         self.assertEqual(self.post('prepare').status_code,200)
         self.assertEqual(self.post('join','enterprise-general').status_code,404)
         self.assertEqual(self.save(self.body,'core-admin').status_code,200)
-        self.assertEqual(self.post('prepare','core-admin').status_code,200)
-        self.assertEqual(self.provider.creations,2)
-        self.assertEqual(len(set(self.provider.rooms)),2)
+        self.assertEqual(self.post('prepare','core-admin').status_code,403)
+        self.assertEqual(self.provider.creations,1)
+        self.assertEqual(len(set(self.provider.rooms)),1)
     def test_filter_and_duration_validation(self):
         listed=self.client.get('/api/modules/schedule?meetings_only=true&limit=1',headers=self.h()).json()
         self.assertEqual(listed['total'],1);self.assertEqual(listed['items'][0]['meeting_provider'],'daily')
@@ -105,8 +105,10 @@ class DailyMeetingTests(unittest.TestCase):
         for _ in range(6):self.assertEqual(self.post('prepare').status_code,200)
         self.assertEqual(self.post('prepare').status_code,429)
         now=datetime.now(timezone.utc)+timedelta(hours=2)
-        self.save({**self.body,'start':now.isoformat(),'end':(now+timedelta(minutes=30)).isoformat()},user='core-admin')
-        self.assertEqual(self.post('prepare','core-admin').status_code,409)
+        future=str(uuid4())
+        self.save({**self.body,'request_id':future,'start':now.isoformat(),'end':(now+timedelta(minutes=30)).isoformat()},record=future)
+        with patch('services.workspace_preview.daily_meetings.time.monotonic',return_value=time.monotonic()+120):
+            self.assertEqual(self.post('prepare',record=future).status_code,409)
     def test_config_and_exact_frame_origin(self):
         config=self.client.get('/api/meetings/config',headers=self.h()).json()
         self.assertEqual(config['daily_origin'],self.provider.origin)

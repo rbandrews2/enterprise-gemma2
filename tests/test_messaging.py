@@ -49,6 +49,18 @@ class MessagingTests(unittest.TestCase):
     def h(self, who='enterprise-general'):
         return {'X-Preview-Actor': who}
 
+    def test_enterprise_required_before_sends_and_opt_out_survives_downgrade(self):
+        from services.workspace_preview.app import ACTORS
+        verified = self.verified()
+        sent = len(self.provider.sent)
+        with patch.dict(ACTORS['enterprise-general'], {'edition': 'core'}):
+            self.assertEqual(self.message(who='enterprise-general')[0].status_code, 403)
+            self.assertEqual(self.client.post('/api/messaging/sms/contact/verify', headers=self.h(), json={'code':'123456'}).status_code, 403)
+            response = self.client.post('/api/messaging/sms/contact/opt-out', headers=self.h(), json={'expected_version':verified['version']})
+            self.assertEqual(response.status_code, 200, response.text)
+            self.assertEqual(response.json()['status'], 'opted_out')
+        self.assertEqual(len(self.provider.sent), sent)
+
     def contact(self, who='enterprise-general'):
         return self.client.get('/api/messaging/sms/contact', headers=self.h(who)).json()
 
@@ -118,7 +130,7 @@ class MessagingTests(unittest.TestCase):
         # Admins see consent state and masked numbers but cannot enroll or verify a member.
         listed = {i['id']: i for i in self.client.get('/api/messaging/sms/contacts', headers=self.h('enterprise-admin')).json()['items']}
         self.assertEqual(listed['enterprise-general']['status'], 'verified'); self.assertEqual(listed['enterprise-general']['phone'], '•••• 0001')
-        self.assertNotIn('enterprise-general', {i['id'] for i in self.client.get('/api/messaging/sms/contacts', headers=self.h('core-admin')).json()['items']})
+        self.assertEqual(self.client.get('/api/messaging/sms/contacts', headers=self.h('core-admin')).status_code, 403)
         self.assertEqual(self.client.get('/api/messaging/sms/contacts', headers=self.h()).status_code, 403)
 
     def assert_code_hidden(self, code):
@@ -229,7 +241,7 @@ class MessagingTests(unittest.TestCase):
         self.assertIsNone(received['sms'])
         url = f"/api/messages/{data['id']}/acknowledge"
         self.assertEqual(self.client.post(url, headers=self.h('enterprise-admin')).status_code, 404)
-        self.assertEqual(self.client.post(url, headers=self.h('core-general')).status_code, 404)
+        self.assertEqual(self.client.post(url, headers=self.h('core-general')).status_code, 403)
         first = self.client.post(url, headers=self.h()).json(); self.assertEqual(self.client.post(url, headers=self.h()).json(), first)
         sent = self.client.get('/api/messages', headers=self.h('enterprise-admin')).json()['items'][0]
         self.assertEqual(sent['acknowledged_at'], first['acknowledged_at']); self.assertEqual(sent['sms']['status'], 'accepted')
@@ -264,8 +276,8 @@ class MessagingTests(unittest.TestCase):
         row = [r for r in self.outbox() if r['id'] == sms['id']][0]; self.assertEqual(row['status'], 'delivered')
         events = self.client.get(f"/api/messaging/sms/outbox/{sms['id']}/events", headers=self.h('enterprise-admin')).json()['items']
         self.assertEqual([e['event'] for e in events if e['source'] == 'callback'], ['sent', 'delivered'])
-        self.assertEqual(self.client.get(f"/api/messaging/sms/outbox/{sms['id']}/events", headers=self.h('core-admin')).status_code, 404)
-        self.assertEqual(self.client.get('/api/messaging/sms/outbox', headers=self.h('core-admin')).json()['items'], [])
+        self.assertEqual(self.client.get(f"/api/messaging/sms/outbox/{sms['id']}/events", headers=self.h('core-admin')).status_code, 403)
+        self.assertEqual(self.client.get('/api/messaging/sms/outbox', headers=self.h('core-admin')).status_code, 403)
         self.assertEqual(self.client.get('/api/messaging/sms/outbox', headers=self.h()).status_code, 403)
 
     def test_undelivered_callback_records_failure_code(self):
@@ -294,7 +306,7 @@ class MessagingTests(unittest.TestCase):
         url = f"/api/messaging/sms/outbox/{sms['id']}/resolve"
         self.assertEqual(self.client.post(url, headers=self.h('enterprise-admin'), json={'action': 'retry'}).status_code, 409)
         self.assertEqual(self.client.post(url, headers=self.h(), json={'action': 'mark_failed'}).status_code, 403)
-        self.assertEqual(self.client.post(url, headers=self.h('core-admin'), json={'action': 'mark_failed'}).status_code, 404)
+        self.assertEqual(self.client.post(url, headers=self.h('core-admin'), json={'action': 'mark_failed'}).status_code, 403)
         self.callback(sms['id'], 'delivered', 'SMlate')
         self.assertEqual([r for r in self.outbox() if r['id'] == sms['id']][0]['status'], 'delivered')
         self.provider.outcomes = [SendResult('ambiguous', detail='timeout')]
