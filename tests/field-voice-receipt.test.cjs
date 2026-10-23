@@ -1,5 +1,5 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
-function harness(){
+function harness(mode={}){
  class Node{constructor(tag,text=''){this.tag=tag;this.textContent=text;this.children=[];this.hidden=false;this.value='';}append(...items){this.children.push(...items);}prepend(...items){this.children.unshift(...items);}replaceChildren(...items){this.children=items;}setAttribute(){}scrollIntoView(){this.scrolled=true;}focus(){this.focused=true;}querySelectorAll(){return all(this).filter(n=>['input','textarea','select','button'].includes(n.tag));}}
  const all=n=>[n,...n.children.flatMap(all)],main=new Node('main'),menu=new Node('nav'),events={},calls=[];
  const document={createElement:t=>new Node(t),getElementById:id=>id==='main'?main:all(main).find(n=>n.id===id),querySelector:s=>s.startsWith('nav[')?menu:null,addEventListener:(n,f)=>(events[n]??=[]).push(f),dispatchEvent:e=>emit(e.type,e.detail)};
@@ -7,16 +7,47 @@ function harness(){
  let listReads=0,failList=false,failSend=false;
  const draft={id:'receipt-id',job_id:'job',version:1,state:'draft',updated_at:'2026-10-20T14:00:00Z',submission_ids:[],fields:{work_date:'2026-10-20',report:{work_description:'Synthetic work',production_quantities:[],incidents:[],unresolved:[]}}};
  const fetch=async(path,opts={})=>{calls.push(path);let data,ok=true;
-  if(path.endsWith('/config'))data={enabled:true,speech_enabled:false};
+  if(path.endsWith('/config'))data={enabled:true,speech_enabled:!!mode.speech};
+  else if(path.includes('/transcribe')){if(mode.transcribeStall)return new Promise(()=>{});data={transcript:'Synthetic report'};}
+  else if(path.endsWith('/extract')){if(mode.extractStall)return new Promise(()=>{});data={fields:structuredClone(draft.fields)};}
   else if(path.endsWith('/jobs'))data={items:[{id:'job',version:1}]};
   else if(path.endsWith('/send-to-office')){ok=!failSend;data=ok?{...structuredClone(draft),state:'sent',version:2,submission_ids:['form-id']}:{detail:'Connection failed. Retry to confirm.'};}
   else if(path.endsWith('/drafts')){ok=!(failList&&++listReads>1);if(!failList)listReads++;data=ok?{items:[structuredClone(draft)]}:{detail:'List refresh failed.'};}
   else throw Error('Unexpected request '+path);
   return{ok,json:async()=>data};};
- const window={wzosClock:{getSession:()=>({id:'admin',edition:'enterprise'})},wzosAccount:{headers:async()=>({})},showWzosView:()=>true,addEventListener(){}};
- vm.runInNewContext(fs.readFileSync('services/workspace_preview/static/field-voice.js','utf8'),{document,window,fetch,crypto:require('node:crypto').webcrypto,structuredClone,Date,navigator:{},confirm:()=>true,CustomEvent:class{constructor(type){this.type=type;}},clearInterval,setInterval,MutationObserver:class{observe(){}}});
- return{main,all,emit,draft,calls,find:text=>all(main).find(n=>n.textContent===text),setFailList:()=>failList=true,setFailSend:()=>failSend=true,open:()=>window.wzosFieldVoice.open()};
+ let stopped=0,micResolve;const timers=new Map();let timerId=0;
+ class Recorder{constructor(){this.state='inactive';this.mimeType='audio/webm';}start(){this.state='recording';}stop(){this.state='inactive';if(!mode.stopStall)queueMicrotask(()=>{this.ondataavailable?.({data:new Blob(['synthetic'])});this.onstop?.();});}}
+ const window={MediaRecorder:Recorder,wzosDeviceSetup:{status:async()=> 'granted',remembered:()=>true,open(){}},wzosClock:{getSession:()=>({id:'admin',edition:'enterprise'})},wzosAccount:{headers:async()=>({})},showWzosView:()=>true,addEventListener(){}};
+ const stream={getTracks:()=>[{stop(){stopped++;}}]};
+ const navigator={onLine:true,mediaDevices:{getUserMedia:()=>mode.micStall?new Promise(r=>micResolve=r):Promise.resolve(stream)}};
+ class Audio{decodeAudioData(){return mode.decodeStall?new Promise(()=>{}):Promise.resolve({duration:.1});}close(){return Promise.resolve();}}
+ class Offline{createBufferSource(){return {connect(){},start(){}};}startRendering(){return Promise.resolve({getChannelData:()=>new Float32Array(1600)});}}
+ vm.runInNewContext(fs.readFileSync('services/workspace_preview/static/field-voice.js','utf8'),{document,window,fetch,crypto:require('node:crypto').webcrypto,structuredClone,Date,navigator,Blob,URLSearchParams,AudioContext:Audio,OfflineAudioContext:Offline,MediaRecorder:Recorder,confirm:()=>true,CustomEvent:class{constructor(type){this.type=type;}},clearInterval(){},setInterval(){return 1;},setTimeout:(fn,ms)=>{timers.set(++timerId,{fn,ms});return timerId;},clearTimeout:id=>timers.delete(id),AbortController,MutationObserver:class{observe(){}}});
+ return{main,all,emit,draft,calls,window,stopped:()=>stopped,grant:()=>micResolve(stream),timeout:ms=>{const entry=[...timers.entries()].find(([,t])=>t.ms===ms);assert.ok(entry,'Expected timer '+ms);timers.delete(entry[0]);entry[1].fn();},find:text=>all(main).find(n=>n.textContent===text),setFailList:()=>failList=true,setFailSend:()=>failSend=true,open:async()=>{await window.wzosFieldVoice.open();all(main).find(n=>n.tag==='select').value='job';}};
 }
+
+const settle=()=>new Promise(resolve=>setImmediate(resolve));
+for(const [mode,timeout] of [[{decodeStall:true},15000],[{transcribeStall:true},60000],[{extractStall:true},300000],[{stopStall:true},5000]])test('stalled recording phase recovers controls '+Object.keys(mode)[0],async()=>{
+ const h=harness({speech:true,...mode});await h.emit('wzos:session');await h.open();await h.find('● Record').onclick();h.find('Stop').onclick();await settle();
+ assert.equal(h.find('● Record').disabled,true);h.timeout(timeout);await settle();
+ assert.equal(h.find('● Record').disabled,false);assert.equal(h.find('Create drafts with Atlas').disabled,false);assert.ok(h.stopped()>0);
+ assert.equal(h.window.wzosModulesCanLeave(),true);
+ if(mode.extractStall)assert.equal(h.all(h.main).find(n=>n.placeholder)?.value,'Synthetic report');
+});
+test('cancel processing is immediate even when fetch ignores abort, and a new attempt works',async()=>{
+ const mode={speech:true,transcribeStall:true},h=harness(mode);await h.emit('wzos:session');await h.open();await h.find('● Record').onclick();h.find('Stop').onclick();await settle();
+ const cancel=h.find('Cancel action');assert.equal(cancel.disabled,false);cancel.onclick();await settle();assert.equal(h.find('● Record').disabled,false);
+ mode.transcribeStall=false;await h.find('● Record').onclick();h.find('Stop').onclick();await settle();
+ assert.equal(h.find('Review field report').focused,true);assert.equal(h.find('● Record').disabled,false);
+});
+test('late microphone permission stops tracks after timeout and cannot relock the app',async()=>{
+ const h=harness({speech:true,micStall:true});await h.emit('wzos:session');await h.open();const start=h.find('● Record').onclick();await settle();h.timeout(20000);await start;
+ assert.equal(h.find('● Record').disabled,false);h.grant();await settle();assert.equal(h.stopped(),1);assert.equal(h.find('● Record').disabled,false);
+});
+test('navigation can cancel pending processing and a new session remains usable',async()=>{
+ const h=harness({speech:true,transcribeStall:true});await h.emit('wzos:session');await h.open();await h.find('● Record').onclick();h.find('Stop').onclick();await settle();
+ assert.equal(h.window.wzosModulesCanLeave(),true);await settle();await h.emit('wzos:session');assert.equal(h.window.wzosFieldVoice.available(),true);assert.equal(h.find('● Record').disabled,false);
+});
 test('submission receipt stays beside controls even when refreshing saved reports fails',async()=>{
  const h=harness();h.setFailList();await h.emit('wzos:session');await h.open();
  h.find('2026-10-20 · draft · Synthetic work').onclick();h.all(h.main).find(n=>n.type==='checkbox').checked=true;
