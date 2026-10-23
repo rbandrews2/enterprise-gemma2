@@ -1,5 +1,15 @@
 # WZOS remaining tasks - current October 20, 2026
 
+## Installed launch / real-device follow-up — October23
+
+- [x] User confirmed work-order creation and Voice report details match speech.
+- [ ] Initial Voice stall and slow processing remain unresolved on the phone.
+- [x] Local startup deadline, in-place retry, saved-session connection recovery
+  and public-shell reload fallback repairs; isolated192Node checks PASS.
+- [ ] Restore Cloud CLI sign-in; inspect startup latency/scaling; browser and
+  cloud acceptance; deploy isolated8cb99c2 then confirm phone launch timing.
+  STARTUP_RECOVERY_20261023.md contains results; no startup changes live yet.
+
 ## Voice freeze recovery — October23
 
 - [x] Bound stalled recording/conversion/auth/processing; restore cancellation and

@@ -1,5 +1,15 @@
 # WZOS current session handoff - October 18, 2026
 
+## Startup recovery in progress — October23 (latest)
+
+User resumed with real-device partial success: work order and Voice report
+details correct, but initial Voice attempt froze and installed launch sometimes
+takes over a minute. Do not mark phone acceptance passed. Startup fixes committed
+as isolated8cb99c2 (192Node PASS) and integrationa7c2722 (196Node PASS).
+NOT DEPLOYED; live remainsb1bc598. Cloud Shell CLI has no credentials despite
+Authorize; sign-in started in tab1. See STARTUP_RECOVERY_20261023.md for evidence,
+remaining cold-start investigation, cloud/browser gates and release scope.
+
 ## Paused at user request — October23
 
 Progress saved after the Voice freeze hotfix deployment. Await user instruction;
