@@ -11,9 +11,12 @@ resets or saved upload credentials. No schema, dependency or IAM changes.
 22 distinct focused Python checks and 185 Node checks PASS (affected cases rerun
 following final repairs); synthetic browser review PASS. See
 BULK_MANAGED_ACCOUNTS_20261023.md for exact evidence/reuse and constraints.
-NOT DEPLOYED. Cloud Shell requires user authorization; PostgreSQL full integration
-gate has not started. Run that gate and release checks before deployment. Do not
-repeat accepted provider/SMS/Voice tests. Current live release remains 7a674b3.
+NOT DEPLOYED. Cloud authorization restored; full gate on c907ea7 PASS:
+958 PostgreSQL tests in 460.273s and 185 Node tests, zero failures/errors/skips.
+Evidence saved under $HOME/wzos-bulk-evidence-20261023. Candidate path pointer:
+$HOME/wzos-bulk-20261023-path.txt. Remaining: release preflight/build/cutover.
+Reuse accepted exact-source gates; do not repeat provider/SMS/Voice tests.
+Current live release remains 7a674b3; no cloud app configuration was changed.
 
 ## Managed onboarding LIVE — October23 (latest checkpoint)
 

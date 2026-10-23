@@ -4,7 +4,7 @@
 
 - [x] CSV / XLSX / spreadsheet paste, admin-only review and batch provisioning.
 - [x] Duplicate, role, seat, idempotency and partial-recovery checks; local UI.
-- [ ] Full PostgreSQL integration gate (Cloud Shell authorization pending).
+- [x] Full cloud gate: 958 PostgreSQL / 185 Node PASS on c907ea7, zero skips.
 - [ ] Release checks and deployment; no real employee accounts created in tests.
 
 ## Managed onboarding — October23

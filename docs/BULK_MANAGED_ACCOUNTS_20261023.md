@@ -43,8 +43,13 @@ Rollback previous application image; existing accounts remain usable.
   compact result table and dark/amber controls verified. Synthetic only.
 - Screenshot (outside Git): .local-data/bulk-account-review-20261023.png.
 - No database migration or new dependency; production is unchanged.
-- PostgreSQL integrated gate NOT RUN: Cloud Shell reconnected but requests
-  authorization. No cloud command or deployment started for this candidate.
-- Then run the required cloud gate and release checks before deployment.
+- Cloud integrated acceptance for c907ea7: 958 PostgreSQL tests PASS in
+  460.273 seconds, zero failures/errors/skips; 185 Node tests PASS, zero skips.
+  Disposable PostgreSQL cluster removed by the gate cleanup trap.
+- Evidence: $HOME/wzos-bulk-evidence-20261023; working candidate pointer:
+  $HOME/wzos-bulk-20261023-path.txt (temporary source may disappear on restart).
+- No production deployment performed. Remaining: release preflight/build/cutover
+  checks. Preserve these exact-source test results; documentation-only changes
+  do not justify repeating accepted tests.
 - Local synthetic preview: http://127.0.0.1:8085/__managed-preview (port 8085,
   owned temporary server). It uses FakeProvider; never creates Google identities.
