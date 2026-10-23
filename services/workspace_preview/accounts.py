@@ -157,6 +157,8 @@ class Accounts:
     def register(self, app):
         from .employees import register as register_employees
         register_employees(app, self)
+        from .employee_import import register as register_employee_import
+        register_employee_import(app, self)
         from .browser_sessions import register
         register(app, self)
         from .passkeys import register as register_passkeys

@@ -1,5 +1,16 @@
 # WZOS remaining tasks - current October 20, 2026
 
+## Employee import — October22 development
+
+- [x] Admin-only Organization management / Account / Employees import action,
+  template, UTF-8 upload, row review, duplicate/error handling and confirmation.
+- [x] Organization-private roster, no automatic accounts/invitations/sends;
+  atomic/stale/idempotency guards.16unique backend and26account Node checks PASS.
+- [x] Synthetic desktop browser upload/review/import receipt (2imported/1skipped).
+- [ ] PostgreSQL/additive-schema gate and integrated mobile acceptance, then the
+  required exact-candidate release gates before any live deployment. See
+  EMPLOYEE_IMPORT_20261022.md. No production changes in this increment.
+
 ## October 22 operational completion / accepted Voice flow
 
 - [x] Ray accepted Voice incident contents, in-app notification and review-clear

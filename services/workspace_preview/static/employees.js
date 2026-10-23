@@ -75,10 +75,56 @@ window.wzosEmployees = (() => {
   async function directory(offset=0){
    const data=await api('/api/account/employees?offset='+offset+'&limit=25');content.replaceChildren();dirty=false;message.textContent='';
    content.append(node('p',data.total+' organization members'));
+   const importButton=node('button','Import employees / View imported roster');importButton.type='button';importButton.onclick=()=>importEmployees(api);content.append(importButton);
+   const imported=await api('/api/account/employee-import/roster');
+   if(imported.items.length){content.append(node('h3',`Imported employees (${imported.total})`));for(const person of imported.items)content.append(node('p',`${person.name} — ${person.employee_number}`));}
    for(const person of data.items){const button=node('button',person.name+' — '+(person.employee_number||'Profile not configured')+(person.active?'':' — Inactive'));button.type='button';button.onclick=()=>run(()=>detail(person.id));content.append(button);}
    for(const [label,next] of [['Previous',offset-25],['Next',offset+25]])if(next>=0&&next<data.total){const button=node('button',label);button.type='button';button.onclick=()=>run(()=>directory(next));content.append(button);}
   }
   await run(()=>session.can_manage_team?directory():detail(session.id));
  }
- return {open};
+ async function importEmployees(api){
+  const dialog=node('dialog');dialog.className='account-dialog employee-import-dialog';
+  const status=node('p');status.setAttribute('role','status');status.setAttribute('aria-live','polite');
+  const content=node('div');let batch=null,busy=false,epoch=0;
+  const makeButton=(text,action)=>{const b=node('button',text);b.type='button';b.onclick=action;return b;};
+  const close=makeButton('Close',()=>dialog.close());
+  dialog.addEventListener('close',()=>{epoch++;dialog.remove();},{once:true});
+  const sessionChanged=()=>dialog.close();document.addEventListener('wzos:session',sessionChanged);
+  dialog.addEventListener('close',()=>document.removeEventListener('wzos:session',sessionChanged),{once:true});
+  const template=makeButton('Download CSV template',()=>{
+   const url=URL.createObjectURL(new Blob(['name,email,employee_number,phone\r\n'],{type:'text/csv;charset=utf-8'}));
+   const a=node('a');a.href=url;a.download='wzos-employees-template.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+  });
+  const fileLabel=node('label','Employee CSV file');const file=node('input');file.type='file';file.accept='.csv,text/csv';fileLabel.append(file);
+  const review=makeButton('Upload & review',async()=>{
+   if(busy)return;if(!file.files?.[0]){status.textContent='Choose a CSV file first.';return;}
+   if(file.files[0].size>512*1024){status.textContent='Choose a file no larger than 512 KiB.';return;}
+   const generation=++epoch;busy=true;file.disabled=true;review.disabled=true;confirm.disabled=true;batch=null;content.replaceChildren();status.textContent='Checking employee rows…';
+   try{let csv_text;try{csv_text=new TextDecoder('utf-8',{fatal:true}).decode(await file.files[0].arrayBuffer());}catch{throw Error('Save the file as UTF-8 CSV and try again.');}const data=await api('/api/account/employee-import/review',{csv_text});if(generation!==epoch)return;
+    batch=data;renderRows(data.rows);checked.checked=false;
+    status.textContent=`${data.ready} ready · ${data.duplicates} duplicates skipped · ${data.errors} errors. ${data.errors?'Correct errors in your file and upload again.':'Review the rows, then confirm.'}`;
+   }catch(e){if(generation===epoch)status.textContent=e.message;}finally{if(generation===epoch){busy=false;file.disabled=false;review.disabled=false;sync();}}
+  });
+  const checked=node('input');checked.type='checkbox';const approve=node('label','I reviewed these employees and the skipped duplicates.');approve.prepend(checked);
+  const confirm=makeButton('Confirm import',async()=>{
+   if(busy||!batch||!checked.checked)return;busy=true;file.disabled=true;review.disabled=true;confirm.disabled=true;status.textContent='Importing employees…';const generation=epoch;
+   try{const receipt=await api(`/api/account/employee-import/${encodeURIComponent(batch.id)}/confirm`,{reviewed:true});if(generation!==epoch)return;
+    status.textContent=`Imported ${receipt.imported} employees. ${receipt.skipped} duplicates skipped. No invitations sent.`;batch=null;checked.checked=false;file.value='';
+    const roster=await api('/api/account/employee-import/roster');if(generation===epoch){renderRows(roster.items);rosterPaging(roster);}
+   }catch(e){if(generation===epoch)status.textContent=e.message;}finally{if(generation===epoch){busy=false;file.disabled=false;review.disabled=false;sync();}}
+  });
+  function sync(){confirm.disabled=busy||!batch||!batch.ready||!!batch.errors||!checked.checked;}
+  checked.onchange=sync;file.onchange=()=>{if(busy)return;epoch++;batch=null;checked.checked=false;content.replaceChildren();status.textContent='';sync();};sync();
+  function renderRows(rows){content.replaceChildren();const table=node('table');table.className='employee-import-table';const head=node('tr');
+   for(const label of ['Row','Name','Email','Employee number','Phone','Review'])head.append(node('th',label));const thead=node('thead');thead.append(head);table.append(thead);const body=node('tbody');
+   for(const r of rows){const tr=node('tr');for(const value of [r.row??'',r.name,r.email,r.employee_number,r.phone,r.issues?.length?r.issues.join(' '):(r.status||'Imported')])tr.append(node('td',String(value)));body.append(tr);}table.append(body);content.append(table);
+  }
+  async function loadRoster(offset=0){if(busy)return;busy=true;const generation=++epoch;batch=null;sync();status.textContent='Loading imported employees…';try{const data=await api('/api/account/employee-import/roster?offset='+offset);if(generation===epoch){renderRows(data.items);rosterPaging(data);status.textContent=data.total?`${data.total} imported employees.`:'No employees imported yet.';}}catch(e){if(generation===epoch)status.textContent=e.message;}finally{busy=false;sync();}}
+  function rosterPaging(data){for(const [label,next] of [['Previous',data.offset-25],['Next',data.offset+25]])if(next>=0&&next<data.total)content.append(makeButton(label,()=>loadRoster(next)));}
+  const roster=makeButton('View imported employees',()=>loadRoster());
+  dialog.append(node('h2','Import employees'),node('p','Download the template, add up to 500 employees, then upload and review. Imports add roster records only. Invite employees separately through Team access.'),template,fileLabel,review,status,content,approve,confirm,roster,close);
+  document.body.append(dialog);dialog.showModal();
+ }
+ return {open,importEmployees};
 })();

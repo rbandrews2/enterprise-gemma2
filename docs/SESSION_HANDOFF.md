@@ -1,5 +1,18 @@
 # WZOS current session handoff - October 18, 2026
 
+## Employee import — October22 (latest development checkpoint)
+
+Admin-only Import employees implemented locally under Organization management,
+Account and Employees: template, bounded UTF-8 upload, duplicate/error review,
+explicit confirm, idempotent receipt and paginated organization-private roster.
+No memberships/invitations/sends/seat charges created by import. Two additive
+tables; review SQL and rollback in EMPLOYEE_IMPORT_20261022.md.16unique focused
+backend and26existing account Node checks PASS; desktop synthetic browser receipt
+accepted. PostgreSQL and integrated mobile/release gates remain open. Two Cloud
+Shell binding attempts failed with stale-page capture; no cloud mutation/deploy.
+Live app remains the configuration-only pins revision below. Additional-name
+clarification requested; no name inferred. Do not rerun unrelated paid tests.
+
 ## Operational follow-ups / Voice human acceptance — October 22 (latest)
 
 User confirms Smart Field Voice incident numbers/wording correct, notification
@@ -35,14 +48,14 @@ verificationStatus was not returned; delivery is not claimed. All three
 configuration follow-ups checked off; broader device/retention/launch decisions
 remain open. Evidence: $HOME/wzos-followups-evidence-20261022, including
 operational-final-result.json. Old /tmp evidence path has expired; use durable copy.
-Do not check these two completion boxes until actual application/readback.
+Both configuration completion boxes are supported by the actual readback above.
 
 Evidence root /tmp/wzos-followups-20261022.dBAoYjzD, home pointer
 wzos-followups-latest-path.txt, durable $HOME/wzos-followups-evidence-20261022.
 pins-resume2.exit0/pins-result.json/public comparison/independent-final-service.json
 confirm final state; resume-attempt1-evidence archives the failed guard attempt.
 See OPERATIONAL_FOLLOWUPS_20261022.md. Verify fresh auth/project on resume;
-continue pending email/access actions without replaying passed app suites.
+use the completed email/access evidence without replaying passed app suites.
 
 ## Unassisted sweep 2 — October 22
 

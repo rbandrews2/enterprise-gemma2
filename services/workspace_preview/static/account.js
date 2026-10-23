@@ -210,6 +210,7 @@ window.wzosAccount = (() => {
   resizeAccountMenu();phoneLayout?.addEventListener('change',resizeAccountMenu);
   const employeeButton=element('button',session.can_manage_team?'Employees':'My employee record');
   employeeButton.onclick=()=>window.wzosEmployees.open(api,session);employeeButton.className='account-glass account-employees';actions.append(employeeButton);
+  if(session.can_manage_team){const importer=element('button','Import employees');importer.className='account-glass account-employee-import';importer.onclick=()=>window.wzosEmployees.importEmployees(api);actions.append(importer);}
   if(session.can_manage_team){const manage=element('button','Team access');manage.onclick=async()=>{
    const dialog=element('dialog');dialog.className='account-dialog';const status=element('p');status.setAttribute('role','status');const close=element('button','Close');close.onclick=()=>{dialog.close();dialog.remove();};dialog.append(element('h2','Organization access'),status,close);document.body.append(dialog);dialog.showModal();
    try{const data=await api('/api/account/members');

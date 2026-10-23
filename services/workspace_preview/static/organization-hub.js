@@ -31,6 +31,7 @@
    for(const [label,selector,icon] of [['Employees','.account-employees','♙'],['Team access','.account-team','♧'],['Passkeys','.account-passkeys','⚿']]){
     if(document.querySelector(selector)){const b=button('',()=>document.querySelector(selector)?.click());b.className='panel hub-card';b.dataset.moduleNav=selector.slice(1);b.append(node('span',icon,'hub-icon'),node('strong',label));grid.append(b);}
    }content.append(grid);
+   if(window.wzosEmployees?.importEmployees){const importer=button('Import employees',()=>window.wzosEmployees.importEmployees((path,body)=>api(path,body?{method:'POST',body:JSON.stringify(body)}:{})));importer.className='panel hub-card';content.append(importer);}
    if(state.edition==='core'){const offer=button('',()=>upgrade.click());offer.className='panel hub-card';offer.append(node('span','✦','hub-icon'),node('strong','Explore Enterprise'),node('small','One-time $20 upgrade credit for established Core customers'));content.append(offer);}
    content.append(node('p','WZOS powered by Atlas AI Assistant','guided-footer'));
    if(window.wzosSecurity){const security=button('Atlas Security',()=>window.wzosSecurity.open());security.className='panel hub-card';content.append(security);}

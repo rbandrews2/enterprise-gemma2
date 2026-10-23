@@ -82,6 +82,18 @@ independent checks; the successful scenario does not silently close them.
 
 ## Three operational follow-ups
 
+### Subsequent employee-import development (not deployed)
+
+- EMPLOYEE-IMPORT-LOCAL:8new import backend checks +8existing employee cases =
+  16unique PASS, zero skips. Initial7new cases repeated once in the15case combined
+  run; count coverage once. Core/pagination extension passed separately.
+- ACCOUNT-UI-IMPORT-COMPAT:26existing Node checks PASS; no account provisioning,
+  SMS, Speech, model or payment calls. Changed scripts syntax accepted.
+- IMPORT-BROWSER: synthetic three-row review ->2ready/1duplicate -> checkbox
+  enables confirmation ->2imported/1skipped visible receipt. Private screenshot
+  .local-data/employee-import-browser.png. Final mobile and PostgreSQL release
+  acceptance remain open; see EMPLOYEE_IMPORT_20261022.md for provenance/limits.
+
 Track actual completion and evidence in OPERATIONAL_FOLLOWUPS_20261022.md and the
 prelaunch checklists. Use this ledger to avoid repeating unrelated feature suites
 for notification routing, unchanged-image secret pinning or a scoped IAM repair.
