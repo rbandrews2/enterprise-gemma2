@@ -6,9 +6,11 @@
 - [ ] Initial Voice stall and slow processing remain unresolved on the phone.
 - [x] Local startup deadline, in-place retry, saved-session connection recovery
   and public-shell reload fallback repairs; isolated192Node checks PASS.
-- [ ] Restore Cloud CLI sign-in; inspect startup latency/scaling; browser and
-  cloud acceptance; deploy isolated8cb99c2 then confirm phone launch timing.
-  STARTUP_RECOVERY_20261023.md contains results; no startup changes live yet.
+- [x] Cloud CLI restored; startup latency/scaling inspected; browser check and
+  cloud937PostgreSQL/192Node gates PASS; isolated8cb99c2 deployed at100%.
+- [ ] Confirm installed-phone launch timing after update. Residual8–16s cold
+  startup observed; no minimum-instance or paid hosting change made.
+  STARTUP_RECOVERY_20261023.md contains accepted results and release evidence.
 
 ## Voice freeze recovery — October23
 

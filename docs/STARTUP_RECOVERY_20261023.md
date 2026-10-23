@@ -30,11 +30,32 @@ ignored-abort deadlines, stalled reload fallback, and saved-sign-in network retr
 Local logs in TEMP/wzos-startup-node.log and wzos-startup-isolated-node.log.
 No paid AI calls, customer sends, IAM, capacity, schema or persistence changes.
 
-NOT DEPLOYED. Cloud Shell project enterprise-gemma2 verified, but auth list empty;
-Authorize UI did not restore CLI credentials. gcloud auth login started in tab1.
-Remaining: restore CLI authentication; inspect service scaling/startup logs without
-printing secrets or private request data; browser evidence; required cloud gate,
-isolated release preflight/build/deploy and installed-phone launch acceptance.
+Cloud CLI authentication restored by user. Synthetic browser retry check PASS:
+the shipped startup script recovered without page reload. Screenshot is ignored
+at .local-data/startup-recovery-release/.local-data/startup-recovery.png relative
+to the integration checkout; synthetic harness does not authenticate a real user.
+
+Five-day Cloud Run launch-route query found32 responses over5s, maximum89.661s.
+The89.661s and35.284s responses occurred on older ui-bc0f30a, not currentb1bc598.
+Currentb1bc598 system events show about8–16s between autoscaling instance start
+and successful startup probe. No configured minimum warm instance; revision
+max2, service max20, CPU throttling true, startup CPU boost true. This supports a
+cold-start contribution, not a claim that every reported delay has one cause.
+No infrastructure settings changed. Evidence files contain timings/revisions,
+not request bodies, credentials or customer identifiers.
+
+## Live release accepted
+
+937 PostgreSQL checks PASS in436.671s;192Node PASS; zero failures/errors/skips.
+Build d5cf322a-382a-4133-842f-120930787854 succeeded. Preflight/schema/configuration
+drift/no-traffic staging/public assets/anonymous boundaries/traffic checks PASS.
+Independent readback: wzos-v2-accounts-ui-8cb99c2 at100%; version
+198c9e683b53fc65521a7139; image SHA256
+e726e890bc116b5c5db5025b10ce9b72ba037c7e1ee14c79e3c4e50a79490f1d.
+Public warm HTML first byte0.238s,total0.261s after deployment; this does not
+measure Android startup or eliminate the known cold-start contribution.
+Evidence:$HOME/wzos-startup-evidence-20261023. Cloud pointer:
+$HOME/wzos-startup-path.txt. Installed-phone launch acceptance remains open.
 Do not claim the underlying minute-long delay has been fully diagnosed. Do not
 change paid minimum instances without a concrete cost/scope decision.
 

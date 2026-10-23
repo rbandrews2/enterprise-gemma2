@@ -1,5 +1,16 @@
 # WZOS current session handoff - October 18, 2026
 
+## Startup recovery LIVE — October23 (latest checkpoint)
+
+User restored CLI sign-in. Isolated8cb99c2 deployed as ui-8cb99c2 at100%,
+independent readback PASS; version198c9e683b53fc65521a7139.937PostgreSQL/192Node
+PASS, zero skips. Synthetic browser retry and production asset/access/config
+checks PASS. Rollbackb1bc598 retained. No paid AI tests or hosting changes.
+Logs confirm older launch89.7s; current instances require roughly8–16s to start.
+Fixed indefinite waits/reload loop, but phone launch acceptance and residual
+cold-start improvement remain open. See STARTUP_RECOVERY_20261023.md; evidence
+$HOME/wzos-startup-evidence-20261023. Bulk feature remains undeployed.
+
 ## Startup recovery in progress — October23 (latest)
 
 User resumed with real-device partial success: work order and Voice report
