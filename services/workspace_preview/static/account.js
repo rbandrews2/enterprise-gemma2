@@ -70,6 +70,34 @@ window.wzosAccount = (() => {
    throw Error(typeof d.detail==='string'?d.detail:'Account request failed. Try again or contact your organization administrator.');
   }return d;
  }
+ function createManaged(api){
+  const dialog=element('dialog');dialog.className='account-dialog';
+  const form=element('form'),status=element('p');status.setAttribute('role','status');
+  const fields={};
+  for(const [id,label,type] of [['name','Employee name','text'],['email','Employee email','email'],['username','Username','text'],['password','Initial password (at least 12 characters)','password']]){
+   const input=element('input');input.type=type;input.required=true;input.autocomplete=id==='password'?'new-password':'off';input.setAttribute('aria-label',label);
+   const caption=element('label',label);caption.append(input);form.append(caption);fields[id]=input;
+  }
+  fields.password.minLength=12;fields.password.maxLength=128;fields.username.pattern='[A-Za-z0-9][A-Za-z0-9._-]{2,39}';
+  const role=element('select');role.setAttribute('aria-label','Access level');for(const value of ['member','admin']){const opt=element('option',value==='admin'?'Admin':'Member');opt.value=value;role.append(opt);}
+  const roleLabel=element('label','Access level');roleLabel.append(role);form.append(roleLabel);
+  const save=element('button','Create account');save.type='submit';form.append(save);
+  let requestId=null,details=null,busy=false;
+  form.onsubmit=async event=>{event.preventDefault();if(busy||!form.reportValidity())return;
+   const current=JSON.stringify([fields.name.value.trim(),fields.email.value.trim(),fields.username.value.trim(),role.value]);
+   if(current!==details){requestId=crypto.randomUUID();details=current;}
+   busy=true;save.disabled=true;status.textContent='Creating account…';
+   try{const result=await api('/api/account/managed/accounts',{request_id:requestId,name:fields.name.value.trim(),email:fields.email.value.trim(),username:fields.username.value.trim(),password:fields.password.value,role:role.value});
+    status.textContent=`Account ready: ${result.username} (${result.role}). No invitation is needed. Share the initial password privately; the employee will choose a new password on first sign-in.`;
+    requestId=null;details=null;for(const input of Object.values(fields))input.value='';
+   }catch(e){status.textContent=e.message;}finally{fields.password.value='';busy=false;save.disabled=false;}
+  };
+  const close=element('button','Close');close.type='button';close.onclick=()=>{if(!busy)dialog.close();};
+  dialog.addEventListener('cancel',event=>{if(busy)event.preventDefault();});
+  const sessionChanged=()=>dialog.close();document.addEventListener('wzos:session',sessionChanged);
+  dialog.addEventListener('close',()=>{for(const input of Object.values(fields))input.value='';document.removeEventListener('wzos:session',sessionChanged);dialog.remove();},{once:true});
+  dialog.append(element('h2','Create employee account'),element('p','Add a team member directly. Each active account uses one licensed login.'),form,status,close);document.body.append(dialog);dialog.showModal();
+ }
  async function start(config){
   authHeader=config.auth_header||'Authorization';
   if(!['Authorization','X-WZOS-Authorization'].includes(authHeader))throw Error('Sign-in configuration is unavailable.');
@@ -82,9 +110,9 @@ window.wzosAccount = (() => {
   const panel=element('dialog');panel.className='account-dialog';
   const logo=element('img');logo.src='/wzos-logo.png?brand=20261017';logo.alt='Work Zone OS';logo.className='account-brand-logo';logo.width=80;logo.height=89;panel.append(logo);
   const title=element('h2','Welcome to WZOS');const note=element('p',key?'Sign in to your organization.':'Account sign-in is awaiting Google authentication configuration.');
-  const email=element('input');email.type='email';email.autocomplete='username';email.required=true;
+  const email=element('input');email.type='text';email.autocomplete='username';email.required=true;
   const password=element('input');password.type='password';password.autocomplete='current-password';password.required=true;password.setAttribute('aria-label','Password');
-  const form=element('form');const emailLabel=element('label','Email');emailLabel.append(email);const passwordLabel=element('label','Password');
+  const form=element('form');const emailLabel=element('label','Email or username');emailLabel.append(email);const passwordLabel=element('label','Password');
   const passwordField=element('span');passwordField.className='password-field';
   const passwordVisibility=element('button');passwordVisibility.type='button';passwordVisibility.className='password-visibility-button';
   function passwordVisible(visible){
@@ -111,21 +139,30 @@ window.wzosAccount = (() => {
    let working=false;
    async function run(task){if(working)return;working=true;for(const b of panel.querySelectorAll('button'))b.disabled=true;try{await task();}catch(e){message.textContent=e.message;}finally{working=false;for(const b of panel.querySelectorAll('button'))b.disabled=!key;}}
    async function choose(){
-    const account=await api('/api/account');message.textContent='';password.value='';form.hidden=true;title.textContent='Your organization';note.textContent='Select an organization or use your activation code or invitation.';
+    const account=await api('/api/account');message.textContent='';password.value='';form.hidden=true;title.textContent='Your organization';note.textContent='Select your organization. Invitations are optional for accounts created by your administrator.';
     let choices=panel.querySelector('.account-choices');if(choices)choices.remove();choices=element('div');choices.className='account-choices';
+    if(account.password_change_required){
+     title.textContent='Choose your password';note.textContent='Replace the initial password your administrator provided before opening WZOS.';
+     const next=element('input');next.type='password';next.autocomplete='new-password';next.minLength=12;next.maxLength=128;next.required=true;next.setAttribute('aria-label','New password');
+     const again=element('input');again.type='password';again.autocomplete='new-password';again.required=true;again.setAttribute('aria-label','Confirm new password');
+     const save=element('button','Save password');save.onclick=()=>run(async()=>{if(next.value!==again.value)throw Error('Passwords do not match.');if(next.value.length<12)throw Error('Use at least 12 characters.');try{await api('/api/account/managed/password',{password:next.value});token=null;refresh=null;expires=0;choices.remove();form.hidden=false;title.textContent='Sign in';note.textContent='Your password is updated. Sign in with your new password.';}finally{next.value='';again.value='';}});
+     choices.append(next,again,save);panel.insertBefore(choices,message);return;
+    }
     for(const org of account.organizations){const button=element('button',`${org.name}  -  ${org.role}  -  ${org.edition}`);button.onclick=()=>run(async()=>{organization=org.id;const current=await api('/api/session');panel.close();panel.remove();resolve(current);});choices.append(button);}
     const name=element('input');name.placeholder='Organization name';name.setAttribute('aria-label','Organization name');
     const activation=element('input');activation.placeholder='Activation code';activation.setAttribute('aria-label','Activation code');
     const create=element('button','Create organization');create.onclick=()=>run(async()=>{
      const orgName=name.value.trim(),code=activation.value.trim();
      if(orgName.length<2||orgName.length>120)throw Error('Enter an organization name between 2 and 120 characters.');
-     if(code.length<32||code.length>128)throw Error('An activation code is required to create your organization. Ask WZOS support for your activation code.');
+     if(!account.organization_creation_grant&&(code.length<32||code.length>128))throw Error('An activation code is required to create your organization. Ask WZOS support for your activation code.');
      await api('/api/account/organizations',{name:orgName,activation_code:code});await choose();});
     const invitation=element('input');invitation.placeholder='Invitation token';invitation.setAttribute('aria-label','Invitation token');
     const join=element('button','Join organization');join.onclick=()=>run(async()=>{
      const inviteToken=invitation.value.trim();if(inviteToken.length<32||inviteToken.length>128)throw Error('An invitation token is required to join. Ask your organization administrator for an invitation.');
      await api('/api/account/join',{token:inviteToken});await choose();});
-    choices.append(element('p','Creating a new organization requires a WZOS activation code. Joining an existing organization requires an invitation from its administrator.'),name,activation,create,invitation,join);panel.insertBefore(choices,message);
+    activation.hidden=Boolean(account.organization_creation_grant);
+    const grant=account.organization_creation_grant;
+    choices.append(element('p',grant?`Your ${grant.edition} organization with ${grant.seat_limit} active logins is approved. Enter its name to begin.`:'Create an organization with your activation code. If your admin has already added your account, select your organization above. Otherwise you may use an invitation.'),name,activation,create,invitation,join);panel.insertBefore(choices,message);
     // Purchase controls belong to new customers, never organization members.
     if(!account.organizations.length){
      const purchaseId=new URLSearchParams(location.search).get('purchase');
@@ -173,12 +210,14 @@ window.wzosAccount = (() => {
     if(!email.reportValidity()||!password.reportValidity())return;
     passwordVisible(false);
     if(config.persistent_sessions)await api('/api/account/logout',{});
-    const data=await provider(create?'signUp':'signInWithPassword',{email:email.value.trim(),password:password.value,returnSecureToken:true});
+    const identifier=email.value.trim();
+    if(create&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(identifier))throw Error('Enter an email address to create a personal account. Your administrator can create a username account.');
+    const data=!create&&!identifier.includes('@')?await api('/api/account/managed/sign-in',{username:identifier,password:password.value}):await provider(create?'signUp':'signInWithPassword',{email:identifier,password:password.value,returnSecureToken:true});
     token=data.idToken;refresh=data.refreshToken;expires=Date.now()+Number(data.expiresIn)*1000;
     if(create){try{await provider('sendOobCode',{requestType:'VERIFY_EMAIL',idToken:token});message.textContent='Check your email to verify your account, then sign in.';}
      catch(e){message.textContent='Your account was created, but the verification email could not be requested. Use Resend verification email or try again later.';}
      finally{token=null;refresh=null;expires=0;password.value='';}return;}
-    if(remember.checked&&config.persistent_sessions){await api("/api/account/session",{});token=null;refresh=null;expires=0;}
+    if(remember.checked&&config.persistent_sessions){const account=await api('/api/account');if(!account.password_change_required){await api("/api/account/session",{});token=null;refresh=null;expires=0;}}
     await choose();
    }
    if(config.persistent_sessions)run(async()=>{try{await choose();}catch(e){token=null;refresh=null;expires=0;form.hidden=false;message.textContent="Sign in to continue.";}});
@@ -191,7 +230,7 @@ window.wzosAccount = (() => {
     await choose();
    });
    form.onsubmit=e=>{e.preventDefault();run(()=>login(false));};signup.onclick=()=>run(()=>login(true));
-   reset.onclick=()=>run(async()=>{if(!email.reportValidity())return;await provider('sendOobCode',{requestType:'PASSWORD_RESET',email:email.value.trim()});message.textContent='If the account is eligible, a reset email will arrive.';});
+   reset.onclick=()=>run(async()=>{if(!email.reportValidity())return;if(!email.value.includes('@'))throw Error('Enter your account email address to request a password reset.');await provider('sendOobCode',{requestType:'PASSWORD_RESET',email:email.value.trim()});message.textContent='If the account is eligible, a reset email will arrive.';});
    verify.onclick=()=>run(async()=>{
     if(!email.reportValidity()||!password.reportValidity())return;
     const data=await provider('signInWithPassword',{email:email.value.trim(),password:password.value,returnSecureToken:true});
@@ -216,6 +255,7 @@ window.wzosAccount = (() => {
    try{const data=await api('/api/account/members');
     const license=await api('/api/account/license');
     dialog.append(element('p',license.seat_limit===null?'Seat allowance awaiting configuration.':`${license.seats_used} of ${license.seat_limit} seats in use. Admins and members each use one seat.`));
+    const provision=element('button','Create employee account');provision.onclick=()=>createManaged(api);dialog.append(provision,element('h3','Optional invitation'));
     const email=element('input');email.type='email';email.placeholder='Member email';email.setAttribute('aria-label','Member email');
     const role=element('select');role.setAttribute('aria-label','Invitation role');for(const value of (data.can_change_access?['member','admin']:['member'])){const option=element('option',value);option.value=value;role.append(option);}
     const invite=element('button','Create invitation');invite.onclick=async()=>{invite.disabled=true;try{const result=await api('/api/account/invitations',{email:email.value,role:role.value});const output=element('textarea');output.readOnly=true;output.value=result.token;output.setAttribute('aria-label','Private invitation token');dialog.append(output);status.textContent='Invitation created for this email. Share privately. No message was sent.';}catch(e){status.textContent=e.message;}finally{invite.disabled=false;}};dialog.append(email,role,invite);

@@ -68,6 +68,20 @@ test('failed sign-in does not distinguish missing account from invalid credentia
  assert.doesNotMatch(ui.message.textContent,/EMAIL_NOT_FOUND|does not exist/);
 });
 
+test('username login uses managed authentication without exposing an email lookup',async()=>{
+ const calls=[];const ui=accountFailureFixture(async(url,options)=>{calls.push([url,JSON.parse(options.body)]);return {ok:false,json:async()=>({detail:'Incorrect password or username.'})};});
+ ui.inputs[0].value='field.worker';ui.form.onsubmit({preventDefault(){}});await settle();
+ assert.equal(calls.length,1);assert.equal(calls[0][0],'/api/account/managed/sign-in');
+ assert.equal(calls[0][1].username,'field.worker');assert.equal(calls[0][1].email,undefined);
+ assert.equal(ui.message.textContent,'Incorrect password or username.');
+});
+
+test('personal signup requires an email rather than treating a username as one',async()=>{
+ let calls=0;const ui=accountFailureFixture(async()=>{calls++;throw Error('Should not send');});
+ ui.inputs[0].value='field.worker';await ui.signup.onclick();
+ assert.equal(calls,0);assert.match(ui.message.textContent,/email address/);
+});
+
 for (const authHeader of ['Authorization','X-WZOS-Authorization']) test(authHeader+': session refresh is shared, preserves organization, and fails closed',async()=>{
  const body=new Element('body'),bar=new Element('bar');let now=0,refreshes=0,fail=false;
  const document={body,createElement:t=>new Element(t),querySelector:()=>bar};

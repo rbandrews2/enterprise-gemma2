@@ -1,0 +1,6 @@
+title: WZOS managed account provisioning
+description: Create and update Google identities for organization-managed onboarding
+stage: GA
+includedPermissions:
+- firebaseauth.users.create
+- firebaseauth.users.update

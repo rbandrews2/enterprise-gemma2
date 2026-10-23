@@ -45,13 +45,31 @@ class FirebaseVerifier:
         from firebase_admin import auth
         return auth.verify_session_cookie(cookie, app=self.app, check_revoked=True)
 
+    def create_managed(self, uid, email, password, name):
+        from firebase_admin import auth
+        return auth.create_user(uid=uid, email=email, password=password, display_name=name,
+                                email_verified=False, disabled=True, app=self.app)
+
+    def get_managed(self, uid):
+        from firebase_admin import auth
+        return auth.get_user(uid, app=self.app)
+
+    def enable_managed(self, uid):
+        from firebase_admin import auth
+        return auth.update_user(uid, disabled=False, app=self.app)
+
+    def change_managed_password(self, uid, password):
+        from firebase_admin import auth
+        auth.update_user(uid, password=password, app=self.app)
+        auth.revoke_refresh_tokens(uid, app=self.app)
+
 
 
 # Provider verification remains authoritative for remembered sessions.
 class NewOrganization(BaseModel):
     model_config = ConfigDict(extra='forbid', str_strip_whitespace=True)
     name: str = Field(min_length=2, max_length=120)
-    activation_code: str = Field(min_length=32, max_length=128)
+    activation_code: str = Field(default='', max_length=128)
 
 
 class Invitation(BaseModel):
@@ -92,6 +110,10 @@ class Accounts:
             db.execute("UPDATE memberships SET role='admin' WHERE role='owner'")
         from .licensing import Licensing
         self.licensing = Licensing(connect)
+        from .managed_accounts import DDL
+        with connect() as db:
+            for sql in DDL:
+                db.execute(sql)
 
     def identity(self, request):
         cached = getattr(request.state, 'verified_identity', None)
@@ -108,10 +130,21 @@ class Accounts:
                 claims = self.verify(header[7:])
             except Exception:
                 raise HTTPException(401, 'Session expired or could not be verified') from None
-        if not claims.get('uid') or not claims.get('email') or claims.get('email_verified') is not True:
+        if not claims.get('uid') or not claims.get('email'):
             raise HTTPException(403, 'Verify your email before accessing WZOS')
+        with self.connect() as db:
+            managed = db.execute("SELECT a.* FROM managed_accounts a JOIN memberships m ON m.user_id=a.user_id AND m.organization_id=a.organization_id JOIN organizations o ON o.id=m.organization_id WHERE a.user_id=? AND a.state='ready' AND m.active=1 AND o.active=1", (claims['uid'],)).fetchone()
+        if managed and managed['email'] != claims['email'].lower():
+            raise HTTPException(403, 'Contact your administrator to update your managed account email.')
+        if claims.get('email_verified') is not True and not managed:
+            raise HTTPException(403, 'Verify your email before accessing WZOS')
+        password_change_required = bool(managed and not managed['password_changed'])
+        if password_change_required and request.url.path not in ('/api/account', '/api/account/managed/password', '/api/account/logout'):
+            raise HTTPException(403, 'Choose your own password before opening the workspace.')
         person = {'id': claims['uid'], 'email': claims['email'].lower(),
-                  'name': str(claims.get('name') or claims['email'])[:200]}
+                  'name': str(claims.get('name') or claims['email'])[:200],
+                  'email_verified': claims.get('email_verified') is True,
+                  'password_change_required': password_change_required}
         with self.connect() as db:
             db.execute('INSERT INTO accounts VALUES (?,?,?) ON CONFLICT(id) DO UPDATE SET email=excluded.email,name=excluded.name',
                        (person['id'], person['email'], person['name']))
@@ -159,6 +192,8 @@ class Accounts:
         register_employees(app, self)
         from .employee_import import register as register_employee_import
         register_employee_import(app, self)
+        from .managed_accounts import register as register_managed_accounts
+        register_managed_accounts(app, self)
         from .browser_sessions import register
         register(app, self)
         from .passkeys import register as register_passkeys
@@ -182,13 +217,37 @@ class Accounts:
             user = self.identity(request)
             with self.connect() as db:
                 rows=db.execute('SELECT o.id,o.name,o.edition,m.role FROM memberships m JOIN organizations o ON o.id=m.organization_id WHERE m.user_id=? AND m.active=1 AND o.active=1', (user['id'],)).fetchall()
-            return {**user, 'organizations':[dict(r) for r in rows]}
+                grant = db.execute('SELECT edition,seat_limit,expires_at FROM organization_creation_grants WHERE email=? AND organization_id IS NULL AND expires_at>? ORDER BY expires_at DESC LIMIT 1',(user['email'],now())).fetchone() if user['email_verified'] else None
+            return {**user, 'organizations':[] if user['password_change_required'] else [dict(r) for r in rows],
+                    'organization_creation_grant': dict(grant) if grant else None}
 
         @app.post('/api/account/organizations')
         def create(body: NewOrganization, request: Request):
             user=self.identity(request)
+            if not user['email_verified']:
+                raise HTTPException(403, 'Verify your email before creating an organization.')
             with self.connect() as db:
                 db.execute('BEGIN IMMEDIATE')
+                if not body.activation_code:
+                    grant = db.execute('SELECT * FROM organization_creation_grants WHERE email=? AND expires_at>? ORDER BY expires_at DESC LIMIT 1',(user['email'],now())).fetchone()
+                    if not grant:
+                        raise HTTPException(403, 'An activation code or approved organization grant is required.')
+                    db.execute('UPDATE organization_creation_grants SET email=email WHERE id=?',(grant['id'],))
+                    grant = db.execute('SELECT * FROM organization_creation_grants WHERE id=?',(grant['id'],)).fetchone()
+                    if grant['expires_at'] <= now():
+                        raise HTTPException(403,'Organization grant has expired.')
+                    if grant['organization_id']:
+                        if grant['used_by'] == user['id']:
+                            return {'id':grant['organization_id']}
+                        raise HTTPException(403,'Organization grant is unavailable.')
+                    org=str(uuid4()); activation_hash='grant:'+grant['id']
+                    self.licensing.attach_activation(db,activation_hash,grant['seat_limit'],grant['email'])
+                    self.licensing.redeem(db,activation_hash,org,user)
+                    db.execute('INSERT INTO organizations VALUES (?,?,?,1)',(org,body.name,grant['edition']))
+                    db.execute("INSERT INTO memberships VALUES (?,?,'admin',1)",(org,user['id']))
+                    db.execute('UPDATE organization_creation_grants SET organization_id=?,used_by=? WHERE id=?',(org,user['id'],grant['id']))
+                    self.audit(db,org,user['id'],'organization_grant_redeemed',grant['id'])
+                    return {'id':org}
                 code=db.execute('SELECT * FROM activation_codes WHERE hash=?', (digest(body.activation_code),)).fetchone()
                 if not code or code['expires_at'] < now():
                     raise HTTPException(403, 'Activation code is invalid or expired')
@@ -218,6 +277,8 @@ class Accounts:
         @app.post('/api/account/join')
         def join(body: Join, request: Request):
             user=self.identity(request)
+            if not user['email_verified']:
+                raise HTTPException(403, 'Verify your email before accepting an invitation.')
             with self.connect() as db:
                 db.execute('BEGIN IMMEDIATE')
                 invitation=db.execute('SELECT i.* FROM invitations i JOIN organizations o ON o.id=i.organization_id WHERE i.hash=? AND o.active=1', (digest(body.token),)).fetchone()

@@ -47,6 +47,9 @@ class Licensing:
                 'seat_policy': 'all_active_logins_including_admins'}
 
     def require_capacity(self, db, org):
+        # Serialize capacity checks across invitations, reactivation and direct
+        # admin provisioning. Callers already own the surrounding transaction.
+        db.execute('UPDATE organizations SET active=active WHERE id=?', (org,))
         status = self.status(db, org)
         # Historical organizations retain access until an explicit licensing migration.
         if status['seat_limit'] is not None and status['seats_used'] >= status['seat_limit']:

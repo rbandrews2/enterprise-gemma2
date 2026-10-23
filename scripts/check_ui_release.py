@@ -38,6 +38,9 @@ elif phase == 'schema':
     assert not schema['conflicts'], 'Incompatible existing columns'
     # Preview-only tables may already be absent; only the disclosed voice table is new.
     allowed = {'preview_orders', 'preview_forms', 'preview_checklists'}
+    if os.getenv('WZOS_RELEASE_MANAGED_ACCOUNTS') == '1':
+        # Reviewed additive SQL: docs/managed-onboarding-additive.sql.
+        allowed |= {'managed_accounts', 'organization_creation_grants', 'managed_login_limits'}
     if os.getenv('WZOS_RELEASE_EMPLOYEE_IMPORT') == '1':
         # Reviewed additive SQL: docs/employee-import-additive.sql.
         allowed |= {'employee_roster', 'employee_import_batches'}
