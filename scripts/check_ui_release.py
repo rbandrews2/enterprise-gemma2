@@ -70,6 +70,14 @@ elif phase == 'staged':
     assert traffic(staged) == [(prior, 100)]
 elif phase == 'live':
     static = root / 'source/services/workspace_preview/static'
+    if os.getenv('WZOS_RELEASE_EMPLOYEE_IMPORT') == '1':
+        with urllib.request.urlopen('https://app.workzoneos.org/employees.js?release=' + tag, timeout=45) as response:
+            assert response.read() == (static / 'employees.js').read_bytes(), 'Employee import asset mismatch'
+        try:
+            urllib.request.urlopen('https://app.workzoneos.org/api/account/employee-import/roster', timeout=30)
+            raise AssertionError('Anonymous employee roster access')
+        except urllib.error.HTTPError as error:
+            assert error.code == 401, error.code
     for name in ('startup.js', 'app-shell-worker.js', 'workspace-layout.css', 'manifest.webmanifest', 'install-icon-192.png', 'install-icon-512.png', 'install-maskable-192.png', 'install-maskable-512.png', 'mobile-home.js', 'workspace.js', 'workspace.css', 'weather.js', 'weather.css', 'device-setup.js', 'field-voice.js', 'field-voice.css', 'review-workflows.js', 'ask-atlas.js', 'ask-atlas.css', 'dispatch.js', 'navigation.js', 'timeclock.js', 'organization-hub.js', 'install.js', 'account.js', 'forms-hub.js', 'daily-meetings.js'):
         with urllib.request.urlopen('https://app.workzoneos.org/' + name + '?release=ui-20261020', timeout=45) as response:
             assert response.status == 200
