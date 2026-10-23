@@ -28,7 +28,7 @@
    const grid=node('div',undefined,'hub-grid');for(const item of data.modules.filter(m=>m.visible&&m.id!=='report')){
     const b=button('',()=>document.getElementById(item.nav_id)?.click());b.className=item.id==='report'?'panel hub-card guided-feature':'panel hub-card';b.dataset.moduleNav=item.nav_id;b.append(node('span',item.icon,'hub-icon'),node('strong',item.label));if(item.id==='report')content.append(b);else grid.append(b);
    }
-   for(const [label,selector,icon] of [['Employees','.account-employees','♙'],['Team access','.account-team','♧'],['Passkeys','.account-passkeys','⚿']]){
+   for(const [label,selector,icon] of [['Employees','.account-employees','♙'],['Team access','.account-team','♧'],['Bulk create employee accounts','.account-bulk-create','♙'],['Passkeys','.account-passkeys','⚿']]){
     if(document.querySelector(selector)){const b=button('',()=>document.querySelector(selector)?.click());b.className='panel hub-card';b.dataset.moduleNav=selector.slice(1);b.append(node('span',icon,'hub-icon'),node('strong',label));grid.append(b);}
    }content.append(grid);
    if(window.wzosEmployees?.importEmployees){const importer=button('Import employees',()=>window.wzosEmployees.importEmployees((path,body)=>api(path,body?{method:'POST',body:JSON.stringify(body)}:{})));importer.className='panel hub-card';content.append(importer);}

@@ -162,6 +162,9 @@ def register(app, accounts):
             db.execute("UPDATE managed_accounts SET state='ready' WHERE user_id=?", (uid,))
         return {'id': uid, 'username': username, 'role': body.role, 'created': True, 'invitation_required': False}
 
+    from . import bulk_managed
+    bulk_managed.register(app, accounts, admin, create, CreateAccount, password_value)
+
     @app.post('/api/account/managed/sign-in')
     def sign_in(body: SignIn, request: Request):
         username = body.username.lower().strip()

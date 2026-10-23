@@ -725,6 +725,10 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
     def employee_script():
         return FileResponse(STATIC / "employees.js", media_type="text/javascript")
 
+    @app.get("/bulk-accounts.js")
+    def bulk_accounts_script():
+        return FileResponse(STATIC / "bulk-accounts.js", media_type="text/javascript")
+
     @app.get("/navigation-link.js")
     def navigation_link_script():
         return FileResponse(STATIC / "navigation-link.js", media_type="text/javascript")
