@@ -20,3 +20,10 @@ test('current shell wins for update and rollback, with offline cached fallback',
 test('versioned public assets cache; unversioned assets do not intercept',async()=>{
  const h=harness();assert.equal(await h.run('/workspace.js'),null);await h.run('/workspace.js?v=abcdef123456abcdef123456');assert.equal(h.puts.length,1);
 });
+
+test('reload with stalled network releases cached public shell instead of hanging splash',async()=>{
+ const events={},old={publicShell:true};let deadline;
+ vm.runInNewContext(fs.readFileSync('services/workspace_preview/static/app-shell-worker.js','utf8'),{URL,self:{location:{origin:'https://app.workzoneos.org'},addEventListener:(n,f)=>events[n]=f},setTimeout:f=>(deadline=f,1),clearTimeout(){},fetch:()=>new Promise(()=>{}),caches:{open:async()=>({match:async()=>old})}});
+ let pending;events.fetch({request:{url:'https://app.workzoneos.org/',method:'GET',mode:'navigate',cache:'reload'},respondWith:p=>pending=p,waitUntil(){}});
+ await new Promise(resolve=>setImmediate(resolve));deadline();assert.equal(await pending,old);
+});

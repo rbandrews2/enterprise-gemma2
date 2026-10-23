@@ -248,3 +248,16 @@ for(const paid of [false,true])test('checkout return requires verified receipt b
  assert.equal(activation.value,paid?'synthetic-code':'');
  assert.equal(ui.navigations.length,0);
 });
+
+test('saved sign-in network failure offers retry without logout or page reload',async()=>{
+ const body=new Element('body'),bar=new Element('bar');let attempts=0;
+ const sandbox={window:{},document:{body,createElement:t=>new Element(t),querySelector:()=>bar},Date,URLSearchParams,location:{hostname:'localhost',reload(){throw Error('Unexpected reload');}},fetch:async url=>{
+  assert.equal(url,'/api/account');if(++attempts===1)throw Error('offline');
+  return {ok:true,json:async()=>({organizations:[{id:'org-1',name:'Synthetic',role:'member',edition:'core'}]})};
+ }};
+ vm.runInNewContext(fs.readFileSync('services/workspace_preview/static/account.js','utf8'),sandbox);
+ sandbox.window.wzosAccount.start({auth_api_key:'fake',persistent_sessions:true});await settle();
+ const panel=body.children[0],retry=panel.children.find(n=>n.textContent==='Retry saved sign-in');
+ assert.equal(retry.hidden,false);await retry.onclick();assert.equal(attempts,2);assert.equal(retry.hidden,true);
+ assert.ok(panel.children.find(n=>n.className==='account-choices'));
+});

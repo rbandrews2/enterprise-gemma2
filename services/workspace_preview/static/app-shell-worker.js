@@ -21,8 +21,9 @@ self.addEventListener('fetch',event=>{
  if(request.method!=='GET'||url.origin!==self.location.origin)return;
  if(request.mode==='navigate'&&url.pathname==='/'&&!url.search){
   event.respondWith((async()=>{
-   // A user-requested reload (including Install updates) must get fresh HTML.
-   if(request.cache==='reload'||request.cache==='no-cache')return refreshShell();
+   // Prefer fresh HTML for updates/reloads too, but never strand a returning
+   // user behind the OS splash when the network stalls. The cached shell is
+   // public only; authenticated records are still checked with the server.
    const fresh=refreshShell();
    event.waitUntil(fresh.catch(()=>{}));
    const cached=await (await caches.open(SHELL_CACHE)).match('/');

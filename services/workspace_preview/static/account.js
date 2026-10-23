@@ -57,7 +57,8 @@ window.wzosAccount = (() => {
   return {'X-WZOS-Session':'1',[authHeader]:'Bearer '+token,'X-WZOS-Organization':organization||''};
  }
  async function api(path,body,method){
-  let r;try{r=await fetch(path,{method:method||(body?'POST':'GET'),headers:{'Content-Type':'application/json',...await headers()},...(body?{body:JSON.stringify(body)}:{})});}catch(e){throw Error('The account service could not be reached. Check your connection and try again.');}
+  const task=async signal=>{
+  let r;try{const auth=await headers();if(signal?.aborted)throw Error('Request cancelled.');r=await fetch(path,{method:method||(body?'POST':'GET'),...(signal?{signal}:{}),headers:{'Content-Type':'application/json',...auth},...(body?{body:JSON.stringify(body)}:{})});}catch(e){throw Error('The account service could not be reached. Check your connection and try again.');}
   let d;try{d=await r.json();}catch(e){throw Error('The account service returned an unexpected response. Try again later.');}
   if(!r.ok){
    if(r.status===422){
@@ -67,8 +68,9 @@ window.wzosAccount = (() => {
     if(fields.includes('token'))throw Error('Enter the invitation token supplied by your organization administrator (32–128 characters).');
     throw Error('Check the required fields and try again.');
    }
-   throw Error(typeof d.detail==='string'?d.detail:'Account request failed. Try again or contact your organization administrator.');
-  }return d;
+   const error=Error(typeof d.detail==='string'?d.detail:'Account request failed. Try again or contact your organization administrator.');error.status=r.status;throw error;
+  }return d;};
+  return window.wzosStartup?.request&&!body&&!method&&['/api/account','/api/session'].includes(path)?window.wzosStartup.request(task):task();
  }
  function createManaged(api){
   const dialog=element('dialog');dialog.className='account-dialog';
@@ -220,7 +222,11 @@ window.wzosAccount = (() => {
     if(remember.checked&&config.persistent_sessions){const account=await api('/api/account');if(!account.password_change_required){await api("/api/account/session",{});token=null;refresh=null;expires=0;}}
     await choose();
    }
-   if(config.persistent_sessions)run(async()=>{try{await choose();}catch(e){token=null;refresh=null;expires=0;form.hidden=false;message.textContent="Sign in to continue.";}});
+   if(config.persistent_sessions){
+    const reconnect=element('button','Retry saved sign-in');reconnect.type='button';reconnect.hidden=true;panel.append(reconnect);
+    const restore=async()=>{reconnect.hidden=true;try{await choose();}catch(e){form.hidden=false;if(e.status===401){message.textContent='Sign in to continue.';}else{message.textContent='Your saved sign-in could not be checked. Retry the connection or sign in below.';reconnect.hidden=false;}}};
+    reconnect.onclick=()=>run(restore);run(restore);
+   }
    passkey.onclick=()=>run(async()=>{
     if(config.persistent_sessions)await api('/api/account/logout',{});
     const proof=await passkeyCeremony('login');
