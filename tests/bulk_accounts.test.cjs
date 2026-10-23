@@ -10,7 +10,7 @@ class Element{
 }
 function fixture(api){
  const document={body:new Element('body'),events:{},createElement:t=>new Element(t),addEventListener(k,f){this.events[k]=f;},removeEventListener(k){delete this.events[k];}};
- const sandbox={window:{},document,crypto:{randomUUID:()=> 'stable-batch'},Map,Blob,URL,setTimeout,Uint8Array,btoa};
+ const sandbox={window:{addEventListener(){},removeEventListener(){}},document,crypto:{randomUUID:()=> 'stable-batch'},Map,Blob,URL,setTimeout,Uint8Array,btoa};
  vm.runInNewContext(fs.readFileSync('services/workspace_preview/static/bulk-accounts.js','utf8'),sandbox);
  const dialog=sandbox.window.wzosBulkAccounts.open(api);
  const button=text=>dialog.all('button').find(b=>b.textContent===text);

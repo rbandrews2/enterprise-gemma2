@@ -99,6 +99,14 @@ class BulkManagedTests(unittest.TestCase):
             self.assertEqual(self.call('create',who=who,reviewed=True,rows=[0]).status_code,403)
         self.assertEqual(self.provider.created,0)
 
+    def test_later_chunk_only_creates_selected_row(self):
+        response=self.call('create',reviewed=True,rows=[1])
+        self.assertEqual(response.status_code,200,response.text)
+        self.assertEqual(response.json()['items'][0]['index'],1)
+        self.assertTrue(response.json()['items'][0]['created'])
+        self.assertEqual(self.provider.created,1)
+        self.assertEqual(next(iter(self.provider.users.values())).email,'two@example.test')
+
     def test_duplicate_invalid_and_existing_rows(self):
         for text in [self.body['content'].replace('two@example.test','one@example.test'),self.body['content'].replace(',admin',',owner'),self.body['content'].replace('one@example.test','creator@example.test')]:
             response=self.call(content=text)
@@ -119,9 +127,9 @@ class BulkManagedTests(unittest.TestCase):
         self.assertFalse(self.create().json()['items'][0]['created'])
         self.assertEqual(self.provider.created,2)
         self.provider.fail_enable=False
-        self.assertTrue(all(r['created'] for r in self.create().json()['items']));self.assertEqual(self.provider.created,2)
+        self.assertTrue(all(r['created'] for r in self.create(batch_id=str(uuid4())).json()['items']));self.assertEqual(self.provider.created,2)
         changed=self.body['content'].replace('Test One','Different Name')
-        self.assertFalse(self.create(content=changed).json()['items'][0]['created'])
+        self.assertEqual(self.create(content=changed).status_code,409)
 
     def test_explicit_confirmation_bounds_and_validation_redaction(self):
         for values in [{'reviewed':False,'rows':[0]}, {'reviewed':True,'rows':[0,0]}, {'reviewed':True,'rows':[-1]}, {'reviewed':True,'rows':list(range(6))}]:

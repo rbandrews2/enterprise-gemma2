@@ -1,5 +1,20 @@
 # WZOS current session handoff - October 18, 2026
 
+## Bulk employee accounts — October23 (latest development checkpoint)
+
+User requested bulk CSV and spreadsheet account creation. Implemented admin-only
+Organization management / Team access action; CSV, single-sheet XLSX and pasted
+spreadsheet rows; review duplicates/errors/access/seats, then explicit creation.
+Five-row requests reuse managed account idempotency; same-admin unchanged uploads
+recover pending reservations after a reload. No automatic invitations, no password
+resets or saved upload credentials. No schema, dependency or IAM changes.
+22 distinct focused Python checks and 185 Node checks PASS (affected cases rerun
+following final repairs); synthetic browser review PASS. See
+BULK_MANAGED_ACCOUNTS_20261023.md for exact evidence/reuse and constraints.
+NOT DEPLOYED. Cloud Shell requires user authorization; PostgreSQL full integration
+gate has not started. Run that gate and release checks before deployment. Do not
+repeat accepted provider/SMS/Voice tests. Current live release remains 7a674b3.
+
 ## Managed onboarding LIVE — October23 (latest checkpoint)
 
 Source 7a674b3 deployed as wzos-v2-accounts-ui-7a674b3 at100%; independent

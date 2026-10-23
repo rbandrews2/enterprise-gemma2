@@ -130,15 +130,18 @@ def parse(upload):
         fail()
 
 
-def register(app, accounts, admin, create, account_model, password_value):
-    def review(upload, actor):
+def register(app, accounts, admin, create, account_model, password_value, fingerprint):
+    def review(upload, actor, selected=None):
         records, ignored = parse(upload)
         counts = {key: Counter(r[key] for r in records) for key in ('email', 'username')}
         items = []
         with accounts.connect() as db:
             license = accounts.licensing.status(db, actor['organization_id'])
             for index, record in enumerate(records):
+                if selected is not None and index not in selected:
+                    continue
                 errors = []
+                body = None
                 try:
                     body = account_model(**record)
                     password_value(body.password)
@@ -149,6 +152,15 @@ def register(app, accounts, admin, create, account_model, password_value):
                 if any(counts[k][record[k]] > 1 for k in counts):
                     errors.append('Duplicate email or username in this upload.')
                 own = db.execute('SELECT * FROM managed_accounts WHERE organization_id=? AND request_id=? AND created_by=?', (actor['organization_id'],record['request_id'],actor['id'])).fetchone()
+                # Recover an interrupted upload after a browser reload. Only the
+                # same creator, organization and unchanged identity details may
+                # reuse a reservation. This never changes the original password.
+                if not own and body:
+                    own = db.execute('SELECT * FROM managed_accounts WHERE organization_id=? AND created_by=? AND email=? AND username=? AND fingerprint=?', (actor['organization_id'],actor['id'],record['email'],record['username'],fingerprint(body))).fetchone()
+                    if own:
+                        record['request_id'] = own['request_id']
+                if own and body and own['fingerprint'] != fingerprint(body):
+                    errors.append('Reserved account details changed. Restore the original details to retry.')
                 if not own and (db.execute('SELECT 1 FROM managed_accounts WHERE username=? OR email=?',(record['username'],record['email'])).fetchone() or db.execute('SELECT 1 FROM accounts WHERE lower(email)=?',(record['email'],)).fetchone()):
                     errors.append('Email or username already registered. Use an invitation for an existing account.')
                 items.append({'index':index,'name':record['name'],'email':record['email'],'username':record['username'],'role':record['role'], 'errors':errors, 'state':own['state'] if own else 'new'})
@@ -166,11 +178,11 @@ def register(app, accounts, admin, create, account_model, password_value):
         actor = admin(request)
         if not body.reviewed or len(set(body.rows)) != len(body.rows):
             raise HTTPException(422, 'Review and confirm the employee accounts first.')
-        records, result = review(body, actor)
+        records, result = review(body, actor, set(body.rows))
         if any(i < 0 or i >= len(records) for i in body.rows):
             raise HTTPException(422, 'Choose valid employee rows.')
         # Block erroneous rows; a seat race or provider failure is reported per row.
-        if any(result['items'][i]['errors'] for i in body.rows):
+        if any(item['errors'] for item in result['items']):
             raise HTTPException(409, 'Some selected rows need correction. Review the upload again.')
         results = []
         for index in body.rows:

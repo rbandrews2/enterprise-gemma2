@@ -8,15 +8,16 @@ window.wzosBulkAccounts = (() => {
   const paste=el('textarea');paste.rows=5;paste.autocomplete='off';paste.spellcheck=false;paste.setAttribute('aria-label','Paste spreadsheet cells including column headers');
   const fileLabel=el('label','Upload CSV or Excel (.xlsx)');fileLabel.append(file);
   const pasteLabel=el('label','Or paste rows copied from your spreadsheet, including the header');pasteLabel.append(paste);
+  const source=el('details');source.open=true;source.append(el('summary','CSV, Excel or spreadsheet rows'));
   const template=el('button','Download CSV template');template.type='button';
   template.onclick=()=>{const url=URL.createObjectURL(new Blob(['name,email,username,password,role\r\n'],{type:'text/csv;charset=utf-8'}));const a=el('a');a.href=url;a.download='wzos-account-template.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
   const review=el('button','Review accounts'),confirm=el('button','Create reviewed accounts'),close=el('button','Close');
   const consent=el('input');consent.type='checkbox';const consentLabel=el('label','I reviewed the employees and their access levels. Create these accounts.');consentLabel.className='bulk-confirm';consentLabel.append(consent);
   const output=el('div');let upload=null,rows=[],busy=false,closed=false,results=new Map();
   confirm.disabled=true;consent.disabled=true;
-  function invalidate(){upload=null;rows=[];results.clear();output.replaceChildren();consent.checked=false;consent.disabled=true;confirm.disabled=true;status.textContent='';}
+  function invalidate(){upload=null;rows=[];results.clear();output.replaceChildren();consent.checked=false;consent.disabled=true;confirm.disabled=true;review.disabled=false;status.textContent='';}
   file.onchange=()=>{paste.value='';invalidate();};paste.oninput=()=>{file.value='';invalidate();};
-  function lock(value){busy=value;file.disabled=value;paste.disabled=value;review.disabled=value;template.disabled=value;close.disabled=value;consent.disabled=value||!upload;confirm.disabled=value||!upload||!consent.checked;}
+  function lock(value){busy=value;file.disabled=value;paste.disabled=value;review.disabled=value||Boolean(upload);template.disabled=value;close.disabled=value;consent.disabled=value||!upload;confirm.disabled=value||!upload||!consent.checked;}
   function render(){
    const table=el('table');table.className='employee-import-table';const head=el('tr');for(const title of ['Row','Employee','Username','Access','Result'])head.append(el('th',title));table.append(head);
    for(const row of rows){const tr=el('tr');const result=results.get(row.index);for(const text of [String(row.index+1),`${row.name} · ${row.email}`,row.username,row.role,result?(result.created?'Created':result.error):(row.errors.join(' ')||(row.state==='ready'?'Already created':row.state==='pending'?'Reserved — retry setup':'Ready'))])tr.append(el('td',text));table.append(tr);}
@@ -33,11 +34,11 @@ window.wzosBulkAccounts = (() => {
     const candidate={batch_id:crypto.randomUUID(),format,content};
     const data=await api('/api/account/managed/bulk/review',candidate);if(closed)return;
     rows=data.items;render();
-    status.textContent=`${rows.length} employees reviewed. ${data.seats_needed} new logins needed. ${data.license.seats_available===null?'Seat allowance is not configured.':`${data.license.seats_available} logins available.`}`;
+    status.textContent=`${rows.length} employee${rows.length===1?'':'s'} reviewed. ${data.seats_needed} new login${data.seats_needed===1?'':'s'} needed. ${data.license.seats_available===null?'Seat allowance is not configured.':`${data.license.seats_available} logins available.`}`;
     if(data.ignored_columns.length)status.textContent+=` Not imported: ${data.ignored_columns.join(', ')}. Accounts belong to your current organization.`;
     if(!data.capacity_ok)status.textContent+=' Not enough available logins. Reduce the list or increase your allowance.';
     if(rows.some(r=>r.errors.length))status.textContent+=' Correct the indicated rows in your spreadsheet and review again.';
-    if(data.valid)upload=candidate;
+    if(data.valid){upload=candidate;paste.value='';file.value='';source.open=false;}
    }catch(e){if(!closed)status.textContent=e.message;}finally{if(!closed)lock(false);}
   };
   consent.onchange=()=>{confirm.disabled=busy||!upload||!consent.checked;};
@@ -59,10 +60,13 @@ window.wzosBulkAccounts = (() => {
    }catch(e){if(!closed){status.textContent=`${e.message} Completed rows are preserved. Retry unfinished accounts in this window.`;confirm.textContent='Retry unfinished accounts';}}
    finally{if(!closed)lock(false);}
   };
+  const leaving=event=>{if(upload||busy||paste.value||file.files?.length){event.preventDefault();event.returnValue='';}};
+  window.addEventListener('beforeunload',leaving);
   const sessionChanged=()=>dialog.close();document.addEventListener('wzos:session',sessionChanged);
   dialog.addEventListener('cancel',event=>{if(busy)event.preventDefault();});close.onclick=()=>{if(!busy)dialog.close();};
-  dialog.addEventListener('close',()=>{closed=true;upload=null;rows=[];results.clear();file.value='';paste.value='';document.removeEventListener('wzos:session',sessionChanged);dialog.remove();},{once:true});
-  dialog.append(el('h2','Bulk create employee accounts'),el('p','Upload up to 500 employees, review access, then create their logins. Invitations are optional. Use admin or member for access level.'),template,fileLabel,pasteLabel,el('p','Passwords stay in this window during creation. Close it when finished. Existing accounts are never overwritten.'),review,status,output,consentLabel,confirm,close);
+  dialog.addEventListener('close',()=>{closed=true;upload=null;rows=[];results.clear();file.value='';paste.value='';document.removeEventListener('wzos:session',sessionChanged);window.removeEventListener('beforeunload',leaving);dialog.remove();},{once:true});
+  source.append(template,fileLabel,pasteLabel,review);
+  dialog.append(el('h2','Bulk create employee accounts'),el('p','Upload up to 500 employees, review access, then create their logins. Invitations are optional. Use admin or member for access level.'),source,el('p','Passwords stay in this window during creation. Close it when finished. Existing accounts are never overwritten.'),status,output,consentLabel,confirm,close);
   document.body.append(dialog);dialog.showModal();return dialog;
  }
  return {open};

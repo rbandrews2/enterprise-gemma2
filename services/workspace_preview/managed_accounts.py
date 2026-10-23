@@ -54,6 +54,10 @@ def stamp():
     return datetime.now(timezone.utc).isoformat()
 
 
+def account_fingerprint(body):
+    return hashlib.sha256(json.dumps([body.name.strip(), body.email.strip().lower(), body.username.lower(), body.role]).encode()).hexdigest()
+
+
 def issue_organization_grant(accounts, email, edition, seats, hours=168):
     """Operator-only helper, never exposed as a customer API."""
     accounts.licensing.validate(seats, email)
@@ -117,7 +121,7 @@ def register(app, accounts):
         actor = admin(request)
         password = password_value(body.password)
         email, username = body.email.strip().lower(), body.username.lower()
-        fingerprint = hashlib.sha256(json.dumps([body.name.strip(), email, username, body.role]).encode()).hexdigest()
+        fingerprint = account_fingerprint(body)
         with accounts.connect() as db:
             db.execute('BEGIN IMMEDIATE')
             lock_admin(db, actor)
@@ -163,7 +167,7 @@ def register(app, accounts):
         return {'id': uid, 'username': username, 'role': body.role, 'created': True, 'invitation_required': False}
 
     from . import bulk_managed
-    bulk_managed.register(app, accounts, admin, create, CreateAccount, password_value)
+    bulk_managed.register(app, accounts, admin, create, CreateAccount, password_value, account_fingerprint)
 
     @app.post('/api/account/managed/sign-in')
     def sign_in(body: SignIn, request: Request):

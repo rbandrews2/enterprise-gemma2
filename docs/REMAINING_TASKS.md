@@ -1,5 +1,12 @@
 # WZOS remaining tasks - current October 20, 2026
 
+## Bulk account creation — October23
+
+- [x] CSV / XLSX / spreadsheet paste, admin-only review and batch provisioning.
+- [x] Duplicate, role, seat, idempotency and partial-recovery checks; local UI.
+- [ ] Full PostgreSQL integration gate (Cloud Shell authorization pending).
+- [ ] Release checks and deployment; no real employee accounts created in tests.
+
 ## Managed onboarding — October23
 
 - [x] Admin-created username/password accounts; optional invitations; first-login

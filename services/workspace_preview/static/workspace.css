@@ -266,3 +266,4 @@ p{font-size:calc(var(--wzos-paragraph-font-size,1em) + 1pt)!important}
 
 .bulk-accounts-dialog textarea{box-sizing:border-box;width:100%;background:#151817;color:#eee;border:1px solid #666;border-radius:8px;padding:12px;font:inherit}
 .bulk-accounts-dialog .bulk-confirm{display:flex;align-items:center;gap:12px}.bulk-confirm input{width:22px;height:22px;flex-shrink:0}
+.bulk-accounts-dialog{box-sizing:border-box}.bulk-accounts-dialog summary{cursor:pointer;color:#e8c477;padding:12px 0}.bulk-accounts-dialog>div{max-height:320px;overflow:auto}.bulk-accounts-dialog button{background:linear-gradient(#292d2d,#111313);color:#eee;border:1px solid #806633;border-radius:10px;padding:10px 16px;font:inherit;cursor:pointer}.bulk-accounts-dialog button:hover:not(:disabled){border-color:#efbf58;box-shadow:0 0 10px #efbf5822}.bulk-accounts-dialog button:disabled{opacity:.5;cursor:default}
