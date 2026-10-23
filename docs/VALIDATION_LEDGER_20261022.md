@@ -21,6 +21,16 @@ conversation or Cloud Shell restarted. Verify applicability first.
 
 ## Accepted engineering evidence
 
+October23 release supersedes earlier runtime provenance: app content b693d8b,
+release tooling a1d24d1/checker72aef6b, runtime/tests unchanged between these.
+Full PostgreSQL919/430.662s PASS; Node179 Windows2.082s/Linux5.487s PASS; no skips.
+390px synthetic import receipt PASS; schema/backup/staged/public/traffic checks
+PASS; live authenticated dashboard import dialog and roster read PASS without
+production writes. Revision ui-a1d24d1 at100%, image e29aeee4..., marker
+e83ce03ec082a537e4795648. Durable evidence $HOME/wzos-release-evidence-20261023;
+see AVAILABLE_UPDATES_RELEASE_20261023.md. Do not add overlapping counts to older
+suite totals or repeat unchanged real Voice/SMS/billing acceptance.
+
 | ID | Scope / provenance | Accepted result | Evidence |
 | --- | --- | --- | --- |
 | LIVE-TRAINING-FOOTER | Source16d0905, image80c3819a…, deployed ui-16d0905 | 16 PostgreSQL +10 Node, zero skips; staged/public release checks PASS | TRAINING_FOOTER_RELEASE_20261022.md; cloud `/tmp/wzos-training-footer-20261022.y7ej7c0f` |

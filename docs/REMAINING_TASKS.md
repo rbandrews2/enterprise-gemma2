@@ -7,9 +7,9 @@
 - [x] Organization-private roster, no automatic accounts/invitations/sends;
   atomic/stale/idempotency guards.16unique backend and26account Node checks PASS.
 - [x] Synthetic desktop browser upload/review/import receipt (2imported/1skipped).
-- [ ] PostgreSQL/additive-schema gate and integrated mobile acceptance, then the
-  required exact-candidate release gates before any live deployment. See
-  EMPLOYEE_IMPORT_20261022.md. No production changes in this increment.
+- [x] PostgreSQL/additive-schema gate, narrow-screen import acceptance and release:
+  919PostgreSQL/179Node PASS, zero skips; live ui-a1d24d1 at100%. Signed-in
+  dashboard/dialog/roster read accepted. See AVAILABLE_UPDATES_RELEASE_20261023.md.
 
 ## October 22 operational completion / accepted Voice flow
 

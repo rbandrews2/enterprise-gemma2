@@ -1,5 +1,10 @@
 # Employee CSV import
 
+October23 acceptance: deployed ui-a1d24d1 at100%. Full PostgreSQL919 and Node179
+PASS, zero skips;390px synthetic import receipt and live authenticated dialog /
+roster read PASS. See AVAILABLE_UPDATES_RELEASE_20261023.md; earlier open checks
+below describe the original development checkpoint and are now superseded.
+
 Admin-only Organization management action: template, UTF-8 CSV upload, row review,
 then explicit confirmation. Applies to both editions; never grants membership,
 consumes a licensed login, sends invitations or changes existing employee records.
@@ -57,5 +62,5 @@ admins use Team access separately when ready to invite employees.
 
 Local raw backend log: .local-data/employee-import-tests.log. Preserve these
 passing results; do not repeat unrelated Voice/Speech/SMS/model or payment tests.
-The user message ended with an unfinished additional-name request; clarification
-was requested. The implemented label stays **Import employees** meanwhile.
+The user clarified that the additional-name fragment was a typo. The label is
+**Import employees**.

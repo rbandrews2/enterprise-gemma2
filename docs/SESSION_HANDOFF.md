@@ -1,5 +1,24 @@
 # WZOS current session handoff - October 18, 2026
 
+## Available updates LIVE — October23 (latest checkpoint)
+
+User authorized release of available tested updates. App content b693d8b plus
+release tooling a1d24d1 is deployed as wzos-v2-accounts-ui-a1d24d1 at100%.
+Image e29aeee408ea92f2372774a8fa9562e6b2b05b8dc9efa9be49c6bc2fc0cff7dc;
+version e83ce03ec082a537e4795648. Independent traffic readback PASS.
+919PostgreSQL checks/430.662s and179Node checks Windows/Linux PASS, zero skips.
+Schema compatibility/recent backup, staged settings and public asset/API gates
+PASS. Includes header notifications, Enterprise communications guards, CSP and
+dependency repairs, admin employee CSV roster import. Import's two additive
+tables reviewed; rollback retains them and returns to pins-1022181839.
+Narrow390px synthetic import and signed-in live dashboard/dialog/roster read PASS.
+No live data imported or customer sends. No inference pilots repeated.
+Prior checkpoint's additional-name fragment was a typo; user confirmed disregard.
+Evidence $HOME/wzos-release-evidence-20261023; details AVAILABLE_UPDATES_RELEASE_20261023.md.
+Cloud source /tmp/wzos-release-20261023.RFKngPNY/source contains checker72aef6b
+as an operational-only overlay. Runtime/tests identical to tested candidate.
+Remaining source/provider/human prelaunch checks are not claimed complete.
+
 ## Employee import — October22 (latest development checkpoint)
 
 Admin-only Import employees implemented locally under Organization management,
