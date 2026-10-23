@@ -9,13 +9,17 @@ const types = {line_striping:"Line striping",underground_utility:"Underground ut
 function el(tag, text, className) {const node=document.createElement(tag); if(text!==undefined)node.textContent=text; if(className)node.className=className;return node;}
 function notify(message,error=false){$("notice").hidden=false;$("notice").textContent=message;$("notice").classList.toggle("error",error);}
 async function api(path, options={}) {
- const response=await fetch(path,{...options,headers:{"Content-Type":"application/json","X-Preview-Actor":session?.id || $("identity").value,...await window.wzosAccount.headers(),...options.headers}});
+ const task=async signal=>{
+ const headers=await window.wzosAccount.headers();if(signal?.aborted)throw Error('Connection cancelled. Try again.');
+ const response=await fetch(path,{...options,...(signal?{signal}:{}),headers:{"Content-Type":"application/json","X-Preview-Actor":session?.id || $("identity").value,...headers,...options.headers}});
  let data;try{data=await response.json();}catch(cause){
   const error=new Error('WZOS received an unexpected service response. The preview or sign-in may need to reconnect. Nothing was confirmed saved; reload after the connection is restored.');
   error.status=response.status;throw error;
  }
  if(!response.ok){const error=new Error(typeof data.detail==="string"?data.detail:"Check the fields and try again. Nothing was confirmed saved.");error.status=response.status;throw error;}
- return data;
+ return data;};
+ // Bound startup reads only; AI work and mutations have separate workflows.
+ return window.wzosStartup?.request&&['/api/identities','/api/session','/api/orders'].includes(path)&&!options.method?window.wzosStartup.request(task):task();
 }
 function lock(value){busy=value;lockChecklist();$("identity").disabled=value;$("new-order").disabled=value;$("refresh").disabled=value;$("reload-order").disabled=value;$("save-order").disabled=value;$("prepare").disabled=value||dirty||!selected||!session?.can_prepare_atlas;for(const input of $("order-form").querySelectorAll("input,select,textarea,button"))input.disabled=value||checklistDirty;}
 function canLeave(){return !(dirty||checklistDirty)||confirm("Discard unsaved job or checklist changes?");}
@@ -86,7 +90,23 @@ $("prepare").addEventListener("click",async()=>{
 $("atlas-nav").addEventListener("click",()=>{if(session?.edition==='enterprise')window.wzosAskAtlas?.open();else document.dispatchEvent(new CustomEvent("wzos:assistant-open"));});
 $("jobs-nav").addEventListener("click",()=>{window.showWzosView("orders");$("list-title").scrollIntoView({behavior:"smooth",block:"start"});});
 window.addEventListener("beforeunload",event=>{if(dirty||checklistDirty){event.preventDefault();event.returnValue="";}});
-document.addEventListener("DOMContentLoaded",async()=>{try{const config=await api("/api/identities");identities=config.identities;if(config.mode==="verified_accounts"){identities=[await window.wzosAccount.start(config)];}for(const identity of identities){const option=el("option",`${identity.edition==="core"?"Core":"Enterprise"} · ${identity.role} · ${identity.name}`);option.value=identity.id;$("identity").append(option);}$("identity").value=config.mode==="verified_accounts"?identities[0]?.id:"enterprise-admin";await switchIdentity();if(config.mode==="verified_accounts"){$("identity").disabled=true;$("identity").closest("label").hidden=true;}}catch(error){notify(error.message,true);window.wzosStartup?.fail();}},{once:true});
+let booting=false,bootConfig=null,identityReady=false;
+async function bootWorkspace(){
+ if(booting)return;booting=true;
+ try{
+  if(!identityReady){
+   bootConfig=bootConfig||await api('/api/identities');identities=bootConfig.identities;
+   if(bootConfig.mode==='verified_accounts')identities=[await window.wzosAccount.start(bootConfig)];
+   $('identity').replaceChildren();
+   for(const identity of identities){const option=el('option',`${identity.edition==='core'?'Core':'Enterprise'} · ${identity.role} · ${identity.name}`);option.value=identity.id;$('identity').append(option);}
+   $('identity').value=bootConfig.mode==='verified_accounts'?identities[0]?.id:'enterprise-admin';identityReady=true;
+  }
+  await switchIdentity();
+  if(bootConfig.mode==='verified_accounts'){$('identity').disabled=true;$('identity').closest('label').hidden=true;}
+ }catch(error){notify(error.message,true);window.wzosStartup?.fail();}finally{booting=false;}
+}
+window.wzosStartup?.setRetry?.(bootWorkspace);
+document.addEventListener('DOMContentLoaded',bootWorkspace,{once:true});
 
 function lockChecklist(){
  const blocked=busy||checklistLoading||!checklistData;
