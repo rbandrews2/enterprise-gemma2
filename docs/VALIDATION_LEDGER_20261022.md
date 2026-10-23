@@ -1,5 +1,19 @@
 # Validation ledger — reuse passing evidence
 
+## Managed onboarding — October23
+
+- [x] Admin-created username/password accounts; optional invitations; first-login
+  password change; admin/member and seat/isolation enforcement. Deployed7a674b3.
+- [x]937PostgreSQL/181Node checks, zero skips; schema/config/public/auth boundary
+  acceptance. Reuse evidence in MANAGED_ONBOARDING_20261023.md.
+- [x] Approved Google create/update runtime permissions, independent IAM readback.
+- [x] Ray Enterprise25 email-bound organization creation grant, seven-day expiry;
+  CSV email replacement and backup complete.
+- [ ] Human acceptance: Ray creates/verifies identity and organization, then one
+  employee account is created and the employee changes the initial password.
+  No real employee accounts or passwords were created during automated checks.
+
+
 This is the index of accepted checks and repaired failures. Preserve the raw
 artifacts and commit/image provenance. Do not rerun a check merely because the
 conversation or Cloud Shell restarted. Verify applicability first.

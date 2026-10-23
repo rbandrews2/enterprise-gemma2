@@ -1,5 +1,25 @@
 # WZOS current session handoff - October 18, 2026
 
+## Managed onboarding LIVE — October23 (latest checkpoint)
+
+Source 7a674b3 deployed as wzos-v2-accounts-ui-7a674b3 at100%; independent
+readback PASS. Image6ee61100026337be919f39ccd1d3d3a55238dfdf2d0ed4c5bd636796354887e8;
+version58a02875ab79dd307750c54a.937PostgreSQL/181Node PASS, zero skips.
+Admin Team access can create Google-backed employee username/password accounts
+with admin/member access. Invitations remain optional; first employee sign-in
+requires own password. Existing identities are never overwritten. Three additive
+tables reviewed; no passwords persisted. Approved create/update Google role bound
+only to existing runtime, project-wide IAM scope disclosed and readback verified.
+Ray email-bound Enterprise25 grant issued for ray@workzoneos.org, expiresOct30
+05:31UTC; no activation code needed after email verification. CSV email replaced;
+backup in Downloads. No real employee accounts created, no customer sends.
+Provider transport/anonymous boundaries and schema/config/public gates PASS;
+first real employee provisioning/password-change acceptance remains human work.
+Details MANAGED_ONBOARDING_20261023.md. Evidence cloud
+$HOME/wzos-managed-evidence-20261023. Operator helper d6cbc78 does not change
+runtime candidate; no need to rerun accepted suites for documentation-only changes.
+
+
 ## Available updates LIVE — October23 (latest checkpoint)
 
 User authorized release of available tested updates. App content b693d8b plus

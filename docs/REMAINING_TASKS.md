@@ -1,5 +1,19 @@
 # WZOS remaining tasks - current October 20, 2026
 
+## Managed onboarding — October23
+
+- [x] Admin-created username/password accounts; optional invitations; first-login
+  password change; admin/member and seat/isolation enforcement. Deployed7a674b3.
+- [x]937PostgreSQL/181Node checks, zero skips; schema/config/public/auth boundary
+  acceptance. Reuse evidence in MANAGED_ONBOARDING_20261023.md.
+- [x] Approved Google create/update runtime permissions, independent IAM readback.
+- [x] Ray Enterprise25 email-bound organization creation grant, seven-day expiry;
+  CSV email replacement and backup complete.
+- [ ] Human acceptance: Ray creates/verifies identity and organization, then one
+  employee account is created and the employee changes the initial password.
+  No real employee accounts or passwords were created during automated checks.
+
+
 ## Employee import — October22 development
 
 - [x] Admin-only Organization management / Account / Employees import action,
