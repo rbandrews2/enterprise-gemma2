@@ -1,5 +1,15 @@
 # WZOS current session handoff - October 18, 2026
 
+## Paused at user request — October23
+
+Progress saved after the Voice freeze hotfix deployment. Await user instruction;
+do not start more tests or deployment work during this pause. Resume with one
+user-led phone recording on the updated installed app, checking report creation
+and responsive controls. Reuse the accepted automated checks below unless source
+changes or a new failure justifies rerunning affected tests. The broader bulk
+account feature is tested but remains undeployed. No additional cloud resources
+or tests were started for this checkpoint; existing production services remain on.
+
 ## Voice freeze recovery LIVE — October23 (latest checkpoint)
 
 User reported all controls frozen after recording. Isolated hotfix b1bc598 based
