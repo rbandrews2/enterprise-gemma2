@@ -1,5 +1,16 @@
 # WZOS remaining tasks - current October 20, 2026
 
+## Voice freeze recovery — October23
+
+- [x] Bound stalled recording/conversion/auth/processing; restore cancellation and
+  navigation; retain transcript/drafts; release tracks and reject stale results.
+- [x] 12 focused Voice/receipt checks;188 Node and937 PostgreSQL PASS, zero skips.
+- [x] Synthetic browser cancellation recovery; deployed ui-b1bc598 at100%, public
+  asset/config/access checks and independent traffic readback PASS. Evidence:
+  FIELD_VOICE_RECOVERY_20261023.md. No paid provider retests needed for this fix.
+- [ ] Human acceptance: reopen updated installed app and confirm recording and
+  controls recover on the phone that exhibited the freeze.
+
 ## Bulk account creation — October23
 
 - [x] CSV / XLSX / spreadsheet paste, admin-only review and batch provisioning.

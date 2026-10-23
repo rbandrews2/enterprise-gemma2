@@ -1,5 +1,18 @@
 # WZOS current session handoff - October 18, 2026
 
+## Voice freeze recovery LIVE — October23 (latest checkpoint)
+
+User reported all controls frozen after recording. Isolated hotfix b1bc598 based
+on live7a674b3 bounds browser waits, preserves cancellation/navigation recovery,
+retains transcript/drafts, releases microphone tracks and rejects stale results.
+937 PostgreSQL /188 Node PASS, zero skips; synthetic stalled-request browser
+recovery PASS. Deployed wzos-v2-accounts-ui-b1bc598 at100%, independent readback;
+version a325abc4daf59053d4f10e85. Public assets/access/config checks PASS.
+Rollback7a674b3; no schema/IAM/model changes or paid Voice retests.
+Details/evidence FIELD_VOICE_RECOVERY_20261023.md. Phone acceptance still needed.
+Same runtime repair retained in integration4af6253. Bulk feature below remains
+undeployed; its c907ea7 gates cover that exact candidate, not the combined HEAD.
+
 ## Bulk employee accounts — October23 (latest development checkpoint)
 
 User requested bulk CSV and spreadsheet account creation. Implemented admin-only
