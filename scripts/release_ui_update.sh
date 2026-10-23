@@ -35,6 +35,11 @@ if [[ "$phase" == build ]]; then
  python3 scripts/check_ui_release.py schema "$root"
  kill "$proxy_pid"; wait "$proxy_pid" 2>/dev/null || true; trap - EXIT
  printf 'FROM %s\nUSER root\nCOPY services /app/services\nCOPY shared /app/shared\nCOPY knowledge /app/knowledge\nRUN python -m compileall -q /app/services && chmod -R a+rX /app/services /app/shared /app/knowledge\nUSER wzos\n' "$base" > Dockerfile.ui-release
+ if [[ "${WZOS_RELEASE_EMPLOYEE_IMPORT:-0}" == 1 ]]; then
+  # Carry forward the existing commerce/provider dependencies and update the
+  # reviewed requirements, rather than retaining vulnerable base-image pins.
+  printf 'FROM %s\nUSER root\nCOPY requirements-v2.txt requirements-accounts.txt /tmp/release-deps/\nRUN pip install --no-cache-dir -r /tmp/release-deps/requirements-accounts.txt && pip check\nCOPY services /app/services\nCOPY shared /app/shared\nCOPY knowledge /app/knowledge\nRUN python -m compileall -q /app/services && chmod -R a+rX /app/services /app/shared /app/knowledge\nUSER wzos\n' "$base" > Dockerfile.ui-release
+ fi
  cat > cloudbuild.ui-release.yaml <<'YAML'
 steps:
 - name: gcr.io/cloud-builders/docker

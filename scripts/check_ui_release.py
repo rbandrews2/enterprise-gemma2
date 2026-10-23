@@ -38,6 +38,9 @@ elif phase == 'schema':
     assert not schema['conflicts'], 'Incompatible existing columns'
     # Preview-only tables may already be absent; only the disclosed voice table is new.
     allowed = {'preview_orders', 'preview_forms', 'preview_checklists'}
+    if os.getenv('WZOS_RELEASE_EMPLOYEE_IMPORT') == '1':
+        # Reviewed additive SQL: docs/employee-import-additive.sql.
+        allowed |= {'employee_roster', 'employee_import_batches'}
     assert set(schema['missing_tables']) <= allowed, schema['missing_tables']
     assert any(b['status'] == 'SUCCESSFUL' and (datetime.now(timezone.utc) - datetime.fromisoformat(b['startTime'].replace('Z', '+00:00'))).total_seconds() < 86400 for b in read('backups.json')), 'No successful backup within 24 hours'
 elif phase == 'build':
