@@ -7,9 +7,11 @@
 - [x] Preserve all accepted tests/repairs/reuse rules in VALIDATION_LEDGER_20261022.md.
 - [x] Live numeric secret pinning at pins-1022181839, same80c3819aimage; bounded
   config/readiness/public acceptance and independent readback PASS. Rollback ui-16d0905.
-- [ ] Alert routing: monitored email requested; four existing routes prepared.
-- [ ] Cleanup access: specific approval requested for the prepared single-permission
-  bucket-scoped grant; no actual grant/customer cleanup performed.
+- [x] Alert routing: four existing policies connected to enabled info@workzoneos.org
+  channel; full conditions unchanged on readback. No test delivery claimed.
+- [x] Cleanup access: approved storage.objects.delete-only role bound on the one
+  file bucket to the app runtime; exact additive readback PASS, no customer cleanup.
+- [x] Close the three operational configuration follow-ups on the prelaunch list.
 
 Exact outcomes/receipts: OPERATIONAL_FOLLOWUPS_20261022.md. Five targeted guard
 checks passed; no broad suite rerun or new application image. Earlier sweep
@@ -21,12 +23,12 @@ snapshots below are historical; use this checkpoint for current live state.
 - [x] Read direct runtime IAM, bound-secret scope, private model/scanner invocation,
   operational policies, redacted error metadata and bucket lifecycle configuration.
 - [x] Match vendored Daily SDK to official npm bytes; package advisory query empty.
-- [ ] Attach an approved monitored destination to the four existing alert policies.
-  Email question is pending; no channel or test alert created/sent.
+- [x] Attach approved info@workzoneos.org to the four existing alert policies.
+  Enabled channel/unchanged conditions verified; no test alert sent.
 - [x] Pin the two latest secret references to verified version1 on the same image;
   live pins-1022181839. See OPERATIONAL_FOLLOWUPS_20261022.md for checks/rollback.
-- [ ] Finish effective object-delete permission diagnosis and any approved narrow
-  repair. See FILE_CLEANUP_ACCESS_PROPOSAL_20261022.md; not applied.
+- [x] Apply approved narrow object-delete repair; exact role/bucket binding readback
+  PASS. Effective-policy troubleshooting and real cleanup/recovery remain separate.
 
 Evidence/limits: PRELAUNCH_SWEEP2_20261022.md. No new full-suite rerun or deployment;
 direct principal checks do not close effective group access or OS/bundle review.

@@ -18,11 +18,15 @@ Reorganizing requirements does not start tests or establish acceptance.
   both prelaunch lists; no repeat requested for this accepted flow.
 - [x] Complete unchanged-image numeric secret selector repair and bounded runtime/
   public acceptance. See OPERATIONAL_FOLLOWUPS_20261022.md; broad suites reused.
+- [x] Complete approved alert routing and bucket cleanup permission repair;
+  compare fresh policies/role/bucket readback, preserve prior settings. All three
+  operational follow-ups closed without broad-suite reruns or customer cleanup.
 
 Sweep 2: [access/cache/recovery readiness findings](PRELAUNCH_SWEEP2_20261022.md).
 18 focused checks passed; direct runtime/secret/private-service policies inspected,
-Daily package bytes verified. Alert destinations, effective cleanup access and
-numeric secret pinning need follow-through as recorded there. Production unchanged.
+Daily package bytes verified. The three operational configuration follow-ups are
+now closed in OPERATIONAL_FOLLOWUPS_20261022.md; application image unchanged.
+Actual email delivery and managed-object deletion/recovery remain separate checks.
 
 [Results, exact counts, repaired findings and evidence](PRELAUNCH_ENGINEERING_RESULTS_20261022.md).
 The items below close only their stated technical scope. Remaining mixed tasks

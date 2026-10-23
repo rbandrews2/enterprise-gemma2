@@ -24,10 +24,17 @@ per-request nonce changes while preserving all security directives/content check
 Five focused guard checks PASS. Reused the same staged revision; no image build,
 broad suite, paid inference or customer-report rerun. Independent readback PASS.
 
-Other two requested repairs are prepared, NOT complete: alert destination email
-question pending; specific bucket-scoped storage.objects.delete access approval
-question pending. Browser policy requires confirmation for this new access. No
-channel/test alert, IAM grant, API enablement or customer backlog cleanup occurred.
+Other two requested repairs are now COMPLETE after Ray supplied info@workzoneos.org
+and explicitly approved the scoped cleanup access. Four existing policies point
+to enabled channel6122258028509790755 with all other policy fields unchanged
+except provider mutation metadata. wzosFileCleanup contains only
+storage.objects.delete and is bound only on the file bucket to the existing app
+runtime. Exact additive binding/previous-grant comparison PASS, October22
+8:31:59p.m.Eastern. No test alert, customer cleanup or API enablement. Email
+verificationStatus was not returned; delivery is not claimed. All three
+configuration follow-ups checked off; broader device/retention/launch decisions
+remain open. Evidence: $HOME/wzos-followups-evidence-20261022, including
+operational-final-result.json. Old /tmp evidence path has expired; use durable copy.
 Do not check these two completion boxes until actual application/readback.
 
 Evidence root /tmp/wzos-followups-20261022.dBAoYjzD, home pointer

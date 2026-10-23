@@ -6,15 +6,17 @@ confirmation at the action. No customer cleanup or test alert is implied.
 
 ## Work and acceptance
 
-- [ ] Connect a monitored email/channel to the four existing operational policies.
-  Destination requested; no recipient assumed. Preserve existing thresholds.
+- [x] Connect the four existing operational policies to the approved monitored
+  email info@workzoneos.org. Enabled channel and unchanged policy conditions
+  verified by independent readback; delivery has not been tested.
 - [x] Replace database/auth key `latest` references with verified version1 on the
   unchanged deployed image. Stage without traffic, compare runtime/security
   configuration and image digest, check readiness, cut over and verify matching
   HTML/API release markers, unchanged assets/auth/security directives and anonymous
   denial. Preserve prior revision for rollback.
-- [ ] Resolve retired-file delete access under the prepared single-permission
-  bucket scope. Approval question pending; no grant or customer cleanup performed.
+- [x] Apply the explicitly approved single-permission bucket-scoped cleanup grant.
+  Independent role/policy readback confirms only storage.objects.delete added,
+  previous bindings preserved. No customer cleanup was performed.
 - [x] Record Ray's successful Smart Field Voice incident/report notification and
   review-clear acceptance. See the [validation ledger](VALIDATION_LEDGER_20261022.md).
 - [x] Consolidate passing tests, failed-run repairs, source/image provenance,
@@ -42,7 +44,7 @@ release gates; the ledger must not blur those two cases.
 
 The precise proposed role/binding/rollback and backlog risks are in
 [FILE_CLEANUP_ACCESS_PROPOSAL_20261022.md](FILE_CLEANUP_ACCESS_PROPOSAL_20261022.md).
-The user has been asked for action-time confirmation because granting a new
+The user supplied action-time confirmation on October22 because granting a new
 delete permission materially expands runtime access. Do not run customer
 backlog cleanup to validate the grant. Use policy readback and any separately
 authorized bounded synthetic workflow; preserve Atlas holds and retry behavior.
@@ -69,12 +71,43 @@ authorized bounded synthetic workflow; preserve Atlas holds and retry behavior.
 - Application bytes and customer records are unchanged. New development UI/security code
   is not deployed by this configuration-only repair.
 
-Alert routing remains prepared pending the monitored email; no channel/test alert
-has been created. Cleanup access remains prepared pending specific approval;
-no IAM grant, API enablement or queued customer-object cleanup was performed.
+### Alert routing and cleanup access completed
+
+Final independent readback PASS at October22, 8:31:59 p.m. Eastern
+(2026-10-23T00:31:59Z). Fresh session project/account were enterprise-gemma2 and
+admin@workzoneos.org. The temporary folder had expired; recovered the persistent
+evidence copy instead of repeating any application suites.
+
+- Created enabled email channel
+  `projects/enterprise-gemma2/notificationChannels/6122258028509790755`, addressed
+  only to Ray's supplied info@workzoneos.org. All four existing enabled policies
+  (SQL CPU, memory, disk and service5xx) now reference it. Full policy comparison,
+  excluding only notificationChannels and mutationRecord, matched the fresh
+  baseline. No thresholds, conditions or other policy settings changed.
+- Channel verificationStatus was not returned by Google. Configuration is
+  accepted; inbox delivery/receipt is not claimed. No test alert was sent.
+- Created `projects/enterprise-gemma2/roles/wzosFileCleanup`, exactly
+  `storage.objects.delete`, and bound it only on
+  `enterprise-gemma2-wzos-v2-files-staging` to
+  `wzos-v2-accounts@enterprise-gemma2.iam.gserviceaccount.com`.
+  Readback confirms exactly that single additive binding, no removed/changed
+  previous bindings and unchanged policy version. No project-wide grant, extra
+  permission, service identity, API enablement or customer-object operation.
+- This closes the three operational configuration follow-ups. Effective-policy
+  troubleshooting, actual destructive cleanup/recovery and monitored inbox
+  delivery remain distinct from this configuration acceptance.
+- Rollback: remove only this new bucket binding; remove only the new channel
+  reference from the four policies. Preserve all original grants/conditions.
+  Unbinding does not restore any objects deleted by later authorized app actions.
+
+New private receipts: channels-before.json, channel-created.json,
+channel-readback.json, alerts-current.json, alerts-readback.json,
+cleanup-role-created.json, cleanup-role-readback.json,
+bucket-policy-pregrant.json, bucket-policy-granted.json,
+bucket-policy-readback.json and operational-final-result.json.
 
 Private cloud pointer: `$HOME/wzos-followups-latest-path.txt`. Runtime snapshots
 and command receipts stay private, outside Git. Root:
 `/tmp/wzos-followups-20261022.dBAoYjzD`; durable copy:
 `$HOME/wzos-followups-evidence-20261022`. Append actual results before checking
-the remaining completion boxes; prepared is not completed.
+any future completion boxes; prepared is not completed.

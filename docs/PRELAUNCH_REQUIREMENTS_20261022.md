@@ -11,6 +11,10 @@
   consolidated in [the validation ledger](VALIDATION_LEDGER_20261022.md).
 - [x] Pin database/auth secret references to verified numeric versions on the same
   app image; readiness/configuration/public checks passed. Live pins-1022181839.
+- [x] Complete all three operational configuration follow-ups: numeric secret
+  pins, four alert policies routed to info@workzoneos.org, and approved
+  single-permission bucket cleanup grant. Independent readbacks PASS; delivery
+  and customer-object deletion were not exercised.
 
 Three operational repairs and their actual completion evidence are tracked in
 [OPERATIONAL_FOLLOWUPS_20261022.md](OPERATIONAL_FOLLOWUPS_20261022.md).

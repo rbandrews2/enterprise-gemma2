@@ -38,6 +38,8 @@ conversation or Cloud Shell restarted. Verify applicability first.
 | ACCESS-METADATA | Sweep2 live app/secret/project/bucket/private-service policies | Direct grants captured; private invocation checks confirmed; effective access limitations recorded | PRELAUNCH_SWEEP2_20261022.md; private cloud sweep2 artifacts |
 | PIN-CHECK-GUARD | Tooling-only50557db | Five focused PASS: revision marker/nonce may change; auth, asset, security directives and denial changes still fail comparison | `python -m unittest tests.test_secret_pin_guard`; actual config result in operational repair note |
 | LIVE-SECRET-PINS | Same image80c3819a…, live pins-1022181839 | Numeric refs1, same runtime/image, Ready, HTML/API marker, unchanged assets/auth/security and anonymous401 PASS; prior revision retained | OPERATIONAL_FOLLOWUPS_20261022.md; private pins-result.json, pins-resume2.exit0 and independent readback |
+| ALERT-ROUTING | Four existing policies, approved info@workzoneos.org | Enabled email channel; exact recipient; all policy fields except channels/provider mutation metadata unchanged on independent readback PASS | durable follow-ups channel/alerts readback and operational-final-result.json; no inbox delivery test |
+| CLEANUP-GRANT | Approved app identity on single file bucket | Role exactly storage.objects.delete; exactly one additive binding; previous bindings/policy version preserved PASS | durable follow-ups role/bucket readback and operational-final-result.json; no customer-object deletion or restore test |
 
 Sweep1 private cloud artifacts were copied into
 `$HOME/wzos-prelaunch-evidence-20261022`; sweep2 into

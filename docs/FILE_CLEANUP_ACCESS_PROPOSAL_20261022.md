@@ -1,4 +1,8 @@
-# Retired-file cleanup access — review proposal, not applied
+# Retired-file cleanup access — approved scope
+
+Ray explicitly approved this bucket-scoped grant on October 22, 2026. Actual
+application/readback results are recorded in OPERATIONAL_FOLLOWUPS_20261022.md.
+The approval does not authorize processing customer cleanup queues as a test.
 
 ## Finding
 
