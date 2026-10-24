@@ -2,6 +2,9 @@
 
 ## User-confirmed acceptance — October23
 
+- [x] App loading time tested, diagnosed, repaired and improved; Ray confirmed
+  successful device acceptance. Close the pending installed-phone launch check.
+
 - [x] Created a work report using voice and WZOS successfully.
 - [x] Created a Daily Work Report using voice and WZOS successfully.
 - [x] Reviewed the resulting form and cleared the notification area.
@@ -10,7 +13,7 @@
 
 Evidence: Ray explicitly confirmed these completed workflows in chat. Exact test
 time/release and report identifiers were not supplied. Reuse this acceptance;
-do not repeat unchanged successful scenarios. Startup latency, failure recovery,
+do not repeat unchanged successful scenarios. Voice failure recovery,
 permission edge cases and employee credential provisioning remain separate.
 
 ## Completed acceptance / test reuse

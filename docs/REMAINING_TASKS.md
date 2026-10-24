@@ -2,6 +2,9 @@
 
 ## User-confirmed acceptance — October23
 
+- [x] App loading time tested, diagnosed, repaired and improved; Ray confirmed
+  successful device acceptance. Close the pending installed-phone launch check.
+
 - [x] Created a work report using voice and WZOS successfully.
 - [x] Created a Daily Work Report using voice and WZOS successfully.
 - [x] Reviewed the resulting form and cleared the notification area.
@@ -10,7 +13,7 @@
 
 Evidence: Ray explicitly confirmed these completed workflows in chat. Exact test
 time/release and report identifiers were not supplied. Reuse this acceptance;
-do not repeat unchanged successful scenarios. Startup latency, failure recovery,
+do not repeat unchanged successful scenarios. Voice failure recovery,
 permission edge cases and employee credential provisioning remain separate.
 
 ## Installed launch / real-device follow-up — October23
@@ -21,8 +24,9 @@ permission edge cases and employee credential provisioning remain separate.
   and public-shell reload fallback repairs; isolated192Node checks PASS.
 - [x] Cloud CLI restored; startup latency/scaling inspected; browser check and
   cloud937PostgreSQL/192Node gates PASS; isolated8cb99c2 deployed at100%.
-- [ ] Confirm installed-phone launch timing after update. Residual8–16s cold
-  startup observed; no minimum-instance or paid hosting change made.
+- [x] Installed-phone launch acceptance: Ray confirmed loading time tested,
+  diagnosed, repaired and improved. Historical cold-start measurements retained;
+  no minimum-instance or paid hosting change made.
   STARTUP_RECOVERY_20261023.md contains accepted results and release evidence.
 
 ## Voice freeze recovery — October23

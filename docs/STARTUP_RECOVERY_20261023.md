@@ -55,7 +55,9 @@ e726e890bc116b5c5db5025b10ce9b72ba037c7e1ee14c79e3c4e50a79490f1d.
 Public warm HTML first byte0.238s,total0.261s after deployment; this does not
 measure Android startup or eliminate the known cold-start contribution.
 Evidence:$HOME/wzos-startup-evidence-20261023. Cloud pointer:
-$HOME/wzos-startup-path.txt. Installed-phone launch acceptance remains open.
+$HOME/wzos-startup-path.txt. Installed-phone launch acceptance completed: Ray explicitly confirmed app
+loading time was tested, diagnosed, repaired and improved. No new timing number
+was supplied. Reuse this acceptance; no additional retest was run for this update.
 Do not claim the underlying minute-long delay has been fully diagnosed. Do not
 change paid minimum instances without a concrete cost/scope decision.
 

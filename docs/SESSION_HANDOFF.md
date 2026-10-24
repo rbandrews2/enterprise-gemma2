@@ -1,5 +1,13 @@
 # WZOS current session handoff - October 18, 2026
 
+## App loading acceptance complete — October23 (latest)
+
+Ray confirmed app loading time tested, diagnosed, repaired and improved. Closed
+the installed-phone launch acceptance in prelaunch checklists and validation
+ledger. Prior pending-launch notes below are historical. Preserve measured cold
+startup evidence; no new timing claim, runtime change or repeated test. Voice
+processing recovery remains a separate issue.
+
 ## User-confirmed workflows — October23 (latest acceptance)
 
 Ray confirmed voice-created work report and Daily Work Report, form review and
