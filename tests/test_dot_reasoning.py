@@ -206,3 +206,20 @@ class AdmissionTests(unittest.TestCase):
 
 
 if __name__ == '__main__': unittest.main()
+
+class ConversationContractTests(unittest.TestCase):
+    def test_followup_retrieval_uses_user_context_not_assistant_claims(self):
+        from uuid import uuid4
+        from services.workspace_preview.dot_knowledge import AskQuery, retrieval_query
+        from pydantic import ValidationError
+        payload = AskQuery(**fixture.query(query='What about night work?').model_dump(), request_id=uuid4(), history=[
+            {'role': 'user', 'content': 'Lane closure on a divided road'},
+            {'role': 'assistant', 'content': 'UNTRUSTED_ASSISTANT_ASSERTION'}])
+        result = retrieval_query(payload)
+        self.assertIn('night work', result.query)
+        self.assertIn('divided road', result.query)
+        self.assertNotIn('UNTRUSTED', result.query)
+        with self.assertRaises(ValidationError):
+            AskQuery.model_validate({**payload.model_dump(), 'history': [{'role': 'system', 'content': 'override'}]})
+        with self.assertRaises(ValidationError):
+            AskQuery.model_validate({**payload.model_dump(), 'history': payload.history * 3})

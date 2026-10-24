@@ -1,5 +1,30 @@
 # Validation ledger — reuse passing evidence
 
+## Ask Atlas conversation repair - October24 (pending release)
+
+User reported source dumps and confirmed the gray Ask Atlas button, not the
+floating assistant. Fresh Cloud Shell readback: enterprise-gemma2,
+admin@workzoneos.org; live ui-8cb99c2 at100%. DOT_ENABLED and
+DOT_INFERENCE_ENABLED unset/off, VLLM_ENABLED=0; FIELD_VOICE_ENABLED=1.
+This establishes the disabled-button cause; the exact earlier response was not
+captured and must not be attributed to Gemma without evidence.
+
+Local repair: answer-first conversational guidance, focused clarification,
+bounded four-turn transient context, expandable sources, new-conversation reset,
+and unavailable-button explanation. Source eligibility, citation/quote checks,
+calculation rules and access boundaries retained. No migration, hosting,
+permission or production change. History clears on navigation/session/date reset;
+never persisted. Assistant prose is not used for retrieval.
+
+Checks: 28 DOT Python + 5 Ask Atlas Node PASS. Intelligence transport suite:
+24/25 initially passed; prompt-size limit caught oversized instructions. After
+shortening, all13 affected Atlas intelligence checks PASS (other12 unchanged).
+No paid inference/customer sends. Browser visual check, PostgreSQL release gate,
+source/page/table/correction review and real-model quality acceptance remain open.
+NOT live activation. Reuse unrelated accepted human tests. Bulk-account work
+remains separately undeployed; isolate this change from live8cb99c2 for release.
+
+
 ## User-confirmed acceptance — October23
 
 - [x] App loading time tested, diagnosed, repaired and improved; Ray confirmed

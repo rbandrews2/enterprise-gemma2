@@ -1,5 +1,11 @@
 # WZOS remaining tasks - current October 20, 2026
 
+## Ask Atlas - October24
+
+- [x] Diagnose gray Ask Atlas button: live DOT flags unset/off.
+- [x] Prepare conversational/follow-up and compact-source repair; focused checks pass.
+- [ ] Browser/release validation, governing-source review and real-model answer acceptance before activation. Exact prior source-heavy output remains unverified.
+
 ## User-confirmed acceptance — October23
 
 - [x] App loading time tested, diagnosed, repaired and improved; Ray confirmed

@@ -3,7 +3,7 @@
  const node=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
  const user=()=>window.wzosClock?.getSession(),nav=document.getElementById('atlas-nav');
  const root=node('section',undefined,'panel ask-atlas');root.id='ask-atlas-view';root.hidden=true;document.getElementById('main').append(root);
- let sessionEpoch=0,epoch=0,controller=null,currentId=null,active=false,busy=false,config={},stream=null,recorder=null,chunks=[],timer=null,cancelled=false;
+ let sessionEpoch=0,epoch=0,controller=null,currentId=null,active=false,busy=false,config={},stream=null,recorder=null,chunks=[],timer=null,cancelled=false,history=[];
  const heading=node('h1','Ask Atlas'),intro=node('p','Work Zone Guardian · Ask about Virginia work-zone guidelines. Read the answer and check its cited sources.'),question=node('textarea'),date=node('input'),status=node('p'),answer=node('div'),references=node('div');
  question.maxLength=500;question.rows=4;question.placeholder='What do I need to know about this operation?';date.type='date';
  const label=(text,input)=>{const n=node('label',text);n.append(input);return n;};
@@ -14,8 +14,10 @@
  const speechActions=node('div',undefined,'atlas-actions');speechActions.append(read,silence);
  status.setAttribute('role','status');status.setAttribute('aria-live','polite');answer.className='atlas-answer';references.className='atlas-references';
  root.append(heading,intro,settings,label('Your question',question),actions,status,answer,speechActions,references);
- question.oninput=()=>{window.speechSynthesis?.cancel();answer.replaceChildren();references.replaceChildren();read.hidden=silence.hidden=true;};
- function lock(value){busy=value;ask.disabled=value||!config.enabled||!config.inference_enabled;search.disabled=value||!config.enabled;record.disabled=value||!config.enabled||!config.speech_enabled;question.disabled=date.disabled=value;cancel.hidden=!value;stop.disabled=cancelRecording.disabled=!stream;stop.hidden=cancelRecording.hidden=clock.hidden=!stream;}
+ question.oninput=()=>{window.speechSynthesis?.cancel();};
+ const reset=button('New conversation',()=>{clear();});actions.append(reset);
+ date.onchange=()=>{history=[];answer.replaceChildren();references.replaceChildren();read.hidden=silence.hidden=true;};
+ function lock(value){busy=value;reset.disabled=value;ask.title=!config.enabled?'Atlas DOT library is not activated.':!config.inference_enabled?'Atlas answers are not activated. Find references searches documents only.':'';ask.disabled=value||!config.enabled||!config.inference_enabled;search.disabled=value||!config.enabled;record.disabled=value||!config.enabled||!config.speech_enabled;question.disabled=date.disabled=value;cancel.hidden=!value;stop.disabled=cancelRecording.disabled=!stream;stop.hidden=cancelRecording.hidden=clock.hidden=!stream;}
  async function api(path,options={}){
   const configuration=path==='/api/atlas/dot/config'||path.endsWith('/cancel'),generation=configuration?sessionEpoch:epoch,identity=user();const auth=await window.wzosAccount.headers();if(generation!==(configuration?sessionEpoch:epoch))throw Error('Account changed.');
   const response=await fetch(path,{...options,cache:'no-store',headers:{'Content-Type':'application/json','X-Preview-Actor':identity?.id,...auth,...options.headers}});
@@ -28,17 +30,17 @@
  }
  function stopTracks(){stream?.getTracks().forEach(t=>t.stop());stream=null;clearInterval(timer);timer=null;stop.disabled=cancelRecording.disabled=true;}
  function stopRecording(discard){if(!stream&&!recorder)return;cancelled=discard;if(recorder?.state==='recording')recorder.stop();stopTracks();if(discard){chunks=[];status.textContent='Recording discarded.';}}
- function clear(){stopRecording(true);abort();question.value='';answer.replaceChildren();references.replaceChildren();read.hidden=silence.hidden=true;window.speechSynthesis?.cancel();status.textContent='';}
+ function clear(){history=[];stopRecording(true);abort();question.value='';answer.replaceChildren();references.replaceChildren();read.hidden=silence.hidden=true;window.speechSynthesis?.cancel();status.textContent='';}
  function link(citation){const a=node('a',citation.title||'Source');try{const url=new URL(citation.url);if(url.protocol==='https:'&&!url.username&&!url.password){a.href=url.href;a.target='_blank';a.rel='noopener noreferrer';}}catch{}return a;}
  function excerpt(text){const details=node('details');details.append(node('summary','Read excerpt'),node('p',text));return details;}
  function render(data){
   answer.replaceChildren();references.replaceChildren();read.hidden=silence.hidden=true;
   if(data.draft){
-   for(const claim of data.draft.claims){const paragraph=node('p',claim.text),number=(data.citations||[]).findIndex(c=>c.citation_id===claim.citation_id);if(number>=0){const citation=node('a',' ['+(number+1)+']');citation.href='#atlas-source-'+number;paragraph.append(citation);}answer.append(paragraph);}
+   for(const claim of data.draft.claims){const paragraph=node('p',claim.text),number=(data.citations||[]).findIndex(c=>c.citation_id===claim.citation_id);if(number>=0){const citation=node('a',' ['+(number+1)+']');citation.href='#atlas-source-'+number;citation.onclick=()=>{const details=references.children[0];if(details)details.open=true;};paragraph.append(citation);}answer.append(paragraph);}
    for(const item of data.draft.unresolved)answer.append(node('p',item,'atlas-clarify'));
    for(const calculation of data.calculations||[])answer.append(node('p',`${calculation.expression} = ${calculation.result} ${calculation.unit}. Arithmetic checked; confirm the formula applies to your site.`));
-   references.append(node('h2','Sources'));for(const [index,citation] of (data.citations||[]).entries()){const card=node('article',undefined,'panel');card.id='atlas-source-'+index;card.append(link(citation),node('p',`${citation.edition||'Edition unspecified'} · PDF page ${citation.page}${citation.label?' · '+citation.label:''}`));references.append(card);}
-   status.textContent=data.draft.status==='needs_clarification'?'Atlas needs a few more details.':'Check the cited conditions and exceptions before applying this guidance.';
+   const sources=node('details');sources.append(node('summary','Sources ('+(data.citations||[]).length+')'));references.append(sources);for(const [index,citation] of (data.citations||[]).entries()){const card=node('article',undefined,'panel');card.id='atlas-source-'+index;card.append(link(citation),node('p',`${citation.edition||'Edition unspecified'} · PDF page ${citation.page}${citation.label?' · '+citation.label:''}`));sources.append(card);}
+   status.textContent=data.draft.status==='needs_clarification'?'Let’s clarify your situation.':'Atlas’s answer';
    read.hidden=!answer.textContent;silence.hidden=read.hidden;
   }else if(data.results){
    status.textContent=data.results.length?'Reference matches. Review status is shown with each source.':'No matching references. Try an operation or section name.';
@@ -48,8 +50,8 @@
  async function run(kind){
   if(busy)return;if(question.value.trim().length>500){status.textContent='Shorten your question to 500 characters.';return;}if(!question.value.trim()){status.textContent='Enter or record a question first.';return;}if(!navigator.onLine){status.textContent='Connect to ask Atlas. Your question stays here.';return;}
   window.speechSynthesis?.cancel();answer.replaceChildren();references.replaceChildren();read.hidden=silence.hidden=true;
-  const generation=epoch;currentId=crypto.randomUUID();controller=new AbortController();lock(true);status.textContent=kind==='ask'?'Atlas is reviewing the source context…':'Finding references…';
-  try{const data=await api('/api/atlas/dot/'+kind,{method:'POST',signal:controller.signal,body:JSON.stringify({query:question.value.trim(),authority:'VDOT',region:'VA',as_of:date.value,...(kind==='ask'?{request_id:currentId}:{})})});if(generation===epoch)render(data);}
+  const generation=epoch,asked=question.value.trim();currentId=crypto.randomUUID();controller=new AbortController();lock(true);status.textContent=kind==='ask'?'Atlas is reviewing the source context…':'Finding references…';
+  try{const data=await api('/api/atlas/dot/'+kind,{method:'POST',signal:controller.signal,body:JSON.stringify({query:asked,authority:'VDOT',region:'VA',as_of:date.value,...(kind==='ask'?{request_id:currentId,history}:{})})});if(generation===epoch){render(data);if(kind==='ask'&&data.draft){const reply=[...data.draft.claims.map(c=>c.text),...data.draft.unresolved].join('\n');history=[...history,{role:'user',content:asked},{role:'assistant',content:reply.slice(0,1000)||'More details needed.'}].slice(-4);question.value='';question.placeholder='Ask a follow-up, or start a new conversation.';}}}
   catch(error){if(generation===epoch)status.textContent=error.message;}finally{if(generation===epoch){currentId=null;controller=null;lock(false);}}
  }
  async function start(){
@@ -85,7 +87,7 @@
  function open(){return user()?.edition==='enterprise'&&window.showWzosView('ask_atlas');}
  function cards(){const grid=document.querySelector('#dashboard-view .hub-grid');if(user()?.edition!=='enterprise'||!grid||document.getElementById('ask-atlas-card'))return;const card=button('Ask Atlas — Work Zone Guardian',open);card.className='panel hub-card atlas-launch';card.id='ask-atlas-card';grid.prepend(card);}
  document.addEventListener('wzos:session',async()=>{sessionEpoch++;clear();config={};root.hidden=true;const enterprise=user()?.edition==='enterprise';nav.textContent=enterprise?'Ask Atlas — Work Zone Guardian':'Atlas assistant';document.getElementById('ask-atlas-card')?.remove();if(!enterprise)return;const generation=sessionEpoch;const today=new Date();date.value=`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;cards();lock(false);try{const loaded=await api('/api/atlas/dot/config');if(generation!==sessionEpoch)return;config=loaded;lock(false);if(!config.enabled)status.textContent='Atlas’s DOT reference library is being prepared.';}catch(error){if(generation===sessionEpoch)status.textContent=error.message;}});
- document.addEventListener('wzos:view',event=>{active=event.detail==='ask_atlas';if(!active)clear();else if(!config.enabled)status.textContent='Atlas’s DOT reference library is being prepared.';else if(!config.inference_enabled)status.textContent='Browse references while Atlas answers are being prepared.';cards();});
+ document.addEventListener('wzos:view',event=>{active=event.detail==='ask_atlas';if(!active)clear();else if(!config.enabled)status.textContent='Atlas’s DOT reference library is being prepared.';else if(!config.inference_enabled)status.textContent='Atlas answers are not activated. Find references searches documents; it does not generate an answer.';cards();});
  document.addEventListener('visibilitychange',()=>{if(document.hidden){stopRecording(true);window.speechSynthesis?.cancel();}});
  window.addEventListener('pagehide',clear);
  const dashboard=document.getElementById('dashboard-view');if(dashboard)new MutationObserver(cards).observe(dashboard,{childList:true,subtree:true});

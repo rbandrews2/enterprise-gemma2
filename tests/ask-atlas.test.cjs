@@ -41,3 +41,19 @@ test('a microphone grant arriving after backgrounding never starts recording or 
  h.document.hidden=true;await h.emit('visibilitychange');grant({getTracks:()=>[{stop:()=>stops++}]});await pending;
  assert.equal(stops,1);assert.equal(h.captures.length,0);assert.equal(h.calls.some(c=>c.path.includes('/transcribe')),false);
 });
+
+test('follow-up retains bounded conversation; sources collapse and citation opens them; reset clears history',async()=>{
+ const h=setup();await h.emit('wzos:session');h.window.wzosAskAtlas.open();
+ h.setReply(async()=>({draft:{status:'needs_clarification',claims:[{text:'Supported partial answer.',citation_id:'s'}],unresolved:['Is this a divided road?']},citations:[{citation_id:'s',title:'Source',url:'https://example.org/manual',page:1}]}));
+ const ask=h.all(h.main).find(n=>n.tag==='button'&&n.textContent==='Ask Atlas');
+ h.question().value='Lane closure';await ask.onclick();
+ const sources=h.all(h.main).find(n=>n.tag==='details'&&n.children.some(c=>c.textContent==='Sources (1)'));
+ assert.ok(sources);assert.ok(!sources.open);h.find(' [1]').onclick();assert.equal(sources.open,true);
+ h.question().value='Yes, divided';h.question().oninput();assert.ok(h.find('Supported partial answer.'));await ask.onclick();
+ let sent=JSON.parse(h.calls.filter(c=>c.path.endsWith('/ask')).at(-1).options.body);
+ assert.equal(sent.history[0].content,'Lane closure');assert.match(sent.history[1].content,/divided road/);
+ for(let i=0;i<3;i++){h.question().value='Follow-up '+i;await ask.onclick();}
+ sent=JSON.parse(h.calls.filter(c=>c.path.endsWith('/ask')).at(-1).options.body);assert.equal(sent.history.length,4);
+ h.find('New conversation').onclick();h.question().value='New topic';await ask.onclick();
+ sent=JSON.parse(h.calls.filter(c=>c.path.endsWith('/ask')).at(-1).options.body);assert.deepEqual(sent.history,[]);
+});
