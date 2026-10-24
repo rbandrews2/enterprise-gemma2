@@ -1,5 +1,14 @@
 # WZOS current session handoff - October 18, 2026
 
+## User-confirmed workflows — October23 (latest acceptance)
+
+Ray confirmed voice-created work report and Daily Work Report, form review and
+notification clearance, organization creation, and CSV employee roster upload.
+Marked complete in both prelaunch tracking and validation ledger. Do not rerun
+these unchanged scenarios. Exact test time/release not supplied; no customer
+report contents copied. Startup speed/failure recovery and employee login
+provisioning/password change are not closed by this acceptance.
+
 ## Startup recovery LIVE — October23 (latest checkpoint)
 
 User restored CLI sign-in. Isolated8cb99c2 deployed as ui-8cb99c2 at100%,

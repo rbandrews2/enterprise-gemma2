@@ -1,5 +1,18 @@
 # WZOS remaining tasks - current October 20, 2026
 
+## User-confirmed acceptance — October23
+
+- [x] Created a work report using voice and WZOS successfully.
+- [x] Created a Daily Work Report using voice and WZOS successfully.
+- [x] Reviewed the resulting form and cleared the notification area.
+- [x] Created an organization successfully.
+- [x] Uploaded the employee roster successfully using CSV.
+
+Evidence: Ray explicitly confirmed these completed workflows in chat. Exact test
+time/release and report identifiers were not supplied. Reuse this acceptance;
+do not repeat unchanged successful scenarios. Startup latency, failure recovery,
+permission edge cases and employee credential provisioning remain separate.
+
 ## Installed launch / real-device follow-up — October23
 
 - [x] User confirmed work-order creation and Voice report details match speech.
@@ -39,8 +52,9 @@
 - [x] Approved Google create/update runtime permissions, independent IAM readback.
 - [x] Ray Enterprise25 email-bound organization creation grant, seven-day expiry;
   CSV email replacement and backup complete.
-- [ ] Human acceptance: Ray creates/verifies identity and organization, then one
-  employee account is created and the employee changes the initial password.
+- [x] Human acceptance: Ray confirmed organization creation and CSV roster upload.
+- [ ] Human acceptance: create an employee login and have the employee change the
+  initial password. Roster upload alone does not establish account provisioning.
   No real employee accounts or passwords were created during automated checks.
 
 

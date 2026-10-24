@@ -1,5 +1,18 @@
 # Prelaunch checklist — human involvement
 
+## User-confirmed acceptance — October23
+
+- [x] Created a work report using voice and WZOS successfully.
+- [x] Created a Daily Work Report using voice and WZOS successfully.
+- [x] Reviewed the resulting form and cleared the notification area.
+- [x] Created an organization successfully.
+- [x] Uploaded the employee roster successfully using CSV.
+
+Evidence: Ray explicitly confirmed these completed workflows in chat. Exact test
+time/release and report identifiers were not supplied. Reuse this acceptance;
+do not repeat unchanged successful scenarios. Startup latency, failure recovery,
+permission edge cases and employee credential provisioning remain separate.
+
 Updated October 22, 2026. [Scope and release evidence](PRELAUNCH_REQUIREMENTS_20261022.md)
 | [Codex checklist](PRELAUNCH_CODEX_20261022.md)
 
@@ -12,7 +25,7 @@ Engineering testing has now started. See
 [October22 results](PRELAUNCH_ENGINEERING_RESULTS_20261022.md) and
 [privacy/retention decisions to approve](PRELAUNCH_PRIVACY_DECISIONS_DRAFT_20261022.md).
 No participation is needed to repeat passing automated checks. The concise next
-device checks are signature/PDF and Voice receipt on Android, one consenting SMS
+device checks are signature/PDF on Android, one consenting SMS
 delivery/opt-out, two-device meeting media and installed-update preservation.
 SMS is still in test mode; qualified DOT review and actual connector acceptance
 remain prerequisites before customer availability claims. Existing budget is
@@ -47,9 +60,9 @@ USD50 with alerts; name its recipient/owner and approve an operating budget.
 
 ## Feature-specific human acceptance — before enabling or promoting
 
-- [ ] Smart Field Voice: test actual-phone recording, retained/denied/revoked
-  microphone permission and offline recovery. The incident-generation/notification/
-  review-clear scenario passed above; do not repeat it unnecessarily. Confirm
+- [ ] Smart Field Voice: retained/denied/revoked microphone permission, stalled
+  processing and offline recovery. Successful voice report creation and form
+  review/notification clearance passed above; do not repeat unnecessarily. Confirm
   model operating budget/alert ownership separately.
 - [ ] Weather: accept the compact card with actual location changes, denied
   permission and prepared stale/alert scenarios. No weather configuration change
