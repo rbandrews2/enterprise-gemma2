@@ -294,3 +294,31 @@ pages48/142 page_reviewed=true and answer_eligible=false with original issue
 notes retained. Evidence: review-20261025/batch7-validation.json and
 batch7-rebuild.json. No application code changed; previous passing tests reused.
 No paid model test, production activation or full-manual approval claimed.
+
+## Batch8 - remaining staged tables - October 25, 2026
+
+Completed visual comparison of VWAPM physical pages157-159 against pinned images:
+advance warning spacing, buffers, taper criteria, merging/shifting tables with
+merged cells/formulas/notes, channelizer spacing, barrier flare and rumble strips.
+Corrected staged extraction's erroneous shoulder-taper cross-reference from
+6B-V6 to the visibly printed6P-V6. Made page159 column relationships explicit;
+retained <40 mph and literal downstream 4'-6' rather than inventing a value.
+Prior unreviewed transcriptions preserved in batch8-prior-staged-transcriptions.json.
+
+38 page representations reviewed overall. These three pages remain held for
+previously documented unresolved source discrepancies. Accurate transcription
+is distinct from applicability or field approval. No executable formula added.
+All24 dependency pages queued in batch6 now have reviewed representations;
+source-conflict holds remain. This is not a review of the entire manual/library.
+Next: resolve or explicitly report affected conflicts, assess remaining context
+dependencies for intended question coverage, then bounded model acceptance.
+No application changes, paid inference, or production deployment.
+
+## Source review batch8 validation - October 25, 2026
+
+Local index rebuilt successfully. Assertions passed for all three pages157-159:
+page_reviewed=true, answer_eligible=false, nonempty original source-issue holds.
+Evidence: review-20261025/batch8-validation.json, batch8-rebuild.json and
+batch8-reviews.json. Original PDFs unchanged; no runtime code changes, so passing
+application suites were not repeated. Source snapshot packaging remains required
+before release; ignored source artifacts are not backed up by the Git commit.

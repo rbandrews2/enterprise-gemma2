@@ -1,5 +1,24 @@
 # WZOS remaining tasks - current October 20, 2026
 
+## Batch8 - remaining staged tables - October 25, 2026
+
+Completed visual comparison of VWAPM physical pages157-159 against pinned images:
+advance warning spacing, buffers, taper criteria, merging/shifting tables with
+merged cells/formulas/notes, channelizer spacing, barrier flare and rumble strips.
+Corrected staged extraction's erroneous shoulder-taper cross-reference from
+6B-V6 to the visibly printed6P-V6. Made page159 column relationships explicit;
+retained <40 mph and literal downstream 4'-6' rather than inventing a value.
+Prior unreviewed transcriptions preserved in batch8-prior-staged-transcriptions.json.
+
+38 page representations reviewed overall. These three pages remain held for
+previously documented unresolved source discrepancies. Accurate transcription
+is distinct from applicability or field approval. No executable formula added.
+All24 dependency pages queued in batch6 now have reviewed representations;
+source-conflict holds remain. This is not a review of the entire manual/library.
+Next: resolve or explicitly report affected conflicts, assess remaining context
+dependencies for intended question coverage, then bounded model acceptance.
+No application changes, paid inference, or production deployment.
+
 ## Batch7 - sign illustrations and late-merge diagram - October 25, 2026
 
 Visually compared pinned VWAPM physical pages 48, 49 and 142 and created

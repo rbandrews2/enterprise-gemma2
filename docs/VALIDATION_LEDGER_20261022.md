@@ -250,3 +250,12 @@ pages48/142 page_reviewed=true and answer_eligible=false with original issue
 notes retained. Evidence: review-20261025/batch7-validation.json and
 batch7-rebuild.json. No application code changed; previous passing tests reused.
 No paid model test, production activation or full-manual approval claimed.
+
+## Source review batch8 validation - October 25, 2026
+
+Local index rebuilt successfully. Assertions passed for all three pages157-159:
+page_reviewed=true, answer_eligible=false, nonempty original source-issue holds.
+Evidence: review-20261025/batch8-validation.json, batch8-rebuild.json and
+batch8-reviews.json. Original PDFs unchanged; no runtime code changes, so passing
+application suites were not repeated. Source snapshot packaging remains required
+before release; ignored source artifacts are not backed up by the Git commit.
