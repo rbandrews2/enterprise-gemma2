@@ -16,7 +16,7 @@ from services.v2.knowledge.manual_review import review
 from services.v2.knowledge.store import Store
 from services.workspace_preview.atlas_requests import AtlasRequests
 from services.workspace_preview.dot_calculations import Calculation, arithmetic, verify_calculations
-from services.workspace_preview.dot_knowledge import GuidelinesGemma
+from services.workspace_preview.dot_knowledge import GuidelinesGemma, blocked_source_response
 from services.workspace_preview.intelligence import ModelUnavailable
 import test_dot_manuals as fixture
 
@@ -295,6 +295,23 @@ class ReplacementTextTests(unittest.TestCase):
 class SourceUncertaintyTests(unittest.TestCase):
     setUp = ReasoningTests.setUp
     tearDown = ReasoningTests.tearDown
+
+    def test_update_notice_requires_recorded_vdot_issue(self):
+        packet = {'status': 'source_review_required', 'warnings': ['Missing reviewed page.'], 'evidence': []}
+        self.assertNotIn('message', blocked_source_response(packet))
+        page = {'authority': 'VDOT', 'source_uncertainties': [], 'citation_id': 'test',
+                'title': 'Synthetic manual', 'url': 'https://example.test/manual', 'page': 1, 'edition': 'test'}
+        packet['evidence'] = [page]
+        self.assertNotIn('message', blocked_source_response(packet))
+        page['source_uncertainties'] = ['Documented synthetic contradiction.']
+        result = blocked_source_response(packet)
+        self.assertFalse(result['provider_called'])
+        self.assertIn('VDOT website', result['warnings'][0])
+        self.assertEqual(result['conflict_sources'][0]['page'], 1)
+        self.assertNotIn('source_uncertainties', result['conflict_sources'][0])
+        self.assertEqual(packet['warnings'], ['Missing reviewed page.'])
+        page['authority'] = 'Other agency'
+        self.assertNotIn('message', blocked_source_response(packet))
 
     def test_reviewed_page_is_held_and_hold_survives_packaging(self):
         from services.v2.knowledge.store import IndexUnavailable

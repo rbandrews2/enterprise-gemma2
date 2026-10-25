@@ -1,5 +1,31 @@
 # WZOS remaining tasks - current October 20, 2026
 
+## Ask Atlas answer-path readiness - October 25, 2026
+
+Fixed a gap in VDOT notice delivery: held source packets never reach Gemma, so
+prompt instructions alone could not display the requested notice. The server now
+returns concise discrepancy wording and affected source links only for recorded
+VDOT page issues. The UI displays this without fabricating a model answer; missing
+sources, difficult questions and unreviewed pages alone do not trigger the claim.
+No assertion of latest-publication currency. Existing holds and permissions retained.
+Also removed misleading 'this copy alone' warning when no evidence fits the context
+budget. Budget remains unchanged; no clipping or added inference calls.
+
+Eight real local retrieval probes: hand signaling flaggers, flagger qualifications,
+and STOP SLOW paddle ready for model validation. Taper query reports recorded issues.
+Variable Speed Limit exceeds context capacity; pedestrian accessibility, rumble strips
+and channelizer questions need additional reviewed dependencies and/or narrower scope.
+See ignored review-20261025/answer-readiness.json for exact remaining pages.
+
+Validation: 3 Python source-uncertainty tests, 1 context-budget regression, and
+6 Node Ask Atlas tests passed. New Node test initially selected the matching heading
+instead of button; fixed selector and reran affected file successfully. DOM simulation,
+not browser screenshot or live model acceptance. No paid calls, deployment or schema
+changes. Prior passing unrelated suites not repeated.
+Next: package source artifacts, validate conversational model answers on ready topics,
+and continue the explicitly listed dependencies for broader coverage. Live acceptance
+and deployment remain outstanding.
+
 ## Batch8 - remaining staged tables - October 25, 2026
 
 Completed visual comparison of VWAPM physical pages157-159 against pinned images:

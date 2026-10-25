@@ -69,6 +69,23 @@ def validate_draft(value, packet):
     return draft
 
 
+def blocked_source_response(packet):
+    """Explain recorded source conflicts without inference or invented currency."""
+    response = {'status': packet['status'], 'warnings': list(packet['warnings']), 'provider_called': False}
+    conflicts = [page for page in packet.get('evidence', [])
+                 if page.get('authority') == 'VDOT' and page.get('source_uncertainties')]
+    if conflicts:
+        response['message'] = 'The VDOT references for this question contain an unresolved discrepancy.'
+        response['warnings'] = [warning for warning in response['warnings']
+                                if not warning.startswith('Source discrepancies remain unresolved;')]
+        response['warnings'].insert(0, 'This item remains unclear in the VDOT materials reviewed here. '
+                                   'Check the VDOT website regularly for updates.')
+        response['conflict_sources'] = [
+            {key: page[key] for key in ('citation_id', 'title', 'url', 'page', 'edition')}
+            for page in conflicts]
+    return response
+
+
 class GuidelinesGemma:
     """One bounded request using the existing Google private-service identity."""
     def __init__(self, transport=None, token_provider=None):
@@ -291,7 +308,7 @@ def register(app, actor, store, model=None, requests=None):
             packet['conversation_history'] = [turn.model_dump() for turn in payload.history]
             if packet['status'] != 'ready_for_reviewed_answer':
                 terminal = 'completed'
-                return {'status': packet['status'], 'warnings': packet['warnings'], 'provider_called': False}
+                return blocked_source_response(packet)
             if requests and await asyncio.to_thread(requests.change, key, user, 'read') != 'running':
                 raise RequestCancelled()
             class Engine:

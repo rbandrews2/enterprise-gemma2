@@ -106,6 +106,7 @@ class ManualTests(unittest.TestCase):
         small = self.index.context(query(), budget=1000)
         self.assertFalse(small['evidence'])
         self.assertTrue(small['warnings'])
+        self.assertNotIn('this copy alone', str(small['warnings']))
 
     def test_no_cross_state_authority_edition_or_date_substitution(self):
         for update in ({'authority': 'NCDOT', 'region': 'NC'}, {'region': 'NC'},

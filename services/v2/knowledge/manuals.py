@@ -456,7 +456,7 @@ class ManualIndex:
         elif not packet['evidence'] and found['results']:
             packet['status'] = 'source_review_required'
             packet['warnings'].append('Matches are companion or training material; governing standard evidence is required.')
-        if request.authority == 'VDOT' and not any(p['source_id'] == 'vdot-vwapm-2026' for p in packet['evidence']):
+        if packet['evidence'] and request.authority == 'VDOT' and not any(p['source_id'] == 'vdot-vwapm-2026' for p in packet['evidence']):
             packet['warnings'].append('Temporary traffic control is in the separate VWAPM; this copy alone is not Part 6 coverage.')
         evidence = {p['citation_id']: p for p in packet['evidence'] if p['answer_eligible']}
         for item in self.basis():

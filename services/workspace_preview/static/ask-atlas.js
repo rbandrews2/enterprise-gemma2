@@ -45,7 +45,7 @@
   }else if(data.results){
    status.textContent=data.results.length?'Reference matches. Review status is shown with each source.':'No matching references. Try an operation or section name.';
    for(const citation of data.results){const card=node('article',undefined,'panel');card.append(link(citation),node('p',`${citation.edition||'Edition unspecified'} · PDF page ${citation.page} · ${citation.answer_eligible?'Reviewed extraction; confirm applicability':'Source review needed'}`),excerpt(citation.excerpt||''));references.append(card);}
-  }else{status.textContent='Atlas needs reviewed source material for this question. Use Find references.';for(const warning of data.warnings||[])answer.append(node('p',warning));}
+  }else{status.textContent=data.message||'Atlas needs reviewed source material for this question. Use Find references.';for(const warning of data.warnings||[])answer.append(node('p',warning));for(const citation of data.conflict_sources||[]){const card=node('article',undefined,'panel');card.append(link(citation),node('p',`${citation.edition||'Edition unspecified'} · PDF page ${citation.page}`));references.append(card);}}
  }
  async function run(kind){
   if(busy)return;if(question.value.trim().length>500){status.textContent='Shorten your question to 500 characters.';return;}if(!question.value.trim()){status.textContent='Enter or record a question first.';return;}if(!navigator.onLine){status.textContent='Connect to ask Atlas. Your question stays here.';return;}

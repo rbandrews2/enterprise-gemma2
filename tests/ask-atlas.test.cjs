@@ -57,3 +57,13 @@ test('follow-up retains bounded conversation; sources collapse and citation open
  h.find('New conversation').onclick();h.question().value='New topic';await ask.onclick();
  sent=JSON.parse(h.calls.filter(c=>c.path.endsWith('/ask')).at(-1).options.body);assert.deepEqual(sent.history,[]);
 });
+test('recorded conflict notice shows source links without a fabricated answer',async()=>{
+ const h=setup();await h.emit('wzos:session');h.window.wzosAskAtlas.open();h.question().value='A disputed item';
+ h.setReply(async()=>({status:'source_review_required',provider_called:false,message:'Documented VDOT discrepancy.',warnings:['Check the VDOT website regularly for updates.'],conflict_sources:[{title:'Affected manual',url:'https://example.test/manual#page=25',edition:'test',page:25}]}));
+ await h.all(h.main).find(n=>n.tag==='button'&&n.textContent==='Ask Atlas').onclick();
+ assert.ok(h.find('Documented VDOT discrepancy.'));
+ assert.ok(h.find('Check the VDOT website regularly for updates.'));
+ assert.equal(h.find('Affected manual').href,'https://example.test/manual#page=25');
+ assert.equal(h.find('Read aloud').hidden,true);
+ assert.equal(h.question().value,'A disputed item');
+});
