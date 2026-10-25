@@ -1,5 +1,12 @@
 # WZOS remaining tasks - current October 20, 2026
 
+## Source review batch5 - October25
+
+Figure6D-1 accepted after prose cross-check;13 reviewed page representations.
+Current publisher correction PDF unchanged; ambiguous cell remains blocked.
+Next: continuation39-41 and context dependencies listed in source-review report.
+No activation, paid inference or customer communications.
+
 ## Source review batch4 - October25
 
 Three more page representations accepted (12 total): sign table52-53 and taper

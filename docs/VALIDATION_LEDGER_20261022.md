@@ -197,3 +197,11 @@ preserved. Targeted Variable Speed Limit context includes both52 and53. Three
 additional context checks (signs/taper/flagger) retain source-review blocking.
 Artifacts: review-20261025/batch4-*. No runtime code changes; prior32 DOT tests
 not repeated. No cloud calls, customer sends or deployment.
+
+## October25 - source review batch5
+
+PASS: local rebuild selects reviewed replacement35; all six-panel labels, scope
+and dimensions retained. Correction3 still not answer-eligible. Flagger packet
+remains image_review_required. Publisher SHA matches pinned three-page original.
+Evidence: review-20261025/batch5-*. No runtime changes; prior32 DOT tests not
+repeated. No paid model invocation or production deployment.

@@ -158,3 +158,38 @@ unchanged. No application/runtime code or customer database changes this batch;
 prior32 focused code checks remain applicable and were not repeated. No paid
 inference, IAM changes or deployment. Local source originals/sidecars are not
 Git-backed; use the source-library packaging workflow before any release.
+
+## Batch5 - hand-signal diagram and publisher recheck
+
+Accepted physical35 (printed25), Figure6D-1, after comparing all six panels with
+Sections6D.02/03/05 on34/36/37. Replacement preserves paddle vs emergency/spotter
+flag columns, stop/proceed/slow rows, lowered flag for proceed, optional paddle
+hand motion, flag sweep and dimension-arrow endpoints.13 page representations
+accepted overall; no engineering or full procedure approval.
+
+Publisher check: the currently linked wapm-list-known-errors_acc.pdf remains
+SHA256 bec29b070d4cbe642761fd8a666331df6d48d220346a56d3c9ad2fc0e2a7f80b,
+three pages, identical to the pinned original. A search-engine result for the old
+list-known-errors_acc.pdf shows a stale two-page copy, while direct HTTP returns
+404. Do not use search cache as evidence of the currently published revision.
+The four-lane-divided left-turn value at40mph remains645 followed by615 at45mph;
+no replacement guessed, correction page3 remains ineligible.
+
+Official FAQ linked from the same publication page identifies itself and the
+known-errors document as informal/non-policy. FAQ is not ingested or approved in
+this batch. Candidate for later scoped review, not automatic governing authority:
+https://www.vdot.virginia.gov/media/vdotvirginiagov/doing-business/technical-guidance-and-support/traffic-operations/work-zones/wapm-faq_acc.pdf
+
+Prepared clarification question (not sent): In VWAPM11 known-errors Table6N-1,
+is the four-lane-divided left-turn40mph value645 correct given45mph615? Please
+identify an authoritative correction or confirm applicability. Keep this source
+blocked until clarified or an explicit uncertainty-aware response path is tested.
+
+Remaining context dependencies, beyond the previously highlighted diagrams:
+- Sign questions: VWAPM51/54,47-50,11,141-143 and correction3.
+- Taper questions:27-28,20-22,11,134-135,157-159 and correction3.
+- Flagger questions:39-41,11,143-144,51/54 and correction3 (query-dependent).
+These are actual unreviewed context pages from batch4 packets, not a claim that
+reviewing one remaining table finishes all source coverage. Next prioritize the
+flagger continuation39-41 and cross-reference applicability. Preserve unresolved
+source uncertainty. No customer communications, paid model calls or live changes.
