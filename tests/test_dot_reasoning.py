@@ -140,6 +140,11 @@ class ReasoningTests(unittest.TestCase):
             self.assertIn('known-errors companions override', prompt)
             self.assertIn('cite the correction page', prompt)
             self.assertIn('provisional corrections', prompt)
+            self.assertIn('Only for a documented unresolved contradiction', prompt)
+            self.assertIn('after applying applicable known-errors corrections', prompt)
+            self.assertIn('Check the VDOT website regularly for updates.', prompt)
+            self.assertIn('notice is not a fallback for difficult questions', prompt)
+            self.assertIn('only when the supplied evidence verifies their currency', prompt)
             return httpx.Response(200, json={'count': 30000, 'max_model_len': 32767})
         async def token(origin): return 'test.test.test'
         model = GuidelinesGemma(httpx.MockTransport(handler), token)

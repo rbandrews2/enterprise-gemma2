@@ -228,3 +228,16 @@ source holds/unreviewed diagrams. This is retrieval readiness, not live model
 acceptance. Evidence: batch6-final-rebuild.json, batch6-final-flagger.json,
 batch6-final-taper.json, batch6-final-signs.json and batch6-final-remaining.json
 under the ignored local review-20261025 artifact directory. No paid calls.
+
+## VDOT contradiction wording - October 25, 2026
+
+Added user-requested concise update notice to Atlas guidance instructions. Use
+only for documented unresolved VDOT contradictions after applicable known-errors
+corrections. Identify the affected item; direct users to check VDOT's website.
+Do not assert latest-release currency or active revisions without evidence.
+Difficult questions, missing inputs/sources, extraction review gaps and model
+errors require their actual explanation, not this notice. Existing source holds
+remain intact; this change does not route held evidence into inference.
+Focused mocked prompt/token-budget test passed (1 test, no paid inference).
+No schema changes or deployment. Initial test command had an incorrect Python
+path; rerunning with the verified absolute interpreter passed.
