@@ -1,6 +1,7 @@
 """Enterprise DOT evidence API; separately gated from ordinary chat and Voice."""
 import asyncio
 import json
+import logging
 import os
 import re
 from uuid import UUID
@@ -86,6 +87,26 @@ def blocked_source_response(packet):
     return response
 
 
+def model_context(packet):
+    """Keep governing content intact; leave retrieval/audit bookkeeping on server."""
+    page_fields = ('citation_id', 'source_id', 'page', 'label', 'section', 'text',
+                   'captions', 'headings', 'page_annotation', 'applicability_note',
+                   'source_uncertainties')
+    source_fields = ('title', 'edition', 'authority', 'regions', 'document_role',
+                     'usage_note', 'publication_status')
+    result = {key: value for key, value in packet.items() if key != 'evidence'}
+    result['sources'] = {}
+    result['evidence'] = []
+    for page in packet['evidence']:
+        source = {key: page[key] for key in source_fields if key in page}
+        source_id = page['source_id']
+        if source_id in result['sources'] and result['sources'][source_id] != source:
+            raise ValueError('Inconsistent source metadata')
+        result['sources'][source_id] = source
+        result['evidence'].append({key: page[key] for key in page_fields if key in page})
+    return result
+
+
 class GuidelinesGemma:
     """One bounded request using the existing Google private-service identity."""
     def __init__(self, transport=None, token_provider=None):
@@ -101,6 +122,7 @@ class GuidelinesGemma:
         if self.gate.locked():
             raise ModelUnavailable('Atlas is answering another guidelines request. Try again shortly.')
         async with self.gate:
+            stage = 'prepare'
             try:
                 origin = service_url(os.getenv('WZOS_ATLAS_DOT_MODEL_URL') or os.getenv('WZOS_FIELD_VOICE_MODEL_URL', ''))
                 body = {
@@ -146,11 +168,12 @@ class GuidelinesGemma:
                         'as evidence metadata, not copied into claim text unless the user asks for an exact quote. '
                         'Use unresolved for focused questions, not a list of generic disclaimers. '
                         + CONVERSATIONAL_STYLE)},
-                        {'role': 'user', 'content': packed(packet)}],
+                        {'role': 'user', 'content': packed(model_context(packet))}],
                 }
                 if len(packed(body).encode()) > 160000:
                     raise ValueError('Context budget exceeded')
                 async with asyncio.timeout(290):
+                    stage = 'authenticate'
                     token = await self.token_provider(origin)
                     if not isinstance(token, str) or not re.fullmatch(r'[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+', token):
                         raise ValueError('Invalid metadata identity token')
@@ -158,6 +181,7 @@ class GuidelinesGemma:
                                                 follow_redirects=False, timeout=280) as client:
                         # Tokenize with the actual model/chat template, rather than
                         # confusing bytes or advertised model capacity with tokens.
+                        stage = 'tokenize'
                         async with client.stream('POST', origin + '/tokenize',
                                 headers={'Authorization': 'Bearer ' + token},
                                 json={'model': body['model'], 'messages': body['messages'],
@@ -168,13 +192,20 @@ class GuidelinesGemma:
                         if (type(count) is not int or count < 1 or type(capacity) is not int
                                 or capacity < 8192 or count + body['max_tokens'] + 4096 > min(capacity, 32768)):
                             raise ModelUnavailable('The complete source context exceeds the verified model window. Narrow the operation or section.')
+                        stage = 'generate'
                         async with client.stream('POST', origin + '/v1/chat/completions',
                                                  headers={'Authorization': 'Bearer ' + token}, json=body) as response:
                             data = await bounded_json(response, 65536)
+                stage = 'completion'
                 choice = data['choices'][0]
+                if choice.get('finish_reason') == 'length':
+                    logging.getLogger(__name__).warning('Atlas DOT failure stage=completion reason=output_limit')
+                    raise ModelUnavailable('Atlas reached its answer length limit before finishing. Narrow your question and try again.')
                 if choice.get('finish_reason') != 'stop' or choice['message'].get('tool_calls'):
                     raise ValueError('Incomplete or unsupported response')
+                stage = 'validate_draft'
                 draft = validate_draft(json.loads(choice['message']['content']), packet)
+                stage = 'usage'
                 usage = data.get('usage', {})
                 if any(type(usage.get(key)) is not int or usage[key] < 0 for key in ('prompt_tokens', 'completion_tokens')):
                     raise ValueError('Missing usage accounting')
@@ -190,7 +221,9 @@ class GuidelinesGemma:
                         'approved_for_field_use': False}
             except ModelUnavailable:
                 raise
-            except (httpx.HTTPError, TimeoutError, ValueError, KeyError, IndexError, TypeError):
+            except (httpx.HTTPError, TimeoutError, ValueError, KeyError, IndexError, TypeError) as error:
+                # Never log questions, source text, model output, tokens or exception messages.
+                logging.getLogger(__name__).warning('Atlas DOT failure stage=%s error_type=%s', stage, type(error).__name__)
                 raise ModelUnavailable('Atlas could not produce a valid cited draft. Open the reference pages or explicitly try again.') from None
 
 

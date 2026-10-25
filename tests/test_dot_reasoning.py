@@ -16,7 +16,7 @@ from services.v2.knowledge.manual_review import review
 from services.v2.knowledge.store import Store
 from services.workspace_preview.atlas_requests import AtlasRequests
 from services.workspace_preview.dot_calculations import Calculation, arithmetic, verify_calculations
-from services.workspace_preview.dot_knowledge import GuidelinesGemma, blocked_source_response
+from services.workspace_preview.dot_knowledge import GuidelinesGemma, blocked_source_response, model_context
 from services.workspace_preview.intelligence import ModelUnavailable
 import test_dot_manuals as fixture
 
@@ -153,6 +153,43 @@ class ReasoningTests(unittest.TestCase):
             with self.assertRaisesRegex(ModelUnavailable, 'window'):
                 asyncio.run(model.ask(self.index.context(fixture.query())))
         self.assertEqual(calls, ['/tokenize'])
+
+    def test_model_context_preserves_full_evidence_and_correction_scope(self):
+        self.reviewed()
+        packet = self.index.context(fixture.query())
+        packet['conversation_history'] = [{'role': 'user', 'content': 'Previous question'}]
+        page = packet['evidence'][0]
+        page['source_uncertainties'] = ['Synthetic unresolved note']
+        compact = model_context(packet)
+        for original, projected in zip(packet['evidence'], compact['evidence']):
+            for key in ('text', 'citation_id', 'source_uncertainties', 'applicability_note', 'captions'):
+                if key in original: self.assertEqual(original[key], projected[key])
+            self.assertEqual(compact['sources'][original['source_id']]['document_role'], original['document_role'])
+            self.assertNotIn('revision', projected)
+        self.assertEqual(compact['correction_policy'], packet['correction_policy'])
+        self.assertEqual(compact['conversation_history'], packet['conversation_history'])
+        self.assertEqual(compact['formulas'], packet['formulas'])
+        self.assertIn('revision', packet['evidence'][0])
+        packet['evidence'][1]['edition'] = 'Conflicting synthetic edition'
+        with self.assertRaisesRegex(ValueError, 'Inconsistent source'):
+            model_context(packet)
+
+    def test_output_limit_reports_safe_reason_without_logging_content(self):
+        self.reviewed()
+        def handler(request):
+            if request.url.path == '/tokenize':
+                return httpx.Response(200, json={'count': 1000, 'max_model_len': 32767})
+            return httpx.Response(200, json={'choices': [{'finish_reason': 'length',
+                'message': {'content': 'PRIVATE_MODEL_CONTENT'}}]})
+        async def token(origin): return 'test.test.test'
+        model = GuidelinesGemma(httpx.MockTransport(handler), token)
+        with patch.dict('os.environ', {'WZOS_ATLAS_DOT_INFERENCE_ENABLED': '1',
+                'WZOS_ATLAS_DOT_MODEL_URL': 'https://synthetic.test.run.app'}):
+            with self.assertLogs('services.workspace_preview.dot_knowledge', level='WARNING') as logs:
+                with self.assertRaisesRegex(ModelUnavailable, 'answer length limit'):
+                    asyncio.run(model.ask(self.index.context(fixture.query())))
+        self.assertIn('reason=output_limit', str(logs.output))
+        self.assertNotIn('PRIVATE_MODEL_CONTENT', str(logs.output))
 
 
 class CalculationTests(unittest.TestCase):

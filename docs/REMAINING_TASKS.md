@@ -1,5 +1,38 @@
 # WZOS remaining tasks - current October 20, 2026
 
+## Model context repair - October 25, 2026
+
+### Bounded cloud result and next checkpoint
+
+Repaired attempt finished in96.17s with generic draft-validation failure. Server logs
+confirm POST /tokenize HTTP200 at06:34:16Z and /v1/chat/completions HTTP200 at06:35:51Z.
+Thus the context guard passed, but answer acceptance did NOT pass. The old adapter
+suppressed the precise failure and no raw response was retained; do not claim a
+specific quote, schema or output-limit cause. No second generation was launched.
+Added safe stage/error-type diagnostics (no question, answer, token or exception text)
+and explicit output-limit handling. Focused output-limit/privacy test passed.
+Next: use instrumented adapter for one bounded diagnostic acceptance, then fix the
+observed cause before release. Preserve all source holds. Source package and prior
+20 passing reasoning tests need not be repeated for unchanged code.
+
+
+The isolated real adapter check stopped before generation: actual /tokenize input
+27808 tokens against max_model_len32767, plus unchanged4096 output and4096 safety
+reserve exceeded capacity. No generated answer was produced by that attempt.
+Removed repeated retrieval/audit metadata from model input, grouped source metadata
+once, and retained complete text of all17 pages, captions, headings, applicability,
+page notes, citation IDs, corrections, formulas and conversation context. Full original
+packet remains server-side for citation validation and audit. No source text clipping,
+window increase, IAM change or production deployment.
+Packet decreased from93353 to78113 UTF-8 bytes.20 focused reasoning tests passed;
+additional inconsistent-source-metadata assertion passed in the affected test.
+Cloud isolated adapter normalized SHA256 matches local:
+5f4c90809a8b11fa8b9aa919fbc67438071f399ec4d495b5faca08c2a90ea8f9.
+Original failure preserved as acceptance-result.json in
+/home/admin_/atlas-acceptance-6329a06; repaired bounded attempt writes
+acceptance-compact-result.json. No automatic paid retries.
+
+
 ## Cloud model access restored - October 25, 2026
 
 Verified successful CLI sign-in as admin@workzoneos.org, project enterprise-gemma2.
