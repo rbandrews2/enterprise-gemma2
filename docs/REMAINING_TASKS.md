@@ -1,5 +1,12 @@
 # WZOS remaining tasks - current October 20, 2026
 
+## Source review started - October25
+
+First batch: VWAPM pages34/36 extraction fidelity reviewed; figure35 held.
+Added separately pinned Virginia MUTCD known-errors companion (five pages),
+not a replacement for the three-page VWAPM list. Strike-through/diagram semantics
+remain blockers. See ASK_ATLAS_SOURCE_REVIEW_20261025.md. No live activation.
+
 ## Ask Atlas - October24
 
 - [x] Diagnose gray Ask Atlas button: live DOT flags unset/off.

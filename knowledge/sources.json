@@ -76,7 +76,10 @@
     "document_role": "standard",
     "links_verified_on": "2026-10-20",
     "publication_status": "unknown",
-    "applicability_note": "User-supplied copy; do not equate with the differently hashed official PDF. Physical page 3 identifies the separate VWAPM as Part 6. Verify current official content, corrections, adoption and project applicability before answering requirements."
+    "applicability_note": "User-supplied copy; do not equate with the differently hashed official PDF. Physical page 3 identifies the separate VWAPM as Part 6. Verify current official content, corrections, adoption and project applicability before answering requirements.",
+    "required_companions": {
+      "vdot-mutcd-known-errors-20260615": "5d5ceed217ee150b473bab714815ed17dd8c7049afa389a0faec6d8cfaf29b5f"
+    }
   },
   {
     "id": "vdot-vwapm-2026",
@@ -541,5 +544,22 @@
     "archive_sha256": "9de0f4078975efb9b44614ff5ee8e1a0ba39fbecc083f85f51b7bf9389eee832",
     "applicability_note": "Paragraph 1 states May 6, 2022; Paragraphs 7 and 9 amend Section 704, including replacement of the first materials paragraph. Applicability depends on the contract and surface/material conditions. Text-only scope inspection; layout, tables and project applicability remain unreviewed. Printed dates are not verified effective dates.",
     "publication_status": "unknown"
+  },
+  {
+    "id": "vdot-mutcd-known-errors-20260615",
+    "agency": "VDOT",
+    "title": "Virginia MUTCD 11.0 known errors",
+    "url": "https://www.vdot.virginia.gov/media/vdotvirginiagov/doing-business/technical-guidance-and-support/technical-guidance-documents/traffic-operations/2026-06-15-Virginia-MUTCD-Version-11.0-List-of-Known-Errors_acc06152026_RM.pdf",
+    "publication_page": "https://www.vdot.virginia.gov/doing-business/technical-guidance-and-support/technical-guidance-documents/virginia-mutcd/",
+    "edition": "June 15, 2026 list for Virginia MUTCD 11.0",
+    "jurisdiction": "VA: VDOT roadways",
+    "kind": "pdf",
+    "links_verified_on": "2026-10-25",
+    "applicability_note": "Separate from VWAPM known errors. VDOT describes this list as informational, not official changes at this time. Preserve strike-through and unresolved wording; do not silently replace governing text. Federal known errors are separate. Page extraction and project applicability remain unreviewed.",
+    "publication_status": "current_at_verification",
+    "regions": [
+      "VA"
+    ],
+    "document_role": "correction"
   }
 ]

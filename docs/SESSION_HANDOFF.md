@@ -1,5 +1,12 @@
 # WZOS current session handoff - October 18, 2026
 
+## Source review started - October25
+
+First batch: VWAPM pages34/36 extraction fidelity reviewed; figure35 held.
+Added separately pinned Virginia MUTCD known-errors companion (five pages),
+not a replacement for the three-page VWAPM list. Strike-through/diagram semantics
+remain blockers. See ASK_ATLAS_SOURCE_REVIEW_20261025.md. No live activation.
+
 ## Ask Atlas conversation repair - October24 (pending release)
 
 User reported source dumps and confirmed the gray Ask Atlas button, not the
