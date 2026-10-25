@@ -1,5 +1,21 @@
 # WZOS current session handoff - October 18, 2026
 
+## Batch7 - sign illustrations and late-merge diagram - October 25, 2026
+
+Visually compared pinned VWAPM physical pages 48, 49 and 142 and created
+full-page replacement representations. Figure 6G-1 now associates each sign
+code with its visible legend/symbol and plaque assembly. Page 49 retains all
+Standard/Guidance/Option prose. Figure 6N-1 records the upstream sign order,
+five A intervals, optional downstream sign and printed Known Error notice.
+Illustrated numbers are examples, not selected job requirements. No inferred
+scale or silent sign-code corrections. Original PDFs remain unchanged.
+
+35 page representations reviewed overall. Pages 48 and 142 retain their
+existing source-conflict holds; page 49 has no recorded source hold. The next
+remaining staged tables are 157-159. Source artifacts and review bindings are
+under the ignored knowledge directory; batch7-* evidence is in the local
+review-20261025 directory. No production change or paid inference.
+
 ## Source review batch6 and correction precedence - October25
 
 24 dependency pages inspected;18 VWAPM pages plus known-errors3 accepted.32 total

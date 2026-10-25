@@ -269,3 +269,28 @@ remain intact; this change does not route held evidence into inference.
 Focused mocked prompt/token-budget test passed (1 test, no paid inference).
 No schema changes or deployment. Initial test command had an incorrect Python
 path; rerunning with the verified absolute interpreter passed.
+
+## Batch7 - sign illustrations and late-merge diagram - October 25, 2026
+
+Visually compared pinned VWAPM physical pages 48, 49 and 142 and created
+full-page replacement representations. Figure 6G-1 now associates each sign
+code with its visible legend/symbol and plaque assembly. Page 49 retains all
+Standard/Guidance/Option prose. Figure 6N-1 records the upstream sign order,
+five A intervals, optional downstream sign and printed Known Error notice.
+Illustrated numbers are examples, not selected job requirements. No inferred
+scale or silent sign-code corrections. Original PDFs remain unchanged.
+
+35 page representations reviewed overall. Pages 48 and 142 retain their
+existing source-conflict holds; page 49 has no recorded source hold. The next
+remaining staged tables are 157-159. Source artifacts and review bindings are
+under the ignored knowledge directory; batch7-* evidence is in the local
+review-20261025 directory. No production change or paid inference.
+
+## Source review batch7 validation - October 25, 2026
+
+Real local index rebuild completed. All three new representations bind to
+reviewed originals. Assertions passed: physical page49 answer_eligible=true;
+pages48/142 page_reviewed=true and answer_eligible=false with original issue
+notes retained. Evidence: review-20261025/batch7-validation.json and
+batch7-rebuild.json. No application code changed; previous passing tests reused.
+No paid model test, production activation or full-manual approval claimed.

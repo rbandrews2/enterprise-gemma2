@@ -241,3 +241,12 @@ remain intact; this change does not route held evidence into inference.
 Focused mocked prompt/token-budget test passed (1 test, no paid inference).
 No schema changes or deployment. Initial test command had an incorrect Python
 path; rerunning with the verified absolute interpreter passed.
+
+## Source review batch7 validation - October 25, 2026
+
+Real local index rebuild completed. All three new representations bind to
+reviewed originals. Assertions passed: physical page49 answer_eligible=true;
+pages48/142 page_reviewed=true and answer_eligible=false with original issue
+notes retained. Evidence: review-20261025/batch7-validation.json and
+batch7-rebuild.json. No application code changed; previous passing tests reused.
+No paid model test, production activation or full-manual approval claimed.
