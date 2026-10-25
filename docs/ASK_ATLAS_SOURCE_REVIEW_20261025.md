@@ -54,3 +54,49 @@ activation. Conversational quality acceptance still follows source readiness.
 - https://www.vdot.virginia.gov/doing-business/technical-guidance-and-support/technical-guidance-documents/virginia-mutcd/
 - https://www.vdot.virginia.gov/doing-business/technical-guidance-and-support/technical-guidance-documents/work-area-protection-manual-and-pocket-guide/
 - https://www.vdot.virginia.gov/media/vdotvirginiagov/doing-business/technical-guidance-and-support/technical-guidance-documents/traffic-operations/2026-06-15-Virginia-MUTCD-Version-11.0-List-of-Known-Errors_acc06152026_RM.pdf
+
+## Second batch - flagger, corrections and taper dependencies
+
+Twelve additional pages visually inspected: VWAPM23-26,37-38,51-53 and
+VWAPM known-errors1-3. Full extraction comparison completed for23-26,37-38
+and corrections1-3;51-53 received layout/dependency triage, not blanket acceptance.
+
+Five new extraction-fidelity reviews saved: VWAPM23,37,38 and corrections1,2.
+Together with the first batch this makes seven accepted page transcriptions,
+NOT seven approved operational procedures. Guidance versus Standard, exceptions,
+continuations and provisional correction wording are preserved.
+
+Findings requiring repair/review:
+
+- Corrections page3 Table6N-1 had no extracted table content. Added an AI-assisted
+  manual transcription (110 cells, row labels, mph/feet units) to its OCR-compatible
+  sidecar. Source visibly has a non-monotonic four-lane-divided left-turn cell:
+  645 at40mph followed by615 at45mph. Do not guess a replacement. Initially saved
+  fidelity review3 was withdrawn before index rebuild to keep the page blocked;
+  original review and reason preserved in review-withdrawals.json. Transcription
+  remains unreviewed for answer eligibility pending source clarification or a
+  representation that reliably carries this uncertainty into model context.
+- Corrections page1 itself prints an ambiguous foot-mark in a plaque dimension;
+  extraction preserves it. This is source uncertainty, not a license to normalize
+  it to inches. Page2 explicitly says I believe and Need to verify in places.
+- VWAPM25 contains invisible extracted content: an unlabeled speed/distance list
+  and part of Table6B-V5 that are absent from the rendered page. One extracted
+  formula has075 rather than0.75. Do not approve or merely append OCR to this text;
+  a verified replacement transcription must exclude invisible PDF objects.
+- VWAPM26 tables have merged cells for wider lanes and conditions in footnotes.
+  Flattening loses column span meaning. It also includes repeated preceding-page
+  text. Requires structured transcription and retained notes before acceptance.
+- VWAPM52-53 Table6G-1 includes blank/merged cells, minimum-size restrictions,
+  footnotes and known-error additions. Needs explicit column mapping; page52 alone
+  is not a complete source for sign dimensions. These pages remain unreviewed.
+- VWAPM24 and prior35 are diagrams; captions alone do not preserve layout.
+
+Artifacts remain ignored in review-20261025 and revision-bound sidecars. No
+source originals modified. Rebuild and two focused context checks confirm flagger
+and taper questions still cannot enter reviewed-answer mode with these dependencies.
+No paid inference, production deployment, provider/IAM change or unrelated retests.
+
+Next: implement a provenance-bound reviewed replacement-text/structured-table
+mechanism (not additive OCR for hidden-text pages), with invalidation checks;
+then repair25-26,52-53 and diagram descriptions before model acceptance. Preserve
+unresolved source anomalies rather than silently fixing official documents.

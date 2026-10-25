@@ -1,5 +1,13 @@
 # WZOS remaining tasks - current October 20, 2026
 
+## Source review batch2 - October25
+
+Five more page transcriptions accepted (seven total). Twelve pages inspected;
+found hidden extracted taper content, merged-cell loss and image-only correction
+table. Manual table transcription saved but ambiguous source cell remains blocked;
+review withdrawal preserved. See ASK_ATLAS_SOURCE_REVIEW_20261025.md, batch2.
+Next: verified replacement-text/table mechanism; no broad approval or activation.
+
 ## Source review started - October25
 
 First batch: VWAPM pages34/36 extraction fidelity reviewed; figure35 held.
