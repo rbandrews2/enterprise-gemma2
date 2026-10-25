@@ -303,3 +303,23 @@ Do not use the old terminal's service/flag output as current state. Next: comple
 CLI sign-in, read current private model/service configuration and authorized test
 path, then run bounded conversational acceptance. No model call or cloud deployment
 performed this turn. No new IAM access granted.
+
+## Cloud model access restored - October 25, 2026
+
+Verified successful CLI sign-in as admin@workzoneos.org, project enterprise-gemma2.
+Fresh service read: wzos-atlas-inference Ready=True, 20CPU/80Gi/1GPU, maxScale1,
+max-model-len32767, request logging disabled. Service IAM binds WZOS app identity;
+operator also has effective access (no new grant made).
+GET /v1/models with operator identity timed out at25s. Cloud Run system log
+confirmed autoscaling startup at2026-10-25T06:21:11Z. One subsequent bounded180s
+readiness check returned HTTP200 and google/gemma-4-31B-it. No generation calls.
+This proves reachability and existing invocation access, not answer quality.
+
+Prepared three context packets from the verified release snapshot under ignored
+review-20261025/model-acceptance/context-1..3.json. Next: transfer current answer
+adapter and these packets for bounded conversational acceptance; preserve token
+measurement, citation validation and no automatic retries. Do not repeat the source
+review/package checks. No deployment or IAM changes this turn.
+Browser terminal typeText flattened a multiline command; cancelled via Cloud Shell
+Send key combination Ctrl+C. Use paste for terminal commands; failed entry executed
+no model probe. Successful probes used a single-line command without printing tokens.
