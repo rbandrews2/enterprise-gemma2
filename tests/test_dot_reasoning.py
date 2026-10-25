@@ -145,6 +145,9 @@ class ReasoningTests(unittest.TestCase):
             self.assertIn('Check the VDOT website regularly for updates.', prompt)
             self.assertIn('notice is not a fallback for difficult questions', prompt)
             self.assertIn('only when the supplied evidence verifies their currency', prompt)
+            self.assertIn('final answer must be one JSON object only', prompt)
+            self.assertIn('Never combine text from different pages into one quote', prompt)
+            self.assertIn('one continuous verbatim passage', prompt)
             return httpx.Response(200, json={'count': 30000, 'max_model_len': 32767})
         async def token(origin): return 'test.test.test'
         model = GuidelinesGemma(httpx.MockTransport(handler), token)
@@ -179,6 +182,9 @@ class ReasoningTests(unittest.TestCase):
         def handler(request):
             if request.url.path == '/tokenize':
                 return httpx.Response(200, json={'count': 1000, 'max_model_len': 32767})
+            body = json.loads(request.content)
+            self.assertIs(body['skip_special_tokens'], False)
+            self.assertIs(body['chat_template_kwargs']['enable_thinking'], True)
             return httpx.Response(200, json={'choices': [{'finish_reason': 'length',
                 'message': {'content': 'PRIVATE_MODEL_CONTENT'}}]})
         async def token(origin): return 'test.test.test'

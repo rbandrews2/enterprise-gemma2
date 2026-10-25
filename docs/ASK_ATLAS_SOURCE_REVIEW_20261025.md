@@ -397,3 +397,55 @@ and acceptance-diagnostic-result.json. No automatic retry, IAM change, deploymen
 new workload or customer data. Prior local tests were not repeated.
 Next: repair the structured-response/parser boundary using targeted format evidence;
 keep strict schema, citations and source holds. Do not rerun the same blind check.
+
+## Structured response repair - October 25, 2026 (in progress)
+
+Captured one synthetic-only response in the isolated Cloud Shell test folder for
+replay, not production logging. It began with a bare thought label and had no channel
+delimiters: the pinned serving decoder stripped them before reasoning parsing.
+Reference: https://github.com/vllm-project/vllm/issues/38855 and the official
+Gemma recipe https://docs.vllm.ai/projects/recipes/en/stable/Google/Gemma4.html.
+
+Set skip_special_tokens=False on the DOT request, retaining enable_thinking=True.
+Added explicit final JSON and literal quote instructions. Live repaired response now
+has separate reasoning and parseable JSON (111.05s,22942 input/3014 output tokens).
+Three of four quotes matched exactly. Remaining quote crossed pages36/37 while
+citing37 only; rejected correctly. Added explicit page-boundary instruction and
+continued bounded acceptance. No weakened quote/schema validation or inference retry.
+37 focused Python checks and6 Node checks passed before the last prompt-only change.
+Source holds and live deployment remain unchanged.
+
+## Ask Atlas structured-answer acceptance passed - October 25, 2026
+
+Completed the formatting/citation repair and proceeded through the next checks.
+Final adapter normalized SHA256:
+83d94a6dee64d67ad575901f9f2ef348ae4d3d3a455c7d013627c400bd45c5e7.
+Preserve special tokens for the pinned vLLM reasoning parser; reasoning remains on.
+Require a JSON final answer and continuous page-specific verbatim supporting quotes.
+Do not strip arbitrary prefixes, accept partial JSON, fuzzy-match quotes or auto-retry.
+
+Actual private Gemma31B acceptance through GuidelinesGemma, all using the complete
+reviewed17-page context with pinned corrections and strict server validation:
+- Hand signals/STOP-SLOW: validated draft,80.86s,22983 input/2545 output tokens.
+- Virginia flagger qualifications: validated draft,87.74s,22980 input/2819 output.
+- Contextual follow-up asking to skip training for10 minutes: validated draft,33.52s,
+  23134 input/892 output. Rejected the invented exception, retained conversation,
+  and distinguished traffic delay guidance from the worker's assignment duration.
+All answers passed JSON/schema/exact-quote/citation checks; final prose was reviewed.
+No field approval implied.34-88s latency remains a UX/performance limitation, not an
+instant-response claim. No customer data, IAM changes, new infrastructure or deployment.
+
+37 focused Python tests and6 Node Ask Atlas tests passed. The final prompt-specific
+regression passed after adding the cross-page quote instruction. Existing access,
+cancellation, conflict-notice, context-budget and formula safeguards retained.
+Do not repeat these checks unless affected code/source/model configuration changes.
+
+Cloud evidence folder: /home/admin_/atlas-acceptance-6329a06.
+Accepted artifacts: acceptance-pages-result.json, acceptance-qualification-result.json,
+acceptance-followup-result.json and corresponding logs. Synthetic-only raw diagnostic
+responses are separate in that isolated folder; never enable production raw logging.
+Source package remains .local-data/atlas-release-sources-20261025 (ignored),52 files;
+38 page representations reviewed,8 VWAPM holds retained. Broader source review remains
+open. The live app is unchanged. This completes the bounded answer-path repair and
+acceptance; deployment/in-app acceptance and broader manual coverage are separate.
+Rollback: revert DOT request/prompt changes; no database or source schema changes.
