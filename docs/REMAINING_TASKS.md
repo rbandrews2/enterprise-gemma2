@@ -1,5 +1,12 @@
 # WZOS remaining tasks - current October 20, 2026
 
+## Source review batch4 - October25
+
+Three more page representations accepted (12 total): sign table52-53 and taper
+diagram24.55 sign rows mapped with notes and blanks preserved. Remaining priority:
+flagger diagram35 and correction-table anomaly, then broader source dependencies.
+See ASK_ATLAS_SOURCE_REVIEW_20261025.md. No live activation or paid inference.
+
 ## Source review batch3 - October25
 
 Replacement-text support implemented; VWAPM25-26 visually verified (nine total

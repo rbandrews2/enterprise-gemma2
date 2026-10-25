@@ -188,3 +188,12 @@ replacement integrity, review invalidation and snapshot cases. Logs preserved in
 PASS: real local index rebuilt at schema7; both replacement pages reviewed and
 selected. Flagger and taper context checks remain blocked pending remaining source
 review. Evidence: batch3-rebuild.json, batch3-flagger.json, batch3-taper.json.
+
+## October25 - source review batch4
+
+PASS: local index rebuild; pages24/52/53 select reviewed replacements.55 table
+rows mapped; blank minimum, six notes, units and required/optional buffer text
+preserved. Targeted Variable Speed Limit context includes both52 and53. Three
+additional context checks (signs/taper/flagger) retain source-review blocking.
+Artifacts: review-20261025/batch4-*. No runtime code changes; prior32 DOT tests
+not repeated. No cloud calls, customer sends or deployment.

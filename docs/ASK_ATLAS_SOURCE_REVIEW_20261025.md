@@ -128,3 +128,33 @@ not rebuild these sources without replacement support: keep Ask Atlas disabled o
 restore its matching earlier source snapshot/index. Never discard the originals
 or review history. Remaining: diagram semantics (24/35), sign tables52-53 and
 unresolved correction-table anomaly, then bounded model acceptance.
+
+## Batch4 - sign table and taper diagram
+
+Visually inspected physical pages24,35,52,53 against original page renderings.
+Accepted three more replacement representations: VWAPM24 (printed14) and52-53
+(printed42-43). Total accepted page representations:12. This is transcription
+fidelity, not engineering approval or a complete operational source review.
+
+- Table6G-1: mapped all55 rows (43+12) to sign designation, section and three
+  road-category size columns. Preserved the blank variable-speed minimum cell,
+  printed dashes, asterisks, original spelling, all six notes and Table2B-1
+  reference. Explicitly linked page52 to the continuation/notes on53.
+- Page53 surrounding speed-safety-camera and crosswalk prose retained in full;
+  did not normalize or reinterpret the source's legal references.
+- Figure6B-V3 on24: added spatial description, opposing travel directions,
+  legend, two flaggers and ordered dimension labels. Distinguished the required
+  approach buffer before the curve from the optional downstream buffer. Kept
+  illustration-only scope and Chapter6P reference; inferred no unlabeled lengths.
+- Figure6D-1 on35 remains unreviewed: do not use isolated labels as sufficient
+  evidence of hand motion. Needs a complete gesture description checked against
+  accompanying prose, including the emergency/spotter-only flag column and
+  dimension-arrow endpoints.
+- Correction-table page3 anomaly remains unresolved; no guessed replacement.
+
+Artifacts: ignored review-20261025/vwapm-{24,52,53}-replacement.txt,
+batch4-sign-rows.json and revision-bound replacement/review sidecars. Originals
+unchanged. No application/runtime code or customer database changes this batch;
+prior32 focused code checks remain applicable and were not repeated. No paid
+inference, IAM changes or deployment. Local source originals/sidecars are not
+Git-backed; use the source-library packaging workflow before any release.
