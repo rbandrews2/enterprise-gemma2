@@ -1,5 +1,18 @@
 # WZOS current session handoff - October 18, 2026
 
+## Source review batch6 and correction precedence - October25
+
+24 dependency pages inspected;18 VWAPM pages plus known-errors3 accepted.32 total
+reviewed representations. Explicit known-errors replacements override original
+claims per user decision; published values retained. Source-issue holds distinguish
+accurate transcription from disputed requirements.34 focused tests passed.
+See source-review report for exact remaining conflicts; no live activation.
+Final rebuilt local packet: flagger query ready_for_reviewed_answer; taper and
+sign queries remain held for documented conflicts or unreviewed diagrams.
+Sampled source-level extraction flags updated; individual-page gates retained.
+Next: finish remaining diagram/table dependencies and bounded model acceptance
+before activation. Do not repeat the passing 34-test suite without a relevant change.
+
 ## Source review batch5 - October25
 
 Figure6D-1 accepted after prose cross-check;13 reviewed page representations.

@@ -205,3 +205,26 @@ and dimensions retained. Correction3 still not answer-eligible. Flagger packet
 remains image_review_required. Publisher SHA matches pinned three-page original.
 Evidence: review-20261025/batch5-*. No runtime changes; prior32 DOT tests not
 repeated. No paid model invocation or production deployment.
+
+## October25 - batch6 and explicit correction precedence
+
+PASS:34 focused DOT tests (after new holds, then after user precedence change).
+Second run justified by prompt/policy change. Mock transport confirms correction
+precedence; does not claim live model compliance. Source-review fidelity32 pages;
+3 reviewed pages retain independent conflict holds. Evidence batch6-final-tests.log
+and batch6-final-rebuild/context artifacts. No paid inference or deployment.
+
+### Batch6 final local readiness check
+
+Rebuilt the schema8 index after recording the completed sampled extraction
+reviews through the existing source-review API. The old source-level
+extraction_checked flags were still false; individual page review and issue
+holds remain independently enforced. This does not approve the whole manual.
+
+Final local evidence-packet checks passed: hand signaling flaggers is
+ready_for_reviewed_answer with no unreviewed or held dependencies. Taper lengths
+and variable-speed-limit queries remain needs_clarification with the documented
+source holds/unreviewed diagrams. This is retrieval readiness, not live model
+acceptance. Evidence: batch6-final-rebuild.json, batch6-final-flagger.json,
+batch6-final-taper.json, batch6-final-signs.json and batch6-final-remaining.json
+under the ignored local review-20261025 artifact directory. No paid calls.

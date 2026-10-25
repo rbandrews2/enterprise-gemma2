@@ -136,6 +136,10 @@ class ReasoningTests(unittest.TestCase):
         calls = []
         def handler(request):
             calls.append(request.url.path)
+            prompt = json.loads(request.content)['messages'][0]['content']
+            self.assertIn('known-errors companions override', prompt)
+            self.assertIn('cite the correction page', prompt)
+            self.assertIn('provisional corrections', prompt)
             return httpx.Response(200, json={'count': 30000, 'max_model_len': 32767})
         async def token(origin): return 'test.test.test'
         model = GuidelinesGemma(httpx.MockTransport(handler), token)
@@ -281,3 +285,37 @@ class ReplacementTextTests(unittest.TestCase):
         self.assertTrue(page['page_reviewed'])
         self.assertEqual(page['text_basis'], 'replacement_transcription')
         self.assertNotIn('markings shall use reviewed', page['text'])
+
+
+class SourceUncertaintyTests(unittest.TestCase):
+    setUp = ReasoningTests.setUp
+    tearDown = ReasoningTests.tearDown
+
+    def test_reviewed_page_is_held_and_hold_survives_packaging(self):
+        from services.v2.knowledge.store import IndexUnavailable
+        from scripts.package_source_library import package, verify
+        ReasoningTests.reviewed(self)
+        path = self.store.data/'revisions'/self.source.id/self.revision/'page-issues.json'
+        note = 'Synthetic conflicting values remain unresolved; no value may be chosen.'
+        path.write_text(json.dumps({'1': [note]}), encoding='utf-8')
+        with self.assertRaises(IndexUnavailable): self.index.connect()
+        self.index.rebuild()
+        packet = self.index.context(fixture.query(query='yellow centerline'))
+        self.assertNotEqual(packet['status'], 'ready_for_reviewed_answer')
+        page = next(p for p in packet['evidence'] if p['page'] == 1)
+        self.assertTrue(page['page_reviewed'])
+        self.assertFalse(page['answer_eligible'])
+        self.assertEqual(page['source_uncertainties'], [note])
+        self.assertIn('discrepancies', str(packet['warnings']))
+        target = self.root/'snapshot'; package(self.store, target); verify(target)
+        copied = ManualIndex(Store(target, {self.source.id: self.source}))
+        with closing(copied.connect()) as db:
+            page = copied.record(db.execute('SELECT * FROM pages WHERE page=1').fetchone(), fixture.query().as_of)
+        self.assertFalse(page['answer_eligible'])
+        self.assertEqual(page['source_uncertainties'], [note])
+
+    def test_malformed_hold_fails_closed(self):
+        path = self.store.data/'revisions'/self.source.id/self.revision/'page-issues.json'
+        for value in ({'1': []}, {'0': ['Unresolved synthetic issue with source']}, {'1': 'not a list'}, []):
+            path.write_text(json.dumps(value), encoding='utf-8')
+            with self.subTest(value=value), self.assertRaises(ValueError): self.index.rebuild()

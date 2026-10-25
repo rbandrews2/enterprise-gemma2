@@ -193,3 +193,66 @@ These are actual unreviewed context pages from batch4 packets, not a claim that
 reviewing one remaining table finishes all source coverage. Next prioritize the
 flagger continuation39-41 and cross-reference applicability. Preserve unresolved
 source uncertainty. No customer communications, paid model calls or live changes.
+
+## Batch6 design - source uncertainty holds
+
+Add revision-bound page-issues.json: physical page to list of unresolved issue
+notes. Validate page keys and nonempty bounded notes. Include it in index basis
+and source packaging. Expose notes in evidence; any issue makes answer_eligible
+false even if transcription fidelity was reviewed. Context explicitly explains
+source disagreement. No issue auto-resolution or mutation of original reviews.
+Derivative index schema8 requires rebuild; no customer DB migration. Rollback
+must keep Ask Atlas off or restore the matching prior snapshot; older readers
+cannot safely ignore new holds. Tests cover review-vs-eligibility, staleness,
+packaging and malformed issue rejection. No public activation in this task.
+
+## Batch6 completed work and user correction-precedence decision
+
+Visually inspected all24 queued dependency pages. Accepted18 additional VWAPM
+pages:11,20,21,22,27,28,39,40,41,47,50,51,54,134,135,141,143,144.
+Page21 had invisible neighboring tables: removed those, retained visible6B-V2.
+Pages11/28/41/143 had extracted control characters in hyphenated words: repaired
+against image. Figure6B-2 on22 received spatial label mapping. Other pages retained
+all source paragraphs, modal distinctions and cross-references.
+
+User explicitly confirmed known-errors data overrides corresponding original
+claims. Implemented correction precedence in prompt and evidence packet; cite
+correction, keep original for traceability, do not treat a resolved replacement
+as an unresolved conflict. Provisional notes remain provisional. Rechecked all110
+cells of known-errors3 and accepted exact published values, without smoothing or
+interpolation. Removed earlier non-monotonicity hold with recorded user decision
+in page-issues-history.json; prior withdrawal history preserved.32 total reviewed
+page representations now, including3 reviewed pages held for other source conflicts.
+
+Distinct unresolved conflicts not resolved by that replacement table:
+- VWAPM25 vs157: shoulder taper1/3 L versus L; shifted minimum note differs.
+- VWAPM26 vs158:45mph/4ft shift180 versus200 in purported duplicate tables.
+- VWAPM48 vs50/51: drawing plaque code and rounding annotation disagree with prose.
+-142 explicitly marked Known Error (FHWA); sign code differs from preceding prose.
+-159: <40mph versus <=40mph in another source; downstream NTRS dimension ambiguous.
+Unreviewed diagram descriptions48/49/142 remain;157/158/159 deduplicated/staged but
+not approved. New revision-bound issues hold affected pages even when extraction
+is reviewed. This is separate from correction precedence and never promotes a
+known explicit replacement back to an unresolved base-manual disagreement.
+
+34 focused DOT tests passed after the precedence change. Synthetic mocked transport
+checks prompt policy; no paid model output test has run. New uncertainty checks
+cover reviewed-but-held pages, stale indexes, malformed holds and snapshot retention.
+Local artifacts batch6-* preserve comparisons, holds, rebuild and context results.
+Source originals/sidecars remain ignored and require snapshot packaging for release.
+No PostgreSQL schema change, customer sends, live deployment or paid inference.
+
+### Batch6 final local readiness check
+
+Rebuilt the schema8 index after recording the completed sampled extraction
+reviews through the existing source-review API. The old source-level
+extraction_checked flags were still false; individual page review and issue
+holds remain independently enforced. This does not approve the whole manual.
+
+Final local evidence-packet checks passed: hand signaling flaggers is
+ready_for_reviewed_answer with no unreviewed or held dependencies. Taper lengths
+and variable-speed-limit queries remain needs_clarification with the documented
+source holds/unreviewed diagrams. This is retrieval readiness, not live model
+acceptance. Evidence: batch6-final-rebuild.json, batch6-final-flagger.json,
+batch6-final-taper.json, batch6-final-signs.json and batch6-final-remaining.json
+under the ignored local review-20261025 artifact directory. No paid calls.

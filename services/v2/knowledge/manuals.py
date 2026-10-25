@@ -21,7 +21,7 @@ from .store import IndexUnavailable, Store, write_json
 from .page_text import representation
 
 
-VERSION = 7
+VERSION = 8
 # Whole-section assembly bound, not a claim about token capacity. The serving
 # adapter measures the real chat template with the pinned model tokenizer.
 MAX_CONTEXT_BYTES = 96000
@@ -125,11 +125,17 @@ class ManualIndex:
             if len({rule['formula_id'] for rule in rules}) != len(rules):
                 raise ValueError('Duplicate reviewed formula')
             sidecars = {}
-            for name in ('ocr-pages', 'page-reviews', 'page-transcriptions'):
+            for name in ('ocr-pages', 'page-reviews', 'page-transcriptions', 'page-issues'):
                 path = annotations_path.with_name(name + '.json')
                 if path.exists() and path.stat().st_size > 20 * 1024 * 1024:
                     raise ValueError('Oversized page sidecar')
                 sidecars[name] = json.loads(path.read_text(encoding='utf-8')) if path.exists() else {}
+            issues = sidecars['page-issues']
+            if not isinstance(issues, dict) or any(
+                    not re.fullmatch(r'[1-9][0-9]{0,3}', key) or not isinstance(notes, list)
+                    or not 1 <= len(notes) <= 20 or any(not isinstance(note, str) or not 20 <= len(note) <= 2000 for note in notes)
+                    for key, notes in issues.items()):
+                raise ValueError('Invalid source uncertainty sidecar')
             rows.append({'source': source.model_dump(mode='json'), 'manifest': manifest, 'annotations': annotations, 'formulas': rules, **sidecars})
         return rows
 
@@ -220,6 +226,7 @@ class ManualIndex:
                             metadata = {'source': source, 'extraction_checked': manifest.get('extraction_checked', False),
                                         'review_status': manifest.get('review_status', 'unreviewed'),
                                         'image_review_required': not body_available and not (reviewed and ocr and len(re.sub(r'\W', '', ocr['text'])) >= 20),
+                                        'source_uncertainties': item['page-issues'].get(str(index + 1), []),
                                         'text_basis': 'replacement_transcription' if replacement else 'pdf_plus_ocr' if ocr else 'pdf_text',
                                         'page_reviewed': reviewed, 'ocr_present': bool(ocr), 'page_annotation': annotation,
                                         'section_headings': headings,
@@ -272,9 +279,11 @@ class ManualIndex:
                    applicability_note=source.applicability_note,
                    page_reviewed=metadata.get('page_reviewed', False),
                    text_basis=metadata.get('text_basis', 'pdf_text'),
+                   source_uncertainties=metadata.get('source_uncertainties', []),
                    headings=metadata.get('section_headings', []),
                    answer_eligible=eligible(source, manifest, as_of) and metadata.get('page_reviewed', False)
-                                   and not metadata.get('image_review_required', True),
+                                   and not metadata.get('image_review_required', True)
+                                   and not metadata.get('source_uncertainties'),
                    candidate_only=True, approved_for_field_use=False)
         row['captions'] = [line for line in row['captions'].splitlines() if not line.startswith('Search tags:')]
         return row
@@ -352,7 +361,8 @@ class ManualIndex:
         packet = {'schema_version': 1, 'status': 'no_evidence', 'question': request.query,
                   'authority': request.authority, 'region': request.region, 'as_of': str(request.as_of),
                   'evidence': [], 'formulas': [], 'warnings': [], 'requirements_determined': False,
-                  'approved_for_field_use': False}
+                  'approved_for_field_use': False,
+                  'correction_policy': 'Explicit pinned known-errors replacements take precedence over corresponding base-manual content; retain originals for traceability. Provisional or unspecified changes remain unresolved.'}
         seen, incomplete = set(), False
         heading_terms = list(dict.fromkeys(t.lower().rstrip('s') for t in re.findall(r'[A-Za-z]+', request.query)
                                           if t.lower() not in STOP and len(t) > 3))[:8]
@@ -434,6 +444,8 @@ class ManualIndex:
                 seen.update(p['citation_id'] for p in group)
         if packet['evidence']:
             packet['status'] = 'ready_for_reviewed_answer' if all(p['answer_eligible'] for p in packet['evidence']) else 'source_review_required'
+            if any(p['source_uncertainties'] for p in packet['evidence']):
+                packet['warnings'].append('Source discrepancies remain unresolved; do not present affected values as established requirements. See each page source_uncertainties.')
             if found.get('match_quality') == 'partial_keywords':
                 packet['warnings'].append('Search terms matched partially. Atlas must assess relevance from the complete source context and ask for clarification if it does not answer the question.')
             if any(p['image_review_required'] for p in packet['evidence']):
