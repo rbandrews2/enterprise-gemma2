@@ -1,5 +1,24 @@
 # WZOS remaining tasks - current October 20, 2026
 
+## Diagnostic acceptance result - October 25, 2026
+
+User authorized one diagnostic run. Isolated adapter matched normalized SHA256
+6b4d099fc7cedd21392db4526520b8a855143f5b8cfc7672119b492cf81cccb2 (commit16b85f5).
+One generation attempt completed in66.93s. Actual input22828 tokens, capacity32767;
+completion2009 tokens, total24837, finish_reason=stop, content_present=true.
+Adapter rejected response at validate_draft with JSONDecodeError. Context overflow
+is repaired; output truncation is not the observed cause. Citation/schema validation
+has not run successfully because JSON decoding failed first. Exact formatting cause
+is unknown because raw output was intentionally not retained. Do not claim markdown
+fences, parser tags or a specific provider bug without inspecting evidence.
+
+Cloud artifacts: /home/admin_/atlas-acceptance-6329a06/acceptance-diagnostic.log
+and acceptance-diagnostic-result.json. No automatic retry, IAM change, deployment,
+new workload or customer data. Prior local tests were not repeated.
+Next: repair the structured-response/parser boundary using targeted format evidence;
+keep strict schema, citations and source holds. Do not rerun the same blind check.
+
+
 ## Model context repair - October 25, 2026
 
 ### Bounded cloud result and next checkpoint
