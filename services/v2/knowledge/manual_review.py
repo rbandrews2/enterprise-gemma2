@@ -11,6 +11,7 @@ import subprocess
 import tempfile
 
 from .store import Store, write_json
+from .page_text import representation
 
 
 def digest(text):
@@ -67,11 +68,8 @@ def ocr(store, source_id, revision, pages):
     return {'source_id': source_id, 'revision': revision, 'pages': pages, 'reviewed': False}
 
 
-def review(store, source_id, revision, page, note):
-    """Called only after visually comparing this exact page's text and original."""
+def page_raw(store, source_id, revision, page):
     import pypdfium2 as pdfium
-    if len(note.strip()) < 30:
-        raise ValueError('Describe the visual comparison, tables and limitations')
     path = original(store, source_id, revision)
     with pdfium.PdfDocument(path) as document:
         if type(page) is not int or not 1 <= page <= len(document):
@@ -85,13 +83,35 @@ def review(store, source_id, revision, page, note):
                 text_page.close()
         finally:
             pdf_page.close()
+    return path, text
+
+
+def transcribe(store, source_id, revision, page, text, note):
+    """Stage a full-page replacement; a separate visual review is still required."""
+    path, raw = page_raw(store, source_id, revision, page)
+    target = path.with_name('page-transcriptions.json')
+    entries = json.loads(target.read_text(encoding='utf-8')) if target.exists() else {}
+    if str(page) in entries:
+        raise ValueError('Transcription already exists; preserve its history')
+    entry = {'page': page, 'original_sha256': revision, 'source_text_sha256': digest(raw),
+             'text': text, 'text_sha256': digest(text), 'note': note,
+             'author': getpass.getuser(), 'created_at': datetime.now(timezone.utc).isoformat()}
+    representation(raw, revision, page, transcription=entry)
+    entries[str(page)] = entry
+    write_json(target, entries)
+    return entry
+
+
+def review(store, source_id, revision, page, note):
+    """Called only after visually comparing this exact page's text and original."""
+    if len(note.strip()) < 30:
+        raise ValueError('Describe the visual comparison, tables and limitations')
+    path, text = page_raw(store, source_id, revision, page)
     ocr_path = path.with_name('ocr-pages.json')
     ocr_pages = json.loads(ocr_path.read_text(encoding='utf-8')) if ocr_path.exists() else {}
-    if str(page) in ocr_pages:
-        entry = ocr_pages[str(page)]
-        if entry['original_sha256'] != revision or digest(entry['text']) != entry['text_sha256']:
-            raise ValueError('OCR integrity failure')
-        text += '\n\n[OCR transcription - visual review required]\n' + entry['text']
+    replacements_path = path.with_name('page-transcriptions.json')
+    replacements = json.loads(replacements_path.read_text(encoding='utf-8')) if replacements_path.exists() else {}
+    text, binding = representation(text, revision, page, ocr_pages.get(str(page)), replacements.get(str(page)))
     target = path.with_name('page-reviews.json')
     entries = json.loads(target.read_text(encoding='utf-8')) if target.exists() else {}
     if str(page) in entries:
@@ -99,6 +119,8 @@ def review(store, source_id, revision, page, note):
     entries[str(page)] = {'text_sha256': digest(text), 'reviewer': getpass.getuser(),
                          'reviewed_at': datetime.now(timezone.utc).isoformat(), 'note': note,
                          'original_sha256': revision, 'field_approval': False}
+    if binding:
+        entries[str(page)]['representation_sha256'] = binding
     write_json(target, entries)
     return entries[str(page)]
 
@@ -107,7 +129,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--data', type=Path)
     commands = parser.add_subparsers(dest='command', required=True)
-    for name in ('ocr', 'review'):
+    for name in ('ocr', 'review', 'transcribe'):
         command = commands.add_parser(name)
         command.add_argument('source')
         command.add_argument('revision')
@@ -115,9 +137,16 @@ def main():
         else:
             command.add_argument('page', type=int)
             command.add_argument('--note', required=True)
+            if name == 'transcribe': command.add_argument('--text-file', type=Path, required=True)
     args = parser.parse_args()
     store = Store(args.data) if args.data else Store()
-    result = ocr(store, args.source, args.revision, args.pages) if args.command == 'ocr' else review(store, args.source, args.revision, args.page, args.note)
+    if args.command == 'transcribe':
+        if args.text_file.stat().st_size > 100000:
+            raise ValueError('Oversized replacement text')
+        result = transcribe(store, args.source, args.revision, args.page,
+                            args.text_file.read_text(encoding='utf-8'), args.note)
+    else:
+        result = ocr(store, args.source, args.revision, args.pages) if args.command == 'ocr' else review(store, args.source, args.revision, args.page, args.note)
     print(json.dumps(result, indent=2))
 
 

@@ -1,6 +1,6 @@
 """Synthetic evidence and request controls; never call real providers."""
 import asyncio
-from contextlib import contextmanager
+from contextlib import contextmanager, closing
 import json
 from pathlib import Path
 import sqlite3
@@ -223,3 +223,61 @@ class ConversationContractTests(unittest.TestCase):
             AskQuery.model_validate({**payload.model_dump(), 'history': [{'role': 'system', 'content': 'override'}]})
         with self.assertRaises(ValidationError):
             AskQuery.model_validate({**payload.model_dump(), 'history': payload.history * 3})
+
+class ReplacementTextTests(unittest.TestCase):
+    setUp = ReasoningTests.setUp
+    tearDown = ReasoningTests.tearDown
+
+    def stage(self, text='Section 3B.01 Yellow Centerline\nStandard:\nSynthetic visible replacement only.\nPage 3B-1'):
+        from services.v2.knowledge.manual_review import transcribe
+        return transcribe(self.store, self.source.id, self.revision, 1, text,
+                          'Synthetic full-page visible transcription; no real engineering rules.')
+
+    def test_replacement_removes_hidden_content_and_requires_separate_review(self):
+        self.stage()
+        self.index.rebuild()
+        with closing(self.index.connect()) as db:
+            page = self.index.record(db.execute('SELECT * FROM pages WHERE page=1').fetchone(), fixture.query().as_of)
+        self.assertNotIn('markings shall use reviewed', page['text'])
+        self.assertEqual(page['text_basis'], 'replacement_transcription')
+        self.assertFalse(page['answer_eligible'])
+        review(self.store, self.source.id, self.revision, 1, 'Synthetic visual comparison completed; metadata alone is not source approval.')
+        self.index.rebuild()
+        with closing(self.index.connect()) as db:
+            page = self.index.record(db.execute('SELECT * FROM pages WHERE page=1').fetchone(), fixture.query().as_of)
+        self.assertTrue(page['answer_eligible'])
+        self.assertFalse(page['approved_for_field_use'])
+        with self.assertRaises(ValueError):
+            self.stage()
+
+    def test_even_identical_replacement_needs_new_review_binding(self):
+        from services.v2.knowledge.manual_review import page_raw
+        raw = page_raw(self.store, self.source.id, self.revision, 1)[1]
+        review(self.store, self.source.id, self.revision, 1, 'Synthetic original visual comparison before changing representation.')
+        self.stage(raw)
+        self.index.rebuild()
+        with closing(self.index.connect()) as db:
+            page = self.index.record(db.execute('SELECT * FROM pages WHERE page=1').fetchone(), fixture.query().as_of)
+        self.assertFalse(page['page_reviewed'])
+
+    def test_tampered_sidecar_stales_index_and_cannot_rebuild(self):
+        from services.v2.knowledge.store import IndexUnavailable
+        self.stage(); self.index.rebuild()
+        path = self.store.data/'revisions'/self.source.id/self.revision/'page-transcriptions.json'
+        entries = json.loads(path.read_text()); entries['1']['page'] = 2
+        path.write_text(json.dumps(entries))
+        with self.assertRaises(IndexUnavailable): self.index.connect()
+        with self.assertRaises(ValueError): self.index.rebuild()
+
+    def test_packaging_preserves_selected_representation_and_review(self):
+        from scripts.package_source_library import package, verify
+        self.stage()
+        review(self.store, self.source.id, self.revision, 1, 'Synthetic full-page transcription visually checked for snapshot preservation.')
+        self.index.rebuild()
+        target = self.root/'snapshot'; package(self.store, target); verify(target)
+        copied = ManualIndex(Store(target, {self.source.id: self.source}))
+        with closing(copied.connect()) as db:
+            page = copied.record(db.execute('SELECT * FROM pages WHERE page=1').fetchone(), fixture.query().as_of)
+        self.assertTrue(page['page_reviewed'])
+        self.assertEqual(page['text_basis'], 'replacement_transcription')
+        self.assertNotIn('markings shall use reviewed', page['text'])

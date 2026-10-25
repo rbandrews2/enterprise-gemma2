@@ -100,3 +100,31 @@ Next: implement a provenance-bound reviewed replacement-text/structured-table
 mechanism (not additive OCR for hidden-text pages), with invalidation checks;
 then repair25-26,52-53 and diagram descriptions before model acceptance. Preserve
 unresolved source anomalies rather than silently fixing official documents.
+
+## Batch3 - replacement text and taper tables
+
+Added provenance-bound full-page replacement transcriptions. Each entry binds the
+original PDF hash, physical page, raw extraction hash, replacement text hash and
+metadata. A separate visual review binds that exact representation; any change
+invalidates review. Replacement happens before heading/caption extraction, so
+invisible PDF objects cannot leak back through metadata. Existing OCR remains
+supported. Packaging includes replacements and review-withdrawal history.
+
+Visually compared VWAPM physical pages25-26 (printed15-16) against their rendered
+originals. Accepted replacement transcription fidelity for all visible table rows,
+merged-column scope, formulas, notes and surrounding prose. Hidden objects and
+repeated prior-page text excluded. Nine page transcriptions now accepted overall;
+this is not engineering approval or approval of a complete operational procedure.
+Original PDFs remain unchanged. Ignored artifacts: review-20261025/batch3-* and
+revision-bound page-transcriptions.json/page-reviews.json.
+
+Focused validation: 16 reasoning tests and16 manual tests passed, including four
+new replacement/invalidation/packaging cases. Earlier new-test Windows temporary
+file cleanup failures were repaired by explicitly closing SQLite connections.
+No paid model calls, production changes, unrelated suites or customer DB changes.
+
+Disposable index format is now7; rebuild before use. Rollback to older code must
+not rebuild these sources without replacement support: keep Ask Atlas disabled or
+restore its matching earlier source snapshot/index. Never discard the originals
+or review history. Remaining: diagram semantics (24/35), sign tables52-53 and
+unresolved correction-table anomaly, then bounded model acceptance.

@@ -178,3 +178,13 @@ independent checks; the successful scenario does not silently close them.
 Track actual completion and evidence in OPERATIONAL_FOLLOWUPS_20261022.md and the
 prelaunch checklists. Use this ledger to avoid repeating unrelated feature suites
 for notification routing, unchanged-image secret pinning or a scoped IAM repair.
+
+## October25 - source replacement batch3
+
+PASS: test_dot_reasoning.py16/16 and test_dot_manuals.py16/16. Includes four new
+replacement integrity, review invalidation and snapshot cases. Logs preserved in
+.local-data/dot-manuals/review-20261025/batch3-*. No cloud inference or deployment.
+
+PASS: real local index rebuilt at schema7; both replacement pages reviewed and
+selected. Flagger and taper context checks remain blocked pending remaining source
+review. Evidence: batch3-rebuild.json, batch3-flagger.json, batch3-taper.json.

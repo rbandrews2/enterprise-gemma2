@@ -18,9 +18,10 @@ from pydantic import Field, model_validator
 
 from shared.contracts import StrictModel
 from .store import IndexUnavailable, Store, write_json
+from .page_text import representation
 
 
-VERSION = 6
+VERSION = 7
 # Whole-section assembly bound, not a claim about token capacity. The serving
 # adapter measures the real chat template with the pinned model tokenizer.
 MAX_CONTEXT_BYTES = 96000
@@ -124,7 +125,7 @@ class ManualIndex:
             if len({rule['formula_id'] for rule in rules}) != len(rules):
                 raise ValueError('Duplicate reviewed formula')
             sidecars = {}
-            for name in ('ocr-pages', 'page-reviews'):
+            for name in ('ocr-pages', 'page-reviews', 'page-transcriptions'):
                 path = annotations_path.with_name(name + '.json')
                 if path.exists() and path.stat().st_size > 20 * 1024 * 1024:
                     raise ValueError('Oversized page sidecar')
@@ -170,7 +171,13 @@ class ManualIndex:
                                     textpage.close()
                             finally:
                                 page.close()
-                            lines = text.splitlines()
+                            raw_text = text
+                            replacement = item['page-transcriptions'].get(str(index + 1))
+                            ocr = item['ocr-pages'].get(str(index + 1))
+                            # Replacement precedes indexing/headings: invisible PDF
+                            # objects must not leak back through retrieval metadata.
+                            text, binding = representation(text, revision, index + 1, ocr, replacement)
+                            lines = (text if replacement else raw_text).splitlines()
                             headings = [line.strip() for line in lines if SECTION.match(line) and not re.search(r'\.{3,}', line)]
                             # A repeated running chapter header must not terminate
                             # a subsection; prose references such as "Section 6N.01),"
@@ -205,19 +212,15 @@ class ManualIndex:
                             if not body_available:
                                 gaps.append(index + 1)
                             diagrams += bool(captions)
-                            ocr = item['ocr-pages'].get(str(index + 1))
-                            if ocr:
-                                if (ocr['original_sha256'] != revision or not isinstance(ocr['text'], str)
-                                        or hashlib.sha256(ocr['text'].encode()).hexdigest() != ocr['text_sha256']):
-                                    raise ValueError('OCR sidecar integrity failure')
-                                text = text + '\n\n[OCR transcription - visual review required]\n' + ocr['text']
                             review = item['page-reviews'].get(str(index + 1))
                             reviewed = bool(review and review.get('original_sha256') == revision
                                             and review.get('text_sha256') == hashlib.sha256(text.encode()).hexdigest()
+                                            and review.get('representation_sha256') == binding
                                             and review.get('reviewer') and len(review.get('note', '')) >= 30)
                             metadata = {'source': source, 'extraction_checked': manifest.get('extraction_checked', False),
                                         'review_status': manifest.get('review_status', 'unreviewed'),
                                         'image_review_required': not body_available and not (reviewed and ocr and len(re.sub(r'\W', '', ocr['text'])) >= 20),
+                                        'text_basis': 'replacement_transcription' if replacement else 'pdf_plus_ocr' if ocr else 'pdf_text',
                                         'page_reviewed': reviewed, 'ocr_present': bool(ocr), 'page_annotation': annotation,
                                         'section_headings': headings,
                                         'is_contents': bool(re.search(r'INDEX OF SHEETS|STANDARD TITLE PAGE|TABLE OF CONTENTS|\.{3,}', text, re.I)
@@ -268,6 +271,7 @@ class ManualIndex:
                    page_annotation=metadata.get('page_annotation'),
                    applicability_note=source.applicability_note,
                    page_reviewed=metadata.get('page_reviewed', False),
+                   text_basis=metadata.get('text_basis', 'pdf_text'),
                    headings=metadata.get('section_headings', []),
                    answer_eligible=eligible(source, manifest, as_of) and metadata.get('page_reviewed', False)
                                    and not metadata.get('image_review_required', True),

@@ -1,5 +1,11 @@
 # WZOS remaining tasks - current October 20, 2026
 
+## Source review batch3 - October25
+
+Replacement-text support implemented; VWAPM25-26 visually verified (nine total
+page transcriptions).32 focused DOT tests passed. See ASK_ATLAS_SOURCE_REVIEW_20261025.md.
+Remaining: diagrams24/35, sign tables52-53 and correction anomaly; no live activation.
+
 ## Source review batch2 - October25
 
 Five more page transcriptions accepted (seven total). Twelve pages inspected;
