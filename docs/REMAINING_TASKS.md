@@ -1,5 +1,23 @@
 # WZOS remaining tasks - current October 20, 2026
 
+## Verified source release package - October 25, 2026
+
+Built .local-data/atlas-release-sources-20261025 (ignored local artifact).
+Verified all52 file hashes, 173573936 bytes. Nine selected page records retain
+review bindings: page49 eligible; all eight documented VWAPM holds remain blocked.
+Three packaged flagger queries retain ready_for_reviewed_answer status. Evidence:
+.local-data/dot-manuals/review-20261025/package-verification.json.
+No model acceptance or field approval implied. Do not rebuild/repeat these checks
+unless source data or index code changes. Snapshot must be transferred for deployment;
+Git does not contain source PDFs or these local artifacts.
+
+Fresh Cloud Shell cloudshell-12336 confirms project enterprise-gemma2 but has no
+active CLI account; services.list failed authentication. Login initiated in browser.
+Do not use the old terminal's service/flag output as current state. Next: complete
+CLI sign-in, read current private model/service configuration and authorized test
+path, then run bounded conversational acceptance. No model call or cloud deployment
+performed this turn. No new IAM access granted.
+
 ## Ask Atlas answer-path readiness - October 25, 2026
 
 Fixed a gap in VDOT notice delivery: held source packets never reach Gemma, so
