@@ -16,7 +16,7 @@ from services.v2.knowledge.manual_review import review
 from services.v2.knowledge.store import Store
 from services.workspace_preview.atlas_requests import AtlasRequests
 from services.workspace_preview.dot_calculations import Calculation, arithmetic, verify_calculations
-from services.workspace_preview.dot_knowledge import GuidelinesGemma, blocked_source_response, model_context
+from services.workspace_preview.dot_knowledge import GuidelinesGemma, blocked_source_response, model_context, model_messages, model_schema, validate_draft, evidence_passages, resolve_passage_draft
 from services.workspace_preview.intelligence import ModelUnavailable
 import test_dot_manuals as fixture
 
@@ -146,8 +146,8 @@ class ReasoningTests(unittest.TestCase):
             self.assertIn('notice is not a fallback for difficult questions', prompt)
             self.assertIn('only when the supplied evidence verifies their currency', prompt)
             self.assertIn('final answer must be one JSON object only', prompt)
-            self.assertIn('Never combine text from different pages into one quote', prompt)
-            self.assertIn('one continuous verbatim passage', prompt)
+            self.assertIn('server attaches that exact source passage', prompt)
+            self.assertIn('condition or exception continues in another passage', prompt)
             return httpx.Response(200, json={'count': 30000, 'max_model_len': 32767})
         async def token(origin): return 'test.test.test'
         model = GuidelinesGemma(httpx.MockTransport(handler), token)
@@ -177,6 +177,64 @@ class ReasoningTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'Inconsistent source'):
             model_context(packet)
 
+    def test_reference_prefix_is_stable_across_questions_history_and_ranking(self):
+        self.reviewed()
+        packet = self.index.context(fixture.query())
+        original = model_messages(packet)
+        changed = {**packet, 'question': 'Another question', 'as_of': '2026-10-26',
+                   'conversation_history': [{'role': 'user', 'content': 'Private follow-up'}],
+                   'evidence': list(reversed(packet['evidence']))}
+        followup = model_messages(changed)
+        self.assertEqual(original[0], followup[0])
+        self.assertNotIn('Private follow-up', followup[0]['content'])
+        self.assertIn('Private follow-up', followup[1]['content'])
+        self.assertNotEqual(original[1], followup[1])
+        evidence = json.loads(original[0]['content'])['reference_context']['evidence']
+        self.assertEqual({p['citation_id']:''.join(s['text'] for s in p['passages']) for p in evidence},
+                         {p['citation_id']:p['text'] for p in packet['evidence']})
+
+    def test_boundary_reference_scan_preserves_continuing_exceptions(self):
+        from services.v2.knowledge.manuals import continuation_text
+        text = 'Chapter 6D. Flaggers\nException continues; see Section 6O.01.\nSection 6E.01 New topic\nSee Section 6G.08.'
+        self.assertEqual(continuation_text(text), 'Chapter 6D. Flaggers\nException continues; see Section 6O.01.\n')
+        self.assertEqual(continuation_text('Continuing text without a heading.'), 'Continuing text without a heading.')
+
+    def test_schema_limits_ids_and_validator_rejects_printed_page_substitution(self):
+        packet = {'evidence': [
+            {'citation_id': 'manual:revision:37', 'label': '27', 'answer_eligible': True,
+             'text': 'Synthetic continuous exact source passage.'},
+            {'citation_id': 'manual:revision:38', 'answer_eligible': False, 'text': 'Unreviewed.'}]}
+        self.assertEqual(model_schema(packet)['$defs']['PassageClaim']['properties']['passage_id']['enum'],
+                         ['e001p001'])
+        value = {'status': 'draft', 'claims': [{'text': 'Synthetic explanation',
+                 'citation_id': 'manual:revision:27', 'supporting_quote': packet['evidence'][0]['text']}],
+                 'unresolved': [], 'calculations': []}
+        with self.assertRaisesRegex(ValueError, 'Unknown or unreviewed'):
+            validate_draft(value, packet)
+        value['claims'][0]['citation_id'] = 'manual:revision:37'
+        self.assertEqual(validate_draft(value, packet).claims[0].citation_id, 'manual:revision:37')
+        with self.assertRaisesRegex(ValueError, 'No reviewed'):
+            model_schema({'evidence': [packet['evidence'][1]]})
+
+    def test_passages_are_lossless_bounded_and_resolve_only_reviewed_page_text(self):
+        text = ('Synthetic sentence with condition.\n' * 80) + ('x' * 2100)
+        packet = {'evidence': [{'citation_id': 's:36', 'answer_eligible': True, 'text': text},
+                               {'citation_id': 's:37', 'answer_eligible': True, 'text': 'Exception continues on the next page.'},
+                               {'citation_id': 's:38', 'answer_eligible': False, 'text': 'Unreviewed source material.'}]}
+        passages = evidence_passages(packet)
+        self.assertEqual(''.join(p['text'] for p in passages.values() if p['citation_id']=='s:36'), text)
+        self.assertTrue(all(len(p['text']) <= 1000 for p in passages.values()))
+        self.assertEqual(passages, evidence_passages({**packet, 'evidence': list(reversed(packet['evidence']))}))
+        value = {'status': 'draft', 'claims': [{'text': 'Synthetic condition', 'passage_id': 'e001p001'},
+                  {'text': 'Synthetic exception', 'passage_id': 'e002p001'}], 'unresolved': [], 'calculations': []}
+        result = resolve_passage_draft(value, packet)
+        self.assertEqual(result.claims[0].supporting_quote, passages['e001p001']['text'].strip())
+        self.assertEqual(result.claims[1].citation_id, 's:37')
+        for invalid in ('e003p001', 'unknown', 's:27'):
+            value['claims'][0]['passage_id'] = invalid
+            with self.assertRaisesRegex(ValueError, 'Unknown or unreviewed'):
+                resolve_passage_draft(value, packet)
+
     def test_output_limit_reports_safe_reason_without_logging_content(self):
         self.reviewed()
         def handler(request):
@@ -185,6 +243,7 @@ class ReasoningTests(unittest.TestCase):
             body = json.loads(request.content)
             self.assertIs(body['skip_special_tokens'], False)
             self.assertIs(body['chat_template_kwargs']['enable_thinking'], True)
+            self.assertTrue(body['response_format']['json_schema']['schema']['$defs']['PassageClaim']['properties']['passage_id']['enum'])
             return httpx.Response(200, json={'choices': [{'finish_reason': 'length',
                 'message': {'content': 'PRIVATE_MODEL_CONTENT'}}]})
         async def token(origin): return 'test.test.test'

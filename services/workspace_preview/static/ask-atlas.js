@@ -3,6 +3,7 @@
  const node=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
  const user=()=>window.wzosClock?.getSession(),nav=document.getElementById('atlas-nav');
  const root=node('section',undefined,'panel ask-atlas');root.id='ask-atlas-view';root.hidden=true;document.getElementById('main').append(root);
+ let progressTimer=null;
  let sessionEpoch=0,epoch=0,controller=null,currentId=null,active=false,busy=false,config={},stream=null,recorder=null,chunks=[],timer=null,cancelled=false,history=[];
  const heading=node('h1','Ask Atlas'),intro=node('p','Work Zone Guardian · Ask about Virginia work-zone guidelines. Read the answer and check its cited sources.'),question=node('textarea'),date=node('input'),status=node('p'),answer=node('div'),references=node('div');
  question.maxLength=500;question.rows=4;question.placeholder='What do I need to know about this operation?';date.type='date';
@@ -17,7 +18,7 @@
  question.oninput=()=>{window.speechSynthesis?.cancel();};
  const reset=button('New conversation',()=>{clear();});actions.append(reset);
  date.onchange=()=>{history=[];answer.replaceChildren();references.replaceChildren();read.hidden=silence.hidden=true;};
- function lock(value){busy=value;reset.disabled=value;ask.title=!config.enabled?'Atlas DOT library is not activated.':!config.inference_enabled?'Atlas answers are not activated. Find references searches documents only.':'';ask.disabled=value||!config.enabled||!config.inference_enabled;search.disabled=value||!config.enabled;record.disabled=value||!config.enabled||!config.speech_enabled;question.disabled=date.disabled=value;cancel.hidden=!value;stop.disabled=cancelRecording.disabled=!stream;stop.hidden=cancelRecording.hidden=clock.hidden=!stream;}
+ function lock(value){if(!value){clearInterval(progressTimer);progressTimer=null;}busy=value;reset.disabled=value;ask.title=!config.enabled?'Atlas DOT library is not activated.':!config.inference_enabled?'Atlas answers are not activated. Find references searches documents only.':'';ask.disabled=value||!config.enabled||!config.inference_enabled;search.disabled=value||!config.enabled;record.disabled=value||!config.enabled||!config.speech_enabled;question.disabled=date.disabled=value;cancel.hidden=!value;stop.disabled=cancelRecording.disabled=!stream;stop.hidden=cancelRecording.hidden=clock.hidden=!stream;}
  async function api(path,options={}){
   const configuration=path==='/api/atlas/dot/config'||path.endsWith('/cancel'),generation=configuration?sessionEpoch:epoch,identity=user();const auth=await window.wzosAccount.headers();if(generation!==(configuration?sessionEpoch:epoch))throw Error('Account changed.');
   const response=await fetch(path,{...options,cache:'no-store',headers:{'Content-Type':'application/json','X-Preview-Actor':identity?.id,...auth,...options.headers}});
@@ -50,7 +51,8 @@
  async function run(kind){
   if(busy)return;if(question.value.trim().length>500){status.textContent='Shorten your question to 500 characters.';return;}if(!question.value.trim()){status.textContent='Enter or record a question first.';return;}if(!navigator.onLine){status.textContent='Connect to ask Atlas. Your question stays here.';return;}
   window.speechSynthesis?.cancel();answer.replaceChildren();references.replaceChildren();read.hidden=silence.hidden=true;
-  const generation=epoch,asked=question.value.trim();currentId=crypto.randomUUID();controller=new AbortController();lock(true);status.textContent=kind==='ask'?'Atlas is reviewing the source context…':'Finding references…';
+  const generation=epoch,asked=question.value.trim();currentId=crypto.randomUUID();controller=new AbortController();lock(true);status.textContent=kind==='ask'?'Atlas is reviewing the references and preparing your answer…':'Finding references…';
+  if(kind==='ask'){const started=Date.now();progressTimer=setInterval(()=>{if(generation===epoch&&busy)status.textContent=`Atlas is still working · ${Math.floor((Date.now()-started)/1000)} seconds. You can stop waiting without losing your question.`;},15000);}
   try{const data=await api('/api/atlas/dot/'+kind,{method:'POST',signal:controller.signal,body:JSON.stringify({query:asked,authority:'VDOT',region:'VA',as_of:date.value,...(kind==='ask'?{request_id:currentId,history}:{})})});if(generation===epoch){render(data);if(kind==='ask'&&data.draft){const reply=[...data.draft.claims.map(c=>c.text),...data.draft.unresolved].join('\n');history=[...history,{role:'user',content:asked},{role:'assistant',content:reply.slice(0,1000)||'More details needed.'}].slice(-4);question.value='';question.placeholder='Ask a follow-up, or start a new conversation.';}}}
   catch(error){if(generation===epoch)status.textContent=error.message;}finally{if(generation===epoch){currentId=null;controller=null;lock(false);}}
  }

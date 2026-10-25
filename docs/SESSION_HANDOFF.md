@@ -1,5 +1,22 @@
 # WZOS current session handoff - October 18, 2026
 
+## Ask Atlas speed repair - October 25, 2026
+
+Implemented stable public-reference prefixes, narrower boundary-page reference hops,
+lossless source-passage selection, and elapsed waiting feedback with cancellation.
+The repaired hand-signal answer passed in58.91s versus baseline80.86s (single trials);
+22510input/1395output tokens. Contextual follow-up PASS29.15s,22738input/665output.
+No cache-hit metric or guaranteed latency claim. Final adapter5a555277... matches cloud.
+Two earlier optimized attempts were rejected for invalid page IDs/cross-page quotes;
+root causes were repaired instead of relaxing validation. Public response unchanged.
+41 focused Python cases passed across the focused run and two corrected-fixture
+reruns;7Node cases passed; synthetic browser cancellation/progress checked.
+See docs/ASK_ATLAS_SPEED_20261025.md for exact hashes, artifacts and rollback.
+No new infrastructure/IAM/hosting settings, customer sends, DDL or live deployment.
+Required integrated release gates and in-app acceptance remain before deployment;
+38 reviewed page representations/8 source holds remain unchanged.
+
+
 ## Ask Atlas structured-answer acceptance passed - October 25, 2026
 
 Completed the formatting/citation repair and proceeded through the next checks.

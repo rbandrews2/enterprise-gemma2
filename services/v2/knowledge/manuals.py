@@ -38,6 +38,17 @@ def packed(value):
     return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(',', ':'))
 
 
+def continuation_text(text):
+    """Only preceding-section content on a trailing boundary page drives reference hops."""
+    lines = text.splitlines(keepends=True)
+    prefix = []
+    for line in lines:
+        if re.match(r'^\s*Section\s+\d+[A-Z]?(?:\.\d+)?\s+', line, re.I):
+            break
+        prefix.append(line)
+    return ''.join(prefix)
+
+
 class ManualQuery(StrictModel):
     query: str = Field(min_length=2, max_length=500)
     authority: str = Field(pattern=r'^[A-Z][A-Z0-9_-]{1,19}$')
@@ -389,7 +400,11 @@ class ManualIndex:
                 group = [self.record(p, request.as_of) for p in pages]
                 # One explicit reference hop brings cited sections and tables
                 # into the prompt instead of asking Gemma to recall their values.
-                text = '\n'.join(page['text'] for page in group)
+                # The extra boundary page remains whole in the evidence, but a new
+                # section on that page must not recursively pull unrelated material.
+                text = '\n'.join(continuation_text(page['text'])
+                                 if hit['section'] and page['page'] > bounds[1]
+                                 else page['text'] for page in group)
                 section_refs = set(re.findall(r'\bSection\s+(\d+[A-Z]\.\d{2}[A-Z]?)\b', text, re.I))
                 figure_refs = set(re.findall(r'\b(Figure|Table)\s+(\d+[A-Z](?:[.\-][A-Z0-9]+)+)', text, re.I))
                 related = {}

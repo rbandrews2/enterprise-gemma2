@@ -1,6 +1,7 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 const flush=()=>new Promise(resolve=>setImmediate(resolve));
-function setup({getMedia}={}){
+function setup({getMedia,fakeTimers=false}={}){
+ const intervals=new Map();let nextTimer=0;
  class Node{constructor(tag,text=''){this.tag=tag;this.textContent=text;this.children=[];this.value='';this.hidden=false;this.disabled=false;}append(...nodes){this.children.push(...nodes);}prepend(...nodes){this.children.unshift(...nodes);}replaceChildren(...nodes){this.children=nodes;}setAttribute(){}remove(){this.removed=true;}set innerHTML(value){throw Error('Unsafe HTML rendering');}}
  const main=new Node('main'),nav=new Node('button'),events={},calls=[],spoken=[],captures=[];nav.id='atlas-nav';let session={id:'a',organization_id:'alpha',edition:'enterprise'},reply=null;
  const all=node=>[node,...node.children.flatMap(all)];
@@ -10,9 +11,9 @@ function setup({getMedia}={}){
  class Recorder{constructor(){captures.push(this);}}
  const window={MediaRecorder:Recorder,wzosDeviceSetup:{status:async()=> 'granted',remembered:()=>true},wzosClock:{getSession:()=>session},wzosAccount:{headers:async()=>({})},showWzosView:view=>{emit('wzos:view',view);return true;},addEventListener(){},speechSynthesis,SpeechSynthesisUtterance:class{constructor(text){this.text=text;}}};
  const fetch=async(path,options)=>{calls.push({path,options});const body=path.endsWith('/config')?{enabled:true,inference_enabled:true,speech_enabled:!!getMedia}:reply?await reply(path):{results:[]};return{ok:true,json:async()=>body};};
- vm.runInNewContext(fs.readFileSync('services/workspace_preview/static/ask-atlas.js','utf8'),{window,document,fetch,MediaRecorder:Recorder,navigator:{onLine:true,mediaDevices:{getUserMedia:getMedia}},crypto:require('node:crypto').webcrypto,AbortController,URL,Date,speechSynthesis,SpeechSynthesisUtterance:window.SpeechSynthesisUtterance,MutationObserver:class{observe(){}},setInterval,clearInterval});
+ vm.runInNewContext(fs.readFileSync('services/workspace_preview/static/ask-atlas.js','utf8'),{window,document,fetch,MediaRecorder:Recorder,navigator:{onLine:true,mediaDevices:{getUserMedia:getMedia}},crypto:require('node:crypto').webcrypto,AbortController,URL,Date,speechSynthesis,SpeechSynthesisUtterance:window.SpeechSynthesisUtterance,MutationObserver:class{observe(){}},setInterval:fakeTimers?fn=>{intervals.set(++nextTimer,fn);return nextTimer;}:setInterval,clearInterval:fakeTimers?id=>intervals.delete(id):clearInterval});
  const find=text=>all(main).find(n=>n.textContent===text),question=()=>all(main).find(n=>n.tag==='textarea');
- return{window,document,main,nav,calls,spoken,captures,all,emit,find,question,setReply:fn=>reply=fn,setSession:value=>session=value};
+ return{intervals,window,document,main,nav,calls,spoken,captures,all,emit,find,question,setReply:fn=>reply=fn,setSession:value=>session=value};
 }
 test('Enterprise opens the separate page; Core cannot open or fetch its config',async()=>{
  const h=setup();await h.emit('wzos:session');assert.match(h.nav.textContent,/Work Zone Guardian/);assert.equal(h.window.wzosAskAtlas.open(),true);assert.equal(h.question().maxLength,500);
@@ -66,4 +67,15 @@ test('recorded conflict notice shows source links without a fabricated answer',a
  assert.equal(h.find('Affected manual').href,'https://example.test/manual#page=25');
  assert.equal(h.find('Read aloud').hidden,true);
  assert.equal(h.question().value,'A disputed item');
+});
+
+test('waiting feedback remains cancellable and its timer stops on cancellation',async()=>{
+ const h=setup({fakeTimers:true});await h.emit('wzos:session');h.window.wzosAskAtlas.open();h.question().value='Keep my question';let resolve;
+ h.setReply(path=>path.endsWith('/cancel')?Promise.resolve({state:'cancel_requested'}):new Promise(r=>resolve=r));
+ const pending=h.all(h.main).find(n=>n.tag==='button'&&n.textContent==='Ask Atlas').onclick();await flush();
+ assert.ok(h.find('Atlas is reviewing the references and preparing your answer…'));
+ assert.equal(h.intervals.size,1);[...h.intervals.values()][0]();
+ assert.ok(h.all(h.main).some(n=>n.textContent.includes('You can stop waiting without losing your question.')));
+ h.find('Stop waiting').onclick();assert.equal(h.intervals.size,0);assert.equal(h.question().value,'Keep my question');
+ resolve({results:[]});await pending;assert.ok(h.find('Stopped. Your question is still here.'));
 });

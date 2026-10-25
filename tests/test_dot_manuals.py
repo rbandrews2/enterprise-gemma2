@@ -269,8 +269,11 @@ class ManualTests(unittest.TestCase):
     def test_model_uses_one_request_and_validates_citations_without_tools(self):
         packet = self.index.context(query())
         page = next(p for p in packet['evidence'] if 'Synthetic markings shall' in p['text'])
+        from services.workspace_preview.dot_knowledge import evidence_passages
+        passage_id = next(identifier for identifier, passage in evidence_passages(packet).items()
+                          if passage['citation_id'] == page['citation_id'] and 'Synthetic markings shall' in passage['text'])
         answer = {'status': 'draft', 'claims': [{'text': 'Review synthetic evidence.',
-                  'citation_id': page['citation_id'], 'supporting_quote': 'Synthetic markings shall use reviewed evidence.'}],
+                  'passage_id': passage_id}],
                   'unresolved': ['Confirm project applicability.']}
         calls = []
         response_tools = []
@@ -296,6 +299,8 @@ class ManualTests(unittest.TestCase):
             self.assertEqual(len(calls), 1)
             self.assertTrue(result['qualified_review_required'])
             self.assertFalse(result['approved_for_field_use'])
+            self.assertEqual(result['draft']['claims'][0]['citation_id'], page['citation_id'])
+            self.assertIn('Synthetic markings shall use reviewed evidence.', result['draft']['claims'][0]['supporting_quote'])
             response_tools.append({'function': {'name': 'do_not_execute'}})
             with self.assertRaises(ModelUnavailable):
                 asyncio.run(model.ask(packet))
