@@ -1,5 +1,17 @@
 # WZOS current session handoff - October 18, 2026
 
+## Integrated release gates passed — October 30, 2026
+
+Step 1 complete for application candidate061900a0c1d176f23a1fcdcc9cd0071ab7b63fe2.
+Full backend/PostgreSQL:972PASS; full Node:199PASS; zero failures/errors/skips.
+All11 PostgreSQL Time Tracker correction cases included. Cloud source integrity and
+private temporary database cleanup independently verified. Initial CRLF shell failure
+occurred before testing; shell input normalized, no candidate files changed.
+Evidence: docs/ATLAS_INTEGRATED_GATES_20261030.md. Reuse these passing results;
+do not repeat for this documentation-only checkpoint. No live deployment or model calls.
+Next: authenticated in-app Ask Atlas acceptance, then release/deployment verification.
+
+
 ## Ask Atlas speed repair - October 25, 2026
 
 Implemented stable public-reference prefixes, narrower boundary-page reference hops,
