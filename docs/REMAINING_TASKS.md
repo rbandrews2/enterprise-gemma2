@@ -1,5 +1,19 @@
 # WZOS remaining tasks - current October 20, 2026
 
+## Temporary database setup approved; browser reconnect needed - October 31, 2026
+
+After discussing why the new persistent checkout test database needs provisioning,
+the user said proceed. This authorizes the prepared temporary SQL setup scope in
+CHECKOUT_ACCEPTANCE_SCOPE_20261031.md; approval is recorded and unused.
+The prior Chrome Cloud Shell tab560210709 no longer exists; tab inventory and
+full browser inventory both timed out. No setup script ran and no temporary
+administrator was created. User was asked to reconnect Chrome Cloud Shell.
+Resume by checking the current project/account, proxy5546, and existing prepared
+resources; fetch c39d076 into the isolated cloud checkout, run the approved script,
+verify temporary administrator removal, then continue Core/Enterprise acceptance.
+Time Tracker remains deferred at the user's direction. Do not repeat passing83
+focused checkout checks unless implementation changes justify it.
+
 ## Approved checkout environment preparation - October 31, 2026
 
 User approved isolated WZOS deployment; then prioritized Core and Enterprise
