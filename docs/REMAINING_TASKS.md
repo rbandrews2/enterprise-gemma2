@@ -1,5 +1,20 @@
 # WZOS remaining tasks - current October 20, 2026
 
+## Time history update deployed - October 30, 2026
+
+Commit 2d77bc6 live at 100% on wzos-v2-accounts-history-2d77bc6.
+PWA version 970b793986986cc9adc34a77. Build
+ d1a33f69-1c6c-4cb9-b8fc-2fd2e8f63d89 SUCCESS; image digest
+100f17c262e3eab4abc3c5b88e9fc9d1bc0a685b8059f4642ed021254656c558.
+204 Node checks PASS, no failures/skips. Reused unchanged backend's 977-pass
+gate. Prior local browser expand/collapse acceptance retained. Live HTML has
+closed history disclosure; JS/CSS match archive bytes; no-store version endpoint
+and service worker agree. Runtime settings preserved. No attendance mutations,
+IAM, migrations or customer sends. Live browser remains signed out; this release's
+install click was not repeated (previous release's update click passed).
+Evidence: .local-data/release-2d77bc6 and ~/wzos-release-2d77bc6.
+Rollback revision: wzos-v2-accounts-clock-bf522a0.
+
 ## Time history collapsed by default - October 30, 2026 (local)
 
 User chose to hide old server records while retaining history. Time history is
