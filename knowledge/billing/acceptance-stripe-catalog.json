@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "stripe_account": "acct_1RVoyBCTCYI3n5kZ",
+  "livemode": false,
+  "currency": "usd",
+  "purpose": "isolated deployed activation acceptance",
+  "offers": {
+    "core": {
+      "product_id": "prod_VXcTWfoO9dODrZ",
+      "monthly_price_id": "price_1UWXEpCTCYI3n5kZCIiyIcQa",
+      "setup_price_id": "price_1UWXF8CTCYI3n5kZ7AI3dpJ9",
+      "additional_seat_price_id": "price_1UWXF9CTCYI3n5kZbPpOOauP",
+      "included_seats": 15,
+      "maximum_seats": 30,
+      "setup_cents": 9900,
+      "monthly_cents": 5900,
+      "additional_seat_monthly_cents": 300
+    },
+    "enterprise": {
+      "product_id": "prod_VXcTkpZehOdO8l",
+      "monthly_price_id": "price_1UWXExCTCYI3n5kZIG1rhSC8",
+      "setup_price_id": "price_1UWXFACTCYI3n5kZ8JcaveT0",
+      "additional_seat_price_id": "price_1UWXFBCTCYI3n5kZLqdpSPP9",
+      "included_seats": 25,
+      "maximum_seats": 30,
+      "setup_cents": 99900,
+      "monthly_cents": 24900,
+      "additional_seat_monthly_cents": 700
+    }
+  },
+  "core_upgrade_credit": {
+    "coupon_id": "not_enabled_in_acceptance"
+  }
+}

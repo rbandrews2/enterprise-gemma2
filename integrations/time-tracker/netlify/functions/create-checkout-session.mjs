@@ -1,5 +1,5 @@
 import { validCheckoutUrl } from '../../src/billing-selection.mjs';
-import { stripeLiveMode, requireStripeMode } from '../../src/stripe-mode.mjs';
+import { stripeLiveMode, requireStripeMode, checkoutReturnOrigin } from '../../src/stripe-mode.mjs';
 import { createHash } from 'node:crypto';
 const stripeApi = async (path, body, secretKey, idempotencyKey) => {
   const response = await fetch(`https://api.stripe.com/v1${path}`, {
@@ -81,7 +81,8 @@ const handle = async (req) => {
   const monthlyPriceId = env('STRIPE_MONTHLY_PRICE_ID');
   const supabaseUrl = env('SUPABASE_URL') || env('VITE_SUPABASE_URL');
   const supabaseAnonKey = env('SUPABASE_ANON_KEY') || env('VITE_SUPABASE_ANON_KEY');
-  const siteUrl = env('SITE_URL') || 'https://clock.superiorllc.org';
+  const siteUrl = checkoutReturnOrigin(env('SITE_URL') || 'https://clock.superiorllc.org', live,
+    env('STRIPE_TEST_RETURN_ORIGIN'));
   const productId = env('STRIPE_PRODUCT_ID') || 'prod_USsnAqnFjc2KIa';
 
   if (!stripeSecretKey || !extraPriceId || !monthlyPriceId || !supabaseUrl || !supabaseAnonKey || !env('SUPABASE_SERVICE_ROLE_KEY')) {
@@ -107,10 +108,6 @@ const handle = async (req) => {
       !Number.isInteger(seats) || seats < 1 || seats > 30) {
     return json({ error: 'Select 1 to 30 users and retry checkout.' }, 400);
   }
-  if (new URL(siteUrl).origin !== 'https://clock.superiorllc.org') {
-    return json({ error: 'Checkout is not configured.' }, 503);
-  }
-
   const membership = await supabaseRequest(
     `/memberships_2?select=role&company_id=eq.${encodeURIComponent(companyId)}&user_id=eq.${encodeURIComponent(user.id)}&limit=1`
   );

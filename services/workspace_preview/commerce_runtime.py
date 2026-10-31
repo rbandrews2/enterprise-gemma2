@@ -31,8 +31,14 @@ def configured_purchases(accounts):
         return None
     from cryptography.fernet import Fernet
     from .purchases import Offer, Purchases, StripeProvider
-    catalog = json.loads((Path(__file__).resolve().parents[2] / 'knowledge/billing/v2-stripe-catalog.json').read_text())
     mode = os.environ['WZOS_STRIPE_MODE']
+    catalog_path = Path(__file__).resolve().parents[2] / 'knowledge/billing/v2-stripe-catalog.json'
+    test_catalog = os.getenv('WZOS_STRIPE_TEST_CATALOG')
+    if test_catalog:
+        if mode != 'test':
+            raise RuntimeError('Test catalog is forbidden in live checkout')
+        catalog_path = Path(test_catalog)
+    catalog = json.loads(catalog_path.read_text())
     if mode not in ('test', 'live') or (mode == 'live') is not catalog['livemode']:
         raise RuntimeError('An explicit matching Stripe catalog and mode are required')
     live = mode == 'live'
@@ -43,7 +49,8 @@ def configured_purchases(accounts):
         'additional_seat_monthly_cents', 'setup_price_id', 'monthly_price_id',
         'additional_seat_price_id')}) for key, value in catalog['offers'].items()]
     provider = StripeProvider(os.environ['WZOS_STRIPE_API_KEY'], os.environ['WZOS_STRIPE_WEBHOOK_SECRET'],
-                              livemode=live, automatic_tax=live, tax_configuration_verified=live)
+                              livemode=live, automatic_tax=live, tax_configuration_verified=live,
+                              test_return_origin=os.getenv('WZOS_STRIPE_TEST_RETURN_ORIGIN'))
     purchases = Purchases(accounts, provider, offers, Fernet(os.environ['WZOS_PURCHASE_ENCRYPTION_KEY'].encode()),
                           livemode=live, require_automatic_tax=live, recurring_lifecycle=True)
     purchases.upgrade_coupon_id = catalog['core_upgrade_credit']['coupon_id']

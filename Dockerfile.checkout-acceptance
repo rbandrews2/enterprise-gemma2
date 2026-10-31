@@ -1,0 +1,8 @@
+FROM us-central1-docker.pkg.dev/enterprise-gemma2/enterprise-gemma2/wzos-v2-accounts@sha256:100f17c262e3eab4abc3c5b88e9fc9d1bc0a685b8059f4642ed021254656c558
+USER root
+COPY services /app/services
+COPY shared /app/shared
+COPY knowledge/billing/acceptance-stripe-catalog.json /app/knowledge/billing/acceptance-stripe-catalog.json
+RUN chmod -R a+rX /app/services /app/shared /app/knowledge/billing
+USER wzos
+CMD ["python", "-m", "uvicorn", "services.workspace_preview.commerce_acceptance:create_app", "--factory", "--host", "0.0.0.0", "--port", "8080"]

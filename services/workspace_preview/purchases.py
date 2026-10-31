@@ -197,7 +197,7 @@ class Purchases:
 class StripeProvider:
     """SDK adapter; caller supplies only server-owned prices and secrets."""
     def __init__(self, restricted_key, webhook_secret, *, livemode=False,
-                 automatic_tax=False, tax_configuration_verified=False):
+                 automatic_tax=False, tax_configuration_verified=False, test_return_origin=None):
         from stripe import StripeClient, RequestsClient
         prefix='rk_live_' if livemode else 'rk_test_'
         if (not isinstance(restricted_key,str) or not restricted_key.startswith(prefix)
@@ -208,6 +208,17 @@ class StripeProvider:
         if automatic_tax and not tax_configuration_verified:
             raise ValueError('Verify tax registration and product classification before automatic tax')
         self.livemode,self.automatic_tax=livemode,automatic_tax
+        self.success_url='https://app.workzoneos.org/?purchase={CHECKOUT_SESSION_ID}'
+        self.cancel_url='https://workzoneos.org/#purchase'
+        if test_return_origin is not None:
+            origin=urlsplit(test_return_origin)
+            if (livemode or any(c.isspace() for c in test_return_origin) or origin.scheme != 'https' or not origin.hostname
+                    or origin.username or origin.password or origin.query or origin.fragment
+                    or origin.path not in ('', '/') or origin.port not in (None, 443)
+                    or origin.hostname in ('app.workzoneos.org', 'workzoneos.org', 'clock.superiorllc.org')):
+                raise ValueError('Test checkout requires a separate HTTPS return origin')
+            self.success_url=test_return_origin.rstrip('/')+'/?purchase={CHECKOUT_SESSION_ID}'
+            self.cancel_url=test_return_origin.rstrip('/')+'/?checkout=cancelled'
         self.client=StripeClient(restricted_key,stripe_version='2026-08-26.dahlia',
                                  max_network_retries=0,http_client=RequestsClient(timeout=15))
         self.webhook_secret=webhook_secret
@@ -217,8 +228,8 @@ class StripeProvider:
         parameters={
             'mode':'subscription','customer_email':email,'line_items':line_items,
             'client_reference_id':request_id,
-            'success_url':'https://app.workzoneos.org/?purchase={CHECKOUT_SESSION_ID}',
-            'cancel_url':'https://workzoneos.org/#purchase',
+            'success_url':self.success_url,
+            'cancel_url':self.cancel_url,
             'integration_identifier':'wzos_checkout_'+suffix,
         }
         if self.automatic_tax:parameters['automatic_tax']={'enabled':True}
