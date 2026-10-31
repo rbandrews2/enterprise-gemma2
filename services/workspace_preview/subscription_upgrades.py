@@ -11,7 +11,7 @@ from urllib.parse import urlsplit
 
 from fastapi import HTTPException
 
-from .purchase_lifecycle import resource_id
+from .purchase_lifecycle import resource_id, invoice_is_paid
 
 
 DDL = '''CREATE TABLE IF NOT EXISTS organization_upgrades (
@@ -104,7 +104,7 @@ class SubscriptionUpgrades:
                 or sub.get('pending_update') or sub.get('schedule') or sub.get('cancel_at_period_end')
                 or sub.get('cancel_at') or sub.get('pause_collection') or sub.get('discounts')
                 or item_set(sub) != sorted(expected, key=lambda i: i['price'])
-                or not isinstance(invoice, dict) or invoice.get('status') != 'paid' or invoice.get('paid') is not True):
+                or not invoice_is_paid(invoice)):
             raise HTTPException(409, 'Settle or review the existing subscription before upgrading')
         if self.purchases.require_automatic_tax and sub.get('automatic_tax', {}).get('enabled') is not True:
             raise HTTPException(409, 'Subscription tax configuration requires billing review')
@@ -237,7 +237,7 @@ class SubscriptionUpgrades:
             and line.get('quantity') == 1 for line in lines.get('data', []))
         if (marker == row['request_id'] and not pending and sub.get('status') == 'active'
                 and item_set(sub) == sorted(data['expected_items'], key=lambda i: i['price'])
-                and isinstance(invoice, dict) and invoice.get('status') == 'paid' and invoice.get('paid') is True
+                and invoice_is_paid(invoice)
                 and invoice.get('currency') == 'usd' and invoice.get('livemode') is self.purchases.livemode
                 and resource_id(invoice.get('customer')) == row['customer_id'] and setup_present
                 and invoice.get('billing_reason') == 'subscription_update'

@@ -11,6 +11,12 @@ def resource_id(value):
     return value.get('id') if isinstance(value, dict) else value
 
 
+def invoice_is_paid(invoice):
+    """Use Stripe's invoice status; modern API versions omit legacy paid."""
+    return (isinstance(invoice, dict) and invoice.get('status') == 'paid'
+            and ('paid' not in invoice or invoice['paid'] is True))
+
+
 class PurchaseLifecycle:
     events = {'invoice.paid', 'invoice.payment_failed', 'customer.subscription.created',
               'customer.subscription.updated', 'customer.subscription.deleted'}
@@ -37,7 +43,7 @@ class PurchaseLifecycle:
                   for item in items.get('data', [])]
         matching = not items.get('has_more') and sorted(actual, key=lambda x:x['price']) == sorted(expected, key=lambda x:x['price'])
         invoice = sub.get('latest_invoice')
-        paid = isinstance(invoice, dict) and invoice.get('status') == 'paid' and invoice.get('paid') is True
+        paid = invoice_is_paid(invoice)
         status = str(sub.get('status', 'unknown'))[:40] if matching else 'price_review_required'
         access = int(matching and status == 'active' and (paid or keep_core))
         if access and keep_core and not paid:

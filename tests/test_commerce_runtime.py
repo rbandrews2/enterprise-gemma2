@@ -17,7 +17,7 @@ class CommerceRuntimeTests(seats.SeatLicensingTests):
         super().setUp()
         self.provider = ProviderFixture()
         self.subscription = {'id':'sub_synthetic','customer':'cus_synthetic','livemode':False,
-            'status':'active','latest_invoice':{'id':'in_synthetic','status':'paid','paid':True},
+            'status':'active','latest_invoice':{'id':'in_synthetic','status':'paid'},
             'items':{'data':[{'price':{'id':'price_monthly'},'quantity':1}], 'has_more':False}}
         self.provider.retrieve_subscription = lambda id_: self.subscription
         self.offer = Offer('core','core',15,30,9900,5900,300,'price_setup','price_monthly','price_extra')

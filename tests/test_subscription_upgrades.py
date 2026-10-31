@@ -24,7 +24,7 @@ class UpgradeProvider(ProviderFixture):
         self.amount_due = 102900
         self.sub = {'id': 'sub_synthetic', 'customer': 'cus_synthetic', 'livemode': False,
                     'status': 'active', 'collection_method': 'charge_automatically',
-                    'latest_invoice': {'id': 'in_core', 'status': 'paid', 'paid': True},
+                    'latest_invoice': {'id': 'in_core', 'status': 'paid'},
                     'items': {'data': [{'id': 'si_core', 'price': {'id': 'price_monthly'},
                                'quantity': 1, 'current_period_end': int(time.time())+3600}], 'has_more': False}}
 
@@ -58,6 +58,7 @@ class UpgradeProvider(ProviderFixture):
             for i, v in enumerate(parameters['items']) if not v.get('deleted')], 'has_more': False}
         self.sub.update(metadata=parameters['metadata'], pending_update=None)
         self.sub['latest_invoice'].update(status='paid', paid=True)
+        self.sub['latest_invoice'].pop('paid')  # Current Stripe invoice shape.
 
 
 class SubscriptionUpgradeTests(unittest.TestCase):

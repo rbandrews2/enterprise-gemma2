@@ -1,5 +1,22 @@
 # Stripe deployed activation acceptance
 
+## Checkout database provisioned and receiver preparation - October 31, 2026
+
+Reconnected in-app Cloud Shell and freshly verified admin@workzoneos.org,
+enterprise-gemma2, clean tracked cloud checkout and proxy5546. Approved setup
+script c39d076 completed: RESTRICTED_TEST_DATABASE_LOGIN_READY and
+TEMPORARY_SQL_ADMIN_REMOVED. Independent SQL user list confirms only postgres,
+wzos_app and wzos_checkout_test; no temporary administrator remains.
+New database-url secret version1 granted only to acceptance runtime.
+Private bootstrap control revision00001-fst rejects anonymous access403 and its
+service IAM policy has no public binding. Private receiver revision00001-qh7
+also prepared. Both min0/max1,1CPU/512MiB. No production changes.
+Created Stripe TEST endpoint we_1UWY8BCTCYI3n5kZXXeTZT6X with eight scoped events.
+Signing secret transferred encrypted into acceptance-webhook-secret:1, with
+one-time transfer key removed; runtime access is secret-scoped. No secret values
+printed or committed. Candidate5805cfa deployment to both private services is in
+progress. Actual payment, external delivery, redemption and cleanup remain open.
+
 ## Deployed webhook audit and environment guard - October 31, 2026
 
 Current user objective: verify Stripe-to-deployed-handler activation for Core,
