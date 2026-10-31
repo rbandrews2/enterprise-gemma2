@@ -66,3 +66,18 @@ Before implementation/deployment, establish the exact deployed source baseline;
 then add company-bound checkout selection, validated seat quantities and signed,
 idempotent paid-event fulfillment. Keep standalone entitlement separate from WZOS.
 No Netlify setting, secret, database, deployment or purchase changed in this review.
+
+## Standalone candidate repairs - October 31, 2026
+
+Prepared integrations/time-tracker separately from the recovered checkout.
+Seat-aware authenticated checkout, no setup line, Stripe attempt idempotency,
+no pending-status overwrite, paid-session binding and signature replay-window
+repairs implemented. Final focused Node run: 17 PASS, zero skips/fails.
+External APIs mocked; no PostgreSQL or Stripe sandbox acceptance claimed.
+
+Candidate disabled behind TRACKER_CHECKOUT_V2_ENABLED. Remaining gates include
+matching actual deployed source, server-only billing writes, durable transactional
+webhook deduplication/concurrency, stored/enforced seat allowances, actual app
+handoff and subscription lifecycle acceptance. See integrations/time-tracker/README.md.
+User asked for the source folder location while independent local work proceeded.
+No live changes, secrets, charges or customer sends. Prior WZOS tests not repeated.

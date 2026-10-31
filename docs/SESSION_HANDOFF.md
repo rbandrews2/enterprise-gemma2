@@ -1,5 +1,11 @@
 # WZOS current session handoff - October 18, 2026
 
+## Standalone checkout candidate - October 31, 2026
+
+Local isolated repairs: integrations/time-tracker. 17 focused Node checks PASS;
+not deployed. Source-baseline, database atomicity/seat enforcement and sandbox
+lifecycle gates remain. See docs/STOREFRONT_ACTIVATION_20261031.md.
+
 ## Storefront activation - October 31, 2026 (local)
 
 Core/Enterprise monthly and annual checkout handoff and receipt recovery implemented.
