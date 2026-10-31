@@ -1,4 +1,5 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
+import { stripeLiveMode, requireStripeMode } from '../../src/stripe-mode.mjs';
 
 const env = (key) => Netlify.env.get(key);
 
@@ -13,7 +14,7 @@ const stripeGet = async (path, secretKey) => {
     throw new Error(data?.error?.message ?? 'Stripe request failed.');
   }
 
-  return data;
+  return requireStripeMode(data, stripeLiveMode(env('STRIPE_MODE'), secretKey));
 };
 
 export const verifyStripeSignature = (payload, signatureHeader, secret, now = Date.now()) => {
@@ -110,6 +111,9 @@ export default async (req) => {
     return new Response('Checkout update is not active yet.', { status: 503 });
   }
   const stripeSecretKey = env('STRIPE_SECRET_KEY');
+  let live;
+  try { live = stripeLiveMode(env('STRIPE_MODE'), stripeSecretKey); }
+  catch { return new Response('Billing environment is not configured.', { status: 503 }); }
   const webhookSecret = env('STRIPE_WEBHOOK_SECRET');
   const payload = await req.text();
 
@@ -119,6 +123,8 @@ export default async (req) => {
 
   let event;
   try { event = JSON.parse(payload); } catch { return new Response('Invalid event.', { status: 400 }); }
+  try { requireStripeMode(event, live); }
+  catch { return new Response('Wrong payment environment.', { status: 400 }); }
 
   try {
     if (event.type === 'checkout.session.expired') {

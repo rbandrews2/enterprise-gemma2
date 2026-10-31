@@ -1,4 +1,5 @@
 import { validCheckoutUrl } from '../../src/billing-selection.mjs';
+import { stripeLiveMode, requireStripeMode } from '../../src/stripe-mode.mjs';
 import { createHash } from 'node:crypto';
 const stripeApi = async (path, body, secretKey, idempotencyKey) => {
   const response = await fetch(`https://api.stripe.com/v1${path}`, {
@@ -76,6 +77,7 @@ const handle = async (req) => {
     return json({ error: 'Checkout update is not active yet.' }, 503);
   }
   const extraPriceId = env('STRIPE_EXTRA_USER_PRICE_ID');
+  const live = stripeLiveMode(env('STRIPE_MODE'), stripeSecretKey);
   const monthlyPriceId = env('STRIPE_MONTHLY_PRICE_ID');
   const supabaseUrl = env('SUPABASE_URL') || env('VITE_SUPABASE_URL');
   const supabaseAnonKey = env('SUPABASE_ANON_KEY') || env('VITE_SUPABASE_ANON_KEY');
@@ -159,6 +161,7 @@ const handle = async (req) => {
     stripeSecretKey, idempotencyKey
   );
 
+  requireStripeMode(session, live);
   if (!validCheckoutUrl(session.url)) {
     return json({ error: 'Unable to open secure checkout.' }, 502);
   }

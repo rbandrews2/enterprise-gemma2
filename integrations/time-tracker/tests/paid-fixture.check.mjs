@@ -47,7 +47,7 @@ insert into memberships_2 values('${company}','${user}','owner');
 await db.exec(await readFile(new URL('../supabase/migrations/20261031070800_tracker_checkout_activation.sql',import.meta.url),'utf8'));
 await db.exec('set role service_role');
 await db.query('select tracker_reserve_checkout($1,$2,$3,$4)',[company,user,request,3]);
-const settings={TRACKER_CHECKOUT_V2_ENABLED:'true', STRIPE_SECRET_KEY:'synthetic-only',
+const settings={TRACKER_CHECKOUT_V2_ENABLED:'true', STRIPE_MODE:'test', STRIPE_SECRET_KEY:'rk_test_synthetic',
  STRIPE_WEBHOOK_SECRET:'local-replay-only', SUPABASE_URL:'https://fixture.invalid',SUPABASE_SERVICE_ROLE_KEY:'synthetic-only',
  STRIPE_PRODUCT_ID:session.metadata.product_id,
  STRIPE_MONTHLY_PRICE_ID:subscription.items.data.find(i=>i.quantity===1).price.id,

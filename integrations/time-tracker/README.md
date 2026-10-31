@@ -173,3 +173,11 @@ Stripe-signed webhook delivery, multi-connection PostgreSQL concurrency, failed-
 and refund/dispute policy coverage, then reviewed migration/config deployment.
 Standalone Tracker activates company billing/seats; Core/Enterprise activation-code
 redemption is a separate flow and was not verified by this Tracker test.
+
+## Payment environment guard - October 31, 2026
+Enabled candidate now requires STRIPE_MODE=test or live matching the API key.
+Incoming event and fetched session/subscription livemode must match. This is a
+new required deployment variable; leave TRACKER_CHECKOUT_V2_ENABLED off until
+all release gates pass. Focused28JS and captured-payment17PG replay PASS.
+See docs/STRIPE_DEPLOYED_ACTIVATION_20261031.md for live destination audit and
+external-delivery blockers. No production deployment occurred.

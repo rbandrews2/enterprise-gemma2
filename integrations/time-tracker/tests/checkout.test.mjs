@@ -10,7 +10,7 @@ const originalFetch = globalThis.fetch;
 const originalNetlify = globalThis.Netlify;
 afterEach(() => { globalThis.fetch = originalFetch; globalThis.Netlify = originalNetlify; });
 function setup({ role = 'owner', existing = [], enabled = true, fail = false } = {}) {
-  const values = { TRACKER_CHECKOUT_V2_ENABLED: String(enabled), STRIPE_SECRET_KEY: 'synthetic',
+  const values = { TRACKER_CHECKOUT_V2_ENABLED: String(enabled), STRIPE_MODE: 'test', STRIPE_SECRET_KEY: 'rk_test_synthetic',
     STRIPE_MONTHLY_PRICE_ID: 'price_base', STRIPE_EXTRA_USER_PRICE_ID: 'price_extra',
     SUPABASE_URL: 'https://synthetic.example', SUPABASE_ANON_KEY: 'synthetic',
     SUPABASE_SERVICE_ROLE_KEY: 'synthetic', SITE_URL: 'https://clock.superiorllc.org' };
@@ -25,7 +25,7 @@ function setup({ role = 'owner', existing = [], enabled = true, fail = false } =
     }
     if (url.includes('/memberships_2?')) return Response.json(role ? [{ role }] : []);
     if (url.includes('/company_billing_2?')) return Response.json(existing);
-    if (url === 'https://api.stripe.com/v1/checkout/sessions') return Response.json({ url: 'https://checkout.stripe.com/c/pay/cs_test' });
+    if (url === 'https://api.stripe.com/v1/checkout/sessions') return Response.json({ livemode:false, url: 'https://checkout.stripe.com/c/pay/cs_test' });
     throw new Error('Unexpected request');
   };
   return calls;
@@ -92,9 +92,9 @@ test('signature supports rotated keys and rejects altered, stale and future payl
 });
 function paid() {
   const metadata = { company_id: companyId, product_id: 'prod_tracker' };
-  return [{ mode: 'subscription', payment_status: 'paid', client_reference_id: companyId, metadata,
+  return [{ livemode:false, mode: 'subscription', payment_status: 'paid', client_reference_id: companyId, metadata,
     subscription: 'sub_test', customer: 'cus_test' },
-  { id: 'sub_test', customer: 'cus_test', status: 'active', metadata }];
+  { livemode:false, id: 'sub_test', customer: 'cus_test', status: 'active', metadata }];
 }
 test('paid session must match company, subscription, customer and product', () => {
   const [session, subscription] = paid();
@@ -124,8 +124,9 @@ test('allowance comes from exact subscription price quantities, not metadata', (
   assert.equal(purchasedSeats({ items:{data:[base],has_more:true}},'price_base','price_extra'), null);
 });
 
-for (const payment of ['paid','unpaid']) test(`signed ${payment} event reaches transactional fulfillment only when paid`,async()=>{
-  const values={TRACKER_CHECKOUT_V2_ENABLED:'true',STRIPE_SECRET_KEY:'synthetic',STRIPE_WEBHOOK_SECRET:'synthetic',
+for (const scenario of ['paid','unpaid','event-live','session-live','subscription-live']) test(`signed ${scenario} event preserves payment environment and entitlement`,async()=>{
+  const payment=scenario==='unpaid'?'unpaid':'paid';
+  const values={TRACKER_CHECKOUT_V2_ENABLED:'true',STRIPE_MODE:'test',STRIPE_SECRET_KEY:'rk_test_synthetic',STRIPE_WEBHOOK_SECRET:'synthetic',
     STRIPE_PRODUCT_ID:'prod_tracker',STRIPE_MONTHLY_PRICE_ID:'price_base',STRIPE_EXTRA_USER_PRICE_ID:'price_extra',
     SUPABASE_URL:'https://synthetic.example',SUPABASE_SERVICE_ROLE_KEY:'synthetic'};
   globalThis.Netlify={env:{get:key=>values[key]}};
@@ -134,6 +135,8 @@ for (const payment of ['paid','unpaid']) test(`signed ${payment} event reaches t
   const metadata={company_id:companyId,product_id:'prod_tracker',request_id:requestId,seats:'2',integration:'tracker-v2'};
   session.metadata=metadata;subscription.metadata=metadata;
   subscription.items={has_more:false,data:[{price:{id:'price_base'},quantity:1},{price:{id:'price_extra'},quantity:1}]};
+  if(scenario==='session-live') session.livemode=true;
+  if(scenario==='subscription-live') subscription.livemode=true;
   const writes=[];
   globalThis.fetch=async(url,options={})=>{
     if(url.endsWith('/checkout/sessions/cs_test')) return Response.json(session);
@@ -142,10 +145,18 @@ for (const payment of ['paid','unpaid']) test(`signed ${payment} event reaches t
     throw new Error('Unexpected request');
   };
   const t=Math.floor(Date.now()/1000);
-  const body=JSON.stringify({id:'evt_test',created:t,type:'checkout.session.completed',data:{object:{id:'cs_test'}}});
+  const body=JSON.stringify({id:'evt_test',livemode:scenario==='event-live',created:t,type:'checkout.session.completed',data:{object:{id:'cs_test'}}});
   const result=await webhook(new Request('https://clock.superiorllc.org/api/stripe-webhook',{method:'POST',body,
     headers:{'stripe-signature':`t=${t},v1=${signature(t,body)}`}}));
-  assert.equal(result.status,200);
-  assert.equal(writes.length,payment==='paid'?1:0);
+  assert.equal(result.status,scenario==='event-live'?400:scenario.endsWith('-live')?500:200);
+  assert.equal(writes.length,scenario==='paid'?1:0);
   if(writes.length) {assert.equal(writes[0].p_seats,2);assert.equal(writes[0].p_request,requestId);assert.equal(writes[0].p_initial,true);}
 });
+
+ test('Stripe mode must be explicit and match the API key before any downstream work',async()=>{
+  for(const mode of [undefined,'live','unexpected']) {
+   const calls=setup();const original=globalThis.Netlify.env.get;
+   globalThis.Netlify.env.get=key=>key==='STRIPE_MODE'?mode:original(key);
+   assert.equal((await checkout(request())).status,503);assert.equal(calls.length,0);
+  }
+ });
