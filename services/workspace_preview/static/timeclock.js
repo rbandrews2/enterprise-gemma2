@@ -180,13 +180,18 @@
   if(scope(session)!==scope(window.wzosClock.getSession()))return;
   membersLoaded=scope(session);employee.replaceChildren(option('','All team members'),...data.items.map(p=>option(p.id,p.name)));
  }
- async function refresh(){
+ async function refresh(feedback=false){
   const session=window.wzosClock.getSession();if(!session)return;
   node('clock-view').dataset.edition=session.edition;
   if(!navigator.onLine){showOffline();return;}
-  const epoch=++generation;loaded=false;controls();
+  const epoch=++generation;loaded=false;controls();let statusRefreshed=false;
+  if(feedback)message('Refreshing clock…');
   const admin=session.role==='admin';node('clock-team-label').hidden=!admin;employeeLabel.hidden=!admin;if(!admin){node('clock-team').checked=false;employee.value='';}
   try{
+   const state=await window.wzosClock.api('/api/time/status');
+   if(epoch!==generation||scope(session)!==scope(window.wzosClock.getSession()))return;
+   renderActive(state);statusRefreshed=true;
+   if(feedback)message(drafts.length?'Clock refreshed. Device records still need review.':'Clock refreshed.');
    const options=[option('','Unassigned')];let next=0;
    while(true){
     const jobs=await window.wzosClock.api(`/api/time/jobs?offset=${next}&limit=50`);
@@ -195,10 +200,11 @@
     next+=jobs.items.length;if(next>=jobs.total||!jobs.items.length)break;
    }
    node('clock-order').replaceChildren(...options);
+   if(active)node('clock-order').value=active.order_id||'';
    await loadMembers(session).catch(()=>{});
-   const [state,history]=await Promise.all([window.wzosClock.api('/api/time/status'),window.wzosClock.api(`/api/time/entries?offset=${offset}${filters()}`)]);
+   const history=await window.wzosClock.api(`/api/time/entries?offset=${offset}${filters()}`);
    if(epoch!==generation||scope(session)!==scope(window.wzosClock.getSession()))return;
-   renderActive(state);node('clock-history').replaceChildren();
+   node('clock-history').replaceChildren();
    for(const entry of history.items){const article=document.createElement('article');article.className='clock-entry';
     const basis=text('span',BASIS[entry.record_basis]||'Server recorded');basis.className='clock-basis';basis.dataset.basis=entry.record_basis||'server_recorded';
     const title=text('strong',entry.order_title||'Unassigned work');
@@ -210,7 +216,7 @@
    node('clock-prev').disabled=offset===0;node('clock-next').disabled=offset+history.limit>=history.total;
    node('clock-page').textContent=`${history.total} records · showing ${history.items.length?offset+1:0}–${offset+history.items.length}. Times shown in your device timezone.`;
    loadSubmissions(session);window.wzosClockReview?.refreshQueue?.();
-  }catch(error){if(epoch===generation){loaded=false;if(!error.status){showOffline();}else{active=null;lastVerified=null;baseSeconds=0;tick();node('clock-state').textContent='CLOCK STATUS UNAVAILABLE';setConnection('error','Server could not confirm your shift. Confirmed clock actions are paused.');node('clock-history').replaceChildren();message(error.message);}}}
+  }catch(error){if(epoch===generation){if(statusRefreshed){message('Clock refreshed. Jobs or history could not be updated; try Refresh again.');return;}loaded=false;if(!error.status){showOffline();}else{active=null;lastVerified=null;baseSeconds=0;tick();node('clock-state').textContent='CLOCK STATUS UNAVAILABLE';setConnection('error','Server could not confirm your shift. Confirmed clock actions are paused.');node('clock-history').replaceChildren();message(error.message);}}}
   finally{if(epoch===generation)controls();}
  }
  async function send(action,retry=false){
@@ -233,7 +239,7 @@
  }
  node('clock-in').addEventListener('click',()=>send('clock_in'));node('clock-out').addEventListener('click',()=>send('clock_out'));
  node('clock-switch').addEventListener('click',()=>send('switch_task'));node('clock-break').addEventListener('click',()=>send(timeline().state==='on_break'?'break_end':'break_start'));
- node('clock-retry').addEventListener('click',()=>send(null,true));node('clock-refresh').addEventListener('click',refresh);node('clock-task').addEventListener('change',controls);
+ node('clock-retry').addEventListener('click',()=>send(null,true));node('clock-refresh').addEventListener('click',()=>refresh(true));node('clock-task').addEventListener('change',controls);
  node('clock-team').addEventListener('change',()=>{offset=0;if(!node('clock-team').checked)employee.value='';refresh();});node('clock-prev').addEventListener('click',()=>{offset=Math.max(0,offset-20);refresh();});node('clock-next').addEventListener('click',()=>{offset+=20;refresh();});
  employee.addEventListener('change',()=>{offset=0;if(employee.value)node('clock-team').checked=true;refresh();});
  for(const id of ['clock-from','clock-to'])node(id).onchange=()=>{offset=0;refresh();};

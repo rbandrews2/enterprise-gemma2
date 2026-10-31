@@ -1,5 +1,25 @@
 # WZOS remaining tasks - current October 20, 2026
 
+## Time Tracker refresh follow-up - October 30, 2026 (local, not deployed)
+
+Ray reports Refresh has no apparent effect and a seven-second record remains.
+Asked whether the value is the large timer or a history entry, and which clock
+state is displayed; answer pending. Do not delete attendance or device records.
+
+Confirmed code defect: refresh blocked current status behind jobs/member loading,
+and coupled status display to successful history retrieval. Repaired locally to
+render current status first, keep it if secondary data fails, and show explicit
+manual-refresh success/partial-failure feedback. Device drafts remain visible and
+unverified until reviewed. Restored selected order after replacing job options.
+
+29 clock Node tests PASS, including stale seven-second active state resetting to
+zero after server reports no active shift despite a jobs failure, and preservation
+of unsent device records. Full Node suite 202 PASS; no backend/schema changes.
+Evidence: .local-data/timeclock-refresh-node.log. No live data changed. The user's
+specific record has not been inspected; a completed history entry is expected to
+remain after Refresh. Browser acceptance and deployment remain pending.
+
+
 ## Atlas repair and PWA update release deployed - October 30, 2026
 
 Live: wzos-v2-accounts-atlas-2992d86, 100% traffic, app version

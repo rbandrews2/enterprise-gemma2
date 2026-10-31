@@ -11,7 +11,7 @@ function lockManager(storage){
  }
  return sharedLocks.get(storage);
 }
-function harness({fail=()=>false,gate=()=>null,storage,locks,confirm=()=>true,session:initial,geo=false,denyGeo=false}={}){
+function harness({status=()=>({active:{id:'shift',version:1,work_seconds:100,status:'working',task:'job_site',note:''},tasks:{job_site:'Job Site'}}),fail=()=>false,gate=()=>null,storage,locks,confirm=()=>true,session:initial,geo=false,denyGeo=false}={}){
  const nodes=new Map(),events={},windowEvents={},created=[];
  const element=tag=>{const e={tag,value:'',checked:false,disabled:false,hidden:false,textContent:'',dataset:{},children:[],handlers:{},options:[],
   append(...x){this.children.push(...x)},after(x){this.afterNode=x},before(x){this.beforeNode=x},replaceChildren(...x){this.children=x},
@@ -22,7 +22,7 @@ function harness({fail=()=>false,gate=()=>null,storage,locks,confirm=()=>true,se
  const navigator={onLine:true,permissions:{query:async()=>({state:geo&&!denyGeo?'granted':'denied'})},...(geo?{geolocation:{getCurrentPosition(ok,fail){if(denyGeo)fail({code:1});else ok({coords:{latitude:37,longitude:-79,accuracy:12}})}}}:{}),locks:locks===false?undefined:locks||(storage?lockManager(storage):undefined)};
  const document={getElementById:get,createElement:element,addEventListener(k,v){events[k]=v},dispatchEvent(){}};
  const responses=(path,options)=>{
-  if(path.includes('/status'))return {active:{id:'shift',version:1,work_seconds:100,status:'working',task:'job_site',note:''},tasks:{job_site:'Job Site'}};
+  if(path.includes('/status'))return status();
   if(path.startsWith('/api/time/offline-submissions')&&options?.method==='POST')return {items:JSON.parse(options.body).drafts.map(d=>({...d,status:'pending'}))};
   if(path.startsWith('/api/time/locations'))return {accepted:JSON.parse(options.body).items.map(i=>i.request_id)};
   if(path.startsWith('/api/time/entries'))return {items:[],limit:20,total:0};
@@ -315,4 +315,26 @@ test('shared GPS outbox keeps concurrent evidence and stale tabs cannot resurrec
  const sent=a.posts('/api/time/locations').flatMap(c=>JSON.parse(c[1].body).items);assert.ok(old.every(p=>sent.some(e=>e.request_id===p.request_id)));
  b.get('clock-task').value='teardown';await b.get('clock-switch').handlers.click();await settle();
  const fresh=JSON.parse(storage.data.get(key)).items;assert.ok(fresh.every(p=>!old.some(e=>e.request_id===p.request_id)));
+});
+
+
+test('refresh clears a stale active timer even when jobs fail without deleting time records',async()=>{
+ let active={id:'shift',version:1,work_seconds:7,status:'on_break',task:'job_site',note:''},failJobs=false;
+ const h=harness({status:()=>({active,tasks:{job_site:'Job Site'}}),fail:path=>failJobs&&path.startsWith('/api/time/jobs')});
+ h.events['wzos:session']();await settle();assert.equal(h.get('clock-timer').textContent,'00:00:07');
+ active=null;failJobs=true;await h.get('clock-refresh').handlers.click();
+ assert.equal(h.get('clock-timer').textContent,'00:00:00');
+ assert.equal(h.get('clock-state').textContent,'OFF THE CLOCK');
+ assert.equal(h.get('clock-in').disabled,false);
+ assert.match(h.get('clock-message').textContent,/Clock refreshed.*history could not/);
+ assert.equal(h.posts('/api/time').length,0);
+});
+
+test('manual refresh confirms success and retains unsent device records',async()=>{
+ const h=await offlineAfterLoad();await draft(h,'clock_out');
+ h.navigator.onLine=true;await h.get('clock-refresh').handlers.click();
+ assert.match(h.get('clock-message').textContent,/Device records still need review/);
+ assert.equal(h.byId('clock-draft-list').children.length,1);
+ assert.match(h.get('clock-state').textContent,/DEVICE RECORD/);
+ assert.equal(h.posts('/api/time/commands').length,0);
 });
