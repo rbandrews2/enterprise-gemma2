@@ -2,7 +2,7 @@ import { test, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { createHmac } from 'node:crypto';
 import checkout from '../netlify/functions/create-checkout-session.mjs';
-import webhook, { verifyStripeSignature, paidCompany } from '../netlify/functions/stripe-webhook.mjs';
+import webhook, { verifyStripeSignature, paidCompany, purchasedSeats } from '../netlify/functions/stripe-webhook.mjs';
 
 const companyId = '11111111-1111-4111-8111-111111111111';
 const requestId = '22222222-2222-4222-8222-222222222222';
@@ -20,6 +20,9 @@ function setup({ role = 'owner', existing = [], enabled = true, fail = false } =
     calls.push({ url, options });
     if (fail) throw new Error('private upstream detail');
     if (url.endsWith('/auth/v1/user')) return Response.json({ id: 'user-test', email: 'synthetic@example.test' });
+    if (url.endsWith('/rpc/tracker_reserve_checkout')) {
+      const args = JSON.parse(options.body); return Response.json({ request_id: args.p_request, seats: args.p_seats });
+    }
     if (url.includes('/memberships_2?')) return Response.json(role ? [{ role }] : []);
     if (url.includes('/company_billing_2?')) return Response.json(existing);
     if (url === 'https://api.stripe.com/v1/checkout/sessions') return Response.json({ url: 'https://checkout.stripe.com/c/pay/cs_test' });
@@ -107,4 +110,42 @@ test('disabled webhook does not acknowledge an event as fulfilled', async () => 
   const calls = setup({ enabled: false });
   assert.equal((await webhook(new Request('https://clock.superiorllc.org/api/stripe-webhook', { method: 'POST', body: payload }))).status, 503);
   assert.equal(calls.length, 0);
+});
+
+test('allowance comes from exact subscription price quantities, not metadata', () => {
+  const make = data => ({ metadata: { seats: '300' }, items: { data, has_more: false } });
+  const base = { price: { id: 'price_base' }, quantity: 1 };
+  const extra = { price: { id: 'price_extra' }, quantity: 29 };
+  assert.equal(purchasedSeats(make([base]), 'price_base','price_extra'), 1);
+  assert.equal(purchasedSeats(make([base,extra]), 'price_base','price_extra'), 30);
+  for (const items of [[extra], [base,base], [base,{...extra, quantity:30}], [base,{...extra,price:'price_other'}]]) {
+    assert.equal(purchasedSeats(make(items),'price_base','price_extra'), null);
+  }
+  assert.equal(purchasedSeats({ items:{data:[base],has_more:true}},'price_base','price_extra'), null);
+});
+
+for (const payment of ['paid','unpaid']) test(`signed ${payment} event reaches transactional fulfillment only when paid`,async()=>{
+  const values={TRACKER_CHECKOUT_V2_ENABLED:'true',STRIPE_SECRET_KEY:'synthetic',STRIPE_WEBHOOK_SECRET:'synthetic',
+    STRIPE_PRODUCT_ID:'prod_tracker',STRIPE_MONTHLY_PRICE_ID:'price_base',STRIPE_EXTRA_USER_PRICE_ID:'price_extra',
+    SUPABASE_URL:'https://synthetic.example',SUPABASE_SERVICE_ROLE_KEY:'synthetic'};
+  globalThis.Netlify={env:{get:key=>values[key]}};
+  const [session,subscription]=paid();
+  Object.assign(session,{id:'cs_test',payment_status:payment});
+  const metadata={company_id:companyId,product_id:'prod_tracker',request_id:requestId,seats:'2',integration:'tracker-v2'};
+  session.metadata=metadata;subscription.metadata=metadata;
+  subscription.items={has_more:false,data:[{price:{id:'price_base'},quantity:1},{price:{id:'price_extra'},quantity:1}]};
+  const writes=[];
+  globalThis.fetch=async(url,options={})=>{
+    if(url.endsWith('/checkout/sessions/cs_test')) return Response.json(session);
+    if(url.endsWith('/subscriptions/sub_test')) return Response.json(subscription);
+    if(url.endsWith('/rpc/tracker_apply_billing_event')) { writes.push(JSON.parse(options.body));return Response.json('applied'); }
+    throw new Error('Unexpected request');
+  };
+  const t=Math.floor(Date.now()/1000);
+  const body=JSON.stringify({id:'evt_test',created:t,type:'checkout.session.completed',data:{object:{id:'cs_test'}}});
+  const result=await webhook(new Request('https://clock.superiorllc.org/api/stripe-webhook',{method:'POST',body,
+    headers:{'stripe-signature':`t=${t},v1=${signature(t,body)}`}}));
+  assert.equal(result.status,200);
+  assert.equal(writes.length,payment==='paid'?1:0);
+  if(writes.length) {assert.equal(writes[0].p_seats,2);assert.equal(writes[0].p_request,requestId);assert.equal(writes[0].p_initial,true);}
 });

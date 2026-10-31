@@ -81,3 +81,24 @@ webhook deduplication/concurrency, stored/enforced seat allowances, actual app
 handoff and subscription lifecycle acceptance. See integrations/time-tracker/README.md.
 User asked for the source folder location while independent local work proceeded.
 No live changes, secrets, charges or customer sends. Prior WZOS tests not repeated.
+
+
+## Source confirmation and candidate expansion - October 31, 2026
+
+Owner authorized recovered source. GitHub main 14e3b1fa27a72e058e2f5cd3b3f757ac772e84b1
+TIME_TRACKER compared: 58 files, zero content differences after newline normalization.
+Source reviewed in .local-data/tracker-source-review; no remote mutations.
+
+Candidate now includes the app, admin seat selection, stable request identity,
+bounded server-status polling and honest payment return messaging. Proposed SQL
+adds server-only billing writes, durable reservations, atomic event receipts,
+subscription/session binding, stale-event protection and seat cap trigger. Server
+functions invoke these RPCs; activation remains disabled until migration acceptance.
+SQL is a review proposal, not an applied/generated migration. Existing NULL seat
+allowances and legacy subscription metadata require reconciliation before release.
+
+Validation: 23 JS PASS (zero skips/fails), 17 embedded PostgreSQL checks PASS,
+final Vite build PASS: 1740 modules, index-DBfO5Mo4.js. External Stripe calls mocked.
+Embedded PostgreSQL uses PGlite synthetic fixture, not live RLS/concurrency proof.
+No unnecessary WZOS full-suite reruns. No live deployments, changes, charges or sends.
+Remaining exact release gates and rollback: integrations/time-tracker/README.md.

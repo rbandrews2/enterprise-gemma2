@@ -29,32 +29,52 @@ UI. The recovered code has NOT been proven identical to the published CLI deploy
   linked subscription. Unknown states fail closed to inactive.
 - Ten-second upstream request bounds; safe checkout error text; no-store receipts.
 
+## Baseline and latest increment
+
+Owner authorized the recovered source after loss of the original deployment folder.
+GitHub rbandrews2/dev main 14e3b1fa27a72e058e2f5cd3b3f757ac772e84b1 was fetched
+into an isolated review checkout. All 58 TIME_TRACKER files match the recovered
+copy after line-ending normalization. This proves source-copy equivalence, not
+identity with the Netlify CLI-built artifact.
+
+The app source and build inputs are now in this directory. The original remains
+untouched. Admin checkout includes seat selection, per-user/company retry identity,
+and bounded payment-status polling. A return URL never claims payment succeeded.
+
+The server now calls service-only reservation and atomic fulfillment RPCs specified
+in billing-schema-proposal.sql. That SQL is a REVIEW PROPOSAL, not an applied or
+CLI-generated migration. It includes company serialization, duplicate-event storage,
+subscription/session binding, stale-event protection, a same-timestamp conflict
+that explicitly requires reconciliation, purchased-seat storage and membership caps.
+Checkout expiry releases a pending reservation only after Stripe confirms expiration.
+Initial paid activation derives seats from exact Stripe price quantities.
+
+Existing accounts with NULL seat_limit are deliberately preserved pending allowance
+reconciliation. They must be reconciled before release; never guess their purchases.
+
 ## Required before activation
 
-1. Locate the source for the published CLI deployment; compare and reconcile
-   this patch in a separate owned checkout. Confirm exact live catalog/account,
-   setup retirement, extra-user price and tax settings without exposing secrets.
-2. Read-only database inspection: check current grants/policies. Recovery SQL
-   grants authenticated admins INSERT on billing with no status restriction.
-   Prepare a CLI-generated migration to revoke client billing writes, retain
-   tenant-scoped reads, and make webhook writes server-only. Do not blindly
-   apply recovery SQL to the current database.
-3. Add durable checkout reservations, unique session/subscription linkage,
-   transactional event deduplication, concurrency and ordering protection.
-   The current candidate has Stripe request idempotency but NOT complete
-   database webhook idempotency or checkout-reservation concurrency control.
-4. Persist purchased seat allowance and enforce it in membership creation/join
-   server-side. Metadata alone does not enforce purchased seats. Review existing
-   customer allowances and lifecycle transitions before migrating anything.
-5. Wire seat selection/requestId through the actual app, preserving them across
-   sign-in. Display payment pending/success/failure from authoritative billing;
-   never grant access based on a URL. Connect storefront only after acceptance.
-   Existing storefront Tracker link remains unchanged meanwhile.
-6. Verify invoice failures/renewals, refunds/disputes, cancellation and recoveries
-   against the documented access policy. Add required event handling.
-7. Run PostgreSQL authorization/atomicity checks plus a Stripe sandbox lifecycle
-   including duplicate/out-of-order events and an interrupted return page.
-   Current unit checks mock external services and cannot satisfy this gate.
+1. Inspect live schema/grants and customer allowances read-only. Generate the actual
+   migration with the Supabase CLI after review. Validate tenant RLS and concurrent
+   writes on disposable PostgreSQL. The embedded check uses synthetic schema and
+   roles; it is not live Supabase acceptance or a cross-connection race test.
+2. Test the exact client in a synthetic browser and verify receipt recovery after
+   interruption. Current UI compiles; signed-in browser acceptance remains open.
+3. Verify live catalog/account, extra-user price, setup retirement and tax settings.
+   Enable neither candidate function nor storefront routing before acceptance.
+4. Verify complete Stripe sandbox lifecycle: invoice failures/renewals, disputes,
+   refunds, cancellation, duplicate and out-of-order delivery. Refund/dispute policy
+   handlers and operator reconciliation for equal-timestamp conflicts or orphaned
+   reservations still need implementation. Existing legacy subscription metadata
+   must be migrated/reconciled before replacing the production webhook.
+5. Deploy reviewed schema before functions and app, then connect the storefront.
+   No live enablement is authorized by this document. The Tracker storefront link
+   remains unchanged until the complete flow is accepted.
+
+Rollback: disable new checkout, retain paid reports/records and billing event tables.
+Do not restore browser billing-write permissions. Preserve transactional fulfillment
+while existing payments remain in flight; rolling back blindly to the old webhook
+would remove its payment checks. Take a database backup before any approved migration.
 
 No migrations, credentials, live purchases, production deploy or customer sends
 were performed. Rollback of this local increment is simply excluding this
@@ -63,8 +83,8 @@ directory; it is outside the WZOS application runtime.
 ## Validation
 
 Run `node --test integrations/time-tracker/tests/checkout.test.mjs` from the
-integration checkout. Initial run: 17 PASS, zero skips/fails. Results for the
-final candidate are recorded in `docs/STOREFRONT_ACTIVATION_20261031.md`.
+integration checkout. Latest JavaScript run: 23 PASS, zero skips/fails. Embedded PostgreSQL proposal
+checks: 17 PASS. Final Vite production build PASS (1740 modules). Results recorded in `docs/STOREFRONT_ACTIVATION_20261031.md`.
 
 References: [Stripe webhook processing](https://docs.stripe.com/events/manage-webhook-endpoints),
 [Supabase row security](https://supabase.com/docs/guides/database/postgres/row-level-security).

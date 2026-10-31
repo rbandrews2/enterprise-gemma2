@@ -122,9 +122,15 @@ const handle = async (req) => {
   if (existing?.[0]?.stripe_subscription_id || ['active', 'trialing'].includes(existing?.[0]?.status)) {
     return json({ error: 'This company already has billing. Manage the existing subscription.' }, 409);
   }
-  // Never reset an existing company's entitlement to pending during checkout.
+  const reservation = await supabaseRequest('/rpc/tracker_reserve_checkout', {
+    method: 'POST', body: JSON.stringify({ p_company: companyId, p_user: user.id, p_request: requestId, p_seats: seats }),
+  });
+  if (!uuid.test(reservation?.request_id || '') || reservation.seats !== seats) {
+    return json({ error: 'Unable to reserve checkout.' }, 503);
+  }
+  // Concurrent requests use the same durable reservation and Stripe idempotency key.
   const idempotencyKey = createHash('sha256')
-    .update(JSON.stringify([companyId, user.id, requestId])).digest('hex');
+    .update(JSON.stringify([companyId, user.id, reservation.request_id])).digest('hex');
 
   const session = await stripeApi(
     '/checkout/sessions',
@@ -137,11 +143,13 @@ const handle = async (req) => {
       'line_items[0][price]': monthlyPriceId,
       'line_items[0][quantity]': '1',
       ...(seats > 1 ? { 'line_items[1][price]': extraPriceId, 'line_items[1][quantity]': String(seats - 1) } : {}),
+      'metadata[request_id]': reservation.request_id,
       'metadata[seats]': String(seats),
       'metadata[integration]': 'tracker-v2',
       'metadata[company_id]': companyId,
       'metadata[user_id]': user.id,
       'metadata[product_id]': productId,
+      'subscription_data[metadata][request_id]': reservation.request_id,
       'subscription_data[metadata][seats]': String(seats),
       'subscription_data[metadata][integration]': 'tracker-v2',
       'subscription_data[metadata][company_id]': companyId,

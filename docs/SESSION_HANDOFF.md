@@ -1,5 +1,14 @@
 # WZOS current session handoff - October 18, 2026
 
+## Tracker source confirmed and activation candidate expanded - October 31, 2026
+
+Owner authorized recovered baseline; GitHub main 14e3b1f TIME_TRACKER matches
+all 58 files. Isolated candidate now includes app seat selection/confirmation,
+reservation and fulfillment RPC wiring, and reviewed SQL proposal with seat caps.
+23 focused JS checks PASS; 17 embedded PostgreSQL checks PASS. Not deployed;
+live RLS/concurrency, sandbox lifecycle, legacy reconciliation and UI gates remain.
+See integrations/time-tracker/README.md. Original checkout untouched.
+
 ## Standalone checkout candidate - October 31, 2026
 
 Local isolated repairs: integrations/time-tracker. 17 focused Node checks PASS;

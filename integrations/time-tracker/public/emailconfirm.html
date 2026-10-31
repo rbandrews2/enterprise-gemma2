@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Email Confirmed</title>
+    <style>
+      :root {
+        color-scheme: light;
+        font-family: "Segoe UI", system-ui, sans-serif;
+        background: #0f172a;
+        color: #f8fafc;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+      }
+      main {
+        max-width: 520px;
+        width: 100%;
+        background: rgba(15, 23, 42, 0.9);
+        border: 1px solid rgba(148, 163, 184, 0.2);
+        border-radius: 20px;
+        padding: 28px;
+        box-shadow: 0 24px 60px rgba(15, 23, 42, 0.4);
+      }
+      h1 {
+        margin: 0 0 8px;
+        font-size: 24px;
+      }
+      p {
+        margin: 0 0 16px;
+        color: #cbd5f5;
+      }
+      .note {
+        font-size: 14px;
+        color: #94a3b8;
+      }
+      a.button {
+        display: inline-block;
+        background: #10b981;
+        color: #0f172a;
+        text-decoration: none;
+        font-weight: 700;
+        padding: 12px 18px;
+        border-radius: 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Email confirmed</h1>
+      <p>Confirming your email and signing you in.</p>
+      <a class="button" href="/">Go to Time Tracker⚡</a>
+      <p class="note">Redirecting you in <span id="countdown">5</span> seconds.</p>
+    </main>
+    <script>
+      const countdownEl = document.getElementById('countdown');
+      const hash = window.location.hash || '';
+      let seconds = 5;
+      const tick = () => {
+        seconds -= 1;
+        if (seconds <= 0) {
+          const target = hash ? `/${hash}` : '/';
+          window.location.assign(target);
+          return;
+        }
+        countdownEl.textContent = String(seconds);
+        window.setTimeout(tick, 1000);
+      };
+      window.setTimeout(tick, 1000);
+    </script>
+  </body>
+</html>

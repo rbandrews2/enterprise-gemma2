@@ -66,30 +66,38 @@ const supabaseRequest = async (path, options = {}) => {
   return data;
 };
 
-const upsertBilling = async ({
-  companyId,
-  customerId,
-  subscriptionId,
-  productId,
-  status,
-  currentPeriodEnd,
-}) => {
-  if (!companyId) return;
+export function purchasedSeats(subscription, basePrice, extraPrice) {
+  const items = subscription?.items;
+  if (!basePrice || !extraPrice || items?.has_more || !Array.isArray(items?.data)) return null;
+  let base = 0, extra = 0, count = 0;
+  for (const item of items.data) {
+    if (!Number.isInteger(item.quantity) || item.quantity < 1) return null;
+    const id = typeof item.price === 'string' ? item.price : item.price?.id;
+    if (id === basePrice && base === 0 && item.quantity === 1) base = 1;
+    else if (id === extraPrice && extra === 0) extra = item.quantity;
+    else return null;
+    count++;
+  }
+  const seats = base + extra;
+  return base === 1 && count <= 2 && seats <= 30 ? seats : null;
+}
 
-  await supabaseRequest('/company_billing_2?on_conflict=company_id', {
-    method: 'POST',
-    signal: AbortSignal.timeout(10000),
-    headers: { Prefer: 'resolution=merge-duplicates,return=representation' },
-    body: JSON.stringify({
-      company_id: companyId,
-      stripe_customer_id: customerId,
-      stripe_subscription_id: subscriptionId,
-      stripe_product_id: productId || 'prod_USsnAqnFjc2KIa',
-      status,
-      current_period_end: currentPeriodEnd
-        ? new Date(currentPeriodEnd * 1000).toISOString()
-        : null,
-    }),
+const applyBilling = async (event, session, subscription, initial) => {
+  const seats = purchasedSeats(subscription, env('STRIPE_MONTHLY_PRICE_ID'), env('STRIPE_EXTRA_USER_PRICE_ID'));
+  if (!seats) throw new Error('Invalid subscription prices');
+  const metadata = subscription.metadata || {};
+  if (metadata.integration !== 'tracker-v2') throw new Error('Unreviewed legacy subscription');
+  if (initial && (session.metadata?.request_id !== metadata.request_id ||
+      Number(metadata.seats) !== seats || Number(session.metadata?.seats) !== seats)) throw new Error('Seat binding mismatch');
+  const period = subscription.current_period_end ?? subscription.items?.data?.[0]?.current_period_end;
+  const status = ['active','trialing','past_due','canceled','unpaid'].includes(subscription.status) ? subscription.status : 'inactive';
+  return supabaseRequest('/rpc/tracker_apply_billing_event', {
+    method: 'POST', body: JSON.stringify({ p_event: event.id, p_event_at: event.created,
+      p_company: metadata.company_id, p_request: initial ? metadata.request_id : null,
+      p_session: initial ? session.id : null, p_subscription: subscription.id,
+      p_customer: subscription.customer, p_product: metadata.product_id,
+      p_status: status, p_seats: seats, p_period_end: period ? new Date(period * 1000).toISOString() : null,
+      p_initial: initial }),
   });
 };
 
@@ -113,6 +121,17 @@ export default async (req) => {
   try { event = JSON.parse(payload); } catch { return new Response('Invalid event.', { status: 400 }); }
 
   try {
+    if (event.type === 'checkout.session.expired') {
+      const id = event.data?.object?.id;
+      if (!/^cs_[a-zA-Z0-9_]+$/.test(id || '')) return new Response('Invalid session.', { status: 400 });
+      const session = await stripeGet(`/checkout/sessions/${id}`, stripeSecretKey);
+      if (session.status === 'expired' && session.metadata?.integration === 'tracker-v2' &&
+          session.metadata?.company_id === session.client_reference_id) {
+        await supabaseRequest('/rpc/tracker_expire_checkout', { method: 'POST', body: JSON.stringify({
+          p_company: session.client_reference_id, p_request: session.metadata.request_id,
+        }) });
+      }
+    }
     if (['checkout.session.completed', 'checkout.session.async_payment_succeeded'].includes(event.type)) {
       const sessionId = event.data?.object?.id;
       if (!/^cs_[a-zA-Z0-9_]+$/.test(sessionId || '')) return new Response('Invalid session.', { status: 400 });
@@ -123,14 +142,7 @@ export default async (req) => {
 
       const companyId = paidCompany(session, subscription, env('STRIPE_PRODUCT_ID') || 'prod_USsnAqnFjc2KIa');
       if (!companyId) return new Response('No paid entitlement to activate.');
-      await upsertBilling({
-        companyId,
-        customerId: session.customer,
-        subscriptionId: session.subscription,
-        productId: session.metadata?.product_id,
-        status: subscription.status,
-        currentPeriodEnd: subscription?.current_period_end,
-      });
+      await applyBilling(event, session, subscription, true);
     }
 
     if (
@@ -151,14 +163,7 @@ export default async (req) => {
       if (existing?.[0]?.stripe_subscription_id !== subscription.id) return new Response('Unlinked subscription.');
       const knownStatuses = ['active', 'trialing', 'past_due', 'canceled', 'unpaid'];
       if (!knownStatuses.includes(subscription.status)) subscription.status = 'inactive';
-      await upsertBilling({
-        companyId: subscription.metadata?.company_id,
-        customerId: subscription.customer,
-        subscriptionId: subscription.id,
-        productId: subscription.metadata?.product_id,
-        status: subscription.status,
-        currentPeriodEnd: subscription.current_period_end,
-      });
+      await applyBilling(event, null, subscription, false);
     }
   } catch (error) {
     return new Response('Billing processing failed. Retry this event.', { status: 500 });

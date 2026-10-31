@@ -1,0 +1,66 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-size: 17px;
+  }
+
+  @media (min-width: 768px) {
+    html {
+      font-size: 18px;
+    }
+  }
+}
+
+.app-bg {
+  position: relative;
+  isolation: isolate;
+  overflow-x: hidden;
+  background:
+    linear-gradient(145deg, rgba(0, 0, 0, 0.99), rgba(10, 8, 6, 0.98) 44%, rgba(0, 0, 0, 0.99)),
+    #000;
+}
+
+.app-bg::before {
+  content: "";
+  position: fixed;
+  inset: -18%;
+  z-index: -2;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 18% 18%, rgba(249, 115, 22, 0.18), transparent 28%),
+    radial-gradient(circle at 82% 12%, rgba(234, 179, 8, 0.12), transparent 24%),
+    radial-gradient(circle at 60% 88%, rgba(249, 115, 22, 0.1), transparent 30%);
+  filter: blur(8px);
+}
+
+.app-bg::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.28;
+  background:
+    linear-gradient(115deg, transparent 0 20%, rgba(255, 255, 255, 0.08) 21%, transparent 28% 100%),
+    url("/time-tracker-logo.png");
+  background-size: 220% 220%, min(88vw, 560px);
+  background-position: 0% 50%, center 18%;
+  background-repeat: no-repeat;
+  mix-blend-mode: screen;
+  animation: tracker-layer-drift 18s ease-in-out infinite alternate;
+}
+
+@keyframes tracker-layer-drift {
+  from {
+    transform: translate3d(-2%, -1%, 0) scale(1.02);
+    background-position: 0% 50%, center 16%;
+  }
+
+  to {
+    transform: translate3d(2%, 1%, 0) scale(1.06);
+    background-position: 100% 50%, center 24%;
+  }
+}
