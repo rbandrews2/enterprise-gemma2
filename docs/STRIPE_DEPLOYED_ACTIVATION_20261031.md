@@ -86,3 +86,28 @@ docs/CHECKOUT_ACCEPTANCE_SCOPE_20261031.md; select separate Tracker test project
 or investigate Supabase plan upgrade. Branch creation was refused because the
 current plan lacks branching; no branch or paid plan created. Do not use customer
 records for synthetic checkout acceptance. Test API secret remains pinned version2.
+
+## Approved checkout environment preparation - October 31, 2026
+
+User approved isolated WZOS deployment; then prioritized Core and Enterprise
+before Time Tracker. No Supabase project or plan change should proceed now.
+
+Created wzos_checkout_acceptance database on existing wzos-v2-staging-db and
+wzos-checkout-acceptance service account. Runtime has conditional Cloud SQL
+Client limited to that instance, and secretAccessor only on the two new secrets:
+wzos-checkout-acceptance-stripe-key (copy of verified test version2) and
+wzos-checkout-acceptance-encryption-key. The original key secret contains a live
+version1, so it was deliberately NOT granted to the test runtime.
+
+Build8d4a0cd3-6688-4d4c-b1dd-01a9f4075e85 SUCCESS; image digest
+5805cfa34b8c83e4130ab6e5587fef04b0534e28f1aecfba8c528c3f9845a795.
+No Cloud Run acceptance services or test Stripe endpoint created yet.
+
+Existing wzos_app SQL login lacks CREATEDB and CREATEROLE. User does not know
+postgres password. Prepared scripts/provision_checkout_test_database.py to use
+a temporary expiring SQL administrator, create restricted runtime login and
+acceptance DSN secret, then remove/verify temporary user. This broader setup
+access awaits a specific approval; do not run yet. Scope documented in
+CHECKOUT_ACCEPTANCE_SCOPE_20261031.md. Test DB owner is cloudsqlsuperuser.
+Cloud Shell terminal1 proxy PID7364, localhost5546; log/pid files under
+/tmp/wzos-checkout-gate.EEy9A26Q. Terminal0 is the successful build shell.

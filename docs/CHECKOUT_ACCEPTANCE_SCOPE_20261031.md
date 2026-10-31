@@ -1,5 +1,23 @@
 # Isolated paid-checkout acceptance deployment
 
+## Additional one-shot SQL setup approval required
+
+User approved the isolated deployment and then prioritized Core/Enterprise before
+Tracker. Test database and dedicated service account are created. Existing
+`wzos_app` has neither CREATEDB nor CREATEROLE; user does not have the postgres
+password. Do not reset postgres or broaden the existing application login.
+
+Prepared script: scripts/provision_checkout_test_database.py. Proposed new login
+`wzos_checkout_setup_20261031` receives Cloud SQL's default administrative SQL
+privileges across this instance, including the ability to affect the production
+database. The script only connects to the empty test database, creates the limited
+`wzos_checkout_test` login, grants test schema access, stores its DSN in the
+acceptance-only secret, and deletes the temporary administrator in finally.
+Its password expires after one hour; cleanup is independently read back. No app
+runtime receives the temporary administrator credential. No production records
+or existing passwords are changed. This broader temporary access was NOT part of
+the original test-runtime approval and needs specific confirmation before running.
+
 Prepared, not deployed. No live payments, customer messages or production writes.
 
 ## WZOS Core and Enterprise
