@@ -67,3 +67,22 @@ Credential blocker cleared. Deployed isolated receiver/database configuration,
 test webhook registration/signing-secret binding and actual external delivery
 for Core/Enterprise/Tracker remain outstanding. No deployment, real charge,
 subscription creation, IAM or production database change in this credential check.
+
+## Checkout acceptance preparation - October 31, 2026
+
+Candidate fefb926 pushed to codex/preproduction-modules. Test catalog created for
+Core/Enterprise in Molecular Stripe TEST mode; no payments created. Test catalog
+and return-origin isolation repairs plus separate private-control/public-webhook
+acceptance factory prepared. No production deployment or data changes.
+
+Cloud checkout /tmp/wzos-checkout-gate.EEy9A26Q/repo ran 83 focused checks PASS
+with no skips (commerce runtime, purchase onboarding, staging config and surface),
+including disposable native PostgreSQL cases. Log: ../postgres.log; exit: ../gate.exit.
+Local new checks: 4 config + 3 surface PASS; Tracker26 checkout/config PASS.
+Do not repeat these unchanged tests. Actual Stripe network delivery remains open.
+
+Pending user answers: approve WZOS isolated receiver/database/runtime scope in
+docs/CHECKOUT_ACCEPTANCE_SCOPE_20261031.md; select separate Tracker test project
+or investigate Supabase plan upgrade. Branch creation was refused because the
+current plan lacks branching; no branch or paid plan created. Do not use customer
+records for synthetic checkout acceptance. Test API secret remains pinned version2.
