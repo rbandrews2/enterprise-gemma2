@@ -1,5 +1,28 @@
 # WZOS current session handoff - October 18, 2026
 
+## Soft release candidate prepared - October 31, 2026
+
+User requested repaired code and desktop storefront ready for deployment later
+ today; no production cutover in this step. Backend invoice repair d1ba27f is
+already committed and passed 78 PostgreSQL checks plus deployed Core15 and
+Enterprise25 monthly payment/webhook/activation acceptance. Do not rerun those
+unchanged gates. Storefront routing checks passed 5/5 and all three JS syntax
+checks passed in the preceding preparation.
+
+Desktop folder: C:/Users/MolecularDev/Desktop/GemmaV2_WZOS_2.0_Files/wzos-storefront-draft.
+Public upload artifact: storefront-public.zip (five HTML/JS files), also dist/.
+Tracked storefront source synchronized; WZOS sign-in URL corrected and unverified
+SOC2/ISO/SSO claims replaced. Historical Stripe screenshots and internal README
+are excluded from the upload artifact. Backup retained beside the desktop folder.
+
+Deploy the production WZOS backend containing d1ba27f BEFORE enabling storefront
+sales. The acceptance-only Docker image is not the production application image.
+Retain current production revision for rollback; preserve live secrets/configuration.
+Time Tracker automatic activation remains deferred, not production accepted.
+Annual/additional-seat real payment variants are not covered by the two accepted
+base-seat monthly purchases. Existing support/sales mailboxes and legal/tax details
+remain listed in storefront/README.md for release review.
+
 ## Core and Enterprise deployed activation accepted - October 31, 2026
 
 Repaired image sha256:26b1a23215f519be1177b575834b9186958c8f56ba71c4307e4e5c60b62f3574

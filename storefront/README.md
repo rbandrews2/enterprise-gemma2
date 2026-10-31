@@ -1,3 +1,43 @@
+# Storefront release candidate - October 31, 2026
+
+The desktop draft and repository storefront are synchronized. Publish only the
+contents of dist/ (or storefront-public.zip), not this full working folder.
+No public website deployment was performed by this preparation.
+
+## Current behavior
+
+- Core and Enterprise pass monthly/annual offer and seat selection to
+  https://app.workzoneos.org/. WZOS handles authenticated checkout and activation.
+- Stand-alone Time Tracker still uses its separate Stripe Payment Link; automatic
+  activation for that app is not yet accepted. Its app URL remains
+  https://clock.superiorllc.org.
+- The WZOS customer sign-in link now uses app.workzoneos.org.
+- Unverified SOC2/ISO/SSO marketing claims were replaced with access-control text.
+- No credentials, acceptance endpoints, internal notes or evidence screenshots
+  belong in the public artifact.
+
+## Verified and remaining release gates
+
+Core15 and Enterprise25 monthly sandbox payments, actual Stripe webhook delivery,
+activation, buyer isolation and duplicate handling passed on the deployed test
+receiver. The invoice compatibility repair passed 78 PostgreSQL checks, zero skips.
+The temporary test environment was cleaned up. These results do not establish live
+production acceptance, annual payments or stand-alone Tracker activation.
+
+Before publishing a fully enabled sales site:
+1. Deploy the tested WZOS invoice repair and checkout changes to production and
+   verify its live webhook/configuration (do not use the deleted test receiver).
+2. Finish Tracker activation acceptance, or explicitly approve its existing manual
+   activation sales flow.
+3. Confirm the retained sales/support mailboxes, tax collection configuration,
+   privacy/terms/refund information and the intended storefront hosting/domain.
+4. Check the public site on mobile/desktop after upload and verify product routing.
+
+Historical configuration notes follow; current routing and acceptance above take
+precedence over older statements about untested activation and Payment Links.
+
+---
+
 # Local activation integration (October 31, 2026)
 
 Core/Enterprise now route through authenticated WZOS checkout; corresponding app changes must be deployed first. Monthly/annual selection and seats transfer automatically. Verified payment fills the activation code inside WZOS; no activation email is sent. Stand-alone Tracker link remains separate and not activation-integrated. No live deployment or payment test performed.
