@@ -1,5 +1,56 @@
 # WZOS current session handoff - October 18, 2026
 
+## Core and Enterprise deployed activation accepted - October 31, 2026
+
+Repaired image sha256:26b1a23215f519be1177b575834b9186958c8f56ba71c4307e4e5c60b62f3574
+ran as control revision00003-fbc and webhook revision00003-d7l.
+Stripe resent the existing paid TEST events; no new payment was made.
+Enterprise evt_1UWYCvCTCYI3n5kZPZLEVTAB: HTTP200, fulfilled=true,
+activation_issued=true at09:12:59UTC. Core evt_1UWYCBCTCYI3n5kZ2mKHcCPR:
+HTTP200, fulfilled=true, activation_issued=true at09:13:43UTC.
+Core duplicate redelivery09:14:09UTC: HTTP200, duplicate=true, fulfilled=true.
+
+Deployed authenticated checks PASS for both buyers: fulfilled receipt, wrong-buyer
+receipt404, wrong-buyer redemption403, successful organization creation, correct
+Core15/Enterprise25 seat limit, one seat used, repeat redemption same organization.
+No activation code or credential printed. Cloud evidence: activation-results.json
+under /tmp/wzos-checkout-gate.EEy9A26Q; screenshot checkout-stripe-delivery-20261031.png.
+Earlier83 checks and repair78 PostgreSQL checks remain passing; no unchanged suite
+rerun. Both owned synthetic subscriptions canceled (livemode=false). Disposable
+Stripe webhook deleted and dashboard confirms no remaining destination in this list.
+Cloud cleanup PASS: both temporary services absent; project Cloud SQL grant and all four secret grants removed and independently read back. Test database/secrets retained; production untouched.
+
+Production has NOT received this invoice compatibility repair yet. Time Tracker
+external acceptance remains deferred. Annual/additional-seat payment variants are
+not claimed by these two monthly base-seat acceptance runs. Retain the test database
+and test secrets as evidence; database deletion was not authorized.
+
+## Paid test checkout exposed invoice compatibility issue - October 31, 2026
+
+Both real Stripe SANDBOX Checkout submissions completed paid through deployed
+control service: Core15800cents/15 seats and Enterprise124800cents/25 seats.
+Core session cs_test_b1ll13vZxrTXLD0isdY2c0N7WdZwZ22p1wOduYGZeWcFcANJdOUG5P0KoF;
+subscription sub_1UWYC9CTCYI3n5kZLz0jSGFz; event evt_1UWYCBCTCYI3n5kZ2mKHcCPR.
+Enterprise session cs_test_b1OKqPEJBVDZppdq3cmDT0A9j9hDNSKCTvaYRwf9Fc4NgkDVHNVnsqTHYq;
+subscription sub_1UWYCtCTCYI3n5kZvb0sHYFV; event evt_1UWYCvCTCYI3n5kZPZLEVTAB.
+No real charges. Both receipts currently PENDING; do not call activation accepted.
+Actual webhook deliveries reached receiver but checkout events returned400.
+Read-only provider diagnosis: active subscriptions, invoice status paid, legacy
+paid boolean absent. Code incorrectly required that retired field.
+Repair d1ba27f uses invoice status with legacy contradictory values denied;
+shared helper applied to initial activation and upgrade checks. Fixtures now
+match current Stripe invoice shape. Local78 run:40pass/38PGskips; cloud78PASS,
+zero skips,41.631s, invoice-repair.exit0. Earlier83gate retained, not replayed.
+Repaired acceptance image building; no production deployment. Stripe dashboard
+requires sign-in for event Resend; user asked. Reuse these payments, no new charge.
+
+Receiver public setting uses no-invoker-iam-check after domain policy rejected
+allUsers binding. This is Google's documented public-service method. Public
+account route404, unsigned webhook400; private control anonymous403 and authorized
+catalog200. Both services running candidate5805cfa until repair build completes.
+Keep temporary acceptance environment until resend/receipt/redemption evidence is
+complete, then cancel the two synthetic subscriptions and clean up test workloads.
+
 ## Checkout database provisioned and receiver preparation - October 31, 2026
 
 Reconnected in-app Cloud Shell and freshly verified admin@workzoneos.org,
