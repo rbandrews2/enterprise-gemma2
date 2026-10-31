@@ -44,3 +44,25 @@ Desktop files updated in place with originals backed up at
 .local-data/storefront-before-activation. Reviewed source copy is in storefront/.
 Ship app changes before publishing new storefront; annual options are unavailable
 on older app releases. Rollback both together; no schema migration to undo.
+
+## Authenticated Netlify inspection - October 31, 2026
+
+Chrome confirms clock.superiorllc.org belongs to remarkable-muffin-a25dc8,
+site 01ac459c-00de-4660-9558-7fd1a45a8724. Published CLI deploy:
+69fbb890a565ad9951a85943 (May 6, 2026). Production functions listed:
+create-checkout-session and stripe-webhook.
+
+Environment variable NAMES verified, without revealing values:
+SITE_URL, STRIPE_MONTHLY_PRICE_ID, STRIPE_PRODUCT_ID, STRIPE_SECRET_KEY,
+STRIPE_SETUP_PRICE_ID, STRIPE_WEBHOOK_SECRET, SUPABASE_ANON_KEY,
+SUPABASE_SERVICE_ROLE_KEY, SUPABASE_URL.
+No additional-seat price variable was listed. Presence does not verify values,
+Stripe account ownership, webhook delivery, or database permissions.
+
+Recovered source requires a setup charge and fixes both line quantities to one.
+This conflicts with the current standalone storefront's no-setup, variable-seat
+offer. Deployed function source has not yet been matched to the recovery copy.
+Before implementation/deployment, establish the exact deployed source baseline;
+then add company-bound checkout selection, validated seat quantities and signed,
+idempotent paid-event fulfillment. Keep standalone entitlement separate from WZOS.
+No Netlify setting, secret, database, deployment or purchase changed in this review.
