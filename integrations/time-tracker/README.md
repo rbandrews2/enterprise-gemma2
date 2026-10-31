@@ -88,3 +88,33 @@ checks: 17 PASS. Final Vite production build PASS (1740 modules). Results record
 
 References: [Stripe webhook processing](https://docs.stripe.com/events/manage-webhook-endpoints),
 [Supabase row security](https://supabase.com/docs/guides/database/postgres/row-level-security).
+
+
+## Live read-only audit and migration preparation - October 31, 2026
+
+Public app bundle identifies Supabase project ebzfbuqclkumncnugbvq. Authenticated
+read-only schema/policy audit confirms the recovered structures. Seven companies
+have one member each; one billing row is pending, with zero linked subscriptions.
+No customer identities, contact details or credentials were exported.
+
+Live policies confirmed admin billing INSERT and broad table grants. The repair
+now revokes ALL client billing privileges, restores authenticated SELECT behind
+existing tenant RLS, and adds a restrictive paid-access check for NEW shifts only.
+History and shift completion remain available. Production has NOT been changed.
+
+Supabase CLI 2.122.0 generated
+supabase/migrations/20261031070800_tracker_checkout_activation.sql locally.
+Its body matches the tested proposal except the comment marking migration status.
+24 embedded PostgreSQL checks PASS against synthetic roles with live-policy shapes.
+Prior unchanged 23 JS checks and final Vite build retained; no redundant reruns.
+Cross-connection concurrency and actual deployment validation remain outstanding.
+
+Stripe dashboard confirms Molecular acct_1RVoyBCTCYI3n5kZ: Tracker base $9.99/month,
+extra user $4/month, both with zero active subscriptions. Product currently uses
+txcd_10000000; no tax configuration was changed. Dashboard also displays an account
+information request affecting payouts; owner must review that private task.
+
+Stripe connector still returns reauthentication-required after user's reconnect.
+Chrome reconnected as browser 5, but sandbox submenu control/DOM timed out. No
+sandbox purchase, API-key creation, live billing mutation or deployment occurred.
+Resume sandbox access; do not repeat already passing local gates without changes.

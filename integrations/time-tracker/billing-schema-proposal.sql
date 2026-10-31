@@ -6,7 +6,8 @@ alter table public.company_billing_2 add column if not exists seat_limit integer
 alter table public.company_billing_2 add column if not exists last_stripe_event_at bigint;
 -- NULL preserves existing accounts until their purchased allowance is reconciled.
 -- Do not infer paid allowances from the current employee count.
-revoke insert, update, delete on public.company_billing_2 from anon, authenticated;
+revoke all on public.company_billing_2 from public, anon, authenticated;
+grant select on public.company_billing_2 to authenticated;
 drop policy if exists "Company admins can initialize billing status" on public.company_billing_2;
 
 create table public.tracker_checkout_requests (
@@ -147,5 +148,13 @@ $$;
 revoke all on function public.tracker_enforce_seats() from public,anon,authenticated;
 create trigger tracker_membership_seat_limit before insert or update on public.memberships_2
 for each row execute function public.tracker_enforce_seats();
+-- Existing owner/member checks still apply. Only NEW shifts require paid access;
+-- closing an existing shift and reviewing historical records remain possible.
+create policy tracker_paid_new_shift on public.time_entries_2 as restrictive
+for insert to authenticated with check (
+  exists(select 1 from public.company_billing_2 b where b.company_id=time_entries_2.company_id
+    and b.status in ('active','trialing')
+    and (b.current_period_end is null or b.current_period_end>now()))
+);
 notify pgrst,'reload schema';
 commit;

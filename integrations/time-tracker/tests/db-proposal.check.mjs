@@ -12,9 +12,25 @@ create table companies_2(id uuid primary key);
 create table memberships_2(company_id uuid references companies_2,user_id uuid,role text,unique(company_id,user_id));
 create table company_billing_2(company_id uuid primary key references companies_2,stripe_customer_id text,
 stripe_subscription_id text,stripe_product_id text,status text,current_period_end timestamptz);
+create table time_entries_2(company_id uuid,user_id uuid);
+grant select,insert,update on time_entries_2 to authenticated;
+alter table time_entries_2 enable row level security;
+create policy own_time_insert on time_entries_2 for insert to authenticated with check(true);
 grant usage on schema public to anon,authenticated,service_role;
 grant select,insert,update on companies_2,memberships_2 to authenticated,service_role;
-grant select,insert on company_billing_2 to authenticated;
+grant all on company_billing_2 to anon,authenticated;
+create schema auth;
+grant usage on schema auth to authenticated,service_role;
+create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid $$;
+create function public.company_role(c uuid) returns text language sql stable security definer set search_path=public as $$ select role from memberships_2 where company_id=c and user_id=auth.uid() limit 1 $$;
+create function public.is_company_admin(c uuid) returns boolean language sql stable security definer set search_path=public as $$ select coalesce(company_role(c) in ('owner','admin'),false) $$;
+create function public.is_company_member(c uuid) returns boolean language sql stable security definer set search_path=public as $$ select exists(select 1 from memberships_2 where company_id=c and user_id=auth.uid()) $$;
+alter table company_billing_2 enable row level security;
+alter table memberships_2 enable row level security;
+create policy billing_read on company_billing_2 for select to authenticated using(is_company_member(company_id));
+create policy membership_read on memberships_2 for select to authenticated using(user_id=auth.uid() or is_company_admin(company_id));
+create policy membership_insert on memberships_2 for insert to authenticated with check(is_company_admin(company_id));
+create policy membership_update on memberships_2 for update to authenticated using(is_company_admin(company_id)) with check(is_company_admin(company_id));
 insert into companies_2 values('${company}');
 insert into memberships_2 values('${company}','${user}','owner');
 `);
@@ -22,8 +38,9 @@ await db.exec(await readFile(new URL('../billing-schema-proposal.sql',import.met
 let checks=0;
 const ok = () => checks++;
 async function denied(sql) { await assert.rejects(db.exec(sql)); ok(); }
-await db.exec('set role authenticated');
+await db.exec(`set request.jwt.claim.sub='${user}'; set role authenticated`);
 await denied(`insert into company_billing_2(company_id,status) values('${company}','active')`);
+await denied('truncate company_billing_2');
 await denied(`select tracker_reserve_checkout('${company}','${user}','${request}',2)`);
 await db.exec('reset role; set role service_role');
 const reserve=async (id,seats=2) => (await db.query('select tracker_reserve_checkout($1,$2,$3,$4) as result',[company,user,id,seats])).rows[0].result;
@@ -35,6 +52,7 @@ async function event(id,at,status='active',initial=true,sub='sub_test') {
     [id,at,company,request,'cs_test',sub,'cus_test','prod_test',status,2,null,initial])).rows[0].result;
 }
 assert.equal(await event('evt_1',100),'applied'); ok();
+await db.exec(`reset role;set role authenticated;insert into time_entries_2 values('${company}','${user}');reset role;set role service_role`);ok();
 assert.equal(await event('evt_1',100),'duplicate'); ok();
 assert.equal(await event('evt_2',101),'duplicate-session'); ok();
 await assert.rejects(event('evt_wrong',102,'active',false,'sub_other')); ok();
@@ -43,10 +61,17 @@ assert.equal((await db.query('select status,seat_limit from company_billing_2'))
 assert.equal(await event('evt_cancel',103,'canceled',false),'applied'); ok();
 await assert.rejects(event('evt_equal',103,'active',false)); ok();
 await db.exec('reset role; set role authenticated');
+await denied(`insert into time_entries_2 values('${company}','${user}')`);
 await db.exec(`insert into memberships_2 values('${company}','55555555-5555-4555-8555-555555555555','worker')`); ok();
 await denied(`insert into memberships_2 values('${company}','66666666-6666-4666-8666-666666666666','worker')`);
 await denied(`update memberships_2 set user_id='77777777-7777-4777-8777-777777777777' where user_id='${user}'`);
 await db.exec('reset role');
 assert.equal((await db.query('select count(*)::integer as n from memberships_2')).rows[0].n,2); ok();
+await db.exec(`set request.jwt.claim.sub='88888888-8888-4888-8888-888888888888';set role authenticated`);
+assert.equal((await db.query('select count(*)::integer as n from company_billing_2')).rows[0].n,0); ok();
+await denied(`insert into memberships_2 values('${company}','99999999-9999-4999-8999-999999999999','admin')`);
+await db.exec('reset role; set role anon');
+await denied('select * from company_billing_2');
+await denied('truncate company_billing_2');
 await db.close();
 console.log(`${checks} embedded PostgreSQL checks PASS; live RLS/schema and cross-connection concurrency validation still required.`);

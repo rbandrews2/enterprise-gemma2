@@ -1,5 +1,14 @@
 # WZOS current session handoff - October 18, 2026
 
+## Tracker live audit and migration ready locally - October 31, 2026
+
+Live Supabase schema/policies and aggregate billing state verified read-only.
+Prepared stronger billing grants and new-shift entitlement policy; CLI migration
+created locally, not applied. 24 embedded PostgreSQL checks PASS. Existing 23 JS
+and Vite build results retained. Stripe live prices confirmed; connector still
+reauthentication-blocked after user reconnect, browser sandbox access timed out.
+No charges, live database changes or deployment. See integrations/time-tracker/README.md.
+
 ## Tracker source confirmed and activation candidate expanded - October 31, 2026
 
 Owner authorized recovered baseline; GitHub main 14e3b1f TIME_TRACKER matches
