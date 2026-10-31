@@ -1,5 +1,14 @@
 # WZOS current session handoff - October 18, 2026
 
+## Time history collapsed by default - October 30, 2026 (local)
+
+User chose to hide old server records while retaining history. Time history is
+now a closed-by-default disclosure on mobile and desktop; opening it retains
+all records, filters, pagination, exports and admin correction controls. Account
+switch closes it again. No deletion, API, schema or attendance changes.
+31 clock Node tests passed. Browser expand/collapse verified with synthetic data;
+evidence .local-data/release-bf522a0/history-collapsed.png. Deployment pending.
+
 ## Time Tracker recovery deployed - October 30, 2026
 
 Supersedes the local-only clock checkpoints below. Repairs 89274e7 and bf522a0

@@ -67,3 +67,8 @@
 #clock-device-recovery[hidden]{display:none}
 #clock-device-recovery summary{cursor:pointer;color:#ffd082;font-weight:700}
 #clock-device-recovery .clock-actions{display:flex;flex-wrap:wrap;gap:.5rem}
+
+/* Keep saved attendance available without crowding the current clock. */
+.clock-history-panel > summary { cursor: pointer; color: var(--gold, #e5bd63); font-size: 1.15rem; font-weight: 700; padding: .35rem 0; }
+.clock-history-panel[open] > summary { margin-bottom: 1rem; }
+.clock-history-panel > summary:focus-visible { outline: 2px solid #e5bd63; outline-offset: 5px; }
