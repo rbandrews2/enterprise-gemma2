@@ -52,6 +52,15 @@ class ReasoningTests(unittest.TestCase):
         self.assertEqual(packet['status'], 'ready_for_reviewed_answer')
         self.assertIn('Additional source notes continue', packet['evidence'][2]['text'])
 
+    def test_conversational_named_section_keeps_complete_evidence(self):
+        self.reviewed()
+        query = fixture.query(query='Give me information on proper yellow centerline on a 45-mile-per-hour road.')
+        result = self.index.search(query)
+        self.assertEqual(result['match_quality'], 'named_section')
+        packet = self.index.context(query)
+        self.assertEqual(packet['status'], 'ready_for_reviewed_answer')
+        self.assertEqual({p['page'] for p in packet['evidence']}, {1, 2, 3})
+
     def test_partial_lexical_match_does_not_replace_model_reasoning_with_a_keyword_gate(self):
         self.reviewed()
         packet = self.index.context(fixture.query(query='Explain synthetic markings uncertainty'))
@@ -443,3 +452,49 @@ class SourceUncertaintyTests(unittest.TestCase):
         for value in ({'1': []}, {'0': ['Unresolved synthetic issue with source']}, {'1': 'not a list'}, []):
             path.write_text(json.dumps(value), encoding='utf-8')
             with self.subTest(value=value), self.assertRaises(ValueError): self.index.rebuild()
+
+
+class ConversationalRetrievalRepairTests(unittest.TestCase):
+    def test_only_reviewed_conflict_holds_allow_partial_reasoning(self):
+        from services.workspace_preview.dot_knowledge import supported_context
+        packet = {'status': 'source_review_required', 'evidence': [
+            {'answer_eligible': True}, {'answer_eligible': False, 'conflict_only_hold': True}]}
+        self.assertTrue(supported_context(packet))
+        packet['evidence'][1]['conflict_only_hold'] = False
+        self.assertFalse(supported_context(packet))
+        packet['evidence'] = [{'answer_eligible': False, 'conflict_only_hold': True}]
+        self.assertFalse(supported_context(packet))
+        packet['status'] = 'needs_clarification'
+        self.assertFalse(supported_context(packet))
+
+    def test_budget_failure_returns_one_actionable_follow_up(self):
+        warning = 'A complete section and its corrections exceed the context budget; narrow the operation or section.'
+        result = blocked_source_response({'status': 'needs_clarification', 'evidence': [],
+            'warnings': [warning, warning, 'Search terms matched partially. Internal retrieval details.']})
+        self.assertFalse(result['provider_called'])
+        self.assertEqual(result['warnings'], [])
+        self.assertIn('Which operation', result['follow_up'])
+        self.assertNotIn('needs reviewed', result['message'])
+
+    def test_named_topic_ignores_filler_but_requires_the_heading_topic(self):
+        from services.v2.knowledge.manuals import named_heading
+        self.assertTrue(named_heading('Section 6B.08 Tapers',
+            'Give me information on a proper taper length on a 45-mile-per-hour road.'))
+        self.assertFalse(named_heading('Section 6B.08 Tapers', 'Residential work zone in Roanoke'))
+        self.assertFalse(named_heading('Section 6P.01 Typical Applications', 'Give me general information'))
+
+    def test_conflicting_pages_cannot_support_claims_and_notice_is_not_generic(self):
+        packet = {'evidence': [
+            {'citation_id': 'good', 'answer_eligible': True, 'text': 'Reviewed synthetic guidance only.'},
+            {'citation_id': 'held', 'answer_eligible': False, 'text': 'Disputed synthetic guidance only.',
+             'source_uncertainties': ['Synthetic conflict']}], 'formulas': []}
+        value = {'status': 'draft', 'claims': [{'text': 'Synthetic supported advice', 'citation_id': 'good',
+            'supporting_quote': 'Reviewed synthetic guidance only.'}], 'unresolved': []}
+        draft = validate_draft(value, packet)
+        self.assertEqual(draft.status, 'needs_clarification')
+        self.assertIn('discrepancies', draft.unresolved[0])
+        value['claims'][0].update(citation_id='held', supporting_quote='Disputed synthetic guidance only.')
+        with self.assertRaises(ValueError): validate_draft(value, packet)
+        value['claims'][0].update(citation_id='good', supporting_quote='Reviewed synthetic guidance only.')
+        packet['evidence'].pop()
+        self.assertEqual(validate_draft(value, packet).unresolved, [])

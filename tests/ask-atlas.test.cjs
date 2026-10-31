@@ -79,3 +79,17 @@ test('waiting feedback remains cancellable and its timer stops on cancellation',
  h.find('Stop waiting').onclick();assert.equal(h.intervals.size,0);assert.equal(h.question().value,'Keep my question');
  resolve({results:[]});await pending;assert.ok(h.find('Stopped. Your question is still here.'));
 });
+
+
+test('retrieval clarification stays conversational and preserves the original question',async()=>{
+ const h=setup();await h.emit('wzos:session');h.window.wzosAskAtlas.open();
+ h.setReply(async()=>({status:'needs_clarification',message:'Let us narrow this down.',follow_up:'Which operation are you planning?',warnings:['One warning','One warning']}));
+ const ask=h.all(h.main).find(n=>n.tag==='button'&&n.textContent==='Ask Atlas');
+ h.question().value='Residential road in Roanoke';await ask.onclick();
+ assert.ok(h.find('Which operation are you planning?'));
+ assert.equal(h.all(h.main).filter(n=>n.textContent==='One warning').length,1);
+ h.question().value='A lane closure';await ask.onclick();
+ const sent=JSON.parse(h.calls.filter(c=>c.path.endsWith('/ask')).at(-1).options.body);
+ assert.equal(sent.history[0].content,'Residential road in Roanoke');
+ assert.match(sent.history[1].content,/Which operation/);
+});

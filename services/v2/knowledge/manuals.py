@@ -85,6 +85,18 @@ class FormulaRule(StrictModel):
         return self
 
 
+def named_heading(heading, question):
+    """Recognize an explicitly named section topic despite conversational filler."""
+    match = re.match(r'^Section\s+\d+[A-Z]?\.\d+[A-Z]?\s+(.+)$', heading, re.I)
+    if not match:
+        return False
+    words = lambda value: {w.lower().rstrip('s') for w in re.findall(r'[A-Za-z]+', value)
+                           if w.lower() not in STOP}
+    title = words(match[1])
+    return bool(title and title - {'general', 'application', 'definition'}
+                and title <= words(question))
+
+
 def literal_query(text, require_all=True):
     text = re.sub(r'(\d)([a-zA-Z])', r'\1 \2', text)
     terms = list(dict.fromkeys(t.lower() for t in re.findall(r'[a-zA-Z0-9]+(?:-[a-zA-Z0-9]+)+|[a-zA-Z0-9]+', text)
@@ -295,6 +307,9 @@ class ManualIndex:
                    answer_eligible=eligible(source, manifest, as_of) and metadata.get('page_reviewed', False)
                                    and not metadata.get('image_review_required', True)
                                    and not metadata.get('source_uncertainties'),
+                   conflict_only_hold=eligible(source, manifest, as_of) and metadata.get('page_reviewed', False)
+                                      and not metadata.get('image_review_required', True)
+                                      and bool(metadata.get('source_uncertainties')),
                    candidate_only=True, approved_for_field_use=False)
         row['captions'] = [line for line in row['captions'].splitlines() if not line.startswith('Search tags:')]
         return row
@@ -320,11 +335,25 @@ class ManualIndex:
                 params[0] = literal_query(request.query, require_all=False)
                 total = db.execute('SELECT count(*) FROM lookup JOIN pages p ON p.id=lookup.rowid WHERE ' + where, params).fetchone()[0]
                 quality = 'partial_keywords'
+                # Full questions often contain site inputs absent from headings. A
+                # directly named topic is stronger than incidental whole-page hits.
+                titles = []
+                for row in db.execute("SELECT metadata FROM pages p WHERE json_extract(p.metadata,'$.is_contents')=0 AND p.source_id IN (" + ','.join('?' for _ in ids) + ')', ids):
+                    titles.extend(h for h in json.loads(row['metadata']).get('section_headings', [])
+                                  if named_heading(h, request.query))
+                if titles:
+                    titles = sorted(set(titles))
+                    topic_match = ' OR '.join('(' + literal_query(re.sub(r'^Section\s+\S+\s+', '', h, flags=re.I)) + ')' for h in titles)
+                    params[0] = topic_match
+                    total = db.execute('SELECT count(*) FROM lookup JOIN pages p ON p.id=lookup.rowid WHERE ' + where, params).fetchone()[0]
+                    quality = 'named_section'
             primary = [sid for sid in ids if self.store.catalog[sid].origin == 'official'
                        and self.store.catalog[sid].document_role in {'standard', 'specification'}]
             priority_sql = ('CASE WHEN p.source_id IN (' + ','.join('?' for _ in primary) + ') THEN 0 ELSE 1 END,') if primary else ''
             heading_terms = list(dict.fromkeys(t.lower().rstrip('s') for t in re.findall(r'[A-Za-z]+', request.query)
                                               if t.lower() not in STOP and len(t) > 3))[:8]
+            if quality == 'named_section':
+                heading_terms = [re.sub(r'^Section\s+\S+\s+', '', titles[0], flags=re.I).lower()]
             if heading_terms:
                 priority_sql += 'CASE WHEN ' + ' AND '.join("instr(lower(json_extract(p.metadata,'$.section_headings')),?)>0" for _ in heading_terms) + ' THEN 0 ELSE 1 END,'
             rows = db.execute('SELECT p.* FROM lookup JOIN pages p ON p.id=lookup.rowid WHERE ' + where +
@@ -383,6 +412,10 @@ class ManualIndex:
         named_sections = [hit for hit in found['results'] if hit['document_role'] in {'standard', 'specification'}
                           and heading_terms and any(all(term in heading.lower() for term in heading_terms)
                                                    for heading in hit['headings'])]
+        if found.get('match_quality') == 'named_section':
+            named_sections = [hit for hit in found['results']
+                              if hit['document_role'] in {'standard', 'specification'}
+                              and any(named_heading(h, request.query) for h in hit['headings'])]
         seeds = named_sections or found['results'][:3]
         with closing(self.connect()) as db:
             for hit in seeds:
@@ -485,6 +518,7 @@ class ManualIndex:
                         packet['formulas'].append(public_rule)
         if len(packed(packet).encode()) > budget:
             raise ValueError('Context budget exceeded')
+        packet['warnings'] = list(dict.fromkeys(packet['warnings']))
         return packet
 
     def outline(self, source_id):

@@ -98,6 +98,15 @@ def resolve_passage_draft(value, packet):
     return validate_draft({**draft, 'claims': resolved}, packet)
 
 
+def supported_context(packet):
+    if packet['status'] == 'ready_for_reviewed_answer':
+        return True
+    pages = packet.get('evidence', [])
+    return (packet['status'] == 'source_review_required' and bool(pages)
+            and any(p['answer_eligible'] for p in pages)
+            and all(p['answer_eligible'] or p.get('conflict_only_hold', False) for p in pages))
+
+
 def validate_draft(value, packet):
     draft = GuidanceDraft.model_validate(value)
     evidence = {p['citation_id']: p for p in packet['evidence']}
@@ -111,12 +120,24 @@ def validate_draft(value, packet):
         if normalize(claim.supporting_quote) not in normalize(page['text']):
             raise ValueError('Quote is not present on the cited page')
     verify_calculations(draft.calculations, packet)
+    if any(p.get('source_uncertainties') for p in packet['evidence']):
+        draft.status = 'needs_clarification'
+        notice = ('Some related VDOT material contains unresolved discrepancies. I cannot establish '
+                  'the disputed values. Check the VDOT website for updates before relying on those items.')
+        if len(draft.unresolved) >= 12:
+            raise ValueError('Leave room for the required source discrepancy notice')
+        draft.unresolved = [notice, *draft.unresolved]
     return draft
 
 
 def blocked_source_response(packet):
     """Explain recorded source conflicts without inference or invented currency."""
-    response = {'status': packet['status'], 'warnings': list(packet['warnings']), 'provider_called': False}
+    response = {'status': packet['status'], 'warnings': list(dict.fromkeys(packet['warnings'])), 'provider_called': False}
+    if packet['status'] == 'needs_clarification' and any('context budget' in w for w in response['warnings']):
+        response['message'] = 'Let’s narrow this down so I can use the right traffic-control guidance.'
+        response['warnings'] = [w for w in response['warnings'] if 'context budget' not in w and not w.startswith('Search terms matched partially.')]
+        response['follow_up'] = ('Which operation are you planning - for example, a lane closure, shoulder work, '
+                                 'or flagging traffic through a single lane?')
     conflicts = [page for page in packet.get('evidence', [])
                  if page.get('authority') == 'VDOT' and page.get('source_uncertainties')]
     if conflicts:
@@ -135,7 +156,7 @@ def model_context(packet):
     """Keep governing content intact; leave retrieval/audit bookkeeping on server."""
     page_fields = ('citation_id', 'source_id', 'page', 'label', 'section', 'text',
                    'captions', 'headings', 'page_annotation', 'applicability_note',
-                   'source_uncertainties')
+                   'source_uncertainties', 'answer_eligible')
     source_fields = ('title', 'edition', 'authority', 'regions', 'document_role',
                      'usage_note', 'publication_status')
     result = {key: value for key, value in packet.items() if key != 'evidence'}
@@ -175,6 +196,8 @@ def model_schema(packet):
     if not identifiers:
         raise ValueError('No reviewed citations available')
     schema = PassageDraft.model_json_schema()
+    if any(p.get('source_uncertainties') for p in packet['evidence']):
+        schema['properties']['unresolved']['maxItems'] = 11
     schema['$defs']['PassageClaim']['properties']['passage_id']['enum'] = identifiers
     return schema
 
@@ -189,7 +212,7 @@ class GuidelinesGemma:
     async def ask(self, packet):
         if os.getenv('WZOS_ATLAS_DOT_INFERENCE_ENABLED') != '1':
             raise ModelUnavailable('Atlas DOT answers are not activated. Reference search remains available.')
-        if packet['status'] != 'ready_for_reviewed_answer':
+        if not supported_context(packet):
             raise ValueError('Source review is required before inference')
         if self.gate.locked():
             raise ModelUnavailable('Atlas is answering another guidelines request. Try again shortly.')
@@ -232,6 +255,8 @@ class GuidelinesGemma:
                         'for difficult questions, missing context, missing sources, unreviewed extraction, model errors '
                         'or ordinary uncertainty. In those cases explain the actual limitation and ask a focused '
                         'question. Answer unaffected supported parts normally; never choose a disputed value. '
+                        'Pages marked answer_eligible=false are conflict context only, not support for claims '
+                        'or calculations. Explain the affected item briefly while using eligible passages for unaffected guidance. '
                         'Never invent table values. Calculations may ONLY reference supplied reviewed formula IDs with explicit '
                         'question inputs and units; the server computes their results. Do not put calculated results '
                         'in claim text; explain their applicability and cite their source instead. Empty formulas '
@@ -423,7 +448,7 @@ def register(app, actor, store, model=None, requests=None):
             packet = await asyncio.to_thread(retrieve, 'context', retrieval_query(payload))
             packet['question'] = payload.query
             packet['conversation_history'] = [turn.model_dump() for turn in payload.history]
-            if packet['status'] != 'ready_for_reviewed_answer':
+            if not supported_context(packet):
                 terminal = 'completed'
                 return blocked_source_response(packet)
             if requests and await asyncio.to_thread(requests.change, key, user, 'read') != 'running':

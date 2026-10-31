@@ -1,5 +1,33 @@
 # WZOS remaining tasks - current October 20, 2026
 
+## Ask Atlas reported-question repair - October 30, 2026 (local only)
+
+Ray reported three unanswered questions after the traffic-control deployment and
+provided two examples: proper taper length on a 45-mph road, and a residential
+work zone in Roanoke, Virginia. Reproduced both against the exact production
+source snapshot; conversational filler routed retrieval into oversized chapters.
+
+Local repair selects explicitly named section topics despite filler/site inputs,
+keeps complete sections and mandatory corrections, and deduplicates warnings.
+Reviewed pages with documented conflict-only holds can accompany eligible pages
+for partial reasoning; those held pages remain ineligible for claims/calculations.
+Unreviewed/image-held/incomplete contexts still cannot enter inference. The prompt
+and response schema enforce this distinction and preserve discrepancy notices.
+Budget failures now ask which operation is planned and retain the exchange in
+bounded conversation history instead of displaying repeated technical errors.
+
+Validation: 46 focused Python PASS (26.825s), 8 Ask Atlas Node PASS; diff check PASS.
+An initial new test had an invalid empty-claim draft and was corrected; its focused
+rerun passed before the final Python run. Real snapshot replay: taper section
+10 pages/44,318 bytes with 21 eligible passage choices; Roanoke returns an operation
+clarifier without a model call. No paid inference or source-review changes.
+
+NOT DEPLOYED. Production remains wzos-v2-accounts-atlas-061900a. Remaining:
+required integrated release gates, browser check, deployment, and bounded actual
+answer acceptance. The prior candidate's 972/199 passes are historical evidence,
+not validation of these code changes. No schema/IAM/resource/secret changes.
+
+
 ## Traffic-control Atlas release deployed — October 30, 2026
 
 User-authorized latest tested candidate061900a is live at app.workzoneos.org.
