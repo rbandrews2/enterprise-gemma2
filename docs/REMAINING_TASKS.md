@@ -1,5 +1,22 @@
 # WZOS remaining tasks - current October 20, 2026
 
+## Production checkout repair deployed - October 31, 2026
+
+Authorized production release built from158bea6 over exact prior live image.
+Build dbee9af9-11e1-412a-8c1e-0e84e8a3de65 succeeded; image
+sha256:b85d385dd1dce8cd1debe3fd3aab25ef922794bdd517ea55294c9160778ced93.
+Revision:wzos-v2-accounts-checkout-158bea6. Public cutover checks PASS: root200,
+account commerce401 without authentication, unsigned webhook400, account.js200,
+service worker200. Release6550185e282683104b04c0b2 differs from prior
+970b793986986cc9adc34a77 and matches HTML plus service worker.
+Existing runtime identity/env/secrets retained, no schema or IAM changes.
+Direct tagged URL404 is expected under existing internal-and-cloud-load-balancing
+ingress; protection preserved. Candidate Ready then public checks passed on cutover.
+Rollback revision:wzos-v2-accounts-history-2d77bc6.
+PWA release/worker identities verified; installed-device update banner interaction
+not independently verified this turn. No live charge/customer send performed.
+Time Tracker activation remains separate and deferred. Storefront files unchanged.
+
 ## Soft release candidate prepared - October 31, 2026
 
 User requested repaired code and desktop storefront ready for deployment later
