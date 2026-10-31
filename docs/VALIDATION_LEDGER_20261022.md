@@ -1,5 +1,28 @@
 # Validation ledger — reuse passing evidence
 
+## Time Tracker recovery deployed - October 30, 2026
+
+Supersedes the local-only clock checkpoints below. Repairs 89274e7 and bf522a0
+are live at 100% traffic on wzos-v2-accounts-clock-bf522a0.
+PWA version: 41c42a8821e8156528ed3b99.
+Image digest: e568dd2965bc11c2aedbd20096049a6d5cec8ad17adbfe801e6cfe5c873b0c35.
+Cloud Build 7b7aecc5-e09e-46b1-a7dd-48af776763d7 succeeded.
+
+Full Node gate: 204 PASS, zero skips/failures. Reused the unchanged backend's
+977 PostgreSQL passes; no backend/migration changes. Phone-width synthetic
+browser check confirmed the seven-second device record and reachable Saved
+device records controls (send for review, download, confirmed discard).
+Live JS/CSS bytes match tested files. Version endpoint and worker agree.
+Actual live Install updates click loaded the new release; DOM release verified
+and update prompt cleared. Installed Android acceptance remains user-side.
+No real attendance records were submitted or discarded. Runtime configuration,
+identity, secrets, resources and ingress preserved; no new IAM or inference.
+
+Rollback: route traffic to wzos-v2-accounts-atlas-2992d86.
+Cloud evidence: ~/wzos-release-bf522a0.
+Local evidence: .local-data/timeclock-release-node.log and
+.local-data/release-bf522a0/{mobile-recovery.png,update-offered.png,live-version.txt}.
+
 ## Atlas repair and PWA update release deployed - October 30, 2026
 
 Live: wzos-v2-accounts-atlas-2992d86, 100% traffic, app version
