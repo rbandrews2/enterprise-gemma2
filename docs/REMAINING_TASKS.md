@@ -1,5 +1,20 @@
 # WZOS remaining tasks - current October 20, 2026
 
+## Test API credential verified - October 31, 2026
+
+wzos-stripe-test-api-key version2 is a restricted TEST key. Read-only calls to
+known test checkout/session, subscription and price objects all returned test-mode
+records. An intentionally incomplete Checkout POST returned400 parameter_missing
+success_url, not an authentication/permission error; it created no session.
+Version1 was a LIVE key and was not used for test API calls. Pin version2 for
+staging; do not bind latest or the prior live version. No key values logged/saved.
+
+Credential blocker cleared. Deployed isolated receiver/database configuration,
+test webhook registration/signing-secret binding and actual external delivery
+for Core/Enterprise/Tracker remain outstanding. No deployment, real charge,
+subscription creation, IAM or production database change in this credential check.
+
+
 ## Deployed webhook audit and environment guard - October 31, 2026
 
 Current user objective: verify Stripe-to-deployed-handler activation for Core,
