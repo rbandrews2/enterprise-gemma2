@@ -1,5 +1,39 @@
 # WZOS remaining tasks - current October 20, 2026
 
+## Paid Tracker verification - October 31, 2026
+
+Supersedes the earlier unpaid-session checkpoint. One Stripe test-mode card
+checkout completed: cs_test_b18C2l4BSzQBoVeqE7RETtm7dIfJzjPL2WJGHffQRsVYhAV37TIFPiwghd,
+1799 USD cents, 3 seats (999 base + two 400 extras). Stripe confirmed paid/complete,
+subscription sub_1UWWbGCTCYI3n5kZTZMeE6io active. No real charge.
+
+Captured actual test session, subscription and checkout.session.completed event
+were replayed through the unchanged candidate webhook and CLI-generated migration
+in isolated PGlite PostgreSQL: 17 checks PASS. Covered invalid signature rejection,
+active entitlement, exact three-seat allowance, period boundary, fulfilled reservation,
+duplicate receipt, paid shift access, fourth-member denial, tenant isolation,
+cancellation and subsequent new-shift denial. Replay signatures were locally
+constructed with a synthetic secret: NOT proof of Stripe-signed network delivery.
+
+Synthetic subscription canceled without invoice/proration and independently reread
+as canceled/livemode=false. Test catalog retained for reuse. No live database,
+credentials, production Stripe configuration or deployment changed.
+
+New reproducible harness: integrations/time-tracker/tests/paid-fixture.check.mjs.
+Ignored evidence: .local-data/tracker-paid-validation/lifecycle.json and
+checkout-return.png. Prior 24 JS, 24 DB and Vite build passes remain valid;
+no unchanged suites repeated. Browser return reached the local storefront order
+review (temporary test success URL), not an activation receipt. This does not
+validate the actual app return flow. The session was created through the connector,
+not the candidate checkout endpoint; that endpoint remains mock-tested only.
+
+Remaining release gates: deployed isolated checkout endpoint/app return, actual
+Stripe-signed webhook delivery, multi-connection PostgreSQL concurrency, failed-payment
+and refund/dispute policy coverage, then reviewed migration/config deployment.
+Standalone Tracker activates company billing/seats; Core/Enterprise activation-code
+redemption is a separate flow and was not verified by this Tracker test.
+
+
 ## Stripe test connection restored - October 31, 2026
 
 Molecular connector verified test mode. Test-only Tracker prices created and a
