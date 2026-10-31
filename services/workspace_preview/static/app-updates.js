@@ -21,7 +21,8 @@
     // This synthetic event does not invoke a browser confirmation dialog.
     const guard=new Event('beforeunload',{cancelable:true});window.dispatchEvent(guard);
     if(guard.defaultPrevented){message.textContent='Save your changes or finish the current action, then install updates.';return;}
-    window.location.reload();
+    // Explicit installs bypass the worker's fast cached navigation fallback.
+    window.location.replace('/?wzos_update='+encodeURIComponent(displayed));
    };
    later.onclick=()=>{dismissed=displayed;banner.hidden=true;};
    banner.append(message,install,later);document.body.append(banner);

@@ -12,7 +12,7 @@ async function fixture(){
   querySelectorAll:()=>document.selectedFiles,createElement:element,
   addEventListener:(name,fn)=>documentEvents[name]=fn};
  const navigator={onLine:true};
- const window={location:{reload(){reloads++;}},addEventListener(name,fn){(events[name]??=[]).push(fn);},
+ const window={location:{replace(url){assert.match(url,/^\/\?wzos_update=[a-f0-9]{24}$/);reloads++;}},addEventListener(name,fn){(events[name]??=[]).push(fn);},
   dispatchEvent(event){for(const fn of events[event.type]||[])fn(event);}};
  vm.runInNewContext(fs.readFileSync('services/workspace_preview/static/app-updates.js','utf8'),
   {window,document,navigator,Event,AbortController,setTimeout,clearTimeout,Date:{now:()=>now},
