@@ -62,3 +62,8 @@
 /* Review tools stay on Enterprise desktop layouts; offline capture remains intact. */
 #clock-view:not([data-edition=enterprise]) #clock-drafts,#clock-view:not([data-edition=enterprise]) #clock-drafts~*{display:none!important}
 @media(max-width:1023px){#clock-drafts,#clock-drafts~*{display:none!important}}
+
+#clock-device-recovery{margin:.75rem 0;border:1px solid #b98939;padding:1rem;overflow-wrap:anywhere}
+#clock-device-recovery[hidden]{display:none}
+#clock-device-recovery summary{cursor:pointer;color:#ffd082;font-weight:700}
+#clock-device-recovery .clock-actions{display:flex;flex-wrap:wrap;gap:.5rem}

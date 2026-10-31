@@ -1,5 +1,27 @@
 # WZOS current session handoff - October 18, 2026
 
+## Screenshot-confirmed device-record recovery - October 30, 2026 (local only)
+
+7secs.png confirms CLOCKED OUT - DEVICE RECORD and pending review, not a running
+server shift. Refresh correctly preserves the unsubmitted local draft. The mobile
+CSS hides the entire Device records & review panel, leaving no reachable submit/
+discard controls. Added a compact personal recovery details panel next to the
+clock status, outside that hidden section, with record list, download, submit and
+confirmed discard. The full Enterprise desktop review/editor remains hidden on
+mobile. No automatic discard, submission, attendance modification or entitlement
+change. Refreshes server state after successful submission/discard; resets stale
+DEVICE RECORD labels and timer presentation after drafts leave the local queue.
+
+31 focused clock tests PASS, including the exact seven-second offline clock-in/
+out case, cancel/confirm discard, and one-time submission restoring clock state.
+Full Node run: 203 passed plus one new assertion mistakenly counted preserved
+location uploads as attendance writes. Fixed that assertion to check attendance
+commands/submissions specifically; all 31 affected tests then passed. No runtime
+code changed after the broad run. No user's phone data accessed or deleted.
+Still local; browser layout acceptance and deployment remain. Earlier refresh
+repair 89274e7 remains included but alone would not solve this screenshot's case.
+
+
 ## Time Tracker refresh follow-up - October 30, 2026 (local, not deployed)
 
 Ray reports Refresh has no apparent effect and a seven-second record remains.

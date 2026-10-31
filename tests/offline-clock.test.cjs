@@ -338,3 +338,34 @@ test('manual refresh confirms success and retains unsent device records',async()
  assert.match(h.get('clock-state').textContent,/DEVICE RECORD/);
  assert.equal(h.posts('/api/time/commands').length,0);
 });
+
+
+test('seven-second device record has reachable recovery and only clears after explicit discard',async()=>{
+ let approved=false;
+ const h=harness({status:()=>({active:null,tasks:{job_site:'Job Site'}}),confirm:()=>approved});
+ h.events['wzos:session']();await settle();h.navigator.onLine=false;h.windowEvents.offline();
+ await draft(h,'clock_in');h.advance(7);await draft(h,'clock_out');
+ assert.equal(h.get('clock-timer').textContent,'00:00:07');
+ assert.equal(h.byId('clock-device-recovery').hidden,false);
+ assert.equal(h.get('clock-message').afterNode.id,'clock-device-recovery');
+ await h.byId('clock-recovery-discard').onclick();assert.equal(h.get('clock-timer').textContent,'00:00:07');
+ h.navigator.onLine=true;approved=true;await h.byId('clock-recovery-discard').onclick();
+ assert.equal(h.get('clock-timer').textContent,'00:00:00');
+ assert.equal(h.get('clock-state').textContent,'OFF THE CLOCK');
+ assert.equal(h.byId('clock-device-recovery').hidden,true);
+ assert.equal(h.posts('/api/time/commands').length,0);
+ assert.equal(h.posts('/api/time/offline-submissions').length,0);
+});
+
+test('compact device recovery submits once and restores confirmed clock state',async()=>{
+ const h=harness({status:()=>({active:null,tasks:{job_site:'Job Site'}})});
+ h.events['wzos:session']();await settle();h.navigator.onLine=false;h.windowEvents.offline();
+ await draft(h,'clock_in');h.advance(7);await draft(h,'clock_out');
+ h.navigator.onLine=true;await h.get('clock-refresh').handlers.click();
+ await h.byId('clock-recovery-submit').onclick();
+ assert.equal(h.posts('/api/time/offline-submissions').length,1);
+ assert.equal(h.get('clock-timer').textContent,'00:00:00');
+ assert.equal(h.get('clock-state').textContent,'OFF THE CLOCK');
+ assert.equal(h.byId('clock-device-recovery').hidden,true);
+ assert.equal(h.posts('/api/time/commands').length,0);
+});

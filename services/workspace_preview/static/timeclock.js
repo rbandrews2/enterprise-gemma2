@@ -159,6 +159,7 @@
   keep.disabled=!session||submitting||(loaded&&navigator.onLine)||drafts.length>=50;
   submit.disabled=!drafts.some(d=>!tooOld(d))||submitting||!loaded||!navigator.onLine;
   download.disabled=!drafts.length&&!locations.length;removeLast.disabled=!drafts.length||submitting;discard.disabled=!drafts.length||submitting;
+  recovery.hidden=!drafts.length;recoverySubmit.disabled=submit.disabled;recoveryDiscard.disabled=discard.disabled;recoveryDownload.disabled=download.disabled;
  }
  function renderActive(data){
   // Preserve the original device timeline until offline evidence has been reconciled.
@@ -263,6 +264,15 @@
  draftPanel.append(text('h2','Device records & review'),text('p','Use the regular clock buttons offline after your shift loads. Device times and task changes are unverified estimates. Submit drafts after reconnecting for admin review; submission does not change attendance. Once submitted, the timer returns to the confirmed server shift; review status stays below.'),storageNote,
   labelled('What happened',draftAction),labelled('Task',draftTask),labelled('When, if earlier than now (device time, optional)',draftWhen),labelled('Note',draftNote),draftActions,draftList,text('h3','Submitted for review'),submitted);
  node('clock-view').append(draftPanel);
+ // Personal recovery must remain reachable on mobile even though the full
+ // Enterprise review/editor panel is intentionally hidden there.
+ const recovery=document.createElement('details');recovery.id='clock-device-recovery';recovery.className='panel clock-device-recovery';recovery.hidden=true;
+ const recoveryTitle=text('summary','Saved device records'),recoveryList=document.createElement('ol');
+ const recoverySubmit=button('Send for review','clock-recovery-submit'),recoveryDownload=button('Download records','clock-recovery-download'),recoveryDiscard=button('Discard device records','clock-recovery-discard');
+ const recoveryActions=document.createElement('div');recoveryActions.className='clock-actions';recoveryActions.append(recoverySubmit,recoveryDownload,recoveryDiscard);
+ recovery.append(recoveryTitle,text('p','These records are saved on this device and have not been submitted. Refresh keeps them safe. Review them here, then send for review or discard them if they were a test.'),recoveryList,recoveryActions);
+ node('clock-message').after(recovery);
+ recoverySubmit.onclick=()=>submit.onclick();recoveryDownload.onclick=()=>download.onclick();recoveryDiscard.onclick=()=>discard.onclick();
  const effective=d=>d.stated_at||d.captured_at;
  function expected(list=drafts){
   // Replays drafts over the last verified status so impossible or duplicate sequences are refused.
@@ -272,7 +282,7 @@
  }
  const allowed={off_clock:['clock_in'],working:['break_start','switch_task','clock_out'],on_break:['break_end','clock_out']};
  function renderDrafts(){
-  draftList.replaceChildren();
+  draftList.replaceChildren();recoveryList.replaceChildren();recoveryTitle.textContent=`Saved device records (${drafts.length})`;
   storageNote.dataset.persistence=persistence;
   storageNote.textContent=persistence==='device'?'Drafts are saved on this device for your account and organization until you submit or discard them, even if you close the app. Other people using this device cannot open them in WZOS, but keep the device secure.'
    :'This browser cannot safely save draft changes (storage blocked or cross-tab locking unavailable). They stay only in this open tab, so submit or download them before you close it or sign out.';
@@ -283,8 +293,10 @@
    const status=text('small',' '+state);status.className='clock-draft-state';status.dataset.state=tooOld(d)?'too_old':d.submission||'local';item.append(status);
    if(changed)item.append(text('small',' Your shift changed on the server after this draft. The admin will check it for duplicates.'));
    draftList.append(item);
+   recoveryList.append(text('li',`${ACTIONS[d.action]} · ${local(effective(d))} · ${state}`));
   }
-  controls();
+  if(!drafts.length&&loaded){node('clock-state').textContent=active?active.status==='on_break'?'ON BREAK':'CLOCKED IN':'OFF THE CLOCK';if(!active)node('clock-active-job').textContent='';}
+  tick();controls();
  }
  keep.onclick=async()=>{
   const session=window.wzosClock.getSession();if(!session)return;
@@ -304,7 +316,7 @@
   renderDrafts();tick();controls();if(added){if(action==='clock_out')locationStopped=true;if(action==='clock_in')locationStopped=false;persist();captureLocation(action,draft.request_id,draft.task||timeline().task);draftNote.value='';draftWhen.value='';message(`Draft ${persistence==='device'?'saved on this device':'kept in this tab only'}. It has not changed your shift. Submit it for review when you reconnect.`);}
  };
  removeLast.onclick=async()=>{const owner=actorId,last=drafts.at(-1);if(!last)return;await mutate(owner,list=>list.filter(d=>d.request_id!==last.request_id));if(owner!==actorId)return;renderDrafts();tick();controls();message('Removed the last draft.');};
- discard.onclick=async()=>{if(!drafts.length||submitting||!window.confirm?.('Discard all unsubmitted offline drafts on this device? This cannot be undone.'))return;const owner=actorId,shown=new Set(drafts.map(d=>d.request_id));await mutate(owner,list=>list.filter(d=>!shown.has(d.request_id)));if(owner!==actorId)return;renderDrafts();message('Offline drafts discarded. Nothing was sent to your admin.');};
+ discard.onclick=async()=>{if(!drafts.length||submitting||!window.confirm?.('Discard all unsubmitted offline drafts on this device? This cannot be undone.'))return;const owner=actorId,shown=new Set(drafts.map(d=>d.request_id));await mutate(owner,list=>list.filter(d=>!shown.has(d.request_id)));if(owner!==actorId)return;renderDrafts();await refresh();message('Offline drafts discarded. Nothing was sent to your admin.');};
  submit.onclick=async()=>{
   const session=window.wzosClock.getSession();if(!session||!drafts.length||!navigator.onLine||submitting)return;
   const owner=scope(session), batch=drafts.filter(d=>!tooOld(d));if(!batch.length)return;
@@ -323,7 +335,7 @@
    if(!uncertain){message(`${error.message} Your drafts are still kept ${kept}.`);}
    else{message(`Submission not confirmed. Your drafts are still kept ${kept}, and submitting again will not create duplicates.`);}
   }
-  finally{submitting=false;renderDrafts();}
+  finally{submitting=false;renderDrafts();if(owner===actorId&&!drafts.length)await refresh();}
  };
  download.onclick=()=>{const url=URL.createObjectURL(new Blob([JSON.stringify({type:'WZOS offline attendance drafts',automatic_sync:false,time_basis:'device_estimate_unverified',drafts:drafts.map(outgoing),location_evidence:locations},null,2)],{type:'application/json'}));const link=document.createElement('a');link.href=url;link.download='wzos-offline-drafts.json';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
  async function loadSubmissions(session){
