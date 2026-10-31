@@ -1,5 +1,13 @@
 # WZOS current session handoff - October 18, 2026
 
+## Stripe test connection restored - October 31, 2026
+
+Molecular connector verified test mode. Test-only Tracker prices created and a
+3-seat Checkout Session returned $17.99, unpaid. Its branded URL exposed and led
+to repair of overly strict checkout-domain validation. 24 JS checks and Vite build
+PASS; prior 24 database checks retained. No live deployment, payment or migration.
+Paid lifecycle/signature delivery still open. See integrations/time-tracker/README.md.
+
 ## Tracker live audit and migration ready locally - October 31, 2026
 
 Live Supabase schema/policies and aggregate billing state verified read-only.

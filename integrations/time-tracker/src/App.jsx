@@ -1,4 +1,4 @@
-import { initialSeats, checkoutAttempt, billingMessage } from './billing-selection.mjs';
+import { initialSeats, checkoutAttempt, billingMessage, validCheckoutUrl } from './billing-selection.mjs';
 
 import React, { useEffect, useMemo, useState } from 'react';
 import {
@@ -995,7 +995,7 @@ export default function App() {
         throw new Error(data?.error ?? 'Unable to start checkout.');
       }
 
-      if (new URL(data.url).origin !== 'https://checkout.stripe.com') throw new Error('Unable to open secure checkout.');
+      if (!validCheckoutUrl(data.url)) throw new Error('Unable to open secure checkout.');
       window.location.href = data.url;
     } catch (error) {
       showError(error.message);

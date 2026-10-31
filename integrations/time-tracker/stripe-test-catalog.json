@@ -1,0 +1,8 @@
+{
+  "livemode": false,
+  "stripe_account": "acct_1RVoyBCTCYI3n5kZ",
+  "product": "prod_VXbhAtcp5WagaZ",
+  "base_price": "price_1UWWTuCTCYI3n5kZS8uYQ8yu",
+  "extra_price": "price_1UWWTzCTCYI3n5kZ9b4SFDHz",
+  "purpose": "Synthetic activation validation only; never production configuration"
+}

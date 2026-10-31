@@ -102,3 +102,24 @@ final Vite build PASS: 1740 modules, index-DBfO5Mo4.js. External Stripe calls mo
 Embedded PostgreSQL uses PGlite synthetic fixture, not live RLS/concurrency proof.
 No unnecessary WZOS full-suite reruns. No live deployments, changes, charges or sends.
 Remaining exact release gates and rollback: integrations/time-tracker/README.md.
+
+
+## Stripe test-mode connection and branded checkout repair - October 31, 2026
+
+Connector verified Molecular acct_1RVoyBCTCYI3n5kZ with livemode=false. Existing
+shared test-mode catalog had no Tracker prices. Created clearly labeled test-only
+product and $9.99 base/$4 extra monthly prices; IDs saved in stripe-test-catalog.json.
+No customer information supplied and no payment completed.
+
+Actual Stripe test session cs_test_b18C2l4BSzQBoVeqE7RETtm7dIfJzjPL2WJGHffQRsVYhAV37TIFPiwghd
+returned total 1799 cents for 3 seats, status=open/payment_status=unpaid. Session
+creation validates Stripe request shape and amount only, not end-to-end activation.
+Test session left to expire automatically; connector search did not expose expire.
+
+Stripe returned checkout.superiorllc.org instead of checkout.stripe.com. Repaired
+both server and browser URL checks to accept those two exact HTTPS origins with
+/c/pay/cs_ paths and no embedded credentials. Other hosts remain rejected.
+24 focused JS tests PASS; Vite build PASS (index-waLqWMXD.js,1740 modules).
+Unchanged 24 PostgreSQL checks retained. No production deployment or migration.
+Next: complete synthetic paid checkout and signed-event delivery into an isolated
+candidate, then test cancellation/failure and review remaining release gates.

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { initialSeats,checkoutAttempt,billingMessage } from '../src/billing-selection.mjs';
+import { initialSeats,checkoutAttempt,billingMessage,validCheckoutUrl } from '../src/billing-selection.mjs';
 test('URL accepts only 1-30 whole users',()=>{
   assert.equal(initialSeats('?seats=30'),30);
   for(const input of ['0','31','1.5','nope']) assert.equal(initialSeats(`?seats=${input}`),1);
@@ -17,4 +17,9 @@ test('URL return never implies payment',()=>{
   assert.match(billingMessage(null),/Waiting/);
   assert.match(billingMessage({status:'pending'}),/Waiting/);
   assert.match(billingMessage({status:'active'}),/workspace is active/);
+});
+
+test('accepts verified branded Stripe checkout, rejects foreign and credential URLs',()=>{
+  for(const host of ['checkout.stripe.com','checkout.superiorllc.org']) assert.equal(validCheckoutUrl(`https://${host}/c/pay/cs_test_abc#synthetic`),true);
+  for(const url of ['https://evil.example/c/pay/cs_test_abc','http://checkout.superiorllc.org/c/pay/cs_test_abc','https://checkout.superiorllc.org.evil.example/c/pay/cs_test_a','https://user:pass@checkout.superiorllc.org/c/pay/cs_test_a','https://checkout.superiorllc.org/other','not a url']) assert.equal(validCheckoutUrl(url),false);
 });

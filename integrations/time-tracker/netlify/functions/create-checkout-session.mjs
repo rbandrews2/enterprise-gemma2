@@ -1,3 +1,4 @@
+import { validCheckoutUrl } from '../../src/billing-selection.mjs';
 import { createHash } from 'node:crypto';
 const stripeApi = async (path, body, secretKey, idempotencyKey) => {
   const response = await fetch(`https://api.stripe.com/v1${path}`, {
@@ -158,7 +159,7 @@ const handle = async (req) => {
     stripeSecretKey, idempotencyKey
   );
 
-  if (!session.url || new URL(session.url).origin !== 'https://checkout.stripe.com') {
+  if (!validCheckoutUrl(session.url)) {
     return json({ error: 'Unable to open secure checkout.' }, 502);
   }
   return json({ url: session.url });

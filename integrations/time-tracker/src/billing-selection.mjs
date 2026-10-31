@@ -19,3 +19,12 @@ export function billingMessage(billing) {
   if (['active', 'trialing'].includes(billing?.status)) return 'Your Time Tracker workspace is active.';
   return 'Waiting for payment confirmation. You can refresh billing status without paying again.';
 }
+
+export function validCheckoutUrl(value) {
+  try {
+    const url = new URL(value);
+    return url.protocol === 'https:' && !url.username && !url.password &&
+      ['https://checkout.stripe.com', 'https://checkout.superiorllc.org'].includes(url.origin) &&
+      url.pathname.startsWith('/c/pay/cs_');
+  } catch { return false; }
+}
