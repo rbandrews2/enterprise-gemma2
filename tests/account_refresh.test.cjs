@@ -202,7 +202,7 @@ test('organization HTML response is reported safely without claiming creation',a
  assert.equal(ui.requests.filter(r=>r.url==='/api/account').length,1);
 });
 
-async function checkoutFixture({receipt,redirect='https://checkout.stripe.com/c/pay/synthetic',failFirst=false}={}){
+async function checkoutFixture({search='',saved=[],receipt,redirect='https://checkout.stripe.com/c/pay/synthetic',failFirst=false}={}){
  const body=new Element('body'),bar=new Element('bar'),requests=[],navigations=[];let attempts=0;
  const ok=data=>({ok:true,json:async()=>data});
  const fetch=async(url,options)=>{
@@ -210,13 +210,14 @@ async function checkoutFixture({receipt,redirect='https://checkout.stripe.com/c/
   if(url.includes('signInWithPassword'))return ok({idToken:'synthetic',refreshToken:'synthetic',expiresIn:3600});
   if(url==='/api/account')return ok({organizations:[]});
   if(url==='/api/account/commerce')return ok({enabled:true,offers:[{id:'core',edition:'core',included_seats:15,maximum_seats:30,setup_cents:9900,monthly_cents:5900,additional_seat_monthly_cents:300}]});
+  if(url==='/api/account/purchases')return ok({items:saved});
   if(url.startsWith('/api/account/purchases/'))return ok(receipt);
   if(url==='/api/account/checkout'){if(failFirst&&attempts++===0)throw Error('connection lost');return ok({session_id:'cs_synthetic',checkout_url:redirect});}
   throw Error('Unexpected request '+url);
  };
  const sandbox={window:{},document:{body,createElement:t=>new Element(t),querySelector:()=>bar},fetch,Date,URLSearchParams,URL,Intl,
   crypto:{randomUUID:()=>require('node:crypto').randomUUID()},history:{replaceState(){}},
-  location:{hostname:'localhost',search:receipt?'?purchase=cs_synthetic':'',pathname:'/',hash:'',assign:url=>navigations.push(url),reload(){}}};
+  location:{hostname:'localhost',search:search||(receipt&&!saved.length?'?purchase=cs_synthetic':''),pathname:'/',hash:'',assign:url=>navigations.push(url),reload(){}}};
  vm.runInNewContext(fs.readFileSync('services/workspace_preview/static/account.js','utf8'),sandbox);
  sandbox.window.wzosAccount.start({auth_api_key:'synthetic'});
  const panel=body.children[0],form=panel.children.find(c=>c.tag==='form');
@@ -261,3 +262,20 @@ test('saved sign-in network failure offers retry without logout or page reload',
  assert.equal(retry.hidden,false);await retry.onclick();assert.equal(attempts,2);assert.equal(retry.hidden,true);
  assert.ok(panel.children.find(n=>n.className==='account-choices'));
 });
+
+ test('storefront selection preserves seats and does not purchase automatically',async()=>{
+ const ui=await checkoutFixture({search:'?offer=core&seats=23'});
+ const seats=ui.panel.querySelectorAll('input').find(x=>x.attributes?.['aria-label']==='core active logins');
+ assert.equal(seats.value,'23');assert.equal(ui.requests.filter(r=>r.url==='/api/account/checkout').length,0);
+ await ui.panel.querySelectorAll('button').find(b=>b.textContent==='Continue to secure checkout').onclick();
+ assert.equal(ui.requests.find(r=>r.url==='/api/account/checkout').body.seats,23);
+ });
+ test('unsupported storefront offer never silently purchases another plan',async()=>{
+ const ui=await checkoutFixture({search:'?offer=tracker&seats=2'});
+ assert.equal(ui.panel.querySelectorAll('button').filter(b=>b.textContent==='Continue to secure checkout').length,0);
+ });
+ test('verified receipt can be recovered without a Stripe return URL',async()=>{
+ const ui=await checkoutFixture({saved:[{session_id:'cs_saved',status:'fulfilled'}],receipt:{status:'fulfilled',edition:'core',seats:15,activation_code:'synthetic-code'}});
+ assert.ok(ui.requests.some(r=>r.url==='/api/account/purchases/cs_saved'));
+ assert.equal(ui.panel.querySelectorAll('input').find(x=>x.attributes?.['aria-label']==='Activation code').value,'synthetic-code');
+ });

@@ -26,6 +26,8 @@ class Offer:
     monthly_price_id: str
     additional_seat_price_id: str
 
+    billing_period: str = "month"
+
     def line_items(self, seats):
         if self.edition not in ('core','enterprise') or type(seats) is not int or not self.included_seats <= seats <= (self.maximum_seats or 100000):
             raise ValueError('Requested seats are outside this offer')
@@ -179,6 +181,13 @@ class Purchases:
         return result
 
     def register_private_receipts(self, app):
+        @app.get('/api/account/purchases')
+        def purchase_list(request: Request):
+            user = self.accounts.identity(request)
+            with self.accounts.connect() as db:
+                rows = db.execute("SELECT session_id,status,edition,seats FROM purchase_requests WHERE email=? AND session_id IS NOT NULL ORDER BY id LIMIT 20", (user['email'],)).fetchall()
+            return {'items': [dict(row) for row in rows]}
+
         @app.get('/api/account/purchases/{session_id}')
         def purchase_receipt(session_id: str, request: Request):
             # Verify Google identity/email before reading any purchase/delivery data.

@@ -1,5 +1,12 @@
 # WZOS current session handoff - October 18, 2026
 
+## Storefront activation - October 31, 2026 (local)
+
+Core/Enterprise monthly and annual checkout handoff and receipt recovery implemented.
+212 Node PASS; targeted Python PASS with PostgreSQL skips. Not deployed.
+See docs/STOREFRONT_ACTIVATION_20261031.md for release gates and separate
+stand-alone Time Tracker blocker. No charges or customer sends.
+
 ## Time history update deployed - October 30, 2026
 
 Commit 2d77bc6 live at 100% on wzos-v2-accounts-history-2d77bc6.

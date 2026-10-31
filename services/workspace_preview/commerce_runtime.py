@@ -38,7 +38,7 @@ def configured_purchases(accounts):
     live = mode == 'live'
     if live and os.getenv('WZOS_STRIPE_TAX_VERIFIED') != '1':
         raise RuntimeError('Live checkout requires accepted tax configuration')
-    offers = [Offer(id=key, edition=key, **{field: value[field] for field in (
+    offers = [Offer(id=key, edition=value.get('edition',key), billing_period=value.get('billing_period','month'), **{field: value[field] for field in (
         'included_seats', 'maximum_seats', 'setup_cents', 'monthly_cents',
         'additional_seat_monthly_cents', 'setup_price_id', 'monthly_price_id',
         'additional_seat_price_id')}) for key, value in catalog['offers'].items()]
@@ -116,7 +116,7 @@ def register(app, accounts, purchases=None):
             return {'enabled': False, 'offers': []}
         return {'enabled': True, 'offers': [
             {key: getattr(offer, key) for key in ('id', 'edition', 'included_seats', 'maximum_seats',
-                'setup_cents', 'monthly_cents', 'additional_seat_monthly_cents')}
+                'setup_cents', 'monthly_cents', 'additional_seat_monthly_cents', 'billing_period')}
             for offer in purchases.offers.values()]}
 
     @app.post('/api/account/checkout')

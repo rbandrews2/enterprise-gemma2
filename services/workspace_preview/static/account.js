@@ -167,29 +167,44 @@ window.wzosAccount = (() => {
     choices.append(element('p',grant?`Your ${grant.edition} organization with ${grant.seat_limit} active logins is approved. Enter its name to begin.`:'Create an organization with your activation code. If your admin has already added your account, select your organization above. Otherwise you may use an invitation.'),name,activation,create,invitation,join);panel.insertBefore(choices,message);
     // Purchase controls belong to new customers, never organization members.
     if(!account.organizations.length){
-     const purchaseId=new URLSearchParams(location.search).get('purchase');
+     const selection=new URLSearchParams(location.search);
+     let purchaseId=selection.get('purchase');
+     if(!purchaseId){try{const saved=await api('/api/account/purchases');purchaseId=saved.items?.find(p=>p.status==='fulfilled')?.session_id||saved.items?.[0]?.session_id;}catch{/* Manual activation remains available. */}}
      if(purchaseId?.startsWith('cs_')&&purchaseId.length<512){
       const receiptBox=element('section');const receiptStatus=element('p','Checking your purchase…');
       const check=element('button','Check payment status');receiptBox.append(receiptStatus,check);choices.prepend(receiptBox);
+      let receiptChecks=0;
       const checkReceipt=async()=>{
+       if(choices.isConnected===false)return;
+       receiptChecks++;
        const receipt=await api('/api/account/purchases/'+encodeURIComponent(purchaseId));
        if(receipt.status==='fulfilled'&&receipt.activation_code){
         activation.value=receipt.activation_code;
         receiptStatus.textContent=`Payment confirmed. ${receipt.edition==='enterprise'?'Enterprise':'Core'} includes ${receipt.seats} active logins. Enter your organization name to activate.`;
         check.hidden=true;history.replaceState(null,'',location.pathname+location.hash);
-       }else receiptStatus.textContent='Payment confirmation is pending. Check again shortly; do not pay again.';
+       }else {
+        receiptStatus.textContent='Waiting for payment confirmation. Do not pay again.';
+        if(receiptChecks<12&&typeof setTimeout==='function')setTimeout(()=>{checkReceipt().catch(e=>{receiptStatus.textContent=e.message;});},5000);
+       }
       };
       check.onclick=()=>run(checkReceipt);
       try{await checkReceipt();}catch(e){receiptStatus.textContent=e.message;}
      }
      try{
       const commerce=await api('/api/account/commerce');
+      if(!commerce.enabled&&selection.has('offer'))choices.append(element('p','Online checkout is currently unavailable. No payment has been taken. Please try again later.'));
       if(commerce.enabled){
-       const purchase=element('details');purchase.append(element('summary','Purchase WZOS for a new organization'));
-       for(const offer of commerce.offers){
+       const purchase=element('details');purchase.open=selection.has('offer');purchase.append(element('summary','Purchase WZOS for a new organization'));
+       const selectedOffer=selection.get('offer');
+       const available=commerce.offers.some(o=>o.id===selectedOffer);
+       if(selectedOffer&&!available)choices.append(element('p','This selected plan is not available for automatic activation yet. No payment has been taken.'));
+       for(const offer of commerce.offers.filter(o=>!selectedOffer||o.id===selectedOffer)){
         const card=element('section');const seats=element('input');seats.type='number';seats.required=true;seats.min=String(offer.included_seats);seats.max=String(offer.maximum_seats||100000);seats.step='1';seats.value=seats.min;seats.setAttribute('aria-label',offer.edition+' active logins');
+        const requested=Number(selection.get('seats'));
+        if(offer.id===selectedOffer&&Number.isInteger(requested)&&requested>=1&&requested<=Number(seats.max))seats.value=String(Math.max(offer.included_seats,requested));
+        const period=offer.billing_period==='year'?'year':'month';
         const total=element('p');const money=cents=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(cents/100);
-        function price(){const count=Number(seats.value);const monthly=offer.monthly_cents+Math.max(0,count-offer.included_seats)*offer.additional_seat_monthly_cents;total.textContent=`${money(offer.setup_cents)} setup + ${money(monthly)}/month, plus applicable tax. ${offer.included_seats} logins included; each extra is ${money(offer.additional_seat_monthly_cents)}/month. Admins count as logins.`;}
+        function price(){const count=Number(seats.value);const monthly=offer.monthly_cents+Math.max(0,count-offer.included_seats)*offer.additional_seat_monthly_cents;total.textContent=`${money(offer.setup_cents)} setup + ${money(monthly)}/${period}, plus applicable tax. ${offer.included_seats} logins included; each extra is ${money(offer.additional_seat_monthly_cents)}/${period}. Admins count as logins.`;}
         seats.oninput=price;price();
         const buy=element('button','Continue to secure checkout');let retryId=null,retrySeats=null;
         buy.onclick=()=>run(async()=>{
@@ -201,7 +216,7 @@ window.wzosAccount = (() => {
          if(destination.protocol!=='https:'||!['checkout.stripe.com','checkout.superiorllc.org'].includes(destination.hostname))throw Error('Checkout destination was not accepted.');
          location.assign(destination.href);
         });
-        card.append(element('h3',offer.edition==='enterprise'?'Enterprise':'Core'),total,seats,buy);purchase.append(card);
+        card.append(element('h3',(offer.edition==='enterprise'?'Enterprise':'Core')+' - '+(period==='year'?'Annual':'Monthly')),total,seats,buy);purchase.append(card);
        }
        choices.append(purchase);
       }

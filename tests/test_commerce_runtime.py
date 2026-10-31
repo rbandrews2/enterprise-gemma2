@@ -58,6 +58,27 @@ class CommerceRuntimeTests(seats.SeatLicensingTests):
         self.assertFalse(self.client.get('/api/account/commerce',headers=self.headers()).json()['enabled'])
         self.assertEqual(self.client.post('/api/account/checkout',headers=self.headers(),json={**body,'request_id':str(uuid4())}).status_code,409)
 
+    def test_purchase_recovery_is_account_scoped_and_contains_no_activation_code(self):
+        self.buy()
+        self.assertEqual(self.client.get('/api/account/purchases').status_code,401)
+        result=self.client.get('/api/account/purchases',headers=self.headers()).json()
+        self.assertEqual(result['items'][0]['session_id'],self.session_id)
+        self.assertNotIn('activation_code',result['items'][0])
+        self.assertEqual(self.client.get('/api/account/purchases',headers=self.headers('other')).json()['items'],[])
+
+    def test_annual_offer_activates_only_after_verified_payment(self):
+        annual=Offer('core_annual','core',15,30,9900,60000,3600,'price_setup','price_annual','price_extra_annual','year')
+        self.purchases.offers[annual.id]=annual
+        result=self.client.post('/api/account/checkout',headers=self.headers(),json={'request_id':str(uuid4()),'offer_id':annual.id,'seats':16})
+        self.assertEqual(result.status_code,200,result.text)
+        self.session_id=result.json()['session_id']
+        self.provider.sessions[self.session_id].update(amount_total=73500,subscription='sub_synthetic',customer='cus_synthetic')
+        self.subscription['items']['data']=[{'price':{'id':'price_annual'},'quantity':1},{'price':{'id':'price_extra_annual'},'quantity':1}]
+        self.assertFalse(self.event().json()['activation_issued'])
+        self.provider.sessions[self.session_id]['payment_status']='paid'
+        self.assertTrue(self.event().json()['activation_issued'])
+        self.assertEqual(self.receipt().json()['seats'],16)
+
     def test_subscription_failure_recovery_cancellation_and_stale_invoice(self):
         self.buy();self.assertEqual(self.event().status_code,200)
         code=self.receipt().json()['activation_code']

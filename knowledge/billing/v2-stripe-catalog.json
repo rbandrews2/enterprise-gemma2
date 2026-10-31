@@ -34,6 +34,32 @@
       "setup_price_id": "price_1URE86CTCYI3n5kZghQ7IOIU",
       "monthly_price_id": "price_1URE6yCTCYI3n5kZrHaJaAv8",
       "additional_seat_price_id": "price_1URE8gCTCYI3n5kZQIvNi5fb"
+    },
+    "core_annual": {
+      "product_id": "prod_VS8NPXcRzhnRq4",
+      "setup_cents": 9900,
+      "monthly_cents": 60000,
+      "included_seats": 15,
+      "maximum_seats": 30,
+      "additional_seat_monthly_cents": 3600,
+      "setup_price_id": "price_1UREAZCTCYI3n5kZMp4p4xKi",
+      "monthly_price_id": "price_1UWV4NCTCYI3n5kZGFvSr5fT",
+      "additional_seat_price_id": "price_1UWV8JCTCYI3n5kZ6ZIIozro",
+      "edition": "core",
+      "billing_period": "year"
+    },
+    "enterprise_annual": {
+      "product_id": "prod_VS8NpLjO1KtlTl",
+      "setup_cents": 99900,
+      "monthly_cents": 268800,
+      "included_seats": 25,
+      "maximum_seats": 30,
+      "additional_seat_monthly_cents": 8400,
+      "setup_price_id": "price_1URE86CTCYI3n5kZghQ7IOIU",
+      "monthly_price_id": "price_1UWV5YCTCYI3n5kZ3Gv5BSo3",
+      "additional_seat_price_id": "price_1UWV9ACTCYI3n5kZLeMb3f0Y",
+      "edition": "enterprise",
+      "billing_period": "year"
     }
   },
   "core_upgrade_credit": {

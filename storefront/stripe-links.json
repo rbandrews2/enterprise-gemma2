@@ -1,0 +1,13 @@
+{
+  "core": {
+    "monthly": "https://checkout.superiorllc.org/b/9B6bJ09xB7ik8bg5Ls2cg0c",
+    "annual": "https://checkout.superiorllc.org/b/bJefZgdNR324dvA4Ho2cg0d"
+  },
+  "enterprise": {
+    "monthly": "https://checkout.superiorllc.org/b/5kQ00i6lpauw8bgddU2cg0e",
+    "annual": "https://checkout.superiorllc.org/b/7sYaEW4dh9qsgHM6Pw2cg0f"
+  },
+  "tracker": {
+    "monthly": "https://checkout.superiorllc.org/b/28E14m7ptfOQgHM5Ls2cg0g"
+  }
+}
