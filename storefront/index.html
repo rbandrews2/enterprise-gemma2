@@ -117,7 +117,8 @@ section.block { padding-block: 88px; }
 .mod p { color: var(--muted); font-size: .98rem; }
 .mod .forms { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
 .mod .forms code { font-family: var(--mono); font-size: 12px; color: var(--text); background: var(--panel-2); border: 1px solid var(--line); border-radius: 4px; padding: 2px 7px; }
-@media (max-width: 960px) { .mod-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 961px) { .mod-grid > :last-child:nth-child(3n + 1) { grid-column: 1 / -1; } .mod-grid > :last-child:nth-child(3n + 2) { grid-column: span 2; } }
+@media (max-width: 960px) { .mod-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .mod-grid > :last-child:nth-child(odd) { grid-column: 1 / -1; } }
 @media (max-width: 600px) { .mod-grid { grid-template-columns: 1fr; } }
 
 /* Timesheet strip */
