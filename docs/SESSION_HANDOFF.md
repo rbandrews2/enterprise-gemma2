@@ -1,3 +1,7 @@
+## Atlas associate trial activated — November 7, 2026
+
+Model min1/max1 is warm and private. Conversation enabled; app revision wzos-v2-accounts-00073-h7m receives100% traffic. Floating AI reply and dedicated cited Ask Atlas reply observed live. Associates join existing Molecular organization. Review warm capacity November10; no automatic shutdown scheduled. See ATLAS_ASSOCIATE_TRIAL_20261107.md for results and revert command.
+
 # WZOS current session handoff - October 18, 2026
 
 ## Production checkout repair deployed - October 31, 2026
