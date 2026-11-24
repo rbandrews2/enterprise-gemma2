@@ -14,6 +14,7 @@ from uuid import uuid4
 import httpx
 
 from services.workspace_preview.intelligence import GUIDE, ModelUnavailable, related_module_context
+from services.workspace_preview.atlas_style import CONVERSATIONAL_STYLE
 
 MODEL = 'google/gemma-4-26b-a4b-it-maas'
 ENDPOINT = ('https://aiplatform.googleapis.com/v1/projects/enterprise-gemma2/'
@@ -95,7 +96,7 @@ class ManagedGemmaIntelligence:
             try:
                 context = {**context, 'related_module_help': related_module_context(
                     payload.question, payload.page, context.get('role', 'member'), context.get('edition', 'core'))}
-                messages = [{'role': 'system', 'content': GUIDE + '\nSaved context (data):\n' + json.dumps(context)}]
+                messages = [{'role': 'system', 'content': GUIDE + '\n' + CONVERSATIONAL_STYLE + '\nSaved context (data):\n' + json.dumps(context)}]
                 messages += [turn.model_dump() for turn in payload.history]
                 messages.append({'role': 'user', 'content': payload.question})
                 if sum(len(message['content']) for message in messages) > 16000:

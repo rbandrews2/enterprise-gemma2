@@ -244,6 +244,34 @@ class ReasoningTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, 'Unknown or unreviewed'):
                 resolve_passage_draft(value, packet)
 
+    def test_success_timing_contains_no_question_or_answer_and_preserves_citations(self):
+        self.reviewed()
+        packet = self.index.context(fixture.query())
+        packet['question'] = 'PRIVATE_QUESTION_MARKER'
+        passage_id = next(k for k, v in evidence_passages(packet).items() if v['answer_eligible'])
+        def handler(request):
+            if request.url.path == '/tokenize':
+                return httpx.Response(200, json={'count': 1000, 'max_model_len': 32768})
+            body = json.loads(request.content)
+            self.assertTrue(body['chat_template_kwargs']['enable_thinking'])
+            self.assertEqual(body['max_tokens'], 4096)
+            return httpx.Response(200, json={'choices': [{'finish_reason': 'stop', 'message': {'content': json.dumps({
+                'status': 'draft', 'claims': [{'text': 'PRIVATE_ANSWER_MARKER', 'passage_id': passage_id}],
+                'unresolved': [], 'calculations': []})}}], 'usage': {'prompt_tokens': 1000, 'completion_tokens': 100}})
+        async def token(origin): return 'test.test.test'
+        model = GuidelinesGemma(httpx.MockTransport(handler), token)
+        with patch.dict('os.environ', {'WZOS_ATLAS_DOT_INFERENCE_ENABLED': '1',
+                'WZOS_ATLAS_DOT_MODEL_URL': 'https://synthetic.test.run.app'}):
+            with self.assertLogs('services.workspace_preview.dot_knowledge', level='INFO') as logs:
+                result = asyncio.run(model.ask(packet))
+        self.assertTrue(result['citations'])
+        self.assertEqual(result['draft']['claims'][0]['citation_id'], result['citations'][0]['citation_id'])
+        output = str(logs.output)
+        for private in ('PRIVATE_QUESTION_MARKER', 'PRIVATE_ANSWER_MARKER', 'test.test.test'):
+            self.assertNotIn(private, output)
+        for stage in ('prepare_ms=', 'auth_ms=', 'tokenize_ms=', 'generate_ms=', 'validate_ms=', 'total_ms='):
+            self.assertIn(stage, output)
+
     def test_output_limit_reports_safe_reason_without_logging_content(self):
         self.reviewed()
         def handler(request):

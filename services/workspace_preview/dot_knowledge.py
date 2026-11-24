@@ -4,6 +4,7 @@ import json
 import logging
 import os
 import re
+from time import monotonic
 from uuid import UUID
 from typing import Annotated
 from typing import Literal
@@ -218,6 +219,14 @@ class GuidelinesGemma:
             raise ModelUnavailable('Atlas is answering another guidelines request. Try again shortly.')
         async with self.gate:
             stage = 'prepare'
+            started = monotonic()
+            timings = {}
+            mark = started
+            def mark_stage(name):
+                nonlocal mark
+                now = monotonic()
+                timings[name] = round((now - mark) * 1000)
+                mark = now
             try:
                 origin = service_url(os.getenv('WZOS_ATLAS_DOT_MODEL_URL') or os.getenv('WZOS_FIELD_VOICE_MODEL_URL', ''))
                 body = {
@@ -281,11 +290,13 @@ class GuidelinesGemma:
                 }
                 if len(packed(body).encode()) > 160000:
                     raise ValueError('Context budget exceeded')
+                mark_stage('prepare_ms')
                 async with asyncio.timeout(290):
                     stage = 'authenticate'
                     token = await self.token_provider(origin)
                     if not isinstance(token, str) or not re.fullmatch(r'[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+', token):
                         raise ValueError('Invalid metadata identity token')
+                    mark_stage('auth_ms')
                     async with httpx.AsyncClient(transport=self.transport, trust_env=False,
                                                 follow_redirects=False, timeout=280) as client:
                         # Tokenize with the actual model/chat template, rather than
@@ -298,6 +309,7 @@ class GuidelinesGemma:
                                       'chat_template_kwargs': body['chat_template_kwargs']}) as response:
                             measured = await bounded_json(response, 512 * 1024)
                         count, capacity = measured.get('count'), measured.get('max_model_len')
+                        mark_stage('tokenize_ms')
                         if (type(count) is not int or count < 1 or type(capacity) is not int
                                 or capacity < 8192 or count + body['max_tokens'] + 4096 > min(capacity, 32768)):
                             raise ModelUnavailable('The complete source context exceeds the verified model window. Narrow the operation or section.')
@@ -305,6 +317,7 @@ class GuidelinesGemma:
                         async with client.stream('POST', origin + '/v1/chat/completions',
                                                  headers={'Authorization': 'Bearer ' + token}, json=body) as response:
                             data = await bounded_json(response, 65536)
+                        mark_stage('generate_ms')
                 stage = 'completion'
                 choice = data['choices'][0]
                 if choice.get('finish_reason') == 'length':
@@ -321,6 +334,12 @@ class GuidelinesGemma:
                 used = {claim.citation_id for claim in draft.claims}
                 calculated = verify_calculations(draft.calculations, packet)
                 used.update(item['citation_id'] for item in calculated)
+                mark_stage('validate_ms')
+                logging.getLogger(__name__).info(
+                    'Atlas DOT timing prepare_ms=%d auth_ms=%d tokenize_ms=%d generate_ms=%d validate_ms=%d total_ms=%d prompt_tokens=%d completion_tokens=%d',
+                    timings['prepare_ms'], timings['auth_ms'], timings['tokenize_ms'],
+                    timings['generate_ms'], timings['validate_ms'], round((monotonic() - started) * 1000),
+                    usage['prompt_tokens'], usage['completion_tokens'])
                 return {'draft': draft.model_dump(mode='json'), 'model': body['model'],
                         'calculations': calculated,
                         'usage': {k: usage[k] for k in ('prompt_tokens', 'completion_tokens')},
