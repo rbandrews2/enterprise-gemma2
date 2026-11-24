@@ -1,3 +1,11 @@
+## Atlas daily source research activated — November 24, 2026
+
+Repaired watcher to use VDOT November 10 known-errors PDF as a new source revision.
+Private CPU-only Cloud Run job and daily 03:15 Eastern scheduler active. Initial
+scan 9/9 successful; scheduler delivery and persistent daily guard verified.
+28 focused tests passed. Findings await source review; no automatic promotion
+or WZOS application deployment. See ATLAS_BACKGROUND_RESEARCH_20261124.md.
+
 ## Atlas associate trial activated â€” November 7, 2026
 
 Model min1/max1 is warm and private. Conversation enabled; app revision wzos-v2-accounts-00073-h7m receives100% traffic. Floating AI reply and dedicated cited Ask Atlas reply observed live. Associates join existing Molecular organization. Review warm capacity November10; no automatic shutdown scheduled. See ATLAS_ASSOCIATE_TRIAL_20261107.md for results and revert command.

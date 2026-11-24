@@ -1,3 +1,11 @@
+## Atlas daily source research activated — November 24, 2026
+
+Repaired watcher to use VDOT November 10 known-errors PDF as a new source revision.
+Private CPU-only Cloud Run job and daily 03:15 Eastern scheduler active. Initial
+scan 9/9 successful; scheduler delivery and persistent daily guard verified.
+28 focused tests passed. Findings await source review; no automatic promotion
+or WZOS application deployment. See ATLAS_BACKGROUND_RESEARCH_20261124.md.
+
 # WZOS remaining tasks - current October 20, 2026
 
 ## Production checkout repair deployed - October 31, 2026
