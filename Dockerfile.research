@@ -1,0 +1,9 @@
+FROM python:3.12-slim
+WORKDIR /app
+RUN pip install --no-cache-dir httpx==0.28.1 pydantic==2.10.6 google-cloud-storage==2.19.0
+COPY services/v2/knowledge/models.py services/v2/knowledge/download.py services/v2/knowledge/research.py services/v2/knowledge/research_cloud.py /app/services/v2/knowledge/
+COPY shared/contracts.py /app/shared/contracts.py
+COPY knowledge/sources.json /app/knowledge/sources.json
+ENV PYTHONUNBUFFERED=1
+USER 65532:65532
+ENTRYPOINT ["python", "-m", "services.v2.knowledge.research_cloud"]

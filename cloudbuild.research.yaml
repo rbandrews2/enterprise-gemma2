@@ -1,0 +1,7 @@
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args: ['build', '--file', 'Dockerfile.research', '--tag', '${_IMAGE}', '.']
+images: ['${_IMAGE}']
+timeout: 600s
+options:
+  machineType: E2_MEDIUM
