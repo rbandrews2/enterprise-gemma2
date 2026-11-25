@@ -42,9 +42,19 @@ class V2PriceCatalogTests(unittest.TestCase):
         self.assertEqual(credit['applies_to_product_id'], self.catalog['offers']['enterprise']['product_id'])
         self.assertTrue(credit['requires_admin'])
         self.assertTrue(credit['requires_verified_billing_eligibility'])
-        prices = [o[k] for o in self.catalog['offers'].values()
-                  for k in ['setup_price_id', 'monthly_price_id', 'additional_seat_price_id']]
-        self.assertEqual(len(set(prices)), 6)
+        offers = self.catalog['offers']
+        self.assertEqual(set(offers), {'core', 'enterprise', 'core_annual', 'enterprise_annual'})
+        setup_prices = set()
+        recurring_prices = []
+        for edition in ('core', 'enterprise'):
+            monthly, annual = offers[edition], offers[edition + '_annual']
+            self.assertEqual(monthly['setup_price_id'], annual['setup_price_id'])
+            setup_prices.add(monthly['setup_price_id'])
+            for offer in (monthly, annual):
+                recurring_prices.extend([offer['monthly_price_id'], offer['additional_seat_price_id']])
+        self.assertEqual(len(setup_prices), 2)
+        self.assertEqual(len(set(recurring_prices)), 8)
+        self.assertTrue(setup_prices.isdisjoint(recurring_prices))
 
 
 if __name__ == '__main__':
