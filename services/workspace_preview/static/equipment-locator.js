@@ -9,6 +9,18 @@
  const api = (...args) => window.wzosClock.api(...args);
  const endpoint = "/api/equipment-locator";
  const icons = {"Pickup truck":"🛻", TMA:"🛡️", "Message board":"▤", "Arrow board":"➜", Custom:"◆"};
+ const photoFiles = {TMA:"tma", "Arrow board":"arrow-board", "Message board":"message-board"};
+ const photos = new Map();
+ function photoFor(type) {
+  if (!photoFiles[type]) return;
+  if (!photos.has(type)) {
+   const image = new Image();
+   image.onload = draw;
+   image.src = "/equipment-icons/" + photoFiles[type] + ".png";
+   photos.set(type,image);
+  }
+  return photos.get(type);
+ }
  let generation = 0, revision = 0, map, popup, markers = [], items = [], lastRequest;
  const element = (tag,text) => {const node=document.createElement(tag);node.textContent=text;return node;};
  const name = item => item.custom_name || item.equipment_type;
@@ -39,16 +51,23 @@
    const first = group[0], position={lat:first.latitude,lng:first.longitude};
    bounds.extend(position);
    const title = group.map(item=>name(item)+" × "+item.quantity).join(", ");
-   const symbols = [...new Set(group.map(item=>icons[item.equipment_type]))].join(" ");
-   const canvas=document.createElement("canvas");
-   canvas.width=48*[...new Set(group.map(item=>item.equipment_type))].length+16;canvas.height=48;
-   const ctx=canvas.getContext("2d");
-   ctx.fillStyle="#282318";ctx.fillRect(0,0,canvas.width,48);
-   ctx.strokeStyle="#ffc150";ctx.lineWidth=4;ctx.strokeRect(2,2,canvas.width-4,44);
-   ctx.fillStyle="#ffe0a0";ctx.font="bold 29px sans-serif";ctx.textAlign="center";ctx.textBaseline="middle";
-   ctx.fillText(symbols,canvas.width/2,24,canvas.width-8);
+   const types = [...new Set(group.map(item=>item.equipment_type))];
+   const cellWidth = 60, height = 40, width = cellWidth * types.length;
+   const canvas = document.createElement("canvas");
+   canvas.width = width * 2;
+   canvas.height = height * 2;
+   const ctx = canvas.getContext("2d");
+   ctx.scale(2,2);
+   ctx.fillStyle="#282318";ctx.fillRect(0,0,width,height);
+   ctx.strokeStyle="#ffc150";ctx.lineWidth=2;ctx.strokeRect(1,1,width-2,height-2);
+   ctx.fillStyle="#ffe0a0";ctx.font="bold 24px sans-serif";ctx.textAlign="center";ctx.textBaseline="middle";
+   types.forEach((type,index)=>{
+    const x = index * cellWidth, photo = photoFor(type);
+    if (photo?.complete && photo.naturalWidth) ctx.drawImage(photo,x+2,2,56,36);
+    else ctx.fillText(icons[type],x+cellWidth/2,height/2);
+   });
    const marker = new google.maps.Marker({map,position,title,icon:{
-    url:canvas.toDataURL(),scaledSize:new google.maps.Size(canvas.width*.75,36)}});
+    url:canvas.toDataURL(),scaledSize:new google.maps.Size(width,height)}});
    marker.addListener("click",()=>{
     const content=element("div","");
     group.forEach(item=>content.append(element("p",name(item)+" × "+item.quantity)));
@@ -64,6 +83,13 @@
   if(!items.length) list.append(element("p","No equipment outstanding."));
   for(const item of items){
    const row=element("article",""), title=element("strong",icons[item.equipment_type]+" "+name(item)+" × "+item.quantity);
+   const photo = photoFor(item.equipment_type);
+   if (photo) {
+    const icon = photo.cloneNode();
+    icon.alt="";icon.width=56;icon.height=36;
+    title.textContent=" "+name(item)+" × "+item.quantity;
+    title.prepend(icon);
+   }
    const location=item.address?[item.address.street,item.address.city,item.address.region].join(", "):[item.latitude,item.longitude].join(", ");
    const retrieve=element("button","Mark retrieved");retrieve.type="button";retrieve.className="secondary";
    retrieve.onclick=async()=>{

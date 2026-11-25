@@ -790,6 +790,10 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
     def equipment_script():
         return FileResponse(STATIC / 'equipment-locator.js', media_type='text/javascript')
 
+    @app.get('/equipment-icons/{icon}.png')
+    def equipment_icon(icon: Literal['tma', 'arrow-board', 'message-board']):
+        return FileResponse(STATIC / 'equipment-icons' / f'{icon}.png', media_type='image/png')
+
     from . import field_inspections
     field_inspections.register(app, connect, actor, time_order)
 
