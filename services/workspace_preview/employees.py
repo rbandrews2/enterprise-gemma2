@@ -9,7 +9,16 @@ from typing import Literal
 from fastapi import HTTPException, Query, Request
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from .field_inspections import small_photo
+
+class CertificatePhoto(BaseModel):
+    photo: str = Field(max_length=1_400_000)
+
 DDL = (
+    """CREATE TABLE IF NOT EXISTS certificate_photos (
+        organization_id TEXT NOT NULL,user_id TEXT NOT NULL,qualification_id TEXT NOT NULL,
+        side TEXT NOT NULL,photo TEXT NOT NULL,uploaded_by TEXT NOT NULL,
+        PRIMARY KEY(organization_id,user_id,qualification_id,side))""",
     'CREATE TABLE IF NOT EXISTS employee_profiles (organization_id TEXT NOT NULL,user_id TEXT NOT NULL,employee_number TEXT NOT NULL,payload TEXT NOT NULL,version INTEGER NOT NULL,updated_at TEXT NOT NULL,PRIMARY KEY(organization_id,user_id),UNIQUE(organization_id,employee_number))',
     'CREATE TABLE IF NOT EXISTS employee_qualifications (organization_id TEXT NOT NULL,user_id TEXT NOT NULL,qualification_id TEXT NOT NULL,payload TEXT NOT NULL,version INTEGER NOT NULL,updated_at TEXT NOT NULL,PRIMARY KEY(organization_id,user_id,qualification_id))',
     'CREATE TABLE IF NOT EXISTS employee_history (organization_id TEXT NOT NULL,user_id TEXT NOT NULL,record_key TEXT NOT NULL,version INTEGER NOT NULL,payload TEXT NOT NULL,actor_id TEXT NOT NULL,saved_at TEXT NOT NULL,PRIMARY KEY(organization_id,user_id,record_key,version))',
@@ -157,10 +166,11 @@ def register(app, accounts):
             person = member(db, selected['organization_id'], user_id)
             profile = db.execute('SELECT * FROM employee_profiles WHERE organization_id=? AND user_id=?', (selected['organization_id'], user_id)).fetchone()
             rows = db.execute('SELECT * FROM employee_qualifications WHERE organization_id=? AND user_id=? ORDER BY qualification_id', (selected['organization_id'], user_id)).fetchall()
+            images = db.execute('SELECT qualification_id,side FROM certificate_photos WHERE organization_id=? AND user_id=? ORDER BY side', (selected['organization_id'], user_id)).fetchall()
         qualifications = []
         for row in rows:
             item = packed(row)
-            qualifications.append({'id': row['qualification_id'], **item, 'current_status': qualification_state(item)})
+            qualifications.append({'id': row['qualification_id'], **item, 'photo_sides': [image['side'] for image in images if image['qualification_id']==row['qualification_id']], 'current_status': qualification_state(item)})
         return {**dict(person), 'profile': packed(profile), 'qualifications': qualifications}
 
     @app.put('/api/account/employees/{user_id}')
@@ -188,19 +198,50 @@ def register(app, accounts):
             save(db, selected, user_id, 'profile', version+1, encoded, stamp)
         return {'version': version+1, 'updated_at': stamp, **payload}
 
+    image_path = '/api/account/employees/{user_id}/qualifications/{qualification_id}/photos/{side}'
+
+    @app.get(image_path)
+    def certificate_image(user_id: str, qualification_id: str, side: Literal["front","back"], request: Request):
+        selected = access(request, user_id)
+        with accounts.connect() as db:
+            row = db.execute("SELECT photo FROM certificate_photos WHERE organization_id=? AND user_id=? AND qualification_id=? AND side=?",
+                             (selected["organization_id"],user_id,qualification_id,side)).fetchone()
+            if not row:
+                raise HTTPException(404, "Certificate photo not found.")
+            return {"photo":row["photo"]}
+
+    @app.put(image_path)
+    def upload_certificate(user_id: str, qualification_id: str, side: Literal["front","back"], body: CertificatePhoto, request: Request):
+        selected = access(request, user_id)
+        with accounts.connect() as db:
+            key = (selected["organization_id"],user_id,qualification_id)
+            if not db.execute("SELECT 1 FROM employee_qualifications WHERE organization_id=? AND user_id=? AND qualification_id=?",key).fetchone():
+                raise HTTPException(404, "Qualification not found.")
+            image = small_photo(body.photo)
+            db.execute("INSERT INTO certificate_photos VALUES (?,?,?,?,?,?) ON CONFLICT DO NOTHING", (*key,side,image,selected["id"]))
+            saved = db.execute("SELECT photo FROM certificate_photos WHERE organization_id=? AND user_id=? AND qualification_id=? AND side=?", (*key,side)).fetchone()
+            if saved["photo"] != image:
+                raise HTTPException(409, "This side already has a certificate photo. Add a new qualification for a renewed certificate.")
+            return {"side":side}
+
+    @app.post('/api/account/employees/{user_id}/qualifications/{qualification_id}')
     @app.put('/api/account/employees/{user_id}/qualifications/{qualification_id}')
     def update_qualification(user_id: str, qualification_id: str, body: Qualification, request: Request):
         import re
         if not re.fullmatch(r'[A-Za-z0-9_-]{1,80}', qualification_id):
             raise HTTPException(422, 'Invalid qualification identifier')
-        selected = access(request, user_id, write=True)
+        self_submission = request.method == 'POST'
+        selected = access(request, user_id, write=not self_submission)
+        if self_submission and (user_id != selected['id'] or body.expected_version or body.review_status != 'unreviewed' or body.review_note):
+            raise HTTPException(403, "Employees can submit their own new qualifications for review.")
         payload = body.model_dump(mode='json', exclude={'expected_version'})
         encoded = json.dumps(payload, sort_keys=True)
         org = selected['organization_id']
         stamp = datetime.now(timezone.utc).isoformat()
         with accounts.connect() as db:
             db.execute('BEGIN IMMEDIATE')
-            active_admin(db, selected)
+            if not self_submission:
+                active_admin(db, selected)
             member(db, org, user_id)
             row = db.execute('SELECT * FROM employee_qualifications WHERE organization_id=? AND user_id=? AND qualification_id=?', (org, user_id, qualification_id)).fetchone()
             version = row['version'] if row else 0

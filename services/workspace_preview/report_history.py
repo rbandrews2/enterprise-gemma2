@@ -1,7 +1,7 @@
 """Immutable, actor-scoped draft report snapshots, not approvals or delivery records."""
 import hashlib
 import json
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from uuid import UUID
 from fastapi import HTTPException, Request, Query, Response
 from pydantic import BaseModel, ConfigDict, Field
@@ -9,6 +9,7 @@ from services.workspace_preview.atlas_adapter import prepare_order
 
 class SaveReport(BaseModel):
     model_config = ConfigDict(extra="forbid")
+    inspection_date: date | None = None
     request_id: UUID
     expected_order_version: int = Field(ge=1, strict=True)
 
@@ -24,9 +25,17 @@ def register(app, connect, actor, report, knowledge):
         current = report(order_id, request)  # Enforce edition and current job access.
         return selected, current
 
+    def for_shift_day(items, day):
+        if not day:
+            return items
+        return [item for item in items if item["due_on"] == day or
+                (item["due_on"] < day and item["status"] == "Repair needed") or
+                (item.get("rechecked_at") or "")[:10] == day]
+
     def summary(row, current):
         saved = json.loads(row['payload'])
         changed = (saved['order'] != current['order'] or saved['checklist'] != current['checklist']
+                   or saved.get('inspections', []) != for_shift_day(current.get('inspections', []), saved.get('inspection_date'))
                    or saved['forms'] != current['forms'] or saved['forms_total'] != current['forms_total'])
         return {"id": row['id'], "order_version": row['order_version'], "saved_at": row['saved_at'],
                 "sha256": row['sha256'], "basis_changed": changed, "approved_for_field_use": False}
@@ -38,11 +47,15 @@ def register(app, connect, actor, report, knowledge):
             prior = db.execute('SELECT * FROM report_snapshots WHERE id=?', (str(body.request_id),)).fetchone()
         if prior:
             if (prior['owner_id'] != selected['id'] or prior['organization_id'] != selected['organization_id']
+                    or json.loads(prior['payload']).get('inspection_date') != (body.inspection_date.isoformat() if body.inspection_date else None)
                     or prior['order_id'] != order_id or prior['order_version'] != body.expected_order_version):
                 raise HTTPException(409, 'Save identifier already used; refresh and try again')
             return summary(prior, current)
         if current['order']['version'] != body.expected_order_version:
             raise HTTPException(409, 'Work order changed. Refresh the report first')
+        if body.inspection_date:
+            current['inspection_date'] = body.inspection_date.isoformat()
+            current['inspections'] = for_shift_day(current['inspections'],current['inspection_date'])
         current['preparation'] = prepare_order(current['order'], knowledge)
         current['limitations'][0] = 'Saved draft snapshot, not an approved or complete report. Later changes require a new snapshot.'
         packed = json.dumps(current, sort_keys=True, ensure_ascii=False)
@@ -55,7 +68,7 @@ def register(app, connect, actor, report, knowledge):
                        (str(body.request_id),order_id,selected['organization_id'],selected['id'],
                         body.expected_order_version,saved_at,packed,digest))
             row=db.execute('SELECT * FROM report_snapshots WHERE id=?',(str(body.request_id),)).fetchone()
-            if row['owner_id'] != selected['id'] or row['organization_id'] != selected['organization_id'] or row['order_id'] != order_id or row['order_version'] != body.expected_order_version:
+            if row['owner_id'] != selected['id'] or row['organization_id'] != selected['organization_id'] or row['order_id'] != order_id or row['order_version'] != body.expected_order_version or json.loads(row['payload']).get('inspection_date') != current.get('inspection_date'):
                 raise HTTPException(409,'Save identifier conflict')
         return summary(row, report(order_id, request))
 

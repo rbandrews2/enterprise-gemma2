@@ -26,6 +26,35 @@ class ReportPdfTests(unittest.TestCase):
         self.assertEqual(result.status_code, 200, result.text)
         return '/api/orders/enterprise-sample/reports/' + sid, result.json()
 
+    def test_night_inspection_repair_and_report(self):
+        import base64
+        from io import BytesIO
+        from PIL import Image
+        base = '/api/orders/enterprise-sample'
+        url = base+'/inspections/'+str(uuid4())
+        headers = self.h()
+        schedule = {'shift':'Night','closure_type':'Lane','due_on':'2026-11-25',
+                    'checkpoint':'Arrow board','location':'West approach'}
+        self.assertEqual(self.client.put(url,headers=self.h('core-admin'),json=schedule).status_code,404)
+        self.assertEqual(self.client.put(url,headers=headers,json=schedule).status_code,200)
+        finding = {'status':'Repair needed','finding':'Panel dark','repair_owner':'Shift lead'}
+        self.assertEqual(self.client.put(url+'/finding',headers=headers,json=finding).status_code,200)
+        out = BytesIO()
+        Image.new('RGB',(64,64),'white').save(out,'JPEG')
+        recheck = {'note':'Panel illuminated','photo':base64.b64encode(out.getvalue()).decode()}
+        for _ in range(2):
+            self.assertEqual(self.client.put(url+'/recheck',headers=headers,json=recheck).status_code,200)
+        self.assertEqual(self.client.get(url+'/photo',headers=self.h('core-admin')).status_code,404)
+        self.assertEqual(self.client.get(base+'/report',headers=headers).json()['inspections'][0]['status'],'Rechecked')
+        snapshot = self.client.post(base+'/reports',headers=headers,json={
+            'request_id':str(uuid4()),'expected_order_version':1,'inspection_date':'2026-11-25'}).json()
+        saved = self.client.get(base+'/reports/'+snapshot['id'],headers=headers).json()
+        self.assertEqual(saved['report']['inspection_date'],'2026-11-25')
+        self.assertEqual(saved['report']['inspections'][0]['recheck_note'],'Panel illuminated')
+        self.assertFalse(saved['basis_changed'])
+        pdf = self.client.get(base+'/reports/'+snapshot['id']+'/pdf',headers=headers)
+        self.assertTrue(pdf.content.startswith(b'%PDF'))
+
     def test_private_snapshot_download_and_immutable_bytes(self):
         path, saved = self.save()
         self.assertEqual(self.client.get(path + '/pdf').status_code, 401)

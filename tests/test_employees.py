@@ -45,6 +45,29 @@ class EmployeeTests(unittest.TestCase):
         self.assertEqual(self.client.put('/api/account/employees/member',headers=self.headers('member'),json={'expected_version':1,'employee_number':'new'}).status_code,403)
         self.assertEqual(self.client.get('/api/account/employees/member',headers=self.headers('other')).status_code,403)
 
+    def test_certificate_wallet_self_submission_and_private_images(self):
+        import base64
+        from io import BytesIO
+        from PIL import Image
+        root = '/api/account/employees/member/qualifications/traffic'
+        headers = self.headers('member')
+        body = {'expected_version':0,'title':'Traffic control technician'}
+        self.assertEqual(self.client.post(root,headers=headers,json=body).json()['current_status'],'unreviewed')
+        self.assertEqual(self.client.post(root,headers=headers,json={**body,'review_status':'verified',
+            'review_note':'Reviewed','issuer':'Agency','evidence_reference':'card'}).status_code,403)
+        url = root+'/photos/front'
+        self.assertEqual(self.client.put(url,headers=headers,json={'photo':'invalid'}).status_code,422)
+        out = BytesIO()
+        Image.new('RGB',(120,80),'gold').save(out,'PNG')
+        photo = {'photo':base64.b64encode(out.getvalue()).decode()}
+        for _ in range(2):
+            self.assertEqual(self.client.put(url,headers=headers,json=photo).status_code,200)
+        self.assertIn('photo',self.client.get(url,headers=self.headers()).json())
+        self.assertEqual(self.client.get(url,headers=self.headers('other')).status_code,403)
+        wallet = self.client.get('/api/account/employees/member',headers=headers).json()['qualifications'][0]
+        self.assertEqual(wallet['photo_sides'],['front'])
+        self.assertEqual(wallet['current_status'],'unreviewed')
+
     def test_unique_numbers_retries_and_stale_changes(self):
         self.assertEqual(self.profile().json()['employee_number'],'EMP-1')
         self.assertEqual(self.profile().json()['version'],1)

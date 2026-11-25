@@ -268,7 +268,10 @@ window.wzosAccount = (() => {
   const phoneLayout=window.matchMedia?window.matchMedia('(max-width:760px)'):null;
   const resizeAccountMenu=()=>{menu.open=!phoneLayout?.matches;};
   resizeAccountMenu();phoneLayout?.addEventListener('change',resizeAccountMenu);
-  const employeeButton=element('button',session.can_manage_team?'Employees':'My employee record');
+  const wallet=document.querySelector('#wallet-nav');
+  wallet.hidden=false;
+  wallet.onclick=()=>window.wzosEmployees.open(api,session,true);
+  const employeeButton=element('button',session.can_manage_team?'Employees':'My employee record and wallet');
   employeeButton.onclick=()=>window.wzosEmployees.open(api,session);employeeButton.className='account-glass account-employees';actions.append(employeeButton);
   if(session.can_manage_team){const importer=element('button','Import employees');importer.className='account-glass account-employee-import';importer.onclick=()=>window.wzosEmployees.importEmployees(api);actions.append(importer);}
   if(session.can_manage_team){const bulk=element('button','Bulk create employee accounts');bulk.className='account-glass account-bulk-create';bulk.onclick=()=>window.wzosBulkAccounts.open(api);actions.append(bulk);}

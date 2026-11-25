@@ -1,14 +1,17 @@
 "use strict";
 window.wzosEmployees = (() => {
  const node=(tag,text)=>{const n=document.createElement(tag);if(text)n.textContent=text;return n;};
- async function open(api,session){
+ async function open(api,session,walletOnly=false){
   const dialog=node('dialog');dialog.className='account-dialog';
   const message=node('p');message.setAttribute('role','status');
   const content=node('div');const close=node('button','Close');close.type='button';
   let dirty=false;
   function dismiss(){if(dirty&&!window.confirm('Discard unsaved employee changes?'))return;dialog.close();dialog.remove();}
+  const sessionChanged=()=>{if(dialog.open)dialog.close();dialog.remove();};
+  document.addEventListener('wzos:session',sessionChanged);
+  dialog.addEventListener('close',()=>document.removeEventListener('wzos:session',sessionChanged),{once:true});
   close.onclick=dismiss;dialog.addEventListener('cancel',e=>{e.preventDefault();dismiss();});
-  dialog.append(node('h2',session.can_manage_team?'Employee directory':'My employee record'),message,content,close);
+  dialog.append(node('h2',walletOnly?'My qualification wallet':session.can_manage_team?'Employee directory':'My employee record'),message,content,close);
   document.body.append(dialog);dialog.showModal();
   async function run(task){message.textContent='Loading…';try{await task();}catch(e){message.textContent=e.message;}}
   function field(form,label,value,type='text',required=false){
@@ -48,11 +51,35 @@ window.wzosEmployees = (() => {
      await api('/api/account/employees/'+encodeURIComponent(id),{expected_version:profile.version||0,employee_number:number.value,address:address.value,phone:phone.value,starting_location:start.value,notes:notes.value,availability},'PUT');
      await detail(id);message.textContent='Employee saved.';
     }).finally(()=>{save.disabled=false;});};}
-   content.append(form,node('h3','Qualifications'),node('p','Admin verification records the evidence reviewed. It does not establish eligibility for every job or issue an agency certificate.'));
+   if(!walletOnly)content.append(form,node('h3','Qualification wallet'));
+   content.append(node('p','Admin verification records the evidence reviewed. It does not establish eligibility for every job or issue an agency certificate.'));
    for(const qualification of data.qualifications){const row=node('section');row.className='panel';row.append(node('p',qualification.title+' — '+qualification.current_status),node('p','Issuer: '+(qualification.issuer||'Not recorded')+' • Expiry: '+(qualification.expires_on||'Not recorded')));
+    const photos='/api/account/employees/'+encodeURIComponent(id)+'/qualifications/'+encodeURIComponent(qualification.id)+'/photos/';
+    for(const side of ['front','back']){
+     if(qualification.photo_sides?.includes(side)){
+      const view=node('button','View certificate '+side);
+      view.type='button';
+      view.onclick=()=>run(async()=>{
+       const result=await api(photos+side);
+       window.WzosEvidence.showPhoto(row,result.photo);view.remove();message.textContent='';
+      });
+      row.append(view);
+     }else{
+      const label=node('label','Upload certificate '+side+' (up to 1 MB)');
+      const input=node('input');input.type='file';input.accept='image/jpeg,image/png,image/webp';
+      input.onchange=()=>run(async()=>{
+       if(!input.files.length)return;
+       const photo=await window.WzosEvidence.readPhoto(input.files[0]);
+       await api(photos+side,{photo},'PUT');
+       input.disabled=true;label.textContent='Certificate '+side+' saved.';message.textContent='';
+       window.WzosEvidence.showPhoto(row,photo);
+      });
+      label.append(input);row.append(label);
+     }
+    }
     if(session.can_manage_team){const edit=node('button','Edit qualification');edit.type='button';edit.onclick=()=>qualificationEditor(id,qualification);row.append(edit);}content.append(row);}
-   if(session.can_manage_team){const add=node('button','Add qualification');add.type='button';add.onclick=()=>qualificationEditor(id,null);content.append(add);
-    const back=node('button','Back to directory');back.type='button';back.onclick=()=>{if(dirty&&!window.confirm('Discard unsaved changes?'))return;dirty=false;run(()=>directory());};content.append(back);}
+   {const add=node('button','Add qualification');add.type='button';add.onclick=()=>qualificationEditor(id,null);content.append(add);}
+   if(session.can_manage_team&&!walletOnly){const back=node('button','Back to directory');back.type='button';back.onclick=()=>{if(dirty&&!window.confirm('Discard unsaved changes?'))return;dirty=false;run(()=>directory());};content.append(back);}
   }
   function qualificationEditor(id,current){
    if(dirty&&!window.confirm('Discard unsaved changes?'))return;
@@ -65,10 +92,11 @@ window.wzosEmployees = (() => {
    const evidence=field(form,'Evidence reference (secure record or document identifier)',q.evidence_reference);evidence.maxLength=500;
    const note=field(form,'Review note',q.review_note);note.maxLength=1000;
    const label=node('label','Review status');const status=node('select');for(const value of ['unreviewed','verified','rejected']){const o=node('option',value);o.value=value;status.append(o);}status.value=q.review_status||'unreviewed';status.onchange=()=>{dirty=true;};label.append(status);form.append(label);
+   if(!session.can_manage_team){label.hidden=true;note.parentElement.hidden=true;evidence.parentElement.hidden=true;}
    const save=node('button','Save qualification');save.type='submit';const back=node('button','Back');back.type='button';back.onclick=()=>{if(dirty&&!window.confirm('Discard unsaved changes?'))return;run(()=>detail(id));};form.append(save,back);content.append(form);
    const qualificationId=q.id||crypto.randomUUID();
    form.onsubmit=e=>{e.preventDefault();if(!form.reportValidity())return;save.disabled=true;run(async()=>{
-    await api('/api/account/employees/'+encodeURIComponent(id)+'/qualifications/'+encodeURIComponent(qualificationId),{expected_version:q.version||0,title:title.value,issuer:issuer.value,credential_number:number.value,issued_on:issued.value||null,expires_on:expiry.value||null,evidence_reference:evidence.value,review_note:note.value,review_status:status.value},'PUT');
+    await api('/api/account/employees/'+encodeURIComponent(id)+'/qualifications/'+encodeURIComponent(qualificationId),{expected_version:q.version||0,title:title.value,issuer:issuer.value,credential_number:number.value,issued_on:issued.value||null,expires_on:expiry.value||null,evidence_reference:evidence.value,review_note:note.value,review_status:status.value},session.can_manage_team?'PUT':'POST');
     await detail(id);message.textContent='Qualification saved.';
    }).finally(()=>{save.disabled=false;});};
   }
@@ -81,7 +109,7 @@ window.wzosEmployees = (() => {
    for(const person of data.items){const button=node('button',person.name+' — '+(person.employee_number||'Profile not configured')+(person.active?'':' — Inactive'));button.type='button';button.onclick=()=>run(()=>detail(person.id));content.append(button);}
    for(const [label,next] of [['Previous',offset-25],['Next',offset+25]])if(next>=0&&next<data.total){const button=node('button',label);button.type='button';button.onclick=()=>run(()=>directory(next));content.append(button);}
   }
-  await run(()=>session.can_manage_team?directory():detail(session.id));
+  await run(()=>session.can_manage_team&&!walletOnly?directory():detail(session.id));
  }
  async function importEmployees(api){
   const dialog=node('dialog');dialog.className='account-dialog employee-import-dialog';

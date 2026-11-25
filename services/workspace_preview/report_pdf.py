@@ -1,4 +1,5 @@
 """Render an immutable saved draft. No network requests, model calls or approval."""
+from base64 import b64decode
 from io import BytesIO
 from pathlib import Path
 from threading import Lock
@@ -11,7 +12,7 @@ from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.platypus import Paragraph, SimpleDocTemplate
+from reportlab.platypus import Image as ReportImage, Paragraph, SimpleDocTemplate
 
 FONT_LOCK = Lock()
 
@@ -76,6 +77,12 @@ def render_pdf(saved):
         fields(order['job_geometry'], 'Geometry')
     else:
         text('Work limits and measured approaches are not recorded.')
+    if report.get('inspections'):
+        section('Day and night inspections' + (' - '+report['inspection_date'] if report.get('inspection_date') else ''))
+        for inspection in report['inspections']:
+            fields({key:value for key,value in inspection.items() if value and key not in ('id','recheck_photo')})
+            if inspection.get('recheck_photo'):
+                story.append(ReportImage(BytesIO(b64decode(inspection['recheck_photo'])), width=220, height=160, kind='proportional'))
     section('Readiness checklist')
     checklist = report.get('checklist')
     if checklist:

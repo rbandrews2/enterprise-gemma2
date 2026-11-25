@@ -644,6 +644,7 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
             forms = conn.execute("SELECT * FROM module_records WHERE " + clause + " ORDER BY updated_at DESC, id LIMIT 50", params).fetchall()
             return {"order": order, "checklist": checklist_record(checklist, order["version"]) if checklist else None,
                     "forms": [{"id": row["id"], "version": row["version"], **json.loads(row["payload"])} for row in forms],
+                    "inspections": field_inspections.records(conn, selected["organization_id"], order_id, include_photos=True),
                     "forms_total": total, "generated_at": datetime.now(timezone.utc).isoformat(),
                     "approved_for_field_use": False,
                     "limitations": ["Live draft view; refresh after changes. No approved or frozen report has been issued.",
@@ -781,6 +782,13 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
                     snapshot = json.loads(row['payload'])['delivery_snapshot']
                     return {'payload': json.dumps({'title': title, 'address': snapshot.get('address', '')})}
             raise error
+
+    from . import field_inspections
+    field_inspections.register(app, connect, actor, time_order)
+
+    @app.get('/field-inspections.js')
+    def inspection_script():
+        return FileResponse(STATIC / 'field-inspections.js', media_type='text/javascript')
 
     timeclock.register(app, connect, actor, time_order, roster, jobs=time_jobs)
     from . import weather
