@@ -8,7 +8,7 @@
  // Reorder the real controls so visual and keyboard order agree. Never grant access.
  function groupCards(){
   const premium=['field-voice-nav','atlas-nav','assignments-nav','report-nav'];
-  const enterpriseOptions=[...premium,'messages-nav','meetings-nav'];
+  const enterpriseOptions=[...premium,'equipment-nav','messages-nav','meetings-nav'];
   const enterprise=session()?.edition==='enterprise';
   const cards=[...menu.children];
   for(const card of cards)card.dataset.enterpriseCard=String(enterprise&&enterpriseOptions.includes(card.id));

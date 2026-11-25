@@ -783,6 +783,13 @@ def create_app(db_path: Path | None = None, knowledge_store=None, intelligence=N
                     return {'payload': json.dumps({'title': title, 'address': snapshot.get('address', '')})}
             raise error
 
+    from . import equipment_locator
+    equipment_locator.register(app, connect, actor)
+
+    @app.get('/equipment-locator.js')
+    def equipment_script():
+        return FileResponse(STATIC / 'equipment-locator.js', media_type='text/javascript')
+
     from . import field_inspections
     field_inspections.register(app, connect, actor, time_order)
 

@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>WZOS · Operations workspace</title><link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#08090b"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="WZOS"><link rel="icon" href="/favicon.ico?brand=20261020" sizes="any"><link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png?brand=20261020"><link rel="apple-touch-icon" sizes="180x180" href="/install-icon-180.png?brand=20261020"><meta name="msapplication-TileColor" content="#08090b"><meta name="msapplication-TileImage" content="/install-icon-144.png?brand=20261020"><script src="/startup.js" defer></script><script src="/install.js" defer></script><link rel="stylesheet" href="/workspace.css"><link rel="stylesheet" href="/forms-hub.css"><link rel="stylesheet" href="/timeclock.css"><script src="/field-inspections.js" defer></script><script src="/employees.js" defer></script><script src="/bulk-accounts.js" defer></script><script src="/account.js" defer></script><script src="/geometry.js" defer></script><script src="/files.js" defer></script><script src="/navigation-link.js" defer></script><script src="/workspace.js" defer></script><script src="/timeclock.js" defer></script><script src="/timeclock-review.js" defer></script><script src="/modules.js" defer></script><script src="/daily-meetings.js" defer></script><script src="/forms-hub.js" defer></script><script src="/report-map.js" defer></script><script src="/report.js" defer></script><script src="/navigation.js" defer></script><script src="/phone-number.js" defer></script><script src="/team-modules.js" defer></script><script src="/assistant.js" defer></script><script src="/review-workflows.js" defer></script><script src="/organization-hub.js" defer></script><script src="/mobile-home.js" defer></script><script src="/security.js" defer></script></head>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>WZOS · Operations workspace</title><link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#08090b"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="WZOS"><link rel="icon" href="/favicon.ico?brand=20261020" sizes="any"><link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png?brand=20261020"><link rel="apple-touch-icon" sizes="180x180" href="/install-icon-180.png?brand=20261020"><meta name="msapplication-TileColor" content="#08090b"><meta name="msapplication-TileImage" content="/install-icon-144.png?brand=20261020"><script src="/startup.js" defer></script><script src="/install.js" defer></script><link rel="stylesheet" href="/workspace.css"><link rel="stylesheet" href="/forms-hub.css"><link rel="stylesheet" href="/timeclock.css"><script src="/equipment-locator.js" defer></script><script src="/field-inspections.js" defer></script><script src="/employees.js" defer></script><script src="/bulk-accounts.js" defer></script><script src="/account.js" defer></script><script src="/geometry.js" defer></script><script src="/files.js" defer></script><script src="/navigation-link.js" defer></script><script src="/workspace.js" defer></script><script src="/timeclock.js" defer></script><script src="/timeclock-review.js" defer></script><script src="/modules.js" defer></script><script src="/daily-meetings.js" defer></script><script src="/forms-hub.js" defer></script><script src="/report-map.js" defer></script><script src="/report.js" defer></script><script src="/navigation.js" defer></script><script src="/phone-number.js" defer></script><script src="/team-modules.js" defer></script><script src="/assistant.js" defer></script><script src="/review-workflows.js" defer></script><script src="/organization-hub.js" defer></script><script src="/mobile-home.js" defer></script><script src="/security.js" defer></script></head>
 <body class="app-starting">
 <section id="app-boot" class="app-boot" role="status" aria-live="polite"><img src="/wzos-logo.png?brand=20261020" width="68" height="76" alt="WZOS"><strong>Work Zone OS</strong><span class="app-boot-progress" aria-hidden="true"></span><p id="app-boot-message">Opening your workspace…</p><button id="app-boot-retry" class="secondary" hidden>Try again</button></section><noscript>Enable JavaScript to sign in to WZOS.</noscript>
 <script src="/training-media.js" defer></script><script src="/training-content.js" defer></script>
@@ -12,6 +12,7 @@
  <nav aria-label="Workspace navigation">
   <button class="nav-item active" id="jobs-nav" aria-current="page"><span aria-hidden="true">▤</span> Work orders <span class="nav-count" id="nav-count">0</span></button>
   <button class="nav-item" id="assignments-nav" hidden>My jobs <span class="nav-count" id="assignment-count">0</span></button>
+  <button class="nav-item" id="equipment-nav" hidden>Equipment Locator</button>
   <button class="nav-item" id="inspections-nav">Day and night inspections</button>
   <button class="nav-item" id="wallet-nav" hidden>My qualification wallet</button>
   <button class="nav-item" id="report-nav">Work Zone Report</button>
@@ -136,4 +137,29 @@
 <script src="/app-updates.js" defer></script>
 <link rel="stylesheet" href="/weather.css"><script src="/weather.js" defer></script>
 <link rel="stylesheet" href="/field-voice.css"><script src="/device-setup.js" defer></script><script src="/field-voice.js" defer></script>
-<link rel="stylesheet" href="/workspace-layout.css"><link rel="stylesheet" href="/ask-atlas.css"><script src="/ask-atlas.js" defer></script></body></html>
+<link rel="stylesheet" href="/workspace-layout.css"><link rel="stylesheet" href="/ask-atlas.css"><script src="/ask-atlas.js" defer></script><dialog id="equipment-dialog" class="account-dialog" aria-labelledby="equipment-title">
+ <header class="panel-heading"><h2 id="equipment-title">Equipment Locator</h2><button type="button" id="equipment-close" class="secondary">Close</button></header>
+ <form id="equipment-form">
+  <label>Location method<select name="location_method" required><option value="address">Full address</option><option value="coordinates">Coordinates</option></select></label>
+  <div id="equipment-address">
+   <label>Street address<input name="street" maxlength="200" required></label>
+   <label>City or town<input name="city" maxlength="100" required></label>
+   <label>State or region<input name="region" maxlength="100" required></label>
+  </div>
+  <div id="equipment-coordinates" hidden>
+   <label>Longitude<input name="longitude" type="number" min="-180" max="180" step="any" disabled></label>
+   <label>Latitude<input name="latitude" type="number" min="-90" max="90" step="any" disabled></label>
+  </div>
+  <label>Equipment type<select name="equipment_type" required><option value="">Select equipment</option><option>Pickup truck</option><option>TMA</option><option>Message board</option><option>Arrow board</option><option>Custom</option></select></label>
+  <label id="equipment-custom" hidden>Custom equipment name<input name="custom_name" maxlength="100" disabled></label>
+  <label>Quantity<input name="quantity" type="number" min="1" max="9007199254740991" step="1" required></label>
+  <button class="primary" name="submit_entry" type="submit">Place equipment</button>
+ </form>
+ <p id="equipment-status" role="status"></p>
+ <h3>Outstanding equipment</h3>
+ <p id="equipment-map-status" role="status"></p>
+ <div id="equipment-map" class="report-map" aria-label="Outstanding equipment map" hidden></div>
+ <button id="equipment-refresh" type="button" class="secondary">Refresh equipment</button>
+ <div id="equipment-list"></div>
+</dialog>
+</body></html>
